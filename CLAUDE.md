@@ -323,9 +323,44 @@ without needing the original function.
 
 ## CI/CD
 
-- `test.yml` — runs `dotnet test` on .NET 8 and .NET 10 on push/PR to main
-- `publish.yml` — `dotnet pack` + `dotnet nuget push` on GitHub release creation
-- NuGet API key stored in `secrets.NUGET_API_KEY`
+### Workflows (`.github/workflows/`)
+
+- **`test.yml`** — Runs `dotnet test` on .NET 8 and .NET 10 on push/PR to main.
+  Collects code coverage via `coverlet` and uploads to Codecov on the .NET 10 run.
+  Summary job `All Tests Passed` gates branch protection.
+
+- **`publish.yml`** — Triggers on GitHub release creation. Runs `dotnet pack` in
+  Release configuration and pushes the `.nupkg` to nuget.org via `secrets.NUGET_API_KEY`.
+
+- **`dependabot-automerge.yml`** — Auto-approves and merges Dependabot PRs for
+  patch/minor version bumps after tests pass. Major bumps require manual review.
+
+### Dependabot (`.github/dependabot.yml`)
+
+Configured for weekly checks on:
+- `nuget` — NuGet package updates (xUnit, coverlet, etc.)
+- `github-actions` — Action version updates (checkout, setup-dotnet, codecov, etc.)
+
+### Branch Protection
+
+Ruleset "Protect main" is active with:
+- No branch deletion
+- No force pushes
+- Required status check: `All Tests Passed` (GitHub Actions integration ID 15368)
+- Admin bypass enabled (repo owner can push directly)
+
+### Codecov
+
+Code coverage collected via `coverlet.collector` (already a dependency in the test
+project). The test workflow uploads `coverage.cobertura.xml` to Codecov. To enable:
+add the `CODECOV_TOKEN` secret in the repo's Settings → Secrets → Actions.
+
+### Secrets Required
+
+| Secret | Where to get it | Used by |
+|--------|----------------|---------|
+| `NUGET_API_KEY` | [nuget.org → API Keys](https://www.nuget.org/account/apikeys) | `publish.yml` |
+| `CODECOV_TOKEN` | [codecov.io](https://app.codecov.io/) after adding the repo | `test.yml` |
 
 ## Progress Tracking
 
@@ -343,4 +378,4 @@ When all 457 tests pass, the port is feature-complete. The definition of done fo
 1. Update `<Version>` in `src/ChebyshevSharp/ChebyshevSharp.csproj`
 2. Update `CHANGELOG.md`
 3. Commit, push to main
-4. `gh release create vX.Y.Z` — triggers NuGet publish
+4. `gh release create vX.Y.Z` — triggers `publish.yml` → NuGet
