@@ -34,6 +34,10 @@ dotnet pack src/ChebyshevSharp --configuration Release
 
 # Clean build artifacts
 dotnet clean
+
+# Build and preview docs locally (requires: dotnet tool install --global docfx)
+docfx docs/docfx.json --serve        # http://localhost:8080
+docfx docs/docfx.json                # Build only, output to docs/_site/
 ```
 
 ## Architecture
@@ -334,6 +338,23 @@ without needing the original function.
 
 - **`dependabot-automerge.yml`** — Auto-approves and merges Dependabot PRs for
   patch/minor version bumps after tests pass. Major bumps require manual review.
+
+- **`docs.yml`** — Builds documentation with DocFX and deploys to GitHub Pages
+  at https://0xc000005.github.io/ChebyshevSharp/. Triggers on push to main when
+  `docs/` or `src/` files change. API reference is auto-generated from XML doc
+  comments in the source code.
+
+### Documentation (`docs/`)
+
+DocFX-based documentation site deployed to GitHub Pages.
+
+- `docs/docfx.json` — DocFX configuration (metadata extraction from `.csproj`, build settings)
+- `docs/index.md` — Landing page
+- `docs/docs/` — User guide articles (introduction, getting-started)
+- `docs/api/` — Auto-generated from `<summary>` XML doc comments in source code
+- `docs/_site/` — Build output (gitignored)
+
+To add a new user guide page: create a `.md` file in `docs/docs/`, add it to `docs/docs/toc.yml`.
 
 ### Dependabot (`.github/dependabot.yml`)
 

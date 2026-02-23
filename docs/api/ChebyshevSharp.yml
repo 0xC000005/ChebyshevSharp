@@ -1,0 +1,23 @@
+### YamlMime:ManagedReference
+items:
+- uid: ChebyshevSharp
+  commentId: N:ChebyshevSharp
+  id: ChebyshevSharp
+  children:
+  - ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevSharp
+  nameWithType: ChebyshevSharp
+  fullName: ChebyshevSharp
+  type: Namespace
+  assemblies:
+  - ChebyshevSharp
+references:
+- uid: ChebyshevSharp.ChebyshevApproximation
+  commentId: T:ChebyshevSharp.ChebyshevApproximation
+  href: ChebyshevSharp.ChebyshevApproximation.html
+  name: ChebyshevApproximation
+  nameWithType: ChebyshevApproximation
+  fullName: ChebyshevSharp.ChebyshevApproximation

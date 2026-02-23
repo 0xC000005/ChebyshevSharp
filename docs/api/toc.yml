@@ -1,0 +1,10 @@
+### YamlMime:TableOfContent
+items:
+- uid: ChebyshevSharp
+  name: ChebyshevSharp
+  type: Namespace
+  items:
+  - uid: ChebyshevSharp.ChebyshevApproximation
+    name: ChebyshevApproximation
+    type: Class
+memberLayout: SamePage

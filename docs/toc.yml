@@ -1,0 +1,7 @@
+- name: Home
+  href: index.md
+- name: User Guide
+  href: docs/
+- name: API Reference
+  href: api/
+  homepage: api/ChebyshevSharp.html

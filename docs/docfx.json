@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [
+            "**/*.csproj"
+          ]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appName": "ChebyshevSharp",
+      "_appTitle": "ChebyshevSharp",
+      "_appFooter": "ChebyshevSharp — Multi-dimensional Chebyshev tensor interpolation for .NET",
+      "_enableSearch": true,
+      "_gitContribute": {
+        "repo": "https://github.com/0xC000005/ChebyshevSharp",
+        "branch": "main"
+      }
+    }
+  }
+}
