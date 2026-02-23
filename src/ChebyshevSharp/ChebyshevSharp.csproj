@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet package metadata -->
+    <PackageId>ChebyshevSharp</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Max</Authors>
+    <Description>Multi-dimensional Chebyshev tensor interpolation with analytical derivatives for .NET</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/0xC000005/ChebyshevSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/0xC000005/ChebyshevSharp</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>chebyshev;interpolation;barycentric;numerical;tensor;derivatives</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

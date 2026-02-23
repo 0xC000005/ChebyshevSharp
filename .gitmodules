@@ -1,0 +1,3 @@
+[submodule "ref/PyChebyshev"]
+	path = ref/PyChebyshev
+	url = https://github.com/0xC000005/PyChebyshev.git

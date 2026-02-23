@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ChebyshevSharp/ChebyshevSharp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj" />
+  </Folder>
+</Solution>
