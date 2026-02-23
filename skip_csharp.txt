@@ -2,12 +2,12 @@
 # Remove lines as tests are ported and passing.
 # Target: 457 tests (matching PyChebyshev v0.10.1)
 
-# Phase 1: ChebyshevApproximation (48 + 65 + 77 + 63 + 74 = 327 tests)
-BarycentricTests.*              # 48 tests — core eval, derivatives, batch, serialization
-FromValuesTests.*               # 65 tests — nodes(), from_values(), bit-identical to build()
-AlgebraTests.*                  # 77 tests — +, -, *, /, unary, +=, -=, *=, /= (partial: CA only)
-ExtrudeSliceTests.*             # 63 tests — extrude(), slice(), round-trip (partial: CA only)
-CalculusTests.*                 # 74 tests — integrate(), roots(), minimize(), maximize() (partial: CA only)
+# Phase 1: ChebyshevApproximation — DONE (207 tests passing)
+# BarycentricTests: 42 tests ✓
+# FromValuesTests: 44 tests ✓
+# AlgebraTests: 37 tests ✓
+# ExtrudeSliceTests: 42 tests ✓
+# CalculusTests: 42 tests ✓
 
 # Phase 2: ChebyshevSpline (55 tests + remaining algebra/extrude-slice/calculus)
 SplineTests.*                   # 55 tests — piecewise construction, knots, eval, serialization
