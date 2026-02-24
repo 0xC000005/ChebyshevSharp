@@ -1,3 +1,5 @@
+using BlasSharp;
+
 namespace ChebyshevSharp.Internal;
 
 /// <summary>
@@ -6,6 +8,7 @@ namespace ChebyshevSharp.Internal;
 /// </summary>
 internal static class BarycentricKernel
 {
+    private static readonly IBlasOperations Blas = new BlasSharp.OpenBlas.OpenBlasOperations();
     /// <summary>
     /// Compute barycentric weights for given interpolation nodes.
     /// w_i = 1 / prod_{j!=i} (x_i - x_j)
@@ -158,54 +161,31 @@ internal static class BarycentricKernel
     }
 
     /// <summary>
-    /// Multiply the last axis of an N-D array (stored flat) by a vector or matrix.
-    /// This is the C# equivalent of _matmul_last_axis in Python.
+    /// Multiply flat data[leadSize x lastDim] by vector rhs[lastDim], producing result[leadSize].
+    /// Uses OpenBLAS GEMV via BlasSharp.
     /// </summary>
-    internal static double[] MatmulLastAxis(double[] data, int[] shape, double[] rhs)
+    internal static unsafe double[] MatmulLastAxis(double[] data, int leadSize, int lastDim, double[] rhs)
     {
-        int ndim = shape.Length;
-        int lastDim = shape[ndim - 1];
-        int leadSize = 1;
-        for (int i = 0; i < ndim - 1; i++)
-            leadSize *= shape[i];
-
         double[] result = new double[leadSize];
-        for (int i = 0; i < leadSize; i++)
+        fixed (double* pA = data, pX = rhs, pY = result)
         {
-            double sum = 0.0;
-            int offset = i * lastDim;
-            for (int j = 0; j < lastDim; j++)
-                sum += data[offset + j] * rhs[j];
-            result[i] = sum;
+            Blas.Dgemv((uint)CBLAS_ORDER.CblasRowMajor, (uint)CBLAS_TRANSPOSE.CblasNoTrans,
+                leadSize, lastDim, 1.0, pA, lastDim, pX, 1, 0.0, pY, 1);
         }
         return result;
     }
 
     /// <summary>
-    /// Multiply the last axis of an N-D array (stored flat) by a matrix (columns of rhs).
-    /// Result has last dimension = number of columns in rhs.
+    /// Multiply flat data[leadSize x lastDim] by pre-flattened matrix rhsFlat[lastDim * rhsCols] (row-major).
+    /// Uses OpenBLAS GEMM via BlasSharp.
     /// </summary>
-    internal static double[] MatmulLastAxisMatrix(double[] data, int[] shape, double[,] rhs)
+    internal static unsafe double[] MatmulLastAxisMatrixFlat(double[] data, int leadSize, int lastDim, double[] rhsFlat, int rhsCols)
     {
-        int ndim = shape.Length;
-        int lastDim = shape[ndim - 1];
-        int rhsCols = rhs.GetLength(1);
-        int leadSize = 1;
-        for (int i = 0; i < ndim - 1; i++)
-            leadSize *= shape[i];
-
         double[] result = new double[leadSize * rhsCols];
-        for (int i = 0; i < leadSize; i++)
+        fixed (double* pA = data, pB = rhsFlat, pC = result)
         {
-            int srcOffset = i * lastDim;
-            int dstOffset = i * rhsCols;
-            for (int c = 0; c < rhsCols; c++)
-            {
-                double sum = 0.0;
-                for (int j = 0; j < lastDim; j++)
-                    sum += data[srcOffset + j] * rhs[j, c];
-                result[dstOffset + c] = sum;
-            }
+            Blas.Dgemm((uint)CBLAS_ORDER.CblasRowMajor, (uint)CBLAS_TRANSPOSE.CblasNoTrans, (uint)CBLAS_TRANSPOSE.CblasNoTrans,
+                leadSize, rhsCols, lastDim, 1.0, pA, lastDim, pB, rhsCols, 0.0, pC, rhsCols);
         }
         return result;
     }
@@ -335,6 +315,7 @@ internal static class BarycentricKernel
 
     /// <summary>
     /// Compute Chebyshev expansion coefficients from values at Type I nodes via DCT-II.
+    /// Uses O(n log n) FFT for n > 32, O(n^2) direct for small n.
     /// </summary>
     internal static double[] ChebyshevCoefficients1D(double[] values)
     {
@@ -344,17 +325,64 @@ internal static class BarycentricKernel
         for (int i = 0; i < n; i++)
             reversed[i] = values[n - 1 - i];
 
-        // DCT-II: coeffs[k] = sum_{j=0}^{n-1} reversed[j] * cos(pi*k*(2j+1)/(2n))
+        double[] coeffs;
+        if (n > 32)
+            coeffs = DctIIviaFFT(reversed);
+        else
+            coeffs = DctIINaive(reversed);
+
+        return coeffs;
+    }
+
+    /// <summary>
+    /// O(n^2) direct DCT-II computation.
+    /// </summary>
+    private static double[] DctIINaive(double[] reversed)
+    {
+        int n = reversed.Length;
         double[] coeffs = new double[n];
         for (int k = 0; k < n; k++)
         {
             double sum = 0.0;
             for (int j = 0; j < n; j++)
                 sum += reversed[j] * Math.Cos(Math.PI * k * (2 * j + 1) / (2.0 * n));
-            coeffs[k] = sum * 2.0 / n; // scipy dct type 2 = 2 * sum * cos(...)
+            coeffs[k] = sum * 2.0 / n;
         }
         coeffs[0] /= 2.0;
+        return coeffs;
+    }
 
+    /// <summary>
+    /// O(n log n) DCT-II via FFT using the standard half-sample-shift trick.
+    /// DCT-II[k] = 2 * Re(W^{k/2} * FFT(reordered)[k]) where W = exp(-2*pi*i/(4n)).
+    /// </summary>
+    private static double[] DctIIviaFFT(double[] reversed)
+    {
+        int n = reversed.Length;
+
+        // Reorder: even indices get first half, odd indices get reversed second half
+        // y[j] = x[2j] for j = 0..n/2-1, y[n-1-j] = x[2j+1] for j = 0..n/2-1
+        var reordered = new System.Numerics.Complex[n];
+        for (int j = 0; j < (n + 1) / 2; j++)
+            reordered[j] = new System.Numerics.Complex(reversed[2 * j], 0);
+        for (int j = 0; j < n / 2; j++)
+            reordered[n - 1 - j] = new System.Numerics.Complex(reversed[2 * j + 1], 0);
+
+        // In-place FFT
+        MathNet.Numerics.IntegralTransforms.Fourier.Forward(
+            reordered,
+            MathNet.Numerics.IntegralTransforms.FourierOptions.NoScaling);
+
+        // Extract DCT-II coefficients: coeffs[k] = 2/n * Re(exp(-i*pi*k/(2n)) * FFT[k])
+        double[] coeffs = new double[n];
+        for (int k = 0; k < n; k++)
+        {
+            double angle = -Math.PI * k / (2.0 * n);
+            var twiddle = new System.Numerics.Complex(Math.Cos(angle), Math.Sin(angle));
+            var val = twiddle * reordered[k];
+            coeffs[k] = val.Real * 2.0 / n;
+        }
+        coeffs[0] /= 2.0;
         return coeffs;
     }
 }

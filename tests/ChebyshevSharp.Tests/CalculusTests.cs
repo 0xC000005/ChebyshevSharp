@@ -138,6 +138,18 @@ public class TestIntegrateApprox
         var cheb = new ChebyshevApproximation(f, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 5 });
         Assert.Throws<InvalidOperationException>(() => cheb.Integrate());
     }
+
+    [Fact]
+    public void Test_integrate_cross_validate_scipy()
+    {
+        // Cross-validate integral of exp(x) on [0, 2] with analytical value.
+        static double f(double[] x, object? _) => Math.Exp(x[0]);
+        var cheb = new ChebyshevApproximation(f, 1, new[] { new[] { 0.0, 2.0 } }, new[] { 15 });
+        cheb.Build(verbose: false);
+        var result = (double)cheb.Integrate();
+        double expected = Math.Exp(2.0) - Math.Exp(0.0); // e^2 - 1
+        TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
 }
 
 // ======================================================================
@@ -559,5 +571,32 @@ public class TestSubIntervalIntegrateApprox
         var ex = Assert.Throws<ArgumentException>(() =>
             cheb.Integrate(bounds: new[] { (0.5, -0.5) }));
         Assert.Contains("lo=", ex.Message);
+    }
+
+    [Fact]
+    public void Test_scipy_cross_validation()
+    {
+        // Cross-validate sub-interval integral of sin(x)^2 on [0.5, 2.0] within [-2, 3].
+        // Analytical: int sin^2(x) dx = x/2 - sin(2x)/4 + C
+        // On [0.5, 2.0]: (2/2 - sin(4)/4) - (0.5/2 - sin(1)/4)
+        static double f(double[] x, object? _) => Math.Sin(x[0]) * Math.Sin(x[0]);
+        var cheb = new ChebyshevApproximation(f, 1, new[] { new[] { -2.0, 3.0 } }, new[] { 25 });
+        cheb.Build(verbose: false);
+        var result = (double)cheb.Integrate(bounds: new[] { (0.5, 2.0) });
+        double expected = (2.0 / 2.0 - Math.Sin(4.0) / 4.0) - (0.5 / 2.0 - Math.Sin(1.0) / 4.0);
+        TestFixtures.AssertClose(expected, result, rtol: 1e-8, atol: 1e-8);
+    }
+
+    [Fact]
+    public void Test_bounds_length_mismatch_raises()
+    {
+        // bounds list length != dims length raises ArgumentException with "bounds length".
+        static double f(double[] x, object? _) => x[0] + x[1];
+        var cheb = new ChebyshevApproximation(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 });
+        cheb.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Integrate(dims: new[] { 0 }, bounds: new[] { (0.0, 0.5), (0.0, 0.5) }));
+        Assert.Contains("bounds length", ex.Message);
     }
 }

@@ -12,7 +12,7 @@ ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyCheb
 
 - **Multi-dimensional Chebyshev interpolation** with spectral convergence
 - **Analytical derivatives** via spectral differentiation matrices
-- **Vectorized evaluation** routing N-D tensor contractions through BLAS-style operations
+- **Vectorized evaluation** routing N-D tensor contractions through BLAS (via [BlasSharp.OpenBlas](https://www.nuget.org/packages/BlasSharp.OpenBlas))
 - **Piecewise Chebyshev splines** with user-specified knots at singularities
 - **Sliding technique** for high-dimensional approximation
 - **Tensor Train** decomposition for 5+ dimensional functions
@@ -38,9 +38,9 @@ double MyFunction(double[] x, object? data) => Math.Sin(x[0]) + Math.Sin(x[1]);
 // Build a 2D Chebyshev interpolant
 var cheb = new ChebyshevApproximation(
     function: MyFunction,
-    ndim: 2,
-    domains: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
-    orders: new[] { 11, 11 }
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 11, 11 }
 );
 cheb.Build();
 
@@ -53,7 +53,9 @@ double dfdx = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 
 ## Status
 
-ChebyshevSharp is under active development. See [skip_csharp.txt](skip_csharp.txt) for current feature parity with PyChebyshev.
+**Phase 1 complete** — `ChebyshevApproximation` with 212 passing tests covering construction, evaluation, derivatives, algebra, extrusion/slicing, calculus, and serialization.
+
+Phases 2-4 (ChebyshevSpline, ChebyshevSlider, ChebyshevTT) are not yet implemented. See [skip_csharp.txt](skip_csharp.txt) for current feature parity with PyChebyshev.
 
 ## License
 

@@ -5,4 +5,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/ChebyshevSharp.Benchmarks/ChebyshevSharp.Benchmarks.csproj" />
+  </Folder>
 </Solution>

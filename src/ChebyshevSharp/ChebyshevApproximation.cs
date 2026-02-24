@@ -38,6 +38,9 @@ public class ChebyshevApproximation
     /// <summary>Spectral differentiation matrices per dimension.</summary>
     public double[][,]? DiffMatrices { get; internal set; }
 
+    /// <summary>Pre-transposed diff matrices flattened to double[] for BLAS GEMM (row-major).</summary>
+    internal double[][]? DiffMatricesTFlat { get; set; }
+
     /// <summary>Time taken by Build() in seconds.</summary>
     public double BuildTime { get; internal set; }
 
@@ -130,6 +133,9 @@ public class ChebyshevApproximation
         DiffMatrices = new double[NumDimensions][,];
         for (int d = 0; d < NumDimensions; d++)
             DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(NodeArrays[d], Weights[d]);
+
+        // Step 4: Pre-transpose diff matrices for VectorizedEval
+        PrecomputeTransposedDiffMatrices();
 
         sw.Stop();
         BuildTime = sw.Elapsed.TotalSeconds;
@@ -227,63 +233,65 @@ public class ChebyshevApproximation
             throw new InvalidOperationException("Call Build() first");
 
         double[] current = TensorValues;
-        int[] shape = (int[])NNodes.Clone();
+
+        // Track tensor dimensions without shape array allocations.
+        // leadSize = product of all dims before current last dim.
+        // After contracting dim d, leadSize shrinks accordingly.
+        int totalSize = current.Length;
 
         for (int d = NumDimensions - 1; d >= 0; d--)
         {
             double x = point[d];
             int deriv = derivativeOrder[d];
+            int lastDim = NNodes[d];
+            int leadSize = totalSize / lastDim;
 
             // Apply differentiation matrix if derivative order > 0
             if (deriv > 0)
             {
-                // Transpose of diff matrix
-                double[,] dT = Transpose(DiffMatrices![d]);
+                double[] dTFlat = DiffMatricesTFlat![d];
                 for (int o = 0; o < deriv; o++)
-                {
-                    current = BarycentricKernel.MatmulLastAxisMatrix(current, shape, dT);
-                    // Shape stays the same (n x n matrix)
-                }
+                    current = BarycentricKernel.MatmulLastAxisMatrixFlat(current, leadSize, lastDim, dTFlat, lastDim);
             }
 
             // Barycentric contraction along last axis
-            double[] diff = new double[NNodes[d]];
             int exactIdx = -1;
-            for (int i = 0; i < NNodes[d]; i++)
+            for (int i = 0; i < lastDim; i++)
             {
-                diff[i] = x - NodeArrays[d][i];
-                if (Math.Abs(diff[i]) < 1e-14)
+                if (Math.Abs(x - NodeArrays[d][i]) < 1e-14)
+                {
                     exactIdx = i;
+                    break;
+                }
             }
 
             if (exactIdx >= 0)
             {
-                // Exact node: just take the slice
-                current = BarycentricKernel.TakeAlongAxis(current, shape, shape.Length - 1, exactIdx);
+                // Exact node: extract every leadSize-th element
+                double[] result = new double[leadSize];
+                for (int i = 0; i < leadSize; i++)
+                    result[i] = current[i * lastDim + exactIdx];
+                current = result;
             }
             else
             {
-                // Barycentric formula
-                double[] wOverDiff = new double[NNodes[d]];
+                // Barycentric formula: compute normalized weights inline
+                double[] wNorm = new double[lastDim];
                 double sumW = 0.0;
-                for (int i = 0; i < NNodes[d]; i++)
+                for (int i = 0; i < lastDim; i++)
                 {
-                    wOverDiff[i] = Weights![d][i] / diff[i];
-                    sumW += wOverDiff[i];
+                    double wod = Weights![d][i] / (x - NodeArrays[d][i]);
+                    wNorm[i] = wod;
+                    sumW += wod;
                 }
+                double invSumW = 1.0 / sumW;
+                for (int i = 0; i < lastDim; i++)
+                    wNorm[i] *= invSumW;
 
-                double[] normalized = new double[NNodes[d]];
-                for (int i = 0; i < NNodes[d]; i++)
-                    normalized[i] = wOverDiff[i] / sumW;
-
-                current = BarycentricKernel.MatmulLastAxis(current, shape, normalized);
+                current = BarycentricKernel.MatmulLastAxis(current, leadSize, lastDim, wNorm);
             }
 
-            // Update shape: remove last dimension
-            int[] newShape = new int[shape.Length - 1];
-            for (int i = 0; i < newShape.Length; i++)
-                newShape[i] = shape[i];
-            shape = newShape;
+            totalSize = leadSize;
         }
 
         return current[0];
@@ -355,37 +363,41 @@ public class ChebyshevApproximation
         }
 
         double[] results = new double[derivativeOrders.Length];
+        int tensorSize = TensorValues.Length;
+
         for (int q = 0; q < derivativeOrders.Length; q++)
         {
             int[] derivOrder = derivativeOrders[q];
             double[] current = TensorValues;
-            int[] shape = (int[])NNodes.Clone();
+            int totalSize = tensorSize;
 
             for (int d = NumDimensions - 1; d >= 0; d--)
             {
                 int deriv = derivOrder[d];
+                int lastDim = NNodes[d];
+                int leadSize = totalSize / lastDim;
 
                 if (deriv > 0)
                 {
-                    double[,] dT = Transpose(DiffMatrices![d]);
+                    double[] dTFlat = DiffMatricesTFlat![d];
                     for (int o = 0; o < deriv; o++)
-                        current = BarycentricKernel.MatmulLastAxisMatrix(current, shape, dT);
+                        current = BarycentricKernel.MatmulLastAxisMatrixFlat(current, leadSize, lastDim, dTFlat, lastDim);
                 }
 
                 var (isExact, exactIdx, wNorm) = dimInfo[d];
                 if (isExact)
                 {
-                    current = BarycentricKernel.TakeAlongAxis(current, shape, shape.Length - 1, exactIdx);
+                    double[] result = new double[leadSize];
+                    for (int i = 0; i < leadSize; i++)
+                        result[i] = current[i * lastDim + exactIdx];
+                    current = result;
                 }
                 else
                 {
-                    current = BarycentricKernel.MatmulLastAxis(current, shape, wNorm!);
+                    current = BarycentricKernel.MatmulLastAxis(current, leadSize, lastDim, wNorm!);
                 }
 
-                int[] newShape = new int[shape.Length - 1];
-                for (int i = 0; i < newShape.Length; i++)
-                    newShape[i] = shape[i];
-                shape = newShape;
+                totalSize = leadSize;
             }
 
             results[q] = current[0];
@@ -519,6 +531,8 @@ public class ChebyshevApproximation
             obj.DiffMatrices[d] = Unflatten2D(state.DiffMatrices[d], n, n);
         }
 
+        obj.PrecomputeTransposedDiffMatrices();
+
         return obj;
     }
 
@@ -640,6 +654,8 @@ public class ChebyshevApproximation
         for (int d = 0; d < numDimensions; d++)
             obj.DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(obj.NodeArrays[d], obj.Weights[d]);
 
+        obj.PrecomputeTransposedDiffMatrices();
+
         return obj;
     }
 
@@ -659,6 +675,7 @@ public class ChebyshevApproximation
             NodeArrays = source.NodeArrays,
             Weights = source.Weights,
             DiffMatrices = source.DiffMatrices,
+            DiffMatricesTFlat = source.DiffMatricesTFlat,
             TensorValues = tensorValues,
             BuildTime = 0.0,
             NEvaluations = 0,
@@ -707,7 +724,7 @@ public class ChebyshevApproximation
         }
 
         int newNdim = NumDimensions + sorted.Length;
-        return new ChebyshevApproximation
+        var result = new ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
@@ -722,6 +739,8 @@ public class ChebyshevApproximation
             NEvaluations = 0,
             _cachedErrorEstimate = null,
         };
+        result.PrecomputeTransposedDiffMatrices();
+        return result;
     }
 
     /// <summary>
@@ -769,7 +788,7 @@ public class ChebyshevApproximation
         }
 
         int newNdim = NumDimensions - sorted.Length;
-        return new ChebyshevApproximation
+        var result = new ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
@@ -784,6 +803,8 @@ public class ChebyshevApproximation
             NEvaluations = 0,
             _cachedErrorEstimate = null,
         };
+        result.PrecomputeTransposedDiffMatrices();
+        return result;
     }
 
     // ------------------------------------------------------------------
@@ -1040,15 +1061,25 @@ public class ChebyshevApproximation
     // Private helpers
     // ------------------------------------------------------------------
 
-    private static double[,] Transpose(double[,] matrix)
+    /// <summary>
+    /// Pre-compute transposed diff matrices as flat arrays for BLAS GEMM.
+    /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice.
+    /// </summary>
+    private void PrecomputeTransposedDiffMatrices()
     {
-        int rows = matrix.GetLength(0);
-        int cols = matrix.GetLength(1);
-        double[,] result = new double[cols, rows];
-        for (int i = 0; i < rows; i++)
-            for (int j = 0; j < cols; j++)
-                result[j, i] = matrix[i, j];
-        return result;
+        if (DiffMatrices == null) return;
+        DiffMatricesTFlat = new double[DiffMatrices.Length][];
+        for (int d = 0; d < DiffMatrices.Length; d++)
+        {
+            int rows = DiffMatrices[d].GetLength(0);
+            int cols = DiffMatrices[d].GetLength(1);
+            // Transpose and flatten in one pass (row-major)
+            var flat = new double[rows * cols];
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < cols; j++)
+                    flat[j * rows + i] = DiffMatrices[d][i, j];
+            DiffMatricesTFlat[d] = flat;
+        }
     }
 
     private static double[] Extract1DSlice(double[] data, int[] shape, int dim, int otherFlat, int[] otherShape)

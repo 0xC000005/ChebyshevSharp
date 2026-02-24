@@ -8,12 +8,12 @@ Polynomial interpolation with equally-spaced points suffers from **Runge's pheno
 
 ## Classes
 
-| Class | Purpose |
-|-------|---------|
-| `ChebyshevApproximation` | Core multi-dimensional Chebyshev interpolation with analytical derivatives |
-| `ChebyshevSpline` | Piecewise Chebyshev interpolation with knots at singularities |
-| `ChebyshevSlider` | High-dimensional approximation via the Sliding Technique |
-| `ChebyshevTT` | Tensor Train Chebyshev interpolation for 5+ dimensions |
+| Class | Purpose | Status |
+|-------|---------|--------|
+| `ChebyshevApproximation` | Core multi-dimensional Chebyshev interpolation with analytical derivatives | Available |
+| `ChebyshevSpline` | Piecewise Chebyshev interpolation with knots at singularities | Planned |
+| `ChebyshevSlider` | High-dimensional approximation via the Sliding Technique | Planned |
+| `ChebyshevTT` | Tensor Train Chebyshev interpolation for 5+ dimensions | Planned |
 
 ## Relationship to PyChebyshev
 

@@ -483,3 +483,11 @@ $RECYCLE.BIN/
 
 # DocFX output
 docs/_site/
+
+# Python virtual environment / uv tooling (used for running PyChebyshev reference)
+.python-version
+.venv/
+__pycache__/
+pyproject.toml
+uv.lock
+main.py

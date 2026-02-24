@@ -2,7 +2,7 @@
 # Remove lines as tests are ported and passing.
 # Target: 457 tests (matching PyChebyshev v0.10.1)
 
-# Phase 1: ChebyshevApproximation — DONE (207 tests passing)
+# Phase 1: ChebyshevApproximation — DONE (212 tests passing)
 # BarycentricTests: 42 tests ✓
 # FromValuesTests: 44 tests ✓
 # AlgebraTests: 37 tests ✓

@@ -580,4 +580,44 @@ public class TestCoverageGaps
         string s = cheb.ToString()!;
         Assert.Contains("...", s);
     }
+
+    [Fact]
+    public void Test_verbose_build()
+    {
+        // Build with verbose=true should print progress messages.
+        static double f(double[] x, object? _) => x[0];
+        var cheb = new ChebyshevApproximation(f, 1, [new[] { -1.0, 1.0 }], [5]);
+
+        var sw = new StringWriter();
+        var original = Console.Out;
+        Console.SetOut(sw);
+        try
+        {
+            cheb.Build(verbose: true);
+        }
+        finally
+        {
+            Console.SetOut(original);
+        }
+
+        string output = sw.ToString();
+        Assert.Contains("Building", output);
+        Assert.Contains("Built in", output);
+    }
+
+    [Fact]
+    public void Test_load_wrong_type_raises()
+    {
+        // Loading a file with invalid content should throw.
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "this is not json at all");
+            Assert.ThrowsAny<Exception>(() => ChebyshevApproximation.Load(path));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
 }

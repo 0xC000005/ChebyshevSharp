@@ -16,10 +16,12 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>chebyshev;interpolation;barycentric;numerical;tensor;derivatives</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="ChebyshevSharp.Tests" />
+    <InternalsVisibleTo Include="ChebyshevSharp.Benchmarks" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlasSharp.OpenBlas" Version="0.3.0" />
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
   </ItemGroup>
 

@@ -36,9 +36,9 @@ Specify the number of dimensions, domain bounds, and polynomial orders:
 ```csharp
 var cheb = new ChebyshevApproximation(
     function: MyFunction,
-    ndim: 2,
-    domains: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
-    orders: new[] { 11, 11 }
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 11, 11 }
 );
 cheb.Build();
 ```

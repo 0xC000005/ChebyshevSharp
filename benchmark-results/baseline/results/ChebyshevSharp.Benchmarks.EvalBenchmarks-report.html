@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>ChebyshevSharp.Benchmarks.EvalBenchmarks-20260224-095152</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.14.0, Ubuntu 24.04.4 LTS (Noble Numbat)
+12th Gen Intel Core i7-12700K, 1 CPU, 20 logical and 12 physical cores
+.NET SDK 10.0.103
+  [Host]     : .NET 10.0.3 (10.0.326.7603), X64 RyuJIT AVX2
+  DefaultJob : .NET 10.0.3 (10.0.326.7603), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>Method    </th><th>Mean  </th><th>Error</th><th>StdDev</th><th>Gen0</th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>Eval_1D_Value</td><td>134.3 ns</td><td>0.94 ns</td><td>0.84 ns</td><td>0.0489</td><td>-</td><td>-</td><td>640 B</td>
+</tr><tr><td>Eval_1D_Deriv1</td><td>966.1 ns</td><td>8.59 ns</td><td>8.03 ns</td><td>0.3128</td><td>-</td><td>-</td><td>4096 B</td>
+</tr><tr><td>Eval_3D_Value</td><td>1,184.7 ns</td><td>6.39 ns</td><td>5.98 ns</td><td>0.2193</td><td>-</td><td>-</td><td>2872 B</td>
+</tr><tr><td>Eval_3D_Delta</td><td>1,693.8 ns</td><td>6.64 ns</td><td>6.21 ns</td><td>0.3700</td><td>-</td><td>-</td><td>4856 B</td>
+</tr><tr><td>Eval_5D_Value</td><td>90,032.1 ns</td><td>497.78 ns</td><td>465.63 ns</td><td>36.6211</td><td>35.6445</td><td>35.6445</td><td>130503 B</td>
+</tr><tr><td>Eval_5D_Delta</td><td>93,266.7 ns</td><td>493.15 ns</td><td>461.29 ns</td><td>36.6211</td><td>35.5225</td><td>35.5225</td><td>131624 B</td>
+</tr><tr><td>Batch_3D_100pts</td><td>116,484.6 ns</td><td>409.62 ns</td><td>363.12 ns</td><td>21.9727</td><td>0.1221</td><td>-</td><td>288024 B</td>
+</tr><tr><td>Multi_3D_Greeks</td><td>4,455.6 ns</td><td>39.52 ns</td><td>36.97 ns</td><td>0.8087</td><td>-</td><td>-</td><td>10640 B</td>
+</tr><tr><td>ErrorEstimate_3D</td><td>469,523.2 ns</td><td>593.83 ns</td><td>526.41 ns</td><td>16.1133</td><td>0.9766</td><td>-</td><td>215144 B</td>
+</tr></tbody></table>
+</body>
+</html>
