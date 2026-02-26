@@ -79,3 +79,8 @@ The optimized implementation reduces per-eval memory allocation significantly fo
 | 3D delta | 4,856 B | 2,152 B | -56% |
 
 For 5D problems, allocation is dominated by the large intermediate tensors required for contraction and remains roughly the same (~129 KB per eval).
+
+## References
+
+1. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
+2. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.

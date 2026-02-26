@@ -2,5 +2,13 @@
   href: introduction.md
 - name: Getting Started
   href: getting-started.md
+- name: Advanced Usage
+  href: advanced-usage.md
+- name: Calculus
+  href: calculus.md
+- name: Serialization & Construction
+  href: serialization.md
 - name: Performance
   href: performance.md
+- name: Changelog
+  href: changelog.md

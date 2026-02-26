@@ -1,3 +1,7 @@
+---
+title: Changelog
+---
+
 # Changelog
 
 All notable changes to ChebyshevSharp will be documented in this file.

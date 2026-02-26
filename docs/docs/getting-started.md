@@ -14,7 +14,9 @@ Or add to your `.csproj`:
 <PackageReference Include="ChebyshevSharp" Version="0.1.0" />
 ```
 
-## Basic Usage
+The [BlasSharp.OpenBlas](https://www.nuget.org/packages/BlasSharp.OpenBlas) package is included as a transitive dependency and provides pre-built OpenBLAS binaries for all platforms (Windows, Linux, macOS). No system BLAS installation is required.
+
+## Quick Start
 
 ### 1. Define a function
 
@@ -23,11 +25,14 @@ ChebyshevSharp interpolates functions of the form `f(x, data) -> double`, where 
 ```csharp
 using ChebyshevSharp;
 
+// A 2D function: f(x, y) = sin(x) * cos(y)
 double MyFunction(double[] x, object? data)
 {
     return Math.Sin(x[0]) * Math.Cos(x[1]);
 }
 ```
+
+The second parameter `data` is an optional pass-through for user context (set to `null` if unused).
 
 ### 2. Build the interpolant
 
@@ -43,6 +48,10 @@ var cheb = new ChebyshevApproximation(
 cheb.Build();
 ```
 
+`Build()` evaluates the function at all 11 x 11 = 121 Chebyshev node combinations and pre-computes the barycentric weights and differentiation matrices. This is a one-time cost.
+
+**Choosing node counts:** 10-15 nodes per dimension is typical for smooth functions. The interpolation error decreases exponentially with node count (spectral convergence), so adding a few nodes can gain several digits of accuracy. Use `ErrorEstimate()` (below) to verify.
+
 ### 3. Evaluate
 
 ```csharp
@@ -56,6 +65,10 @@ double dfdx0 = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 double d2fdx1 = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 2 });
 ```
 
+The second argument specifies the derivative order along each dimension. `{0, 0}` means the function value, `{1, 0}` means first derivative with respect to dimension 0, `{0, 2}` means second derivative with respect to dimension 1.
+
+Derivatives are computed analytically using spectral differentiation matrices — they converge at the same rate as the function values, unlike finite differences which lose accuracy.
+
 ### 4. Check accuracy
 
 ```csharp
@@ -63,6 +76,24 @@ double error = cheb.ErrorEstimate();
 Console.WriteLine($"Estimated max error: {error:E2}");
 ```
 
+`ErrorEstimate()` extracts Chebyshev coefficients via DCT-II and uses the magnitude of the last coefficient as a proxy for interpolation error. For well-resolved functions, the actual error is typically smaller than this estimate. If the error is too large, increase the node counts.
+
+### 5. Save for later
+
+```csharp
+cheb.Save("my_interpolant.json");
+
+// Later, in another process:
+var restored = ChebyshevApproximation.Load("my_interpolant.json");
+double val = restored.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 0 });
+```
+
+See [Serialization & Construction](serialization.md) for details on `Save`, `Load`, `FromValues`, and `Nodes`.
+
 ## Next Steps
 
+- [Advanced Usage](advanced-usage.md) — batch/multi eval, extrusion, slicing, arithmetic operators
+- [Calculus](calculus.md) — integration, root-finding, minimization, maximization
+- [Serialization & Construction](serialization.md) — save/load, FromValues, Nodes
+- [Performance](performance.md) — BLAS integration and benchmark results
 - [API Reference](../api/ChebyshevSharp.html) — full class and method documentation

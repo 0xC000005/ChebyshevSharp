@@ -397,6 +397,6 @@ When all 457 tests pass, the port is feature-complete. The definition of done fo
 ## Release Process
 
 1. Update `<Version>` in `src/ChebyshevSharp/ChebyshevSharp.csproj`
-2. Update `CHANGELOG.md`
+2. Update `docs/docs/changelog.md`
 3. Commit, push to main
 4. `gh release create vX.Y.Z` — triggers `publish.yml` → NuGet
