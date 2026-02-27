@@ -255,4 +255,28 @@ public static class TestFixtures
 
         return (chebA, chebB);
     }
+
+    /// <summary>
+    /// Build same function via Build() and via Nodes()+FromValues() for ChebyshevSpline, return both.
+    /// </summary>
+    public static (ChebyshevSpline a, ChebyshevSpline b) BuildBothWaysSpline(
+        Func<double[], object?, double> func, int ndim, double[][] domain, int[] nNodes,
+        double[][] knots, int maxDerivativeOrder = 2)
+    {
+        var splineA = new ChebyshevSpline(func, ndim, domain, nNodes, knots, maxDerivativeOrder);
+        splineA.Build(verbose: false);
+
+        var info = ChebyshevSpline.Nodes(ndim, domain, nNodes, knots);
+        double[][] pieceValues = new double[info.NumPieces][];
+        for (int p = 0; p < info.NumPieces; p++)
+        {
+            var piece = info.Pieces[p];
+            pieceValues[p] = new double[piece.FullGrid.Length];
+            for (int i = 0; i < piece.FullGrid.Length; i++)
+                pieceValues[p][i] = func(piece.FullGrid[i], null);
+        }
+        var splineB = ChebyshevSpline.FromValues(pieceValues, ndim, domain, nNodes, knots, maxDerivativeOrder);
+
+        return (splineA, splineB);
+    }
 }
