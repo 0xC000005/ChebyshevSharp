@@ -13,6 +13,9 @@ items:
   - uid: ChebyshevSharp.ChebyshevSpline
     name: ChebyshevSpline
     type: Class
+  - uid: ChebyshevSharp.ChebyshevTT
+    name: ChebyshevTT
+    type: Class
   - uid: ChebyshevSharp.NodeInfo
     name: NodeInfo
     type: Class

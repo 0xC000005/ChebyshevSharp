@@ -217,6 +217,63 @@ public static class TestFixtures
     public static ChebyshevSlider AlgebraSliderG => _algebraSliderG.Value;
 
     // ---------------------------------------------------------------
+    // TensorTrain fixture builders
+    // ---------------------------------------------------------------
+
+    public static readonly double[][] TT_5D_BS_DOMAIN = new[] {
+        new[] { 80.0, 120.0 },
+        new[] { 90.0, 110.0 },
+        new[] { 0.25, 1.0 },
+        new[] { 0.15, 0.35 },
+        new[] { 0.01, 0.08 },
+    };
+
+    private static readonly int[] TT_5D_BS_NODES = { 11, 11, 11, 11, 11 };
+
+    /// <summary>5D BS call price: V(S, K, T, sigma, r), q=0.02.</summary>
+    public static double Bs5DFunc(double[] x) =>
+        BlackScholes.BsCallPrice(S: x[0], K: x[1], T: x[2], r: x[4], sigma: x[3], q: 0.02);
+
+    private static readonly Lazy<ChebyshevTT> _ttSin3D = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            x => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]),
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11, 11 },
+            maxRank: 5);
+        tt.Build(verbose: false, seed: 42);
+        return tt;
+    });
+
+    private static readonly Lazy<ChebyshevTT> _ttSin3DSvd = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            x => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]),
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11, 11 },
+            maxRank: 5);
+        tt.Build(verbose: false, method: "svd");
+        return tt;
+    });
+
+    private static readonly Lazy<ChebyshevTT> _ttBs5D = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            Bs5DFunc, 5,
+            TT_5D_BS_DOMAIN,
+            TT_5D_BS_NODES,
+            maxRank: 15, maxSweeps: 5);
+        tt.Build(verbose: false, seed: 42);
+        return tt;
+    });
+
+    public static ChebyshevTT TtSin3D => _ttSin3D.Value;
+    public static ChebyshevTT TtSin3DSvd => _ttSin3DSvd.Value;
+    public static ChebyshevTT TtBs5D => _ttBs5D.Value;
+
+    // ---------------------------------------------------------------
     // Assertion helpers
     // ---------------------------------------------------------------
 

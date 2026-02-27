@@ -23,5 +23,11 @@
 # ExtrudeSliceTests (Slider): 10 tests ✓ (10 Python)
 # ExtrudeSliceTests (Slider C#-specific): 10 tests ✓ (boundaries, roundtrip, serialization)
 
-# Phase 4: ChebyshevTT (35 tests)
-TensorTrainTests.*              # 35 tests — TT-Cross, TT-SVD, batch eval, FD derivatives
+# Phase 4: ChebyshevTT — DONE (35 tests passing, 588 total)
+# TensorTrainTests: 35 tests ✓ (35 Python)
+# TensorTrainCrossValidationTests: 9 tests ✓ (C# vs Python reference values)
+# TensorTrainCorrectnessTests: 16 tests ✓ (mathematical invariants, edge cases, robustness)
+# CoverageGapTests: 70 tests ✓ (C#-specific coverage improvements)
+#
+# ALL PHASES COMPLETE — Feature parity with PyChebyshev v0.10.1 achieved.
+# Total: 613 tests (457 Python-parity + 156 C#-specific)

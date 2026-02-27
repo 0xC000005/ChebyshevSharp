@@ -97,16 +97,20 @@ See [Serialization & Construction](serialization.md) for details on `Save`, `Loa
 | Smooth function on a single domain | `ChebyshevApproximation` |
 | Function with known discontinuities or singularities | `ChebyshevSpline` — place knots at trouble points for spectral convergence on each piece |
 | High-dimensional function (6+ dims), additively separable or nearly so | `ChebyshevSlider` — partition dimensions into groups, build cost is sum instead of product |
+| High-dimensional function (5+ dims), general cross-variable coupling | `ChebyshevTT` — Tensor Train decomposition, build cost is $O(d \cdot n \cdot r^2)$ |
 
 `ChebyshevSpline` supports the same API as `ChebyshevApproximation` (eval, derivatives, batch, multi, save/load, arithmetic, extrusion, slicing, integration, roots, optimization). See [Piecewise Chebyshev Interpolation](spline.md) for a full guide.
 
 `ChebyshevSlider` supports eval, eval_multi, error estimation, save/load, extrusion, slicing, and arithmetic operators. It does not support batch eval, integration, roots, or optimization. See [Sliding Technique](slider.md) for a full guide.
+
+`ChebyshevTT` supports eval, eval_batch, eval_multi (finite-difference derivatives), error estimation, and save/load. It does not support analytical derivatives, arithmetic operators, extrusion, slicing, integration, roots, or optimization. See [Tensor Train Interpolation](tensor-train.md) for a full guide.
 
 ## Next Steps
 
 - [Mathematical Concepts](concepts.md) — theory behind Chebyshev interpolation, Bernstein ellipse, spectral convergence
 - [Piecewise Chebyshev Interpolation](spline.md) — handling discontinuities with ChebyshevSpline
 - [Sliding Technique](slider.md) — high-dimensional approximation with ChebyshevSlider
+- [Tensor Train Interpolation](tensor-train.md) — high-dimensional approximation with general coupling via ChebyshevTT
 - [Advanced Usage](advanced-usage.md) — batch/multi eval, extrusion, slicing, arithmetic operators
 - [Computing Greeks](greeks.md) — analytical derivatives for option Greeks
 - [Calculus](calculus.md) — integration, root-finding, minimization, maximization

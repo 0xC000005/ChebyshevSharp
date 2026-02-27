@@ -6,7 +6,7 @@ title: Advanced Usage
 
 ## Batch Evaluation
 
-Evaluate the interpolant at multiple points in a single call. Supported by `ChebyshevApproximation` (`VectorizedEvalBatch`) and `ChebyshevSpline` (`EvalBatch`). `ChebyshevSlider` does not support batch evaluation.
+Evaluate the interpolant at multiple points in a single call. Supported by `ChebyshevApproximation` (`VectorizedEvalBatch`), `ChebyshevSpline` (`EvalBatch`), and `ChebyshevTT` (`EvalBatch`). `ChebyshevSlider` does not support batch evaluation.
 
 ```csharp
 double[][] points = new[]
@@ -33,6 +33,8 @@ double[] values = cheb.VectorizedEvalBatch(points, new[] { 0, 0, 0 });
 | `VectorizedEvalMulti` | Single point, multiple derivative orders (e.g., price + all Greeks). Shares barycentric weight computation across outputs. |
 
 `ChebyshevSpline` and `ChebyshevSlider` provide `Eval` and `EvalMulti` with the same signatures. `ChebyshevSpline` also supports `EvalBatch`.
+
+`ChebyshevTT` provides `Eval`, `EvalBatch`, and `EvalMulti`. Note that `EvalMulti` computes derivatives via finite differences (not spectral differentiation), supporting derivative orders 0, 1, and 2 per dimension. See [Tensor Train Interpolation](tensor-train.md) for details.
 
 ## Multi-Output Evaluation
 
@@ -122,6 +124,8 @@ Slicing is used internally by `Roots`, `Minimize`, and `Maximize` to reduce mult
 
 `ChebyshevSlider` supports slicing. If the sliced dimension belongs to a multi-dimension group, the slide is sliced within that group. If it is a singleton group, the slide is evaluated and its contribution is absorbed into the remaining slides. See [Sliding Technique](slider.md) for details.
 
+`ChebyshevTT` does **not** support extrusion or slicing.
+
 ## Arithmetic Operators
 
 Interpolants defined on the same grid support pointwise arithmetic:
@@ -141,6 +145,8 @@ Arithmetic on interpolants is exact at the nodes. Between nodes, the result is t
 `ChebyshevSpline` also supports arithmetic operators. Both operands must have the same knots, domain bounds, and node counts. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
 `ChebyshevSlider` also supports arithmetic operators. Both operands must have the same partition and pivot point in addition to domain and node counts. See [Sliding Technique](slider.md) for details.
+
+`ChebyshevTT` does **not** support arithmetic operators.
 
 ## Derivative Orders
 

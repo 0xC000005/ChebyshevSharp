@@ -150,10 +150,12 @@ of multiple terms in the Black-Scholes formula, but remains well within practica
 tolerance for most applications. Increasing the node count to 13--15 per dimension
 reduces Vega error below 0.1%.
 
-> **Tensor Train derivatives.** `ChebyshevTT` (not yet implemented -- Phase 4)
-> will use **finite differences** instead of analytical derivatives, because the
-> spectral differentiation matrix requires the full tensor (which TT avoids
-> storing).
+> **Tensor Train derivatives.** `ChebyshevTT` uses **finite differences** instead of
+> analytical derivatives, because the spectral differentiation matrix requires the
+> full tensor (which TT avoids storing). Central finite differences with step size
+> $h = (b-a) \times 10^{-4}$ provide 4--8 fewer digits of accuracy than spectral
+> derivatives, but are adequate for most financial applications. See
+> [Tensor Train Interpolation](tensor-train.md) for details.
 
 > **Slider cross-group derivatives.** In `ChebyshevSlider`, the additive decomposition
 > means that derivatives with respect to variables in **different groups** are exactly

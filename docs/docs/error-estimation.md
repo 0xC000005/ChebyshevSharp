@@ -160,6 +160,18 @@ for (int n = 5; n <= 30; n += 5)
 
 For $\sin(x)$, which is entire (analytic everywhere in the complex plane), the coefficients decay exponentially, so you should see the estimate drop by several orders of magnitude as $n$ grows.
 
+## ChebyshevTT Error Estimation
+
+`ChebyshevTT` also supports `ErrorEstimate()`. The estimate is computed as the sum of $\max |G_k[:, n_k{-}1, :]|$ across all dimensions $k$, where $G_k[:, n_k{-}1, :]$ is the slice of the coefficient core corresponding to the highest-order Chebyshev polynomial. This parallels the DCT-II coefficient decay used by `ChebyshevApproximation`, adapted to the TT core structure.
+
+```csharp
+var tt = new ChebyshevTT(f, 5, domain, nNodes, maxRank: 15);
+tt.Build(verbose: false, seed: 42);
+Console.WriteLine($"TT error estimate: {tt.ErrorEstimate():E2}");
+```
+
+> **Note:** The TT error estimate measures coefficient truncation within each core but does not capture the TT rank truncation error (the error from approximating a high-rank tensor with a low-rank TT). For TT-Cross, the rank is adaptively chosen, so the rank truncation error is typically small relative to the coefficient truncation error.
+
 ## Class Support
 
 | Class | How `ErrorEstimate()` Works |
@@ -167,6 +179,7 @@ For $\sin(x)$, which is entire (analytic everywhere in the complex plane), the c
 | `ChebyshevApproximation` | Per-dimension DCT-II of 1-D slices; maximize over slices per dimension; sum across dimensions. |
 | `ChebyshevSpline` | Computes `ErrorEstimate()` for each piece; returns the **maximum** across all pieces. |
 | `ChebyshevSlider` | Computes `ErrorEstimate()` for each slide; returns the **sum** across all slides. Does not capture decomposition error. |
+| `ChebyshevTT` | Sum of max last-coefficient magnitude per core across dimensions. Does not capture TT rank truncation error. |
 
 ## References
 

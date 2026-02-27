@@ -11,6 +11,8 @@
   href: spline.md
 - name: Sliding Technique
   href: slider.md
+- name: Tensor Train
+  href: tensor-train.md
 
 # Operations
 - name: Advanced Usage

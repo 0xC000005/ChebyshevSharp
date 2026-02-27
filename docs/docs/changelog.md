@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-27
+
+### Added
+
+- `ChebyshevTT` -- Phase 4 Tensor Train Chebyshev interpolation for high-dimensional functions (5+ dimensions)
+- TT-Cross decomposition with maxvol pivoting, adaptive rank selection, and evaluation caching
+- TT-SVD decomposition for deterministic, optimal rank-$r$ approximation on small grids
+- TT API: `Eval`, `EvalBatch` (vectorized), `EvalMulti` (finite-difference derivatives), `ErrorEstimate`, `Save`/`Load`
+- Finite-difference derivatives: central differences for order 1 and 2, mixed partials via 4-point stencil, boundary nudging
+- TT-specific properties: `TtRanks`, `CompressionRatio`, `TotalBuildEvals`
+- Cross-language validation tests: 9 tests comparing C# TT-SVD output against hardcoded Python reference values
+- Correctness tests: 16 additional tests covering mathematical invariants, edge cases, and robustness
+- TT tests ported from PyChebyshev `test_tensor_train.py` (35 tests)
+- Tensor Train Interpolation documentation page with theory, examples, and parameter guidance
+- ChebyshevTT references added to all existing documentation pages
+
+### Summary
+
+All four phases complete. Feature parity with PyChebyshev v0.10.1 achieved. 613 tests passing.
+
 ## [0.3.0] - 2026-02-26
 
 ### Added

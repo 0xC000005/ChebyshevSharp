@@ -29,6 +29,8 @@ Loaded interpolants cannot call `Build()` since they do not retain the original 
 
 `ChebyshevSlider` supports `Save` and `Load`. The serialized file includes the partition, pivot point, pivot value, and all slide states. `Nodes()` and `FromValues()` are not available for `ChebyshevSlider` — use the constructor and `Build()` workflow instead. See [Sliding Technique](slider.md) for details.
 
+`ChebyshevTT` supports `Save` and `Load`. The serialized file includes all coefficient cores, TT ranks, domain, node counts, and build metadata. `Nodes()` and `FromValues()` are not available for `ChebyshevTT`. If the file was saved with a different library version, a `LoadWarning` property is set. See [Tensor Train Interpolation](tensor-train.md) for details.
+
 ## FromValues
 
 If you already have function values at Chebyshev nodes, use `FromValues` to construct an interpolant directly without providing a function:
