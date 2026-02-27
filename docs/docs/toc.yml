@@ -1,15 +1,34 @@
+# Core
 - name: Introduction
   href: introduction.md
 - name: Getting Started
   href: getting-started.md
+- name: Mathematical Concepts
+  href: concepts.md
+
+# Classes
 - name: Piecewise Chebyshev (Splines)
   href: spline.md
 - name: Sliding Technique
   href: slider.md
+
+# Operations
 - name: Advanced Usage
   href: advanced-usage.md
+- name: Computing Greeks
+  href: greeks.md
+- name: Chebyshev Algebra
+  href: algebra.md
+- name: Extrusion & Slicing
+  href: extrude-slice.md
+- name: Pre-computed Values
+  href: from-values.md
 - name: Calculus
   href: calculus.md
+- name: Error Estimation
+  href: error-estimation.md
+
+# Deployment
 - name: Serialization & Construction
   href: serialization.md
 - name: Performance

@@ -6,7 +6,7 @@ title: Advanced Usage
 
 ## Batch Evaluation
 
-Evaluate the interpolant at multiple points in a single call:
+Evaluate the interpolant at multiple points in a single call. Supported by `ChebyshevApproximation` (`VectorizedEvalBatch`) and `ChebyshevSpline` (`EvalBatch`). `ChebyshevSlider` does not support batch evaluation.
 
 ```csharp
 double[][] points = new[]
@@ -20,6 +20,19 @@ double[] values = cheb.VectorizedEvalBatch(points, new[] { 0, 0, 0 });
 ```
 
 `VectorizedEvalBatch` loops over points internally, calling `VectorizedEval` for each. It is 23x faster than Python's equivalent on 3D problems because the loop runs in JIT-compiled native code rather than the Python interpreter (see [Performance](performance.md)).
+
+## Evaluation Methods
+
+`ChebyshevApproximation` provides several evaluation methods for different use cases:
+
+| Method | Use case |
+|--------|----------|
+| `VectorizedEval` | Single point, single derivative order. BLAS-optimized; recommended for most uses. |
+| `Eval` | Same as `VectorizedEval` but uses loop-based contraction. Matches the Python `eval()` method. |
+| `VectorizedEvalBatch` | Multiple points, same derivative order. Loops over points with JIT-compiled code. |
+| `VectorizedEvalMulti` | Single point, multiple derivative orders (e.g., price + all Greeks). Shares barycentric weight computation across outputs. |
+
+`ChebyshevSpline` and `ChebyshevSlider` provide `Eval` and `EvalMulti` with the same signatures. `ChebyshevSpline` also supports `EvalBatch`.
 
 ## Multi-Output Evaluation
 

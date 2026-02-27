@@ -104,10 +104,13 @@ See [Serialization & Construction](serialization.md) for details on `Save`, `Loa
 
 ## Next Steps
 
+- [Mathematical Concepts](concepts.md) — theory behind Chebyshev interpolation, Bernstein ellipse, spectral convergence
 - [Piecewise Chebyshev Interpolation](spline.md) — handling discontinuities with ChebyshevSpline
 - [Sliding Technique](slider.md) — high-dimensional approximation with ChebyshevSlider
 - [Advanced Usage](advanced-usage.md) — batch/multi eval, extrusion, slicing, arithmetic operators
+- [Computing Greeks](greeks.md) — analytical derivatives for option Greeks
 - [Calculus](calculus.md) — integration, root-finding, minimization, maximization
+- [Error Estimation](error-estimation.md) — measuring interpolation accuracy via DCT-II
 - [Serialization & Construction](serialization.md) — save/load, FromValues, Nodes
 - [Performance](performance.md) — BLAS integration and benchmark results
 - [API Reference](../api/ChebyshevSharp.yml) — full class and method documentation

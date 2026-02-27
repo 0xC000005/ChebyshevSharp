@@ -79,7 +79,7 @@ Replace a slow Black-Scholes pricer with a fast Chebyshev interpolant that retur
 
 ```csharp
 var cheb = new ChebyshevApproximation(
-    function: BlackScholes.Price,
+    function: BsPrice,
     numDimensions: 3,
     domain: new[] {
         new[] { 80.0, 120.0 },   // spot
@@ -119,10 +119,15 @@ See [skip_csharp.txt](skip_csharp.txt) for detailed feature parity with PyChebys
 Full documentation is available at **[0xc000005.github.io/ChebyshevSharp](https://0xc000005.github.io/ChebyshevSharp/)**.
 
 - [Getting Started](https://0xc000005.github.io/ChebyshevSharp/docs/getting-started.html)
+- [Mathematical Concepts](https://0xc000005.github.io/ChebyshevSharp/docs/concepts.html)
 - [Piecewise Chebyshev (Splines)](https://0xc000005.github.io/ChebyshevSharp/docs/spline.html)
 - [Sliding Technique](https://0xc000005.github.io/ChebyshevSharp/docs/slider.html)
+- [Computing Greeks](https://0xc000005.github.io/ChebyshevSharp/docs/greeks.html)
+- [Chebyshev Algebra](https://0xc000005.github.io/ChebyshevSharp/docs/algebra.html)
 - [Advanced Usage](https://0xc000005.github.io/ChebyshevSharp/docs/advanced-usage.html)
 - [Calculus](https://0xc000005.github.io/ChebyshevSharp/docs/calculus.html)
+- [Error Estimation](https://0xc000005.github.io/ChebyshevSharp/docs/error-estimation.html)
+- [Serialization](https://0xc000005.github.io/ChebyshevSharp/docs/serialization.html)
 - [Performance](https://0xc000005.github.io/ChebyshevSharp/docs/performance.html)
 - [API Reference](https://0xc000005.github.io/ChebyshevSharp/api/ChebyshevSharp.html)
 

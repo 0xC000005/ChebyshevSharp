@@ -40,7 +40,7 @@ Sliding does **not** work well when:
 - High accuracy is required far from the pivot point.
 
 > **Alternative: Tensor Train.**
-> For general (non-separable) high-dimensional functions, consider `ChebyshevTT` (when available). TT-Cross captures cross-variable coupling that the sliding decomposition misses, at the cost of using finite differences for derivatives instead of analytical spectral differentiation.
+> For general (non-separable) high-dimensional functions, consider `ChebyshevTT` (not yet implemented in ChebyshevSharp -- Phase 4). TT-Cross captures cross-variable coupling that the sliding decomposition misses, at the cost of using finite differences for derivatives instead of analytical spectral differentiation.
 
 > **Choosing the partition.**
 > Group variables that have strong non-linear interactions together. For example, if $f = x_1^3 x_2^2 + x_3$, group $(x_1, x_2)$ in one slide and $x_3$ in another.
@@ -200,6 +200,12 @@ Both operands must have the same dimensions, domain, node counts, **partition**,
 | Function with discontinuities/singularities | `ChebyshevSpline` | $\text{pieces} \times \prod_i n_i$ |
 | High dimensions, additively separable | `ChebyshevSlider` | $\sum_g \prod_{i \in g} n_i$ |
 | High dimensions, general coupling | `ChebyshevTT` (planned) | $O(d \cdot n \cdot r^2)$ |
+
+> **Method availability.**
+> `ChebyshevSlider` does **not** support `Nodes()`, `FromValues()`, `EvalBatch()`,
+> `Integrate()`, `Roots()`, `Minimize()`, or `Maximize()`. These operations require the
+> full tensor grid, which the sliding decomposition avoids by design. Use
+> `ChebyshevApproximation` or `ChebyshevSpline` for these features.
 
 ## References
 

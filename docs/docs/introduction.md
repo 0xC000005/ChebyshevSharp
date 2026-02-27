@@ -40,8 +40,16 @@ For multi-dimensional problems, the function values are stored as an N-dimension
 A common application is replacing slow pricing models with fast Chebyshev interpolants. For example, a 3D Black-Scholes pricer (spot, volatility, maturity) with 15 x 12 x 10 = 1,800 nodes:
 
 ```csharp
+double BsPrice(double[] x, object? data)
+{
+    // Your Black-Scholes pricing model
+    double S = x[0], sigma = x[1], T = x[2];
+    // ... compute call price ...
+    return price;
+}
+
 var cheb = new ChebyshevApproximation(
-    function: BlackScholes.Price,
+    function: BsPrice,
     numDimensions: 3,
     domain: new[] {
         new[] { 80.0, 120.0 },   // spot
