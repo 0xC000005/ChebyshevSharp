@@ -26,7 +26,9 @@ The key to understanding why piecewise interpolation helps lies in the **Bernste
 
 For a function $f$ analytic in the interior of the **Bernstein ellipse** $\mathcal{E}_\rho$ -- the ellipse in the complex plane with foci at $\pm 1$ and semi-axis sum $\rho > 1$ -- the Chebyshev interpolation error on $[-1, 1]$ with $n$ nodes satisfies:
 
-$$\| f - p_n \|_\infty \leq \frac{2 M}{\rho^n (\rho - 1)}$$
+$$
+\| f - p_n \|_\infty \leq \frac{2 M}{\rho^n (\rho - 1)}
+$$
 
 where $M = \max_{z \in \mathcal{E}_\rho} |f(z)|$. The rate $\rho^{-n}$ is **exponential** in $n$ -- this is spectral convergence.
 
@@ -43,11 +45,15 @@ By placing a **knot** at $c$ and interpolating each sub-interval separately, eac
 
 Each piece has a large Bernstein ellipse parameter $\rho_k \gg 1$, and the error on piece $k$ with $n$ Chebyshev nodes is:
 
-$$E_k \leq \frac{2 M_k}{\rho_k^n (\rho_k - 1)}$$
+$$
+E_k \leq \frac{2 M_k}{\rho_k^n (\rho_k - 1)}
+$$
 
 where $M_k = \max_{z \in \mathcal{E}_{\rho_k}} |f(z)|$ on that piece's Bernstein ellipse. Because pieces cover disjoint sub-domains, the overall interpolation error is:
 
-$$\| f - \mathcal{S}_n f \|_\infty = \max_k \, E_k$$
+$$
+\| f - \mathcal{S}_n f \|_\infty = \max_k \, E_k
+$$
 
 This is exponential in $n$ -- **spectral convergence is restored**.
 
@@ -222,7 +228,9 @@ Console.WriteLine($"Error estimate: {error:E2}");
 
 Since pieces cover disjoint sub-domains, the interpolation error at any point is bounded by the error of the piece containing that point. The worst-case error is therefore the **maximum** over all pieces:
 
-$$\hat{E} = \max_k \hat{E}_k$$
+$$
+\hat{E} = \max_k \hat{E}_k
+$$
 
 This differs from `ChebyshevSlider`, where all slides contribute to every point and the error estimate is the **sum** over slides.
 
