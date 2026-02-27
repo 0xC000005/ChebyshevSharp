@@ -8,17 +8,21 @@ Polynomial interpolation with equally-spaced points suffers from **Runge's pheno
 
 Specifically, if a function f is analytic inside the Bernstein ellipse with parameter rho > 1, then the Chebyshev interpolant of degree n satisfies:
 
-    ||f - p_n||_inf  <=  C * rho^(-n)
+$$
+\| f - p_n \|_\infty \leq C \, \rho^{-n}
+$$
 
-where C depends on f but not on n. This exponential convergence means that 10-20 nodes per dimension typically suffice for 10-12 digit accuracy on smooth functions [1, Ch. 8].
+where $C$ depends on $f$ but not on $n$. This exponential convergence means that 10-20 nodes per dimension typically suffice for 10-12 digit accuracy on smooth functions [1, Ch. 8].
 
 ## How It Works
 
 ChebyshevSharp evaluates the Chebyshev interpolant using the **barycentric interpolation formula** [2]:
 
-    p(x) = sum_j [ w_j / (x - x_j) * f_j ] / sum_j [ w_j / (x - x_j) ]
+$$
+p(x) = \frac{\displaystyle\sum_j \frac{w_j}{x - x_j} f_j}{\displaystyle\sum_j \frac{w_j}{x - x_j}}
+$$
 
-where x_j are the Chebyshev nodes, f_j are the function values at those nodes, and w_j are the barycentric weights. This formula is numerically stable and evaluates in O(n) time.
+where $x_j$ are the Chebyshev nodes, $f_j$ are the function values at those nodes, and $w_j$ are the barycentric weights. This formula is numerically stable and evaluates in $O(n)$ time.
 
 For multi-dimensional problems, the function values are stored as an N-dimensional tensor and contracted one axis at a time — each contraction is a matrix-vector multiply routed through BLAS. Derivatives are computed analytically via spectral differentiation matrices [2], not finite differences.
 

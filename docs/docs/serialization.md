@@ -85,11 +85,13 @@ var nodeInfo = ChebyshevApproximation.Nodes(
 // nodeInfo.Shape       — tensor shape (int[], e.g., [15, 12, 10])
 ```
 
-ChebyshevSharp uses **Type I Chebyshev nodes** (roots of the Chebyshev polynomial T_n):
+ChebyshevSharp uses **Type I Chebyshev nodes** (roots of the Chebyshev polynomial $T_n$):
 
-    x_i = cos((2i - 1) * pi / (2n)),  for i = 1, ..., n
+$$
+x_i = \cos\!\left(\frac{(2i - 1)\,\pi}{2n}\right), \quad i = 1, \ldots, n
+$$
 
-These are mapped to the domain [a, b] via the affine transformation `node = (a + b) / 2 + (b - a) / 2 * x_i`. Nodes are stored in ascending order within each dimension (smallest first).
+These are mapped to the domain $[a, b]$ via the affine transformation $\text{node} = \tfrac{a+b}{2} + \tfrac{b-a}{2}\,x_i$. Nodes are stored in ascending order within each dimension (smallest first).
 
 Type I nodes avoid the endpoints of the interval. This is advantageous when the function has singularities or discontinuities at the boundary [1, Ch. 3].
 
