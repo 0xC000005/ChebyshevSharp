@@ -737,3 +737,118 @@ public class TestFromValuesEdgeCases
         Assert.True(Math.Abs(actual - expected) < 1e-10);
     }
 }
+
+// ======================================================================
+// C#-specific FromValues edge case tests
+// ======================================================================
+
+/// <summary>
+/// Additional edge cases for FromValues that exercise domain extremes
+/// and boundary evaluation. These complement the Python-ported tests
+/// with C#-specific concerns around floating-point domain mapping.
+/// </summary>
+public class TestFromValuesCSharpEdgeCases
+{
+    /// <summary>
+    /// FromValues with a fully negative domain [-5, -1] should produce
+    /// correct interpolation results.
+    /// </summary>
+    [Fact]
+    public void Test_from_values_negative_domain()
+    {
+        var info = ChebyshevApproximation.Nodes(
+            1, new[] { new[] { -5.0, -1.0 } }, new[] { 15 });
+
+        double[] values = new double[info.FullGrid.Length];
+        for (int i = 0; i < info.FullGrid.Length; i++)
+            values[i] = Math.Exp(info.FullGrid[i][0]);
+
+        var cheb = ChebyshevApproximation.FromValues(
+            values, 1, new[] { new[] { -5.0, -1.0 } }, new[] { 15 });
+
+        double testX = -3.0;
+        double expected = Math.Exp(testX);
+        double actual = cheb.VectorizedEval(new[] { testX }, new[] { 0 });
+        TestFixtures.AssertClose(expected, actual, rtol: 1e-10);
+    }
+
+    /// <summary>
+    /// FromValues with a wide domain [0, 1000] should produce correct
+    /// interpolation results when using a smooth target function.
+    /// </summary>
+    [Fact]
+    public void Test_from_values_wide_domain()
+    {
+        var info = ChebyshevApproximation.Nodes(
+            1, new[] { new[] { 0.0, 1000.0 } }, new[] { 20 });
+
+        // Use a polynomial that is smooth across the wide domain
+        double[] values = new double[info.FullGrid.Length];
+        for (int i = 0; i < info.FullGrid.Length; i++)
+        {
+            double x = info.FullGrid[i][0] / 1000.0;
+            values[i] = x * x - x + 0.25; // (x/1000)^2 - (x/1000) + 0.25
+        }
+
+        var cheb = ChebyshevApproximation.FromValues(
+            values, 1, new[] { new[] { 0.0, 1000.0 } }, new[] { 20 });
+
+        double testX = 500.0;
+        double xNorm = testX / 1000.0;
+        double expected = xNorm * xNorm - xNorm + 0.25;
+        double actual = cheb.VectorizedEval(new[] { testX }, new[] { 0 });
+        TestFixtures.AssertClose(expected, actual, rtol: 1e-10);
+    }
+
+    /// <summary>
+    /// FromValues with a very tight domain [0.999, 1.001] should produce
+    /// correct interpolation despite the tiny range.
+    /// </summary>
+    [Fact]
+    public void Test_from_values_tight_domain()
+    {
+        var info = ChebyshevApproximation.Nodes(
+            1, new[] { new[] { 0.999, 1.001 } }, new[] { 10 });
+
+        double[] values = new double[info.FullGrid.Length];
+        for (int i = 0; i < info.FullGrid.Length; i++)
+            values[i] = Math.Exp(info.FullGrid[i][0]);
+
+        var cheb = ChebyshevApproximation.FromValues(
+            values, 1, new[] { new[] { 0.999, 1.001 } }, new[] { 10 });
+
+        double testX = 1.0;
+        double expected = Math.Exp(testX);
+        double actual = cheb.VectorizedEval(new[] { testX }, new[] { 0 });
+        TestFixtures.AssertClose(expected, actual, rtol: 1e-12);
+    }
+
+    /// <summary>
+    /// Evaluation at exact domain boundary points after FromValues should
+    /// produce correct results without numerical instability.
+    /// </summary>
+    [Fact]
+    public void Test_from_values_boundary_eval()
+    {
+        double lo = 2.0, hi = 5.0;
+        var info = ChebyshevApproximation.Nodes(
+            1, new[] { new[] { lo, hi } }, new[] { 15 });
+
+        double[] values = new double[info.FullGrid.Length];
+        for (int i = 0; i < info.FullGrid.Length; i++)
+            values[i] = Math.Log(info.FullGrid[i][0]);
+
+        var cheb = ChebyshevApproximation.FromValues(
+            values, 1, new[] { new[] { lo, hi } }, new[] { 15 });
+
+        // Left boundary
+        double leftExpected = Math.Log(lo);
+        double leftActual = cheb.VectorizedEval(new[] { lo }, new[] { 0 });
+        TestFixtures.AssertClose(leftExpected, leftActual, rtol: 0, atol: 1e-10);
+
+        // Right boundary
+        double rightExpected = Math.Log(hi);
+        double rightActual = cheb.VectorizedEval(new[] { hi }, new[] { 0 });
+        TestFixtures.AssertClose(rightExpected, rightActual, rtol: 0, atol: 1e-10);
+    }
+}

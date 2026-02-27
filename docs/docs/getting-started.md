@@ -90,10 +90,20 @@ double val = restored.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 0 });
 
 See [Serialization & Construction](serialization.md) for details on `Save`, `Load`, `FromValues`, and `Nodes`.
 
+## Choosing the Right Class
+
+| Scenario | Class |
+|----------|-------|
+| Smooth function on a single domain | `ChebyshevApproximation` |
+| Function with known discontinuities or singularities | `ChebyshevSpline` — place knots at trouble points for spectral convergence on each piece |
+
+`ChebyshevSpline` supports the same API as `ChebyshevApproximation` (eval, derivatives, batch, multi, save/load, arithmetic, extrusion, slicing, integration, roots, optimization). See [Piecewise Chebyshev Interpolation](spline.md) for a full guide.
+
 ## Next Steps
 
+- [Piecewise Chebyshev Interpolation](spline.md) — handling discontinuities with ChebyshevSpline
 - [Advanced Usage](advanced-usage.md) — batch/multi eval, extrusion, slicing, arithmetic operators
 - [Calculus](calculus.md) — integration, root-finding, minimization, maximization
 - [Serialization & Construction](serialization.md) — save/load, FromValues, Nodes
 - [Performance](performance.md) — BLAS integration and benchmark results
-- [API Reference](../api/ChebyshevSharp.html) — full class and method documentation
+- [API Reference](../api/ChebyshevSharp.yml) — full class and method documentation

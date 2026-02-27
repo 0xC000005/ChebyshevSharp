@@ -636,4 +636,208 @@ public class TestExtrudeSliceEdgeCases
         double refVal = Cheb2D.VectorizedEval(new[] { 0.5, 0.4 }, new[] { 0, 0 });
         Assert.True(Math.Abs(results[0] - refVal) < 1e-10);
     }
+
+    [Fact]
+    public void Spline_slice_at_knot()
+    {
+        // Slice a 2D spline (extruded from 1D |x|) at exact knot value.
+        var spAbs1D = TestFixtures.SplineAbs1D;
+        var sp2 = spAbs1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+        // Slice dim 0 at the knot x=0
+        var sp1 = sp2.Slice((0, 0.0));
+        Assert.Equal(1, sp1.NumDimensions);
+        // |0| = 0, so value should be ~0 everywhere in new dim
+        foreach (double y in new[] { 0.0, 2.5, 5.0 })
+        {
+            double val = sp1.Eval(new[] { y }, new[] { 0 });
+            Assert.True(Math.Abs(val) < 1e-10);
+        }
+    }
+}
+
+// ======================================================================
+// TestSplineExtrude (ported from Python TestSplineExtrude)
+// ======================================================================
+
+public class TestSplineExtrude
+{
+    private static ChebyshevSpline SpAbs1D => TestFixtures.SplineAbs1D;
+
+    [Fact]
+    public void Spline_extrude_basic()
+    {
+        // Extrude 1D spline -> 2D.
+        var sp2 = SpAbs1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+        Assert.Equal(2, sp2.NumDimensions);
+        Assert.Equal(new[] { 15, 9 }, sp2.NNodes);
+    }
+
+    [Fact]
+    public void Spline_extrude_knots_preserved()
+    {
+        // Original knots unchanged, new dim has empty knots.
+        var sp2 = SpAbs1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+        Assert.Equal(new[] { 0.0 }, sp2.Knots[0]); // original
+        Assert.Empty(sp2.Knots[1]); // new dim
+    }
+
+    [Fact]
+    public void Spline_extrude_pieces_count()
+    {
+        // Number of pieces unchanged (multiplied by 1 for new knotless dim).
+        var sp2 = SpAbs1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+        Assert.Equal(SpAbs1D.NumPieces, sp2.NumPieces);
+    }
+
+    [Fact]
+    public void Spline_extrude_value_preserved()
+    {
+        // Evaluations match original regardless of new coordinate.
+        var sp2 = SpAbs1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+        foreach (double x in new[] { -0.8, -0.3, 0.0, 0.3, 0.8 })
+        {
+            double orig = SpAbs1D.Eval(new[] { x }, new[] { 0 });
+            foreach (double y in new[] { 0.0, 2.5, 5.0 })
+            {
+                double ext = sp2.Eval(new[] { x, y }, new[] { 0, 0 });
+                Assert.True(Math.Abs(ext - orig) < 1e-10,
+                    $"Value mismatch at ({x}, {y}): {ext} vs {orig}");
+            }
+        }
+    }
+
+    [Fact]
+    public void Spline_extrude_derivative_new_dim_zero()
+    {
+        // Derivative along new dim is zero.
+        var sp2 = SpAbs1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+        foreach (double x in new[] { 0.3, 0.8 }) // avoid knot at 0
+        {
+            double deriv = sp2.Eval(new[] { x, 2.5 }, new[] { 0, 1 });
+            Assert.True(Math.Abs(deriv) < 1e-10);
+        }
+    }
+}
+
+// ======================================================================
+// TestSplineSlice (ported from Python TestSplineSlice)
+// ======================================================================
+
+public class TestSplineSlice
+{
+    private static ChebyshevSpline SpBs2D => TestFixtures.SplineBs2D;
+
+    [Fact]
+    public void Spline_slice_basic()
+    {
+        // Slice 2D spline -> 1D.
+        double sFixed = 95.0;
+        var sp1 = SpBs2D.Slice((0, sFixed));
+        Assert.Equal(1, sp1.NumDimensions);
+    }
+
+    [Fact]
+    public void Spline_slice_piece_reduction()
+    {
+        // After slicing, we keep only pieces from the interval containing the value.
+        // spline_bs_2d has knots [[100.0], []], domain [[80,120],[0.25,1.0]]
+        // Slicing dim 0 at S=95 -> picks the left piece (80-100)
+        var sp1 = SpBs2D.Slice((0, 95.0));
+        // Original had 2 pieces along dim 0 (knot at 100), 1 along dim 1
+        // After slicing dim 0, should have 1 piece
+        Assert.Equal(1, sp1.NumPieces);
+    }
+
+    [Fact]
+    public void Spline_slice_value_matches()
+    {
+        // Evaluation matches direct 2D eval at sliced point.
+        double sFixed = 95.0;
+        var sp1 = SpBs2D.Slice((0, sFixed));
+        foreach (double t in new[] { 0.3, 0.5, 0.8 })
+        {
+            double exact = SpBs2D.Eval(new[] { sFixed, t }, new[] { 0, 0 });
+            double sliced = sp1.Eval(new[] { t }, new[] { 0 });
+            Assert.True(Math.Abs(sliced - exact) < 1e-10,
+                $"Spline slice mismatch at T={t}: {sliced} vs {exact}");
+        }
+    }
+
+    [Fact]
+    public void Spline_slice_knots_preserved()
+    {
+        // Remaining knots unchanged after slicing.
+        var sp1 = SpBs2D.Slice((0, 95.0));
+        Assert.Single(sp1.Knots);
+        Assert.Empty(sp1.Knots[0]); // dim 1's knots were []
+    }
+
+    [Fact]
+    public void Spline_slice_serialization()
+    {
+        // Save/load round-trip works.
+        var sp1 = SpBs2D.Slice((0, 95.0));
+        string path = Path.Combine(Path.GetTempPath(), $"spline_slice_test_{Guid.NewGuid()}.json");
+        try
+        {
+            sp1.Save(path);
+            var loaded = ChebyshevSpline.Load(path);
+            double valOrig = sp1.Eval(new[] { 0.5 }, new[] { 0 });
+            double valLoaded = loaded.Eval(new[] { 0.5 }, new[] { 0 });
+            Assert.True(Math.Abs(valOrig - valLoaded) < 1e-15);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+}
+
+// ======================================================================
+// C#-Specific: Spline Extrude/Slice Edge Cases
+// ======================================================================
+
+/// <summary>
+/// C#-specific extrude/slice edge case tests for ChebyshevSpline.
+/// </summary>
+public class TestSplineExtrudeSliceCSharpEdgeCases
+{
+    [Fact]
+    public void Test_extrude_spline_preserves_knots()
+    {
+        // Extruding a 1D spline with knot at 0 should:
+        // - Preserve the existing knot [0.0] for dim 0
+        // - Add an empty knot list for the new dim
+        var sp1D = TestFixtures.SplineAbs1D;
+        var sp2D = sp1D.Extrude((1, new[] { 0.0, 5.0 }, 9));
+
+        Assert.Equal(2, sp2D.Knots.Length);
+        Assert.Equal(new[] { 0.0 }, sp2D.Knots[0]); // original knots preserved
+        Assert.Empty(sp2D.Knots[1]); // new dim has no knots
+    }
+
+    [Fact]
+    public void Test_slice_spline_at_knot_value()
+    {
+        // Slicing a 2D spline (with knots along dim 0) at a knot value
+        // in that dimension should succeed and remove the knot dimension.
+        // spline_bs_2d has knots [[100.0], []], domain [[80,120],[0.25,1.0]]
+        var sp2D = TestFixtures.SplineBs2D;
+
+        // Slice dim 0 at the knot value S=100
+        var sp1D = sp2D.Slice((0, 100.0));
+
+        Assert.Equal(1, sp1D.NumDimensions);
+        // The remaining dim's knots (originally dim 1) should be empty
+        Assert.Single(sp1D.Knots);
+        Assert.Empty(sp1D.Knots[0]);
+
+        // At S=100, max(S-100, 0)*exp(-rT) = 0 for all T
+        foreach (double t in new[] { 0.3, 0.5, 0.8 })
+        {
+            double val = sp1D.Eval(new[] { t }, new[] { 0 });
+            Assert.True(Math.Abs(val) < 1e-8,
+                $"Expected ~0 at T={t} (S=100 is at the kink), got {val}");
+        }
+    }
 }

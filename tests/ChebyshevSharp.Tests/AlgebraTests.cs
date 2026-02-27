@@ -570,3 +570,369 @@ public class TestPortfolioUseCase
         }
     }
 }
+
+// ================================================================
+// TestSplineArithmetic (ported from Python TestSplineArithmetic)
+// ================================================================
+
+public class TestSplineArithmetic
+{
+    private static ChebyshevSpline SF => TestFixtures.AlgebraSplineF; // |x|
+    private static ChebyshevSpline SG => TestFixtures.AlgebraSplineG; // x^2
+
+    // Test points in both pieces (x < 0 and x > 0) within [-1, 1] domain
+    private static readonly double[] SplinePts = { -0.8, -0.5, -0.2, 0.2, 0.5, 0.8 };
+
+    [Fact]
+    public void Spline_AddValues()
+    {
+        var c = SF + SG;
+        foreach (double x in SplinePts)
+        {
+            double exact = Math.Abs(x) + x * x;
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10,
+                $"Spline add failed at {x}");
+        }
+    }
+
+    [Fact]
+    public void Spline_AddDerivative()
+    {
+        // d/dx(|x| + x^2) on right side = 1 + 2x
+        var c = SF + SG;
+        foreach (double x in new[] { 0.2, 0.5, 0.8 })
+        {
+            double exact = 1.0 + 2.0 * x;
+            double approx = c.Eval(new[] { x }, new[] { 1 });
+            Assert.True(Math.Abs(approx - exact) < 1e-8,
+                $"Spline deriv failed at {x}");
+        }
+    }
+
+    [Fact]
+    public void Spline_SubValues()
+    {
+        var c = SF - SG;
+        foreach (double x in SplinePts)
+        {
+            double exact = Math.Abs(x) - x * x;
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_MulScalar()
+    {
+        var c = 2.5 * SF;
+        foreach (double x in SplinePts)
+        {
+            double exact = 2.5 * Math.Abs(x);
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_Neg()
+    {
+        var c = -SF;
+        foreach (double x in SplinePts)
+        {
+            double exact = -Math.Abs(x);
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_TruedivScalar()
+    {
+        var c = SF / 2.0;
+        foreach (double x in SplinePts)
+        {
+            double exact = Math.Abs(x) / 2.0;
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_RmulScalar()
+    {
+        var c1 = 2.5 * SF;
+        var c2 = SF * 2.5;
+        foreach (double x in SplinePts)
+        {
+            double v1 = c1.Eval(new[] { x }, new[] { 0 });
+            double v2 = c2.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(v1 - v2) < 1e-15);
+        }
+    }
+
+    [Fact]
+    public void Spline_Isub()
+    {
+        var c = 1.0 * SF;
+        c = c - SG;
+        foreach (double x in new[] { -0.5, 0.5 })
+        {
+            double exact = Math.Abs(x) - x * x;
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_Itruediv()
+    {
+        var c = 1.0 * SF;
+        c = c / 2.0;
+        foreach (double x in new[] { -0.5, 0.5 })
+        {
+            double exact = Math.Abs(x) / 2.0;
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_EvalBatch()
+    {
+        var c = SF + SG;
+        double[][] pts = SplinePts.Select(x => new[] { x }).ToArray();
+        double[] batchVals = c.EvalBatch(pts, new[] { 0 });
+        for (int i = 0; i < SplinePts.Length; i++)
+        {
+            double single = c.Eval(new[] { SplinePts[i] }, new[] { 0 });
+            Assert.True(Math.Abs(batchVals[i] - single) < 1e-14);
+        }
+    }
+
+    [Fact]
+    public void Spline_DifferentKnotsRaises()
+    {
+        // Splines with different knots cannot be combined.
+        var s2 = new ChebyshevSpline(
+            (x, _) => x[0] * x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.5 } });
+        s2.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() => { var _ = SF + s2; });
+        Assert.Matches("[Kk]not", ex.Message);
+    }
+
+    [Fact]
+    public void Spline_ResultErrorEstimate()
+    {
+        var c = SF + SG;
+        Assert.True(c.ErrorEstimate() >= 0);
+    }
+
+    [Fact]
+    public void Spline_ResultNumPieces()
+    {
+        var c = SF + SG;
+        Assert.Equal(SF.NumPieces, c.NumPieces);
+    }
+}
+
+// ================================================================
+// TestSplineExtended (ported from Python TestSplineExtended)
+// ================================================================
+
+public class TestSplineExtended
+{
+    private static ChebyshevSpline SF => TestFixtures.AlgebraSplineF;
+    private static ChebyshevSpline SG => TestFixtures.AlgebraSplineG;
+
+    [Fact]
+    public void Spline_Iadd()
+    {
+        var c = 1.0 * SF;
+        c = c + SG;
+        foreach (double x in new[] { -0.5, 0.5 })
+        {
+            double exact = Math.Abs(x) + x * x;
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_Imul()
+    {
+        var c = 1.0 * SF;
+        c = c * 3.0;
+        foreach (double x in new[] { -0.5, 0.5 })
+        {
+            double exact = 3.0 * Math.Abs(x);
+            double approx = c.Eval(new[] { x }, new[] { 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Spline_Serializable()
+    {
+        var c = SF + SG;
+        string path = Path.Combine(Path.GetTempPath(), $"spline_algebra_test_{Guid.NewGuid()}.json");
+        try
+        {
+            c.Save(path);
+            var loaded = ChebyshevSpline.Load(path);
+            double vOrig = c.Eval(new[] { 0.5 }, new[] { 0 });
+            double vLoaded = loaded.Eval(new[] { 0.5 }, new[] { 0 });
+            Assert.True(Math.Abs(vOrig - vLoaded) < 1e-15);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Spline_Repr()
+    {
+        var c = SF + SG;
+        string r = c.ToReprString();
+        Assert.Contains("built=True", r);
+        Assert.Contains("ChebyshevSpline", r);
+    }
+}
+
+// ================================================================
+// TestSplineCompatibility (ported from Python TestCompatibility spline tests)
+// ================================================================
+
+public class TestSplineCompatibility
+{
+    [Fact]
+    public void UnbuiltSplineRaises()
+    {
+        var a = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        var b = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        b.Build(verbose: false);
+        var ex = Assert.Throws<InvalidOperationException>(() => { var _ = a + b; });
+        Assert.Contains("not built", ex.Message);
+    }
+}
+
+// ================================================================
+// C#-Specific: Spline Arithmetic Edge Cases
+// ================================================================
+
+/// <summary>
+/// C#-specific spline arithmetic edge case tests not in the Python baseline.
+/// </summary>
+public class TestSplineArithmeticCSharpEdgeCases
+{
+    [Fact]
+    public void Test_spline_add_different_knots_throws()
+    {
+        // Two splines on the same domain but with different knot positions.
+        var s1 = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        s1.Build(verbose: false);
+
+        var s2 = new ChebyshevSpline(
+            (x, _) => x[0] * x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.5 } });
+        s2.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() => { var _ = s1 + s2; });
+        Assert.Matches("[Kk]not", ex.Message);
+    }
+
+    [Fact]
+    public void Test_spline_divide_by_zero_scalar()
+    {
+        // Division by 0.0 should produce Infinity values, not throw.
+        var sp = TestFixtures.AlgebraSplineF;
+        var result = sp / 0.0;
+
+        // Evaluate at a point where |x| > 0 (non-zero value)
+        double val = result.Eval(new[] { 0.5 }, new[] { 0 });
+        Assert.True(double.IsInfinity(val),
+            $"Expected Infinity from division by zero, got {val}");
+    }
+
+    [Fact]
+    public void Test_spline_subtract_self_exactly_zero()
+    {
+        var sp = TestFixtures.AlgebraSplineF;
+        var diff = sp - sp;
+
+        // Evaluate at non-knot points
+        foreach (double x in new[] { -0.8, -0.3, 0.2, 0.5, 0.9 })
+        {
+            double val = diff.Eval(new[] { x }, new[] { 0 });
+            Assert.Equal(0.0, val);
+        }
+    }
+}
+
+// ================================================================
+// C#-specific tests: Arithmetic Edge Cases
+// ================================================================
+
+/// <summary>
+/// Tests for arithmetic edge cases with special floating-point values.
+/// These are C#-specific concerns around IEEE 754 behavior that don't
+/// exist in the Python baseline.
+/// </summary>
+public class TestArithmeticEdgeCases
+{
+    private static ChebyshevApproximation F => TestFixtures.AlgebraChebF;
+
+    /// <summary>
+    /// Dividing by zero scalar should produce Infinity values in the tensor
+    /// (not throw an exception), consistent with IEEE 754 behavior.
+    /// </summary>
+    [Fact]
+    public void Test_divide_by_zero_scalar()
+    {
+        var c = F / 0.0;
+        double[] p = { 0.5, 0.3 };
+        double val = c.VectorizedEval(p, new[] { 0, 0 });
+        Assert.True(double.IsInfinity(val) || double.IsNaN(val),
+            $"Expected Infinity or NaN, got {val}");
+    }
+
+    /// <summary>
+    /// Multiplying by NaN should produce NaN values in the result.
+    /// </summary>
+    [Fact]
+    public void Test_multiply_by_nan()
+    {
+        var c = F * double.NaN;
+        double[] p = { 0.5, 0.3 };
+        double val = c.VectorizedEval(p, new[] { 0, 0 });
+        Assert.True(double.IsNaN(val), $"Expected NaN, got {val}");
+    }
+
+    /// <summary>
+    /// (f - f) evaluated at any point should give exactly 0.0.
+    /// This verifies pointwise cancellation produces exact zeros in TensorValues.
+    /// </summary>
+    [Fact]
+    public void Test_subtract_self_exactly_zero()
+    {
+        var c = F - F;
+        foreach (var p in AlgebraHelpers.TestPoints2D)
+        {
+            double val = c.VectorizedEval(p, new[] { 0, 0 });
+            Assert.Equal(0.0, val);
+        }
+    }
+}

@@ -5,6 +5,10 @@ items:
   id: ChebyshevSharp
   children:
   - ChebyshevSharp.ChebyshevApproximation
+  - ChebyshevSharp.ChebyshevSpline
+  - ChebyshevSharp.NodeInfo
+  - ChebyshevSharp.SplineNodeInfo
+  - ChebyshevSharp.SplinePieceNodeInfo
   langs:
   - csharp
   - vb
@@ -17,7 +21,41 @@ items:
 references:
 - uid: ChebyshevSharp.ChebyshevApproximation
   commentId: T:ChebyshevSharp.ChebyshevApproximation
+  parent: ChebyshevSharp
   href: ChebyshevSharp.ChebyshevApproximation.html
   name: ChebyshevApproximation
   nameWithType: ChebyshevApproximation
   fullName: ChebyshevSharp.ChebyshevApproximation
+- uid: ChebyshevSharp.NodeInfo
+  commentId: T:ChebyshevSharp.NodeInfo
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.NodeInfo.html
+  name: NodeInfo
+  nameWithType: NodeInfo
+  fullName: ChebyshevSharp.NodeInfo
+- uid: ChebyshevSharp.ChebyshevSpline
+  commentId: T:ChebyshevSharp.ChebyshevSpline
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevSpline.html
+  name: ChebyshevSpline
+  nameWithType: ChebyshevSpline
+  fullName: ChebyshevSharp.ChebyshevSpline
+- uid: ChebyshevSharp.SplinePieceNodeInfo
+  commentId: T:ChebyshevSharp.SplinePieceNodeInfo
+  href: ChebyshevSharp.SplinePieceNodeInfo.html
+  name: SplinePieceNodeInfo
+  nameWithType: SplinePieceNodeInfo
+  fullName: ChebyshevSharp.SplinePieceNodeInfo
+- uid: ChebyshevSharp.SplineNodeInfo
+  commentId: T:ChebyshevSharp.SplineNodeInfo
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.SplineNodeInfo.html
+  name: SplineNodeInfo
+  nameWithType: SplineNodeInfo
+  fullName: ChebyshevSharp.SplineNodeInfo
+- uid: ChebyshevSharp
+  commentId: N:ChebyshevSharp
+  href: ChebyshevSharp.html
+  name: ChebyshevSharp
+  nameWithType: ChebyshevSharp
+  fullName: ChebyshevSharp

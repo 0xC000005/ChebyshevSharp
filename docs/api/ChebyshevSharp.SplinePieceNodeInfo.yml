@@ -1,0 +1,524 @@
+### YamlMime:ManagedReference
+items:
+- uid: ChebyshevSharp.SplinePieceNodeInfo
+  commentId: T:ChebyshevSharp.SplinePieceNodeInfo
+  id: SplinePieceNodeInfo
+  parent: ChebyshevSharp
+  children:
+  - ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+  - ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+  - ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
+  - ChebyshevSharp.SplinePieceNodeInfo.Shape
+  - ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  langs:
+  - csharp
+  - vb
+  name: SplinePieceNodeInfo
+  nameWithType: SplinePieceNodeInfo
+  fullName: ChebyshevSharp.SplinePieceNodeInfo
+  type: Class
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SplinePieceNodeInfo
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1475
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Node information for a single piece of a spline.
+  example: []
+  syntax:
+    content: public class SplinePieceNodeInfo
+    content.vb: Public Class SplinePieceNodeInfo
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
+  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
+  id: PieceIndex
+  parent: ChebyshevSharp.SplinePieceNodeInfo
+  langs:
+  - csharp
+  - vb
+  name: PieceIndex
+  nameWithType: SplinePieceNodeInfo.PieceIndex
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: PieceIndex
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1478
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Multi-index of this piece.
+  example: []
+  syntax:
+    content: public int[] PieceIndex { get; set; }
+    parameters: []
+    return:
+      type: System.Int32[]
+    content.vb: Public Property PieceIndex As Integer()
+  overload: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex*
+- uid: ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  id: SubDomain
+  parent: ChebyshevSharp.SplinePieceNodeInfo
+  langs:
+  - csharp
+  - vb
+  name: SubDomain
+  nameWithType: SplinePieceNodeInfo.SubDomain
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SubDomain
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1480
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Sub-domain bounds for this piece.
+  example: []
+  syntax:
+    content: public double[][] SubDomain { get; set; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property SubDomain As Double()()
+  overload: ChebyshevSharp.SplinePieceNodeInfo.SubDomain*
+- uid: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+  id: NodesPerDim
+  parent: ChebyshevSharp.SplinePieceNodeInfo
+  langs:
+  - csharp
+  - vb
+  name: NodesPerDim
+  nameWithType: SplinePieceNodeInfo.NodesPerDim
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NodesPerDim
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1482
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Per-dimension node arrays.
+  example: []
+  syntax:
+    content: public double[][] NodesPerDim { get; set; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property NodesPerDim As Double()()
+  overload: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim*
+- uid: ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+  id: FullGrid
+  parent: ChebyshevSharp.SplinePieceNodeInfo
+  langs:
+  - csharp
+  - vb
+  name: FullGrid
+  nameWithType: SplinePieceNodeInfo.FullGrid
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: FullGrid
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1484
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Full Cartesian product grid.
+  example: []
+  syntax:
+    content: public double[][] FullGrid { get; set; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property FullGrid As Double()()
+  overload: ChebyshevSharp.SplinePieceNodeInfo.FullGrid*
+- uid: ChebyshevSharp.SplinePieceNodeInfo.Shape
+  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.Shape
+  id: Shape
+  parent: ChebyshevSharp.SplinePieceNodeInfo
+  langs:
+  - csharp
+  - vb
+  name: Shape
+  nameWithType: SplinePieceNodeInfo.Shape
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.Shape
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Shape
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1486
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Tensor shape.
+  example: []
+  syntax:
+    content: public int[] Shape { get; set; }
+    parameters: []
+    return:
+      type: System.Int32[]
+    content.vb: Public Property Shape As Integer()
+  overload: ChebyshevSharp.SplinePieceNodeInfo.Shape*
+references:
+- uid: ChebyshevSharp
+  commentId: N:ChebyshevSharp
+  href: ChebyshevSharp.html
+  name: ChebyshevSharp
+  nameWithType: ChebyshevSharp
+  fullName: ChebyshevSharp
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex*
+  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
+  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_PieceIndex
+  name: PieceIndex
+  nameWithType: SplinePieceNodeInfo.PieceIndex
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
+- uid: System.Int32[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int[]
+  nameWithType: int[]
+  fullName: int[]
+  nameWithType.vb: Integer()
+  fullName.vb: Integer()
+  name.vb: Integer()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.SplinePieceNodeInfo.SubDomain*
+  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_SubDomain
+  name: SubDomain
+  nameWithType: SplinePieceNodeInfo.SubDomain
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+- uid: System.Double[][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double[][]
+  nameWithType: double[][]
+  fullName: double[][]
+  nameWithType.vb: Double()()
+  fullName.vb: Double()()
+  name.vb: Double()()
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim*
+  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_NodesPerDim
+  name: NodesPerDim
+  nameWithType: SplinePieceNodeInfo.NodesPerDim
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+- uid: ChebyshevSharp.SplinePieceNodeInfo.FullGrid*
+  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_FullGrid
+  name: FullGrid
+  nameWithType: SplinePieceNodeInfo.FullGrid
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+- uid: ChebyshevSharp.SplinePieceNodeInfo.Shape*
+  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.Shape
+  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_Shape
+  name: Shape
+  nameWithType: SplinePieceNodeInfo.Shape
+  fullName: ChebyshevSharp.SplinePieceNodeInfo.Shape

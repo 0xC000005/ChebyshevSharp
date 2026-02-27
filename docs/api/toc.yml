@@ -7,4 +7,16 @@ items:
   - uid: ChebyshevSharp.ChebyshevApproximation
     name: ChebyshevApproximation
     type: Class
+  - uid: ChebyshevSharp.ChebyshevSpline
+    name: ChebyshevSpline
+    type: Class
+  - uid: ChebyshevSharp.NodeInfo
+    name: NodeInfo
+    type: Class
+  - uid: ChebyshevSharp.SplineNodeInfo
+    name: SplineNodeInfo
+    type: Class
+  - uid: ChebyshevSharp.SplinePieceNodeInfo
+    name: SplinePieceNodeInfo
+    type: Class
 memberLayout: SamePage

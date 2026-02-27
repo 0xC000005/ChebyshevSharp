@@ -621,3 +621,302 @@ public class TestCoverageGaps
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// C#-specific tests: Null Safety
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Tests for null argument handling in evaluation methods.
+/// These are C#-specific concerns that do not exist in the Python baseline.
+/// </summary>
+public class TestNullSafety
+{
+    /// <summary>
+    /// VectorizedEval with null derivativeOrder should throw.
+    /// </summary>
+    [Fact]
+    public void Test_null_derivative_order_in_eval()
+    {
+        var cheb = TestFixtures.ChebSin3D;
+        Assert.ThrowsAny<NullReferenceException>(() =>
+            cheb.VectorizedEval([0.1, 0.3, 1.7], null!));
+    }
+
+    /// <summary>
+    /// VectorizedEval with null point should throw.
+    /// </summary>
+    [Fact]
+    public void Test_null_point_in_eval()
+    {
+        var cheb = TestFixtures.ChebSin3D;
+        Assert.ThrowsAny<NullReferenceException>(() =>
+            cheb.VectorizedEval(null!, [0, 0, 0]));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// C#-specific tests: Boundary Validation
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Tests for argument validation on point dimensions, derivative orders,
+/// and domain configuration. C#-specific because these rely on .NET
+/// exception types and array bounds checking.
+/// </summary>
+public class TestBoundaryValidation
+{
+    /// <summary>
+    /// VectorizedEval with a point of wrong dimension should throw.
+    /// </summary>
+    [Fact]
+    public void Test_eval_point_wrong_dimension()
+    {
+        var cheb = TestFixtures.ChebSin3D; // 3D interpolant
+        // Point has 2 dimensions instead of 3
+        Assert.ThrowsAny<Exception>(() =>
+            cheb.VectorizedEval([0.1, 0.3], [0, 0, 0]));
+    }
+
+    /// <summary>
+    /// VectorizedEval with derivativeOrder of wrong length should throw.
+    /// </summary>
+    [Fact]
+    public void Test_derivative_order_wrong_length()
+    {
+        var cheb = TestFixtures.ChebSin3D; // 3D interpolant
+        // derivativeOrder has 2 elements instead of 3
+        Assert.ThrowsAny<Exception>(() =>
+            cheb.VectorizedEval([0.1, 0.3, 1.7], [0, 0]));
+    }
+
+    /// <summary>
+    /// VectorizedEval with negative derivative order silently behaves like
+    /// derivative order 0, because the implementation guards with
+    /// <c>if (deriv &gt; 0)</c>. This test documents that behavior.
+    /// </summary>
+    [Fact]
+    public void Test_negative_derivative_order_behaves_like_zero()
+    {
+        var cheb = TestFixtures.ChebSin3D;
+        double valueWithNeg = cheb.VectorizedEval([0.1, 0.3, 1.7], [-1, 0, 0]);
+        double valueWithZero = cheb.VectorizedEval([0.1, 0.3, 1.7], [0, 0, 0]);
+        Assert.Equal(valueWithZero, valueWithNeg);
+    }
+
+    /// <summary>
+    /// Constructor with domain where lo == hi should cause an error
+    /// when passed to FromValues (which validates domain bounds).
+    /// </summary>
+    [Fact]
+    public void Test_domain_lo_equals_hi_throws()
+    {
+        // FromValues validates domain lo &lt; hi
+        Assert.ThrowsAny<ArgumentException>(() =>
+            ChebyshevApproximation.FromValues(
+                new double[] { 1.0, 1.0, 1.0, 1.0, 1.0 },
+                1, [new[] { 1.0, 1.0 }], [5]));
+    }
+
+    /// <summary>
+    /// nNodes = [1] is degenerate but should still work for constant interpolation.
+    /// Evaluation at the domain midpoint should return the single node value.
+    /// </summary>
+    [Fact]
+    public void Test_single_node_per_dimension()
+    {
+        static double f(double[] x, object? _) => 42.0;
+        var cheb = new ChebyshevApproximation(f, 1, [new[] { 0.0, 1.0 }], [1]);
+        cheb.Build(verbose: false);
+        double val = cheb.VectorizedEval([0.5], [0]);
+        TestFixtures.AssertClose(42.0, val, rtol: 1e-10);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// C#-specific tests: Build State
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Tests for build state consistency and boundary evaluation correctness.
+/// </summary>
+public class TestBuildState
+{
+    /// <summary>
+    /// Calling Build() twice should produce the same evaluation results (idempotent).
+    /// </summary>
+    [Fact]
+    public void Test_double_build_is_idempotent()
+    {
+        static double f(double[] x, object? _) => Math.Sin(x[0]) + Math.Cos(x[1]);
+        var cheb = new ChebyshevApproximation(f, 2,
+            [new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }], [10, 10]);
+
+        cheb.Build(verbose: false);
+        double v1 = cheb.VectorizedEval([0.3, 0.7], [0, 0]);
+
+        cheb.Build(verbose: false);
+        double v2 = cheb.VectorizedEval([0.3, 0.7], [0, 0]);
+
+        Assert.Equal(v1, v2);
+    }
+
+    /// <summary>
+    /// Eval at the exact domain minimum should produce the correct value.
+    /// </summary>
+    [Fact]
+    public void Test_eval_at_domain_min_exact()
+    {
+        static double f(double[] x, object? _) => Math.Sin(x[0]);
+        var cheb = new ChebyshevApproximation(f, 1, [new[] { 0.0, Math.PI }], [20]);
+        cheb.Build(verbose: false);
+
+        double expected = Math.Sin(0.0);
+        double actual = cheb.VectorizedEval([0.0], [0]);
+        TestFixtures.AssertClose(expected, actual, rtol: 0, atol: 1e-10);
+    }
+
+    /// <summary>
+    /// Eval at the exact domain maximum should produce the correct value.
+    /// </summary>
+    [Fact]
+    public void Test_eval_at_domain_max_exact()
+    {
+        static double f(double[] x, object? _) => Math.Sin(x[0]);
+        var cheb = new ChebyshevApproximation(f, 1, [new[] { 0.0, Math.PI }], [20]);
+        cheb.Build(verbose: false);
+
+        double expected = Math.Sin(Math.PI);
+        double actual = cheb.VectorizedEval([Math.PI], [0]);
+        TestFixtures.AssertClose(expected, actual, rtol: 0, atol: 1e-10);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// C#-specific tests: Thread Safety
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Tests for concurrent evaluation safety. A built interpolant should be
+/// safe to evaluate from multiple threads simultaneously since evaluation
+/// is a read-only operation on pre-computed data.
+/// </summary>
+public class TestThreadSafety
+{
+    /// <summary>
+    /// 100 parallel VectorizedEval calls on the same built interpolant should
+    /// all produce the correct result (no data races on shared state).
+    /// </summary>
+    [Fact]
+    public void Test_concurrent_eval_thread_safe()
+    {
+        var cheb = TestFixtures.ChebBs5D;
+        double[] point = [100, 100, 1.0, 0.25, 0.05];
+        int[] deriv = [0, 0, 0, 0, 0];
+        double expected = cheb.VectorizedEval(point, deriv);
+
+        const int numParallel = 100;
+        double[] results = new double[numParallel];
+        Exception? caughtException = null;
+
+        Parallel.For(0, numParallel, i =>
+        {
+            try
+            {
+                results[i] = cheb.VectorizedEval(
+                    [100, 100, 1.0, 0.25, 0.05], [0, 0, 0, 0, 0]);
+            }
+            catch (Exception ex)
+            {
+                Interlocked.CompareExchange(ref caughtException, ex, null);
+            }
+        });
+
+        Assert.Null(caughtException);
+        for (int i = 0; i < numParallel; i++)
+        {
+            Assert.Equal(expected, results[i]);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// C#-specific tests: Serialization Edge Cases
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// Tests for serialization edge cases specific to the C# JSON implementation.
+/// </summary>
+public class TestSerializationEdgeCases
+{
+    /// <summary>
+    /// Load from a nonexistent file path should throw FileNotFoundException.
+    /// </summary>
+    [Fact]
+    public void Test_load_nonexistent_file_throws()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"nonexistent_{Guid.NewGuid()}.json");
+        Assert.Throws<FileNotFoundException>(() =>
+            ChebyshevApproximation.Load(path));
+    }
+
+    /// <summary>
+    /// Load from an empty file should throw a JSON deserialization exception.
+    /// </summary>
+    [Fact]
+    public void Test_load_empty_file_throws()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "");
+            Assert.ThrowsAny<System.Text.Json.JsonException>(() =>
+                ChebyshevApproximation.Load(path));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// Save, load, then eval at 10 test points — results must be bit-identical
+    /// (exactly equal, not just close) since all data is round-tripped through JSON.
+    /// </summary>
+    [Fact]
+    public void Test_save_load_roundtrip_bit_identical()
+    {
+        var cheb = TestFixtures.ChebBs5D;
+        string path = Path.GetTempFileName();
+        try
+        {
+            cheb.Save(path);
+            var loaded = ChebyshevApproximation.Load(path);
+
+            double[][] testPoints =
+            [
+                [100, 100, 1.0, 0.25, 0.05],
+                [85, 95, 0.3, 0.20, 0.03],
+                [115, 105, 0.8, 0.30, 0.07],
+                [90, 100, 0.5, 0.18, 0.02],
+                [110, 95, 0.7, 0.25, 0.06],
+                [95, 110, 0.9, 0.32, 0.04],
+                [105, 90, 0.4, 0.16, 0.05],
+                [100, 100, 0.25, 0.15, 0.01],
+                [88, 100, 0.6, 0.28, 0.08],
+                [112, 108, 1.0, 0.35, 0.05],
+            ];
+
+            foreach (double[] pt in testPoints)
+            {
+                double orig = cheb.VectorizedEval(pt, [0, 0, 0, 0, 0]);
+                double rest = loaded.VectorizedEval(pt, [0, 0, 0, 0, 0]);
+                Assert.Equal(orig, rest); // Exact equality, not approximate
+            }
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+}

@@ -4,7 +4,45 @@ items:
   commentId: T:ChebyshevSharp.ChebyshevApproximation
   id: ChebyshevApproximation
   parent: ChebyshevSharp
-  children: []
+  children:
+  - ChebyshevSharp.ChebyshevApproximation.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32)
+  - ChebyshevSharp.ChebyshevApproximation.Build(System.Boolean)
+  - ChebyshevSharp.ChebyshevApproximation.BuildTime
+  - ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D(System.Double[])
+  - ChebyshevSharp.ChebyshevApproximation.DiffMatrices
+  - ChebyshevSharp.ChebyshevApproximation.Domain
+  - ChebyshevSharp.ChebyshevApproximation.ErrorEstimate
+  - ChebyshevSharp.ChebyshevApproximation.Eval(System.Double[],System.Int32[])
+  - ChebyshevSharp.ChebyshevApproximation.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  - ChebyshevSharp.ChebyshevApproximation.FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32)
+  - ChebyshevSharp.ChebyshevApproximation.Function
+  - ChebyshevSharp.ChebyshevApproximation.GetDerivativeId(System.Int32[])
+  - ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  - ChebyshevSharp.ChebyshevApproximation.Load(System.String)
+  - ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevApproximation.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  - ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  - ChebyshevSharp.ChebyshevApproximation.NEvaluations
+  - ChebyshevSharp.ChebyshevApproximation.NNodes
+  - ChebyshevSharp.ChebyshevApproximation.NodeArrays
+  - ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+  - ChebyshevSharp.ChebyshevApproximation.NumDimensions
+  - ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  - ChebyshevSharp.ChebyshevApproximation.Save(System.String)
+  - ChebyshevSharp.ChebyshevApproximation.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  - ChebyshevSharp.ChebyshevApproximation.TensorValues
+  - ChebyshevSharp.ChebyshevApproximation.ToReprString
+  - ChebyshevSharp.ChebyshevApproximation.ToString
+  - ChebyshevSharp.ChebyshevApproximation.VectorizedEval(System.Double[],System.Int32[])
+  - ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch(System.Double[][],System.Int32[])
+  - ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti(System.Double[],System.Int32[][])
+  - ChebyshevSharp.ChebyshevApproximation.Weights
+  - ChebyshevSharp.ChebyshevApproximation.op_Addition(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  - ChebyshevSharp.ChebyshevApproximation.op_Division(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  - ChebyshevSharp.ChebyshevApproximation.op_Multiply(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  - ChebyshevSharp.ChebyshevApproximation.op_Multiply(System.Double,ChebyshevSharp.ChebyshevApproximation)
+  - ChebyshevSharp.ChebyshevApproximation.op_Subtraction(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  - ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation(ChebyshevSharp.ChebyshevApproximation)
   langs:
   - csharp
   - vb
@@ -19,7 +57,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ChebyshevApproximation
     path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 6
+    startLine: 11
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -40,7 +78,1381 @@ items:
   - System.Object.GetType
   - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
-  - System.Object.ToString
+- uid: ChebyshevSharp.ChebyshevApproximation.Function
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.Function
+  id: Function
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Function
+  nameWithType: ChebyshevApproximation.Function
+  fullName: ChebyshevSharp.ChebyshevApproximation.Function
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Function
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 14
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: The function to approximate. Null after load or from_values.
+  example: []
+  syntax:
+    content: public Func<double[], object?, double>? Function { get; }
+    parameters: []
+    return:
+      type: System.Func{System.Double[],System.Object,System.Double}
+    content.vb: Public Property [Function] As Func(Of Double(), Object, Double)
+  overload: ChebyshevSharp.ChebyshevApproximation.Function*
+- uid: ChebyshevSharp.ChebyshevApproximation.NumDimensions
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.NumDimensions
+  id: NumDimensions
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: NumDimensions
+  nameWithType: ChebyshevApproximation.NumDimensions
+  fullName: ChebyshevSharp.ChebyshevApproximation.NumDimensions
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NumDimensions
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 17
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Number of input dimensions.
+  example: []
+  syntax:
+    content: public int NumDimensions { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property NumDimensions As Integer
+  overload: ChebyshevSharp.ChebyshevApproximation.NumDimensions*
+- uid: ChebyshevSharp.ChebyshevApproximation.Domain
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.Domain
+  id: Domain
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Domain
+  nameWithType: ChebyshevApproximation.Domain
+  fullName: ChebyshevSharp.ChebyshevApproximation.Domain
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Domain
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 20
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Domain bounds for each dimension, as list of [lo, hi].
+  example: []
+  syntax:
+    content: public double[][] Domain { get; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property Domain As Double()()
+  overload: ChebyshevSharp.ChebyshevApproximation.Domain*
+- uid: ChebyshevSharp.ChebyshevApproximation.NNodes
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.NNodes
+  id: NNodes
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: NNodes
+  nameWithType: ChebyshevApproximation.NNodes
+  fullName: ChebyshevSharp.ChebyshevApproximation.NNodes
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NNodes
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 23
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Number of Chebyshev nodes per dimension.
+  example: []
+  syntax:
+    content: public int[] NNodes { get; }
+    parameters: []
+    return:
+      type: System.Int32[]
+    content.vb: Public Property NNodes As Integer()
+  overload: ChebyshevSharp.ChebyshevApproximation.NNodes*
+- uid: ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
+  id: MaxDerivativeOrder
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: MaxDerivativeOrder
+  nameWithType: ChebyshevApproximation.MaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: MaxDerivativeOrder
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 26
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Maximum supported derivative order.
+  example: []
+  syntax:
+    content: public int MaxDerivativeOrder { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property MaxDerivativeOrder As Integer
+  overload: ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder*
+- uid: ChebyshevSharp.ChebyshevApproximation.NodeArrays
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.NodeArrays
+  id: NodeArrays
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: NodeArrays
+  nameWithType: ChebyshevApproximation.NodeArrays
+  fullName: ChebyshevSharp.ChebyshevApproximation.NodeArrays
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NodeArrays
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 29
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Chebyshev nodes per dimension, each sorted ascending.
+  example: []
+  syntax:
+    content: public double[][] NodeArrays { get; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property NodeArrays As Double()()
+  overload: ChebyshevSharp.ChebyshevApproximation.NodeArrays*
+- uid: ChebyshevSharp.ChebyshevApproximation.TensorValues
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.TensorValues
+  id: TensorValues
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: TensorValues
+  nameWithType: ChebyshevApproximation.TensorValues
+  fullName: ChebyshevSharp.ChebyshevApproximation.TensorValues
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: TensorValues
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 32
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Flat tensor of function values at all node combinations (C-order).
+  example: []
+  syntax:
+    content: public double[]? TensorValues { get; }
+    parameters: []
+    return:
+      type: System.Double[]
+    content.vb: Public Property TensorValues As Double()
+  overload: ChebyshevSharp.ChebyshevApproximation.TensorValues*
+- uid: ChebyshevSharp.ChebyshevApproximation.Weights
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.Weights
+  id: Weights
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Weights
+  nameWithType: ChebyshevApproximation.Weights
+  fullName: ChebyshevSharp.ChebyshevApproximation.Weights
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Weights
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 35
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Barycentric weights per dimension.
+  example: []
+  syntax:
+    content: public double[][]? Weights { get; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property Weights As Double()()
+  overload: ChebyshevSharp.ChebyshevApproximation.Weights*
+- uid: ChebyshevSharp.ChebyshevApproximation.DiffMatrices
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.DiffMatrices
+  id: DiffMatrices
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: DiffMatrices
+  nameWithType: ChebyshevApproximation.DiffMatrices
+  fullName: ChebyshevSharp.ChebyshevApproximation.DiffMatrices
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: DiffMatrices
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 38
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Spectral differentiation matrices per dimension.
+  example: []
+  syntax:
+    content: public double[][,]? DiffMatrices { get; }
+    parameters: []
+    return:
+      type: System.Double[,][]
+    content.vb: Public Property DiffMatrices As Double()(,)
+  overload: ChebyshevSharp.ChebyshevApproximation.DiffMatrices*
+- uid: ChebyshevSharp.ChebyshevApproximation.BuildTime
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.BuildTime
+  id: BuildTime
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: BuildTime
+  nameWithType: ChebyshevApproximation.BuildTime
+  fullName: ChebyshevSharp.ChebyshevApproximation.BuildTime
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: BuildTime
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 44
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Time taken by Build() in seconds.
+  example: []
+  syntax:
+    content: public double BuildTime { get; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public Property BuildTime As Double
+  overload: ChebyshevSharp.ChebyshevApproximation.BuildTime*
+- uid: ChebyshevSharp.ChebyshevApproximation.NEvaluations
+  commentId: P:ChebyshevSharp.ChebyshevApproximation.NEvaluations
+  id: NEvaluations
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: NEvaluations
+  nameWithType: ChebyshevApproximation.NEvaluations
+  fullName: ChebyshevSharp.ChebyshevApproximation.NEvaluations
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NEvaluations
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 47
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Number of function evaluations during Build().
+  example: []
+  syntax:
+    content: public int NEvaluations { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property NEvaluations As Integer
+  overload: ChebyshevSharp.ChebyshevApproximation.NEvaluations*
+- uid: ChebyshevSharp.ChebyshevApproximation.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32)
+  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32)'
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevApproximation(Func<double[], object?, double>, int, double[][], int[], int)
+  nameWithType: ChebyshevApproximation.ChebyshevApproximation(Func<double[], object?, double>, int, double[][], int[], int)
+  fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevApproximation(System.Func<double[], object?, double>, int, double[][], int[], int)
+  type: Constructor
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: .ctor
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 59
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Create a new ChebyshevApproximation.
+  example: []
+  syntax:
+    content: public ChebyshevApproximation(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] nNodes, int maxDerivativeOrder = 2)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Object,System.Double}
+      description: 'Function to approximate: f(point, data) -&gt; double.'
+    - id: numDimensions
+      type: System.Int32
+      description: Number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds for each dimension as double[ndim][2].
+    - id: nNodes
+      type: System.Int32[]
+      description: Number of Chebyshev nodes per dimension.
+    - id: maxDerivativeOrder
+      type: System.Int32
+      description: Maximum derivative order to support (default 2).
+    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), maxDerivativeOrder As Integer = 2)
+  overload: ChebyshevSharp.ChebyshevApproximation.#ctor*
+  nameWithType.vb: ChebyshevApproximation.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer)
+  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer)
+- uid: ChebyshevSharp.ChebyshevApproximation.Build(System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Build(System.Boolean)
+  id: Build(System.Boolean)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Build(bool)
+  nameWithType: ChebyshevApproximation.Build(bool)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Build(bool)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Build
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 87
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate the function at all node combinations and pre-compute weights.
+  example: []
+  syntax:
+    content: public void Build(bool verbose = true)
+    parameters:
+    - id: verbose
+      type: System.Boolean
+      description: If true, print build progress.
+    content.vb: Public Sub Build(verbose As Boolean = True)
+  overload: ChebyshevSharp.ChebyshevApproximation.Build*
+  nameWithType.vb: ChebyshevApproximation.Build(Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Build(Boolean)
+  name.vb: Build(Boolean)
+- uid: ChebyshevSharp.ChebyshevApproximation.Eval(System.Double[],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Eval(System.Double[],System.Int32[])
+  id: Eval(System.Double[],System.Int32[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Eval(double[], int[])
+  nameWithType: ChebyshevApproximation.Eval(double[], int[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Eval(double[], int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Eval
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 156
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Evaluate using dimensional decomposition with barycentric interpolation.
+
+    Loop-based implementation matching Python eval().
+  example: []
+  syntax:
+    content: public double Eval(double[] point, int[] derivativeOrder)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Query point, one coordinate per dimension.
+    - id: derivativeOrder
+      type: System.Int32[]
+      description: Derivative order per dimension.
+    return:
+      type: System.Double
+      description: Interpolated value or derivative at the query point.
+    content.vb: Public Function Eval(point As Double(), derivativeOrder As Integer()) As Double
+  overload: ChebyshevSharp.ChebyshevApproximation.Eval*
+  nameWithType.vb: ChebyshevApproximation.Eval(Double(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Eval(Double(), Integer())
+  name.vb: Eval(Double(), Integer())
+- uid: ChebyshevSharp.ChebyshevApproximation.VectorizedEval(System.Double[],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.VectorizedEval(System.Double[],System.Int32[])
+  id: VectorizedEval(System.Double[],System.Int32[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: VectorizedEval(double[], int[])
+  nameWithType: ChebyshevApproximation.VectorizedEval(double[], int[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEval(double[], int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: VectorizedEval
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 229
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Fully vectorized evaluation using matrix operations.
+
+    Replaces the Python loop with BLAS-style matrix-vector products.
+  example: []
+  syntax:
+    content: public double VectorizedEval(double[] point, int[] derivativeOrder)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Query point, one coordinate per dimension.
+    - id: derivativeOrder
+      type: System.Int32[]
+      description: Derivative order per dimension.
+    return:
+      type: System.Double
+      description: Interpolated value or derivative.
+    content.vb: Public Function VectorizedEval(point As Double(), derivativeOrder As Integer()) As Double
+  overload: ChebyshevSharp.ChebyshevApproximation.VectorizedEval*
+  nameWithType.vb: ChebyshevApproximation.VectorizedEval(Double(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.VectorizedEval(Double(), Integer())
+  name.vb: VectorizedEval(Double(), Integer())
+- uid: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch(System.Double[][],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch(System.Double[][],System.Int32[])
+  id: VectorizedEvalBatch(System.Double[][],System.Int32[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: VectorizedEvalBatch(double[][], int[])
+  nameWithType: ChebyshevApproximation.VectorizedEvalBatch(double[][], int[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch(double[][], int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: VectorizedEvalBatch
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 305
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate at multiple points.
+  example: []
+  syntax:
+    content: public double[] VectorizedEvalBatch(double[][] points, int[] derivativeOrder)
+    parameters:
+    - id: points
+      type: System.Double[][]
+      description: Points as double[N][numDimensions].
+    - id: derivativeOrder
+      type: System.Int32[]
+      description: Derivative order per dimension.
+    return:
+      type: System.Double[]
+      description: Results array of length N.
+    content.vb: Public Function VectorizedEvalBatch(points As Double()(), derivativeOrder As Integer()) As Double()
+  overload: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch*
+  nameWithType.vb: ChebyshevApproximation.VectorizedEvalBatch(Double()(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch(Double()(), Integer())
+  name.vb: VectorizedEvalBatch(Double()(), Integer())
+- uid: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti(System.Double[],System.Int32[][])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti(System.Double[],System.Int32[][])
+  id: VectorizedEvalMulti(System.Double[],System.Int32[][])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: VectorizedEvalMulti(double[], int[][])
+  nameWithType: ChebyshevApproximation.VectorizedEvalMulti(double[], int[][])
+  fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti(double[], int[][])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: VectorizedEvalMulti
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 319
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate multiple derivative orders at the same point, sharing barycentric weights.
+  example: []
+  syntax:
+    content: public double[] VectorizedEvalMulti(double[] point, int[][] derivativeOrders)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Query point.
+    - id: derivativeOrders
+      type: System.Int32[][]
+      description: Each inner array specifies derivative order per dimension.
+    return:
+      type: System.Double[]
+      description: One result per derivative order.
+    content.vb: Public Function VectorizedEvalMulti(point As Double(), derivativeOrders As Integer()()) As Double()
+  overload: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti*
+  nameWithType.vb: ChebyshevApproximation.VectorizedEvalMulti(Double(), Integer()())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti(Double(), Integer()())
+  name.vb: VectorizedEvalMulti(Double(), Integer()())
+- uid: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.GetDerivativeId(System.Int32[])
+  id: GetDerivativeId(System.Int32[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevApproximation.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId(int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDerivativeId
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 411
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Return derivative order as-is (for API compatibility).
+  example: []
+  syntax:
+    content: public int[] GetDerivativeId(int[] derivativeOrder)
+    parameters:
+    - id: derivativeOrder
+      type: System.Int32[]
+    return:
+      type: System.Int32[]
+    content.vb: Public Function GetDerivativeId(derivativeOrder As Integer()) As Integer()
+  overload: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId*
+  nameWithType.vb: ChebyshevApproximation.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+- uid: ChebyshevSharp.ChebyshevApproximation.ErrorEstimate
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.ErrorEstimate
+  id: ErrorEstimate
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: ErrorEstimate()
+  nameWithType: ChebyshevApproximation.ErrorEstimate()
+  fullName: ChebyshevSharp.ChebyshevApproximation.ErrorEstimate()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ErrorEstimate
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 421
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Estimate the supremum-norm interpolation error using Chebyshev coefficient decay.
+  example: []
+  syntax:
+    content: public double ErrorEstimate()
+    return:
+      type: System.Double
+      description: Estimated maximum interpolation error.
+    content.vb: Public Function ErrorEstimate() As Double
+  overload: ChebyshevSharp.ChebyshevApproximation.ErrorEstimate*
+- uid: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D(System.Double[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D(System.Double[])
+  id: ChebyshevCoefficients1D(System.Double[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevCoefficients1D(double[])
+  nameWithType: ChebyshevApproximation.ChebyshevCoefficients1D(double[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D(double[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ChebyshevCoefficients1D
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 460
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Get Chebyshev coefficients for a 1D array of values at Type I nodes.
+
+    Public for testing.
+  example: []
+  syntax:
+    content: public static double[] ChebyshevCoefficients1D(double[] values)
+    parameters:
+    - id: values
+      type: System.Double[]
+    return:
+      type: System.Double[]
+    content.vb: Public Shared Function ChebyshevCoefficients1D(values As Double()) As Double()
+  overload: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D*
+  nameWithType.vb: ChebyshevApproximation.ChebyshevCoefficients1D(Double())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D(Double())
+  name.vb: ChebyshevCoefficients1D(Double())
+- uid: ChebyshevSharp.ChebyshevApproximation.Save(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Save(System.String)
+  id: Save(System.String)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Save(string)
+  nameWithType: ChebyshevApproximation.Save(string)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Save(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Save
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 473
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Save the built interpolant to a file using JSON serialization.
+  example: []
+  syntax:
+    content: public void Save(string path)
+    parameters:
+    - id: path
+      type: System.String
+      description: Destination file path.
+    content.vb: Public Sub Save(path As String)
+  overload: ChebyshevSharp.ChebyshevApproximation.Save*
+  nameWithType.vb: ChebyshevApproximation.Save(String)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Save(String)
+  name.vb: Save(String)
+- uid: ChebyshevSharp.ChebyshevApproximation.Load(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Load(System.String)
+  id: Load(System.String)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Load(string)
+  nameWithType: ChebyshevApproximation.Load(string)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Load(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Load
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 504
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Load a previously saved interpolant from a file.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation Load(string path)
+    parameters:
+    - id: path
+      type: System.String
+      description: Path to the saved file.
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+      description: The restored interpolant.
+    content.vb: Public Shared Function Load(path As String) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.Load*
+  nameWithType.vb: ChebyshevApproximation.Load(String)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Load(String)
+  name.vb: Load(String)
+- uid: ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+  id: Nodes(System.Int32,System.Double[][],System.Int32[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Nodes(int, double[][], int[])
+  nameWithType: ChebyshevApproximation.Nodes(int, double[][], int[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Nodes(int, double[][], int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Nodes
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 549
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Generate Chebyshev nodes without evaluating any function.
+  example: []
+  syntax:
+    content: public static NodeInfo Nodes(int numDimensions, double[][] domain, int[] nNodes)
+    parameters:
+    - id: numDimensions
+      type: System.Int32
+      description: Number of dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Lower and upper bounds for each dimension.
+    - id: nNodes
+      type: System.Int32[]
+      description: Number of Chebyshev nodes per dimension.
+    return:
+      type: ChebyshevSharp.NodeInfo
+      description: Dictionary with "NodesPerDim", "FullGrid", and "Shape".
+    content.vb: Public Shared Function Nodes(numDimensions As Integer, domain As Double()(), nNodes As Integer()) As NodeInfo
+  overload: ChebyshevSharp.ChebyshevApproximation.Nodes*
+  nameWithType.vb: ChebyshevApproximation.Nodes(Integer, Double()(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Nodes(Integer, Double()(), Integer())
+  name.vb: Nodes(Integer, Double()(), Integer())
+- uid: ChebyshevSharp.ChebyshevApproximation.FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32)
+  id: FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: FromValues(double[], int, double[][], int[], int)
+  nameWithType: ChebyshevApproximation.FromValues(double[], int, double[][], int[], int)
+  fullName: ChebyshevSharp.ChebyshevApproximation.FromValues(double[], int, double[][], int[], int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: FromValues
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 592
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Create an interpolant from pre-computed function values.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation FromValues(double[] tensorValues, int numDimensions, double[][] domain, int[] nNodes, int maxDerivativeOrder = 2)
+    parameters:
+    - id: tensorValues
+      type: System.Double[]
+    - id: numDimensions
+      type: System.Int32
+    - id: domain
+      type: System.Double[][]
+    - id: nNodes
+      type: System.Int32[]
+    - id: maxDerivativeOrder
+      type: System.Int32
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Function FromValues(tensorValues As Double(), numDimensions As Integer, domain As Double()(), nNodes As Integer(), maxDerivativeOrder As Integer = 2) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.FromValues*
+  nameWithType.vb: ChebyshevApproximation.FromValues(Double(), Integer, Double()(), Integer(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.FromValues(Double(), Integer, Double()(), Integer(), Integer)
+  name.vb: FromValues(Double(), Integer, Double()(), Integer(), Integer)
+- uid: ChebyshevSharp.ChebyshevApproximation.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  id: Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
+  nameWithType: ChebyshevApproximation.Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Extrude
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 692
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Add new dimensions where the function is constant.
+  example: []
+  syntax:
+    content: public ChebyshevApproximation Extrude(params (int dimIndex, double[] bounds, int nNodes)[] extrudeParams)
+    parameters:
+    - id: extrudeParams
+      type: System.ValueTuple{System.Int32,System.Double[],System.Int32}[]
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Function Extrude(ParamArray extrudeParams As (dimIndex As Integer, bounds As Double(), nNodes As Integer)()) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.Extrude*
+  nameWithType.vb: ChebyshevApproximation.Extrude(ParamArray (dimIndex As Integer, bounds As Double(), nNodes As Integer)())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Extrude(ParamArray (dimIndex As Integer, bounds As Double(), nNodes As Integer)())
+  name.vb: Extrude(ParamArray (dimIndex As Integer, bounds As Double(), nNodes As Integer)())
+- uid: ChebyshevSharp.ChebyshevApproximation.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  id: Slice(System.ValueTuple{System.Int32,System.Double}[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Slice(params (int dimIndex, double value)[])
+  nameWithType: ChebyshevApproximation.Slice(params (int dimIndex, double value)[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Slice(params (int dimIndex, double value)[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Slice
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 748
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Fix one or more dimensions at given values, reducing dimensionality.
+  example: []
+  syntax:
+    content: public ChebyshevApproximation Slice(params (int dimIndex, double value)[] sliceParams)
+    parameters:
+    - id: sliceParams
+      type: System.ValueTuple{System.Int32,System.Double}[]
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Function Slice(ParamArray sliceParams As (dimIndex As Integer, value As Double)()) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.Slice*
+  nameWithType.vb: ChebyshevApproximation.Slice(ParamArray (dimIndex As Integer, value As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Slice(ParamArray (dimIndex As Integer, value As Double)())
+  name.vb: Slice(ParamArray (dimIndex As Integer, value As Double)())
+- uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  id: Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Integrate(int[]?, (double lo, double hi)[]?)
+  nameWithType: ChebyshevApproximation.Integrate(int[]?, (double lo, double hi)[]?)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Integrate(int[]?, (double lo, double hi)[]?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Integrate
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 819
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Integrate the interpolant over one or more dimensions.
+  example: []
+  syntax:
+    content: public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
+    parameters:
+    - id: dims
+      type: System.Int32[]
+      description: Dimensions to integrate out. Null = all.
+    - id: bounds
+      type: System.ValueTuple{System.Double,System.Double}[]
+      description: Sub-interval bounds per dim. Null = full domain.
+    return:
+      type: System.Object
+      description: Scalar if all dims integrated, otherwise a lower-dimensional interpolant.
+    content.vb: Public Function Integrate(dims As Integer() = Nothing, bounds As (lo As Double, hi As Double)() = Nothing) As Object
+  overload: ChebyshevSharp.ChebyshevApproximation.Integrate*
+  nameWithType.vb: ChebyshevApproximation.Integrate(Integer(), (lo As Double, hi As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Integrate(Integer(), (lo As Double, hi As Double)())
+  name.vb: Integrate(Integer(), (lo As Double, hi As Double)())
+- uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Roots(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevApproximation.Roots(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Roots(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Roots
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 911
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Find all roots of the interpolant along a specified dimension.
+  example: []
+  syntax:
+    content: public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+    return:
+      type: System.Double[]
+    content.vb: Public Function Roots([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As Double()
+  overload: ChebyshevSharp.ChebyshevApproximation.Roots*
+  nameWithType.vb: ChebyshevApproximation.Roots(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Roots(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Roots(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Minimize(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevApproximation.Minimize(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Minimize(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Minimize
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 925
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Find the minimum value of the interpolant along a dimension.
+  example: []
+  syntax:
+    content: public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+    return:
+      type: System.ValueTuple{System.Double,System.Double}
+    content.vb: Public Function Minimize([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As (value As Double, location As Double)
+  overload: ChebyshevSharp.ChebyshevApproximation.Minimize*
+  nameWithType.vb: ChebyshevApproximation.Minimize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Minimize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Minimize(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevApproximation.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: Maximize(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevApproximation.Maximize(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Maximize(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Maximize
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 941
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Find the maximum value of the interpolant along a dimension.
+  example: []
+  syntax:
+    content: public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+    return:
+      type: System.ValueTuple{System.Double,System.Double}
+    content.vb: Public Function Maximize([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As (value As Double, location As Double)
+  overload: ChebyshevSharp.ChebyshevApproximation.Maximize*
+  nameWithType.vb: ChebyshevApproximation.Maximize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Maximize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Maximize(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Addition(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.op_Addition(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  id: op_Addition(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: operator +(ChebyshevApproximation, ChebyshevApproximation)
+  nameWithType: ChebyshevApproximation.operator +(ChebyshevApproximation, ChebyshevApproximation)
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator +(ChebyshevSharp.ChebyshevApproximation, ChebyshevSharp.ChebyshevApproximation)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Addition
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 959
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Add two interpolants with the same grid.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation operator +(ChebyshevApproximation a, ChebyshevApproximation b)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevApproximation
+    - id: b
+      type: ChebyshevSharp.ChebyshevApproximation
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Operator +(a As ChebyshevApproximation, b As ChebyshevApproximation) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.op_Addition*
+  nameWithType.vb: ChebyshevApproximation.+(ChebyshevApproximation, ChebyshevApproximation)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.+(ChebyshevSharp.ChebyshevApproximation, ChebyshevSharp.ChebyshevApproximation)
+  name.vb: +(ChebyshevApproximation, ChebyshevApproximation)
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Subtraction(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.op_Subtraction(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  id: op_Subtraction(ChebyshevSharp.ChebyshevApproximation,ChebyshevSharp.ChebyshevApproximation)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: operator -(ChebyshevApproximation, ChebyshevApproximation)
+  nameWithType: ChebyshevApproximation.operator -(ChebyshevApproximation, ChebyshevApproximation)
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator -(ChebyshevSharp.ChebyshevApproximation, ChebyshevSharp.ChebyshevApproximation)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Subtraction
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 971
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Subtract two interpolants with the same grid.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation operator -(ChebyshevApproximation a, ChebyshevApproximation b)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevApproximation
+    - id: b
+      type: ChebyshevSharp.ChebyshevApproximation
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Operator -(a As ChebyshevApproximation, b As ChebyshevApproximation) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.op_Subtraction*
+  nameWithType.vb: ChebyshevApproximation.-(ChebyshevApproximation, ChebyshevApproximation)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.-(ChebyshevSharp.ChebyshevApproximation, ChebyshevSharp.ChebyshevApproximation)
+  name.vb: -(ChebyshevApproximation, ChebyshevApproximation)
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Multiply(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.op_Multiply(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  id: op_Multiply(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: operator *(ChebyshevApproximation, double)
+  nameWithType: ChebyshevApproximation.operator *(ChebyshevApproximation, double)
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator *(ChebyshevSharp.ChebyshevApproximation, double)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Multiply
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 983
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Multiply interpolant by a scalar.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation operator *(ChebyshevApproximation a, double scalar)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevApproximation
+    - id: scalar
+      type: System.Double
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Operator *(a As ChebyshevApproximation, scalar As Double) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.op_Multiply*
+  nameWithType.vb: ChebyshevApproximation.*(ChebyshevApproximation, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.*(ChebyshevSharp.ChebyshevApproximation, Double)
+  name.vb: '*(ChebyshevApproximation, Double)'
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Multiply(System.Double,ChebyshevSharp.ChebyshevApproximation)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.op_Multiply(System.Double,ChebyshevSharp.ChebyshevApproximation)
+  id: op_Multiply(System.Double,ChebyshevSharp.ChebyshevApproximation)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: operator *(double, ChebyshevApproximation)
+  nameWithType: ChebyshevApproximation.operator *(double, ChebyshevApproximation)
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator *(double, ChebyshevSharp.ChebyshevApproximation)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Multiply
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 992
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Multiply scalar by interpolant.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation operator *(double scalar, ChebyshevApproximation a)
+    parameters:
+    - id: scalar
+      type: System.Double
+    - id: a
+      type: ChebyshevSharp.ChebyshevApproximation
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Operator *(scalar As Double, a As ChebyshevApproximation) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.op_Multiply*
+  nameWithType.vb: ChebyshevApproximation.*(Double, ChebyshevApproximation)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.*(Double, ChebyshevSharp.ChebyshevApproximation)
+  name.vb: '*(Double, ChebyshevApproximation)'
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Division(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.op_Division(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  id: op_Division(ChebyshevSharp.ChebyshevApproximation,System.Double)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: operator /(ChebyshevApproximation, double)
+  nameWithType: ChebyshevApproximation.operator /(ChebyshevApproximation, double)
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator /(ChebyshevSharp.ChebyshevApproximation, double)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Division
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 998
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Divide interpolant by a scalar.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation operator /(ChebyshevApproximation a, double scalar)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevApproximation
+    - id: scalar
+      type: System.Double
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Operator /(a As ChebyshevApproximation, scalar As Double) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.op_Division*
+  nameWithType.vb: ChebyshevApproximation./(ChebyshevApproximation, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation./(ChebyshevSharp.ChebyshevApproximation, Double)
+  name.vb: /(ChebyshevApproximation, Double)
+- uid: ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation(ChebyshevSharp.ChebyshevApproximation)
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation(ChebyshevSharp.ChebyshevApproximation)
+  id: op_UnaryNegation(ChebyshevSharp.ChebyshevApproximation)
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: operator -(ChebyshevApproximation)
+  nameWithType: ChebyshevApproximation.operator -(ChebyshevApproximation)
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator -(ChebyshevSharp.ChebyshevApproximation)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_UnaryNegation
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 1004
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Negate interpolant.
+  example: []
+  syntax:
+    content: public static ChebyshevApproximation operator -(ChebyshevApproximation a)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevApproximation
+    return:
+      type: ChebyshevSharp.ChebyshevApproximation
+    content.vb: Public Shared Operator -(a As ChebyshevApproximation) As ChebyshevApproximation
+  overload: ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation*
+  nameWithType.vb: ChebyshevApproximation.-(ChebyshevApproximation)
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.-(ChebyshevSharp.ChebyshevApproximation)
+  name.vb: -(ChebyshevApproximation)
+- uid: ChebyshevSharp.ChebyshevApproximation.ToString
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.ToString
+  id: ToString
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: ToString()
+  nameWithType: ChebyshevApproximation.ToString()
+  fullName: ChebyshevSharp.ChebyshevApproximation.ToString()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ToString
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 1014
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Returns a string that represents the current object.
+  example: []
+  syntax:
+    content: public override string ToString()
+    return:
+      type: System.String
+      description: A string that represents the current object.
+    content.vb: Public Overrides Function ToString() As String
+  overridden: System.Object.ToString
+  overload: ChebyshevSharp.ChebyshevApproximation.ToString*
+- uid: ChebyshevSharp.ChebyshevApproximation.ToReprString
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.ToReprString
+  id: ToReprString
+  parent: ChebyshevSharp.ChebyshevApproximation
+  langs:
+  - csharp
+  - vb
+  name: ToReprString()
+  nameWithType: ChebyshevApproximation.ToReprString()
+  fullName: ChebyshevSharp.ChebyshevApproximation.ToReprString()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ToReprString
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
+    startLine: 1053
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Compact representation of the interpolant.
+  example: []
+  syntax:
+    content: public string ToReprString()
+    return:
+      type: System.String
+    content.vb: Public Function ToReprString() As String
+  overload: ChebyshevSharp.ChebyshevApproximation.ToReprString*
 references:
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
@@ -254,6 +1666,1009 @@ references:
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.object
   - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ChebyshevSharp.ChebyshevApproximation.Function*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Function
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Function
+  name: Function
+  nameWithType: ChebyshevApproximation.Function
+  fullName: ChebyshevSharp.ChebyshevApproximation.Function
+- uid: System.Func{System.Double[],System.Object,System.Double}
+  commentId: T:System.Func{System.Double[],System.Object,System.Double}
+  parent: System
+  definition: System.Func`3
+  href: https://learn.microsoft.com/dotnet/api/system.func-3
+  name: Func<double[], object, double>
+  nameWithType: Func<double[], object, double>
+  fullName: System.Func<double[], object, double>
+  nameWithType.vb: Func(Of Double(), Object, Double)
+  fullName.vb: System.Func(Of Double(), Object, Double)
+  name.vb: Func(Of Double(), Object, Double)
+  spec.csharp:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: <
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  spec.vb:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.Func`3
+  commentId: T:System.Func`3
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.func-3
+  name: Func<T1, T2, TResult>
+  nameWithType: Func<T1, T2, TResult>
+  fullName: System.Func<T1, T2, TResult>
+  nameWithType.vb: Func(Of T1, T2, TResult)
+  fullName.vb: System.Func(Of T1, T2, TResult)
+  name.vb: Func(Of T1, T2, TResult)
+  spec.csharp:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: <
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: ','
+  - name: " "
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: ','
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.NumDimensions*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.NumDimensions
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_NumDimensions
+  name: NumDimensions
+  nameWithType: ChebyshevApproximation.NumDimensions
+  fullName: ChebyshevSharp.ChebyshevApproximation.NumDimensions
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ChebyshevSharp.ChebyshevApproximation.Domain*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Domain
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Domain
+  name: Domain
+  nameWithType: ChebyshevApproximation.Domain
+  fullName: ChebyshevSharp.ChebyshevApproximation.Domain
+- uid: System.Double[][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double[][]
+  nameWithType: double[][]
+  fullName: double[][]
+  nameWithType.vb: Double()()
+  fullName.vb: Double()()
+  name.vb: Double()()
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.NNodes*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.NNodes
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_NNodes
+  name: NNodes
+  nameWithType: ChebyshevApproximation.NNodes
+  fullName: ChebyshevSharp.ChebyshevApproximation.NNodes
+- uid: System.Int32[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int[]
+  nameWithType: int[]
+  fullName: int[]
+  nameWithType.vb: Integer()
+  fullName.vb: Integer()
+  name.vb: Integer()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_MaxDerivativeOrder
+  name: MaxDerivativeOrder
+  nameWithType: ChebyshevApproximation.MaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
+- uid: ChebyshevSharp.ChebyshevApproximation.NodeArrays*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.NodeArrays
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_NodeArrays
+  name: NodeArrays
+  nameWithType: ChebyshevApproximation.NodeArrays
+  fullName: ChebyshevSharp.ChebyshevApproximation.NodeArrays
+- uid: ChebyshevSharp.ChebyshevApproximation.TensorValues*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.TensorValues
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_TensorValues
+  name: TensorValues
+  nameWithType: ChebyshevApproximation.TensorValues
+  fullName: ChebyshevSharp.ChebyshevApproximation.TensorValues
+- uid: System.Double[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double[]
+  nameWithType: double[]
+  fullName: double[]
+  nameWithType.vb: Double()
+  fullName.vb: Double()
+  name.vb: Double()
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Weights*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Weights
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Weights
+  name: Weights
+  nameWithType: ChebyshevApproximation.Weights
+  fullName: ChebyshevSharp.ChebyshevApproximation.Weights
+- uid: ChebyshevSharp.ChebyshevApproximation.DiffMatrices*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.DiffMatrices
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_DiffMatrices
+  name: DiffMatrices
+  nameWithType: ChebyshevApproximation.DiffMatrices
+  fullName: ChebyshevSharp.ChebyshevApproximation.DiffMatrices
+- uid: System.Double[,][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double[][,]
+  nameWithType: double[][,]
+  fullName: double[][,]
+  nameWithType.vb: Double()(,)
+  fullName.vb: Double()(,)
+  name.vb: Double()(,)
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ','
+  - name: ']'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: ','
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.BuildTime*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.BuildTime
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_BuildTime
+  name: BuildTime
+  nameWithType: ChebyshevApproximation.BuildTime
+  fullName: ChebyshevSharp.ChebyshevApproximation.BuildTime
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ChebyshevSharp.ChebyshevApproximation.NEvaluations*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.NEvaluations
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_NEvaluations
+  name: NEvaluations
+  nameWithType: ChebyshevApproximation.NEvaluations
+  fullName: ChebyshevSharp.ChebyshevApproximation.NEvaluations
+- uid: ChebyshevSharp.ChebyshevApproximation.#ctor*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.#ctor
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation__ctor_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Int32_
+  name: ChebyshevApproximation
+  nameWithType: ChebyshevApproximation.ChebyshevApproximation
+  fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevApproximation
+  nameWithType.vb: ChebyshevApproximation.New
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.New
+  name.vb: New
+- uid: ChebyshevSharp.ChebyshevApproximation.Build*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Build
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Build_System_Boolean_
+  name: Build
+  nameWithType: ChebyshevApproximation.Build
+  fullName: ChebyshevSharp.ChebyshevApproximation.Build
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ChebyshevSharp.ChebyshevApproximation.Eval*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Eval
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Eval_System_Double___System_Int32___
+  name: Eval
+  nameWithType: ChebyshevApproximation.Eval
+  fullName: ChebyshevSharp.ChebyshevApproximation.Eval
+- uid: ChebyshevSharp.ChebyshevApproximation.VectorizedEval*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.VectorizedEval
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_VectorizedEval_System_Double___System_Int32___
+  name: VectorizedEval
+  nameWithType: ChebyshevApproximation.VectorizedEval
+  fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEval
+- uid: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_VectorizedEvalBatch_System_Double_____System_Int32___
+  name: VectorizedEvalBatch
+  nameWithType: ChebyshevApproximation.VectorizedEvalBatch
+  fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch
+- uid: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_VectorizedEvalMulti_System_Double___System_Int32_____
+  name: VectorizedEvalMulti
+  nameWithType: ChebyshevApproximation.VectorizedEvalMulti
+  fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti
+- uid: System.Int32[][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int[][]
+  nameWithType: int[][]
+  fullName: int[][]
+  nameWithType.vb: Integer()()
+  fullName.vb: Integer()()
+  name.vb: Integer()()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.GetDerivativeId
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_GetDerivativeId_System_Int32___
+  name: GetDerivativeId
+  nameWithType: ChebyshevApproximation.GetDerivativeId
+  fullName: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId
+- uid: ChebyshevSharp.ChebyshevApproximation.ErrorEstimate*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.ErrorEstimate
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_ErrorEstimate
+  name: ErrorEstimate
+  nameWithType: ChebyshevApproximation.ErrorEstimate
+  fullName: ChebyshevSharp.ChebyshevApproximation.ErrorEstimate
+- uid: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_ChebyshevCoefficients1D_System_Double___
+  name: ChebyshevCoefficients1D
+  nameWithType: ChebyshevApproximation.ChebyshevCoefficients1D
+  fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D
+- uid: ChebyshevSharp.ChebyshevApproximation.Save*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Save
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Save_System_String_
+  name: Save
+  nameWithType: ChebyshevApproximation.Save
+  fullName: ChebyshevSharp.ChebyshevApproximation.Save
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ChebyshevSharp.ChebyshevApproximation.Load*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Load
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Load_System_String_
+  name: Load
+  nameWithType: ChebyshevApproximation.Load
+  fullName: ChebyshevSharp.ChebyshevApproximation.Load
+- uid: ChebyshevSharp.ChebyshevApproximation
+  commentId: T:ChebyshevSharp.ChebyshevApproximation
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevApproximation.html
+  name: ChebyshevApproximation
+  nameWithType: ChebyshevApproximation
+  fullName: ChebyshevSharp.ChebyshevApproximation
+- uid: ChebyshevSharp.ChebyshevApproximation.Nodes*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Nodes
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Nodes_System_Int32_System_Double_____System_Int32___
+  name: Nodes
+  nameWithType: ChebyshevApproximation.Nodes
+  fullName: ChebyshevSharp.ChebyshevApproximation.Nodes
+- uid: ChebyshevSharp.NodeInfo
+  commentId: T:ChebyshevSharp.NodeInfo
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.NodeInfo.html
+  name: NodeInfo
+  nameWithType: NodeInfo
+  fullName: ChebyshevSharp.NodeInfo
+- uid: ChebyshevSharp.ChebyshevApproximation.FromValues*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.FromValues
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_FromValues_System_Double___System_Int32_System_Double_____System_Int32___System_Int32_
+  name: FromValues
+  nameWithType: ChebyshevApproximation.FromValues
+  fullName: ChebyshevSharp.ChebyshevApproximation.FromValues
+- uid: ChebyshevSharp.ChebyshevApproximation.Extrude*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Extrude
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Extrude_System_ValueTuple_System_Int32_System_Double___System_Int32____
+  name: Extrude
+  nameWithType: ChebyshevApproximation.Extrude
+  fullName: ChebyshevSharp.ChebyshevApproximation.Extrude
+- uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: (int dimIndex, double[] bounds, int nNodes)[]
+  nameWithType: (int dimIndex, double[] bounds, int nNodes)[]
+  fullName: (int dimIndex, double[] bounds, int nNodes)[]
+  nameWithType.vb: (dimIndex As Integer, bounds As Double(), nNodes As Integer)()
+  fullName.vb: (dimIndex As Integer, bounds As Double(), nNodes As Integer)()
+  name.vb: (dimIndex As Integer, bounds As Double(), nNodes As Integer)()
+  spec.csharp:
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.dimindex
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.bounds
+    name: bounds
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.bounds
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.nNodes
+    name: nNodes
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.nnodes
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.dimindex
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.bounds
+    name: bounds
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.bounds
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.nNodes
+    name: nNodes
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.nnodes
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Slice*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Slice
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Slice_System_ValueTuple_System_Int32_System_Double____
+  name: Slice
+  nameWithType: ChebyshevApproximation.Slice
+  fullName: ChebyshevSharp.ChebyshevApproximation.Slice
+- uid: System.ValueTuple{System.Int32,System.Double}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: (int dimIndex, double value)[]
+  nameWithType: (int dimIndex, double value)[]
+  fullName: (int dimIndex, double value)[]
+  nameWithType.vb: (dimIndex As Integer, value As Double)()
+  fullName.vb: (dimIndex As Integer, value As Double)()
+  name.vb: (dimIndex As Integer, value As Double)()
+  spec.csharp:
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.dimindex
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double}.value
+    name: value
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.value
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Int32,System.Double}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.dimindex
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double}.value
+    name: value
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.value
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Integrate*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Integrate
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  name: Integrate
+  nameWithType: ChebyshevApproximation.Integrate
+  fullName: ChebyshevSharp.ChebyshevApproximation.Integrate
+- uid: System.ValueTuple{System.Double,System.Double}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double lo, double hi)[]
+  nameWithType: (double lo, double hi)[]
+  fullName: (double lo, double hi)[]
+  nameWithType.vb: (lo As Double, hi As Double)()
+  fullName.vb: (lo As Double, hi As Double)()
+  name.vb: (lo As Double, hi As Double)()
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Roots*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Roots
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Roots
+  nameWithType: ChebyshevApproximation.Roots
+  fullName: ChebyshevSharp.ChebyshevApproximation.Roots
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+  commentId: T:System.Collections.Generic.Dictionary{System.Int32,System.Double}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.Dictionary`2
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<int, double>
+  nameWithType: Dictionary<int, double>
+  fullName: System.Collections.Generic.Dictionary<int, double>
+  nameWithType.vb: Dictionary(Of Integer, Double)
+  fullName.vb: System.Collections.Generic.Dictionary(Of Integer, Double)
+  name.vb: Dictionary(Of Integer, Double)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic.Dictionary`2
+  commentId: T:System.Collections.Generic.Dictionary`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<TKey, TValue>
+  nameWithType: Dictionary<TKey, TValue>
+  fullName: System.Collections.Generic.Dictionary<TKey, TValue>
+  nameWithType.vb: Dictionary(Of TKey, TValue)
+  fullName.vb: System.Collections.Generic.Dictionary(Of TKey, TValue)
+  name.vb: Dictionary(Of TKey, TValue)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ChebyshevSharp.ChebyshevApproximation.Minimize*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Minimize
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Minimize
+  nameWithType: ChebyshevApproximation.Minimize
+  fullName: ChebyshevSharp.ChebyshevApproximation.Minimize
+- uid: System.ValueTuple{System.Double,System.Double}
+  commentId: T:System.ValueTuple{System.Double,System.Double}
+  parent: System
+  definition: System.ValueTuple`2
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double value, double location)
+  nameWithType: (double value, double location)
+  fullName: (double value, double location)
+  nameWithType.vb: (value As Double, location As Double)
+  fullName.vb: (value As Double, location As Double)
+  name.vb: (value As Double, location As Double)
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.value
+    name: value
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.value
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.location
+    name: location
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.location
+  - name: )
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.value
+    name: value
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.value
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.location
+    name: location
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.location
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.ValueTuple`2
+  commentId: T:System.ValueTuple`2
+  name: (T1, T2)
+  nameWithType: (T1, T2)
+  fullName: (T1, T2)
+  spec.csharp:
+  - name: (
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+  spec.vb:
+  - name: (
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Maximize*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.Maximize
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Maximize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Maximize
+  nameWithType: ChebyshevApproximation.Maximize
+  fullName: ChebyshevSharp.ChebyshevApproximation.Maximize
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Addition*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.op_Addition
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Addition_ChebyshevSharp_ChebyshevApproximation_ChebyshevSharp_ChebyshevApproximation_
+  name: operator +
+  nameWithType: ChebyshevApproximation.operator +
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator +
+  nameWithType.vb: ChebyshevApproximation.+
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.+
+  name.vb: +
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevApproximation.op_Addition*
+    name: +
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Addition_ChebyshevSharp_ChebyshevApproximation_ChebyshevSharp_ChebyshevApproximation_
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Subtraction*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.op_Subtraction
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Subtraction_ChebyshevSharp_ChebyshevApproximation_ChebyshevSharp_ChebyshevApproximation_
+  name: operator -
+  nameWithType: ChebyshevApproximation.operator -
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator -
+  nameWithType.vb: ChebyshevApproximation.-
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.-
+  name.vb: '-'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevApproximation.op_Subtraction*
+    name: '-'
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Subtraction_ChebyshevSharp_ChebyshevApproximation_ChebyshevSharp_ChebyshevApproximation_
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Multiply*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.op_Multiply
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Multiply_ChebyshevSharp_ChebyshevApproximation_System_Double_
+  name: operator *
+  nameWithType: ChebyshevApproximation.operator *
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator *
+  nameWithType.vb: ChebyshevApproximation.*
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.*
+  name.vb: '*'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevApproximation.op_Multiply*
+    name: '*'
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Multiply_ChebyshevSharp_ChebyshevApproximation_System_Double_
+- uid: ChebyshevSharp.ChebyshevApproximation.op_Division*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.op_Division
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Division_ChebyshevSharp_ChebyshevApproximation_System_Double_
+  name: operator /
+  nameWithType: ChebyshevApproximation.operator /
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator /
+  nameWithType.vb: ChebyshevApproximation./
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation./
+  name.vb: /
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevApproximation.op_Division*
+    name: /
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_Division_ChebyshevSharp_ChebyshevApproximation_System_Double_
+- uid: ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_UnaryNegation_ChebyshevSharp_ChebyshevApproximation_
+  name: operator -
+  nameWithType: ChebyshevApproximation.operator -
+  fullName: ChebyshevSharp.ChebyshevApproximation.operator -
+  nameWithType.vb: ChebyshevApproximation.-
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.-
+  name.vb: '-'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevApproximation.op_UnaryNegation*
+    name: '-'
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_op_UnaryNegation_ChebyshevSharp_ChebyshevApproximation_
 - uid: System.Object.ToString
   commentId: M:System.Object.ToString
   parent: System.Object
@@ -278,10 +2693,15 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.tostring
   - name: (
   - name: )
-- uid: System
-  commentId: N:System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system
-  name: System
-  nameWithType: System
-  fullName: System
+- uid: ChebyshevSharp.ChebyshevApproximation.ToString*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.ToString
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_ToString
+  name: ToString
+  nameWithType: ChebyshevApproximation.ToString
+  fullName: ChebyshevSharp.ChebyshevApproximation.ToString
+- uid: ChebyshevSharp.ChebyshevApproximation.ToReprString*
+  commentId: Overload:ChebyshevSharp.ChebyshevApproximation.ToReprString
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_ToReprString
+  name: ToReprString
+  nameWithType: ChebyshevApproximation.ToReprString
+  fullName: ChebyshevSharp.ChebyshevApproximation.ToReprString

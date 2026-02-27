@@ -32,6 +32,8 @@ The return type is `object` — cast to `double` or `ChebyshevApproximation` dep
 
 **Accuracy:** Since Fejer-1 weights integrate degree n-1 polynomials exactly, and the Chebyshev interpolant is a polynomial of degree n-1, the quadrature is exact for the interpolant. The only error comes from the interpolation itself. For well-resolved functions, integration accuracy matches the interpolation accuracy.
 
+For `ChebyshevSpline`, integration sums across pieces with automatic bound clipping to each piece's sub-domain. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
 ## Root-Finding
 
 Find all roots (zero crossings) of the interpolant along a single dimension using the **colleague matrix** eigenvalue method [2]:
@@ -60,6 +62,8 @@ Roots are returned as an array of values within the domain bounds, sorted in asc
 
 This finds all roots simultaneously (no initial guess needed) and is numerically stable for polynomials of moderate degree (up to ~100 nodes).
 
+For `ChebyshevSpline`, roots are found per-piece and merged with deduplication near knot boundaries. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
 ## Minimization and Maximization
 
 Find the minimum or maximum of the interpolant along a single dimension:
@@ -85,6 +89,8 @@ Both methods return a tuple of `(double value, double location)`.
 4. Returns the best value and its location
 
 This is guaranteed to find the global optimum of the interpolant (not a local one), since all critical points are found via the eigenvalue method.
+
+For `ChebyshevSpline`, optimization searches each piece independently and returns the global optimum across all pieces. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
 ## References
 

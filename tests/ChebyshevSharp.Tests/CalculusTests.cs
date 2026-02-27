@@ -600,3 +600,490 @@ public class TestSubIntervalIntegrateApprox
         Assert.Contains("bounds length", ex.Message);
     }
 }
+
+// ======================================================================
+// TestIntegrateSpline (ported from Python TestIntegrateSpline)
+// ======================================================================
+
+public class TestIntegrateSpline
+{
+    [Fact]
+    public void Test_spline_integrate_abs()
+    {
+        // Integral of |x| on [-1, 1] = 1 (exact with knot at 0).
+        var sp = TestFixtures.CalculusSplineAbs;
+        var result = (double)sp.Integrate();
+        TestFixtures.AssertClose(1.0, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spline_integrate_2d_full()
+    {
+        // 2D spline integral of |x| + y^2 on [-1,1]^2 with knot at x=0.
+        // Total = 1*2 + 2/3*2 = 2 + 4/3 = 10/3.
+        static double f(double[] x, object? _) => Math.Abs(x[0]) + x[1] * x[1];
+        var sp = new ChebyshevSpline(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var result = (double)sp.Integrate();
+        double expected = 10.0 / 3.0;
+        TestFixtures.AssertClose(expected, result, rtol: 1e-8, atol: 1e-8);
+    }
+
+    [Fact]
+    public void Test_spline_integrate_pieces_sum()
+    {
+        // Sum of piece integrals equals total integral for 1D |x|.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        double total = (double)sp.Integrate();
+        double pieceSum = 0;
+        for (int i = 0; i < sp.NumPieces; i++)
+        {
+            pieceSum += (double)sp.Pieces[i]!.Integrate();
+        }
+        TestFixtures.AssertClose(total, pieceSum, rtol: 1e-12, atol: 1e-12);
+    }
+
+    [Fact]
+    public void Test_spline_integrate_no_knots()
+    {
+        // Spline with no knots should match ChebyshevApproximation.integrate().
+        static double f(double[] x, object? _) => Math.Sin(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var ca = new ChebyshevApproximation(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 });
+        ca.Build(verbose: false);
+        double spVal = (double)sp.Integrate();
+        double caVal = (double)ca.Integrate();
+        TestFixtures.AssertClose(spVal, caVal, rtol: 1e-12, atol: 1e-12);
+    }
+
+    [Fact]
+    public void Test_spline_integrate_before_build_raises()
+    {
+        // integrate() raises InvalidOperationException before build().
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        Assert.Throws<InvalidOperationException>(() => sp.Integrate());
+    }
+
+    [Fact]
+    public void Test_spline_integrate_partial()
+    {
+        // Partial integration of 2D spline |x| + y^2 over dim 0.
+        // int_{-1}^{1} (|x| + y^2) dx = 1 + 2*y^2.
+        static double f(double[] x, object? _) => Math.Abs(x[0]) + x[1] * x[1];
+        var sp = new ChebyshevSpline(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var result = (ChebyshevSpline)sp.Integrate(dims: new[] { 0 });
+        Assert.IsType<ChebyshevSpline>(result);
+        Assert.Equal(1, result.NumDimensions);
+        foreach (double y in new[] { -0.5, 0.0, 0.3, 0.8 })
+        {
+            double val = result.Eval(new[] { y }, new[] { 0 });
+            double expected = 1.0 + 2.0 * y * y;
+            TestFixtures.AssertClose(expected, val, rtol: 1e-8, atol: 1e-8);
+        }
+    }
+}
+
+// ======================================================================
+// TestRootsSpline (ported from Python TestRootsSpline)
+// ======================================================================
+
+public class TestRootsSpline
+{
+    [Fact]
+    public void Test_spline_roots_abs_shifted()
+    {
+        // Roots of |x| - 0.5 on [-1,1] with knot at 0: {-0.5, 0.5}.
+        static double f(double[] x, object? _) => Math.Abs(x[0]) - 0.5;
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        double[] roots = sp.Roots();
+        Array.Sort(roots);
+        Assert.Equal(2, roots.Length);
+        TestFixtures.AssertClose(-0.5, roots[0], rtol: 0, atol: 1e-8);
+        TestFixtures.AssertClose(0.5, roots[1], rtol: 0, atol: 1e-8);
+    }
+
+    [Fact]
+    public void Test_spline_roots_at_knot()
+    {
+        // Function x with knot at 0: root at x=0 (the knot). Verify dedup.
+        static double f(double[] x, object? _) => x[0];
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        double[] roots = sp.Roots();
+        // Both pieces have x=0 as endpoint root; after dedup, expect exactly 1
+        Assert.Single(roots);
+        Assert.True(Math.Abs(roots[0]) < 1e-8, $"Root {roots[0]} != 0");
+    }
+
+    [Fact]
+    public void Test_spline_roots_multi_piece()
+    {
+        // Roots spanning multiple pieces: sin(x) on [-4,4] with knots at -2 and 2.
+        static double f(double[] x, object? _) => Math.Sin(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -4.0, 4.0 } }, new[] { 15 },
+            new[] { new[] { -2.0, 2.0 } });
+        sp.Build(verbose: false);
+        double[] roots = sp.Roots();
+        Array.Sort(roots);
+        double[] expected = { -Math.PI, 0.0, Math.PI };
+        Assert.Equal(3, roots.Length);
+        for (int i = 0; i < roots.Length; i++)
+        {
+            TestFixtures.AssertClose(expected[i], roots[i], rtol: 0, atol: 1e-8);
+        }
+    }
+
+    [Fact]
+    public void Test_spline_roots_2d()
+    {
+        // 2D spline roots: f(x,y) = |x| - 0.3 with knot at x=0, fix y=0.5.
+        static double f(double[] x, object? _) => Math.Abs(x[0]) - 0.3;
+        var sp = new ChebyshevSpline(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 5 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+        double[] roots = sp.Roots(dim: 0, fixedDims: new Dictionary<int, double> { { 1, 0.5 } });
+        Array.Sort(roots);
+        Assert.Equal(2, roots.Length);
+        TestFixtures.AssertClose(-0.3, roots[0], rtol: 0, atol: 1e-8);
+        TestFixtures.AssertClose(0.3, roots[1], rtol: 0, atol: 1e-8);
+    }
+
+    [Fact]
+    public void Test_spline_roots_no_knots_matches_ca()
+    {
+        // Spline with no knots matches ChebyshevApproximation.roots().
+        static double f(double[] x, object? _) => Math.Sin(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -4.0, 4.0 } }, new[] { 25 },
+            new[] { Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var ca = new ChebyshevApproximation(f, 1,
+            new[] { new[] { -4.0, 4.0 } }, new[] { 25 });
+        ca.Build(verbose: false);
+        double[] spRoots = sp.Roots();
+        double[] caRoots = ca.Roots();
+        Array.Sort(spRoots);
+        Array.Sort(caRoots);
+        Assert.Equal(caRoots.Length, spRoots.Length);
+        for (int i = 0; i < spRoots.Length; i++)
+        {
+            TestFixtures.AssertClose(caRoots[i], spRoots[i], rtol: 0, atol: 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Test_spline_roots_before_build_raises()
+    {
+        // roots() raises InvalidOperationException before build().
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        Assert.Throws<InvalidOperationException>(() => sp.Roots());
+    }
+}
+
+// ======================================================================
+// TestMinMaxSpline (ported from Python TestMinMaxSpline)
+// ======================================================================
+
+public class TestMinMaxSpline
+{
+    [Fact]
+    public void Test_spline_minimize_abs()
+    {
+        // Min of |x| on [-1, 1] with knot at 0 -> (0, 0).
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        var (val, loc) = sp.Minimize();
+        Assert.True(Math.Abs(val) < 1e-8, $"Min value {val} != 0");
+        Assert.True(Math.Abs(loc) < 1e-8, $"Min location {loc} != 0");
+    }
+
+    [Fact]
+    public void Test_spline_maximize_abs()
+    {
+        // Max of |x| on [-1, 1] -> (1, -1 or 1).
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        var (val, loc) = sp.Maximize();
+        TestFixtures.AssertClose(1.0, val, rtol: 0, atol: 1e-8);
+        Assert.True(Math.Abs(Math.Abs(loc) - 1.0) < 1e-8,
+            $"Max location {loc} not at +/-1");
+    }
+
+    [Fact]
+    public void Test_spline_minimize_multi_piece()
+    {
+        // Global min across pieces: |x| - 0.5 on [-1,1], min at x=0, value=-0.5.
+        static double f(double[] x, object? _) => Math.Abs(x[0]) - 0.5;
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        var (val, loc) = sp.Minimize();
+        TestFixtures.AssertClose(-0.5, val, rtol: 0, atol: 1e-8);
+        Assert.True(Math.Abs(loc) < 1e-8, $"Min location {loc} != 0");
+    }
+
+    [Fact]
+    public void Test_spline_maximize_2d()
+    {
+        // 2D spline maximize: f(x,y) = -|x| + cos(y) on [-1,1]^2 with knot at x=0.
+        // Fix y=0, max along x: -|x| + 1, max at x=0, value=1.
+        static double f(double[] x, object? _) => -Math.Abs(x[0]) + Math.Cos(x[1]);
+        var sp = new ChebyshevSpline(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var (val, loc) = sp.Maximize(dim: 0, fixedDims: new Dictionary<int, double> { { 1, 0.0 } });
+        TestFixtures.AssertClose(1.0, val, rtol: 0, atol: 1e-6);
+        Assert.True(Math.Abs(loc) < 1e-6, $"Max location {loc} != 0");
+    }
+
+    [Fact]
+    public void Test_spline_minimize_no_knots_matches_ca()
+    {
+        // Spline with no knots matches CA.minimize().
+        static double f(double[] x, object? _) => x[0] * x[0] - 0.5 * x[0];
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var ca = new ChebyshevApproximation(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 });
+        ca.Build(verbose: false);
+        var (spVal, spLoc) = sp.Minimize();
+        var (caVal, caLoc) = ca.Minimize();
+        TestFixtures.AssertClose(caVal, spVal, rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(caLoc, spLoc, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spline_minimize_before_build_raises()
+    {
+        // minimize() raises InvalidOperationException before build().
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        Assert.Throws<InvalidOperationException>(() => sp.Minimize());
+    }
+
+    [Fact]
+    public void Test_spline_maximize_returns_tuple()
+    {
+        // Verify maximize() return type is a tuple of two doubles.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        var result = sp.Maximize();
+        Assert.IsType<double>(result.value);
+        Assert.IsType<double>(result.location);
+    }
+}
+
+// ======================================================================
+// TestSubIntervalIntegrateSpline (ported from Python TestSubIntervalIntegrateSpline)
+// ======================================================================
+
+public class TestSubIntervalIntegrateSpline
+{
+    [Fact]
+    public void Test_within_one_piece()
+    {
+        // Integral of |x| on [0.2, 0.8] (within right piece) = 0.3.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        var result = (double)sp.Integrate(bounds: new[] { (0.2, 0.8) });
+        double expected = 0.3; // (0.8^2 - 0.2^2)/2 = (0.64 - 0.04)/2 = 0.3
+        TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spanning_knot()
+    {
+        // Integral of |x| on [-0.3, 0.5] spans knot at 0: = 0.17.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        var result = (double)sp.Integrate(bounds: new[] { (-0.3, 0.5) });
+        // int_{-0.3}^{0} |x| dx + int_{0}^{0.5} |x| dx
+        // = 0.3^2/2 + 0.5^2/2 = 0.045 + 0.125 = 0.17
+        double expected = 0.17;
+        TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_full_domain_matches_no_bounds()
+    {
+        // bounds == full domain matches integrate() with no bounds.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        double noBounds = (double)sp.Integrate();
+        double withBounds = (double)sp.Integrate(bounds: new[] { (-1.0, 1.0) });
+        TestFixtures.AssertClose(noBounds, withBounds, rtol: 1e-12, atol: 1e-12);
+    }
+
+    [Fact]
+    public void Test_non_overlapping_pieces_excluded()
+    {
+        // Sub-interval entirely within one piece ignores others.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        // Only integrates right piece [0, 1], left piece [-1, 0] excluded
+        var result = (double)sp.Integrate(bounds: new[] { (0.0, 1.0) });
+        double expected = 0.5; // int_0^1 x dx = 0.5
+        TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_2d_partial_sub_interval()
+    {
+        // 2D spline: integrate dim 0 on sub-interval with knot.
+        static double f(double[] x, object? _) => Math.Abs(x[0]) + x[1] * x[1];
+        var sp = new ChebyshevSpline(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+        // int_{-0.5}^{0.5} (|x| + y^2) dx
+        //   = 0.125 + 0.125 + y^2 = 0.25 + y^2
+        var result = (ChebyshevSpline)sp.Integrate(dims: new[] { 0 }, bounds: new[] { (-0.5, 0.5) });
+        Assert.IsType<ChebyshevSpline>(result);
+        Assert.Equal(1, result.NumDimensions);
+        foreach (double y in new[] { -0.5, 0.0, 0.7 })
+        {
+            double val = result.Eval(new[] { y }, new[] { 0 });
+            double expected = 0.25 + y * y;
+            TestFixtures.AssertClose(expected, val, rtol: 1e-8, atol: 1e-8);
+        }
+    }
+
+    [Fact]
+    public void Test_adjacent_sub_intervals_sum()
+    {
+        // Adjacent sub-intervals on spline sum to full integral.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        double full = (double)sp.Integrate();
+        double left = (double)sp.Integrate(bounds: new[] { (-1.0, 0.3) });
+        double right = (double)sp.Integrate(bounds: new[] { (0.3, 1.0) });
+        TestFixtures.AssertClose(full, left + right, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_knot_boundary_precision()
+    {
+        // Sub-interval endpoint exactly at knot is handled correctly.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        // [0.0, 0.5] -- left boundary is exactly at knot
+        var result = (double)sp.Integrate(bounds: new[] { (0.0, 0.5) });
+        double expected = 0.125; // int_0^0.5 x dx = 0.5^2/2
+        TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
+}
+
+// ======================================================================
+// C#-Specific: Integration Across Knots
+// ======================================================================
+
+/// <summary>
+/// C#-specific tests verifying spline integration consistency across
+/// piece boundaries.
+/// </summary>
+public class TestSplineIntegrateCSharpEdgeCases
+{
+    [Fact]
+    public void Test_spline_integrate_full_equals_sum_of_pieces()
+    {
+        // The full-domain integral should equal the sum of each piece's
+        // individual integral.
+        static double f(double[] x, object? _) => Math.Abs(x[0] - 1.0) + Math.Abs(x[0] + 1.0);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -3.0, 3.0 } }, new[] { 11 },
+            new[] { new[] { -1.0, 1.0 } });
+        sp.Build(verbose: false);
+
+        double totalIntegral = (double)sp.Integrate();
+        double pieceSum = 0.0;
+        for (int i = 0; i < sp.NumPieces; i++)
+        {
+            pieceSum += (double)sp.Pieces[i]!.Integrate();
+        }
+
+        TestFixtures.AssertClose(totalIntegral, pieceSum, rtol: 1e-12, atol: 1e-12);
+    }
+
+    [Fact]
+    public void Test_spline_integrate_within_single_piece()
+    {
+        // Integration bounds entirely within one piece should match that
+        // piece's own sub-interval integral.
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        // Integrate only within the right piece [0.2, 0.8]
+        double splineResult = (double)sp.Integrate(bounds: new[] { (0.2, 0.8) });
+        // For |x| on [0.2, 0.8], which is x on that interval:
+        // int_0.2^0.8 x dx = (0.64 - 0.04)/2 = 0.3
+        double expected = 0.3;
+        TestFixtures.AssertClose(expected, splineResult, rtol: 1e-10, atol: 1e-10);
+    }
+}

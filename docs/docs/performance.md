@@ -80,6 +80,22 @@ The optimized implementation reduces per-eval memory allocation significantly fo
 
 For 5D problems, allocation is dominated by the large intermediate tensors required for contraction and remains roughly the same (~129 KB per eval).
 
+## ChebyshevSpline Performance
+
+`ChebyshevSpline` evaluation adds a thin routing layer on top of `ChebyshevApproximation`. The overhead consists of one `Array.BinarySearch` per dimension (O(log k) where k is the number of knots) followed by a standard `VectorizedEval` on the selected piece.
+
+Since each piece has fewer nodes than a global interpolant of equivalent accuracy, per-eval BLAS work is smaller. The trade-off is more function evaluations at build time (one full tensor grid per piece) and slightly higher per-eval overhead from piece routing.
+
+**When to expect similar performance:** For functions with singularities, the spline achieves target accuracy with far fewer nodes per piece than a global interpolant would need. The reduced per-piece tensor size often more than compensates for the routing overhead.
+
+**When to expect overhead:** For smooth functions where a global interpolant already works well, the spline adds routing cost with no accuracy benefit. Use `ChebyshevApproximation` in this case.
+
+Spline benchmarks are available in the `SplineBenchmarks` class in the benchmark project. Run them with:
+
+```bash
+dotnet run -c Release --project benchmarks/ChebyshevSharp.Benchmarks -- --filter '*Spline*'
+```
+
 ## References
 
 1. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.

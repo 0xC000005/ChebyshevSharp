@@ -52,4 +52,4 @@ double dfdx = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 
 ## API Reference
 
-See the [API documentation](api/ChebyshevSharp.html) for full class and method reference, auto-generated from XML documentation comments.
+See the [API documentation](api/ChebyshevSharp.yml) for full class and method reference, auto-generated from XML documentation comments.

@@ -25,6 +25,8 @@ Loaded interpolants cannot call `Build()` since they do not retain the original 
 
 **Format note:** ChebyshevSharp uses its own JSON format, not Python pickle. Files saved by PyChebyshev cannot be loaded by ChebyshevSharp and vice versa. To transfer between languages, use `FromValues` with exported node positions and function values.
 
+`ChebyshevSpline` also supports `Save` and `Load` with the same JSON format. The serialized file includes all pieces and knot positions. `Nodes()` and `FromValues()` are available for `ChebyshevSpline` as well. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
 ## FromValues
 
 If you already have function values at Chebyshev nodes, use `FromValues` to construct an interpolant directly without providing a function:
@@ -47,10 +49,10 @@ for (int i = 0; i < nodeInfo.FullGrid.Length; i++)
 
 // Build the interpolant from pre-computed values
 var cheb = ChebyshevApproximation.FromValues(
+    tensorValues: values,
     numDimensions: 2,
     domain: new[] { new[] { 0.0, 1.0 }, new[] { 0.0, 1.0 } },
-    nNodes: new[] { 10, 10 },
-    values: values
+    nNodes: new[] { 10, 10 }
 );
 ```
 

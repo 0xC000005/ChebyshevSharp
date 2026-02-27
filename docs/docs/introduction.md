@@ -20,14 +20,14 @@ ChebyshevSharp evaluates the Chebyshev interpolant using the **barycentric inter
 
 where x_j are the Chebyshev nodes, f_j are the function values at those nodes, and w_j are the barycentric weights. This formula is numerically stable and evaluates in O(n) time.
 
-For multi-dimensional problems, the function values are stored as an N-dimensional tensor and contracted one axis at a time — each contraction is a matrix-vector multiply routed through BLAS. Derivatives are computed analytically via spectral differentiation matrices [1, Ch. 6], not finite differences.
+For multi-dimensional problems, the function values are stored as an N-dimensional tensor and contracted one axis at a time — each contraction is a matrix-vector multiply routed through BLAS. Derivatives are computed analytically via spectral differentiation matrices [2], not finite differences.
 
 ## Classes
 
 | Class | Purpose | Status |
 |-------|---------|--------|
 | `ChebyshevApproximation` | Core multi-dimensional Chebyshev interpolation with analytical derivatives | Available |
-| `ChebyshevSpline` | Piecewise Chebyshev interpolation with knots at singularities | Planned |
+| `ChebyshevSpline` | Piecewise Chebyshev interpolation with knots at singularities | Available |
 | `ChebyshevSlider` | High-dimensional approximation via the Sliding Technique | Planned |
 | `ChebyshevTT` | Tensor Train Chebyshev interpolation for 5+ dimensions | Planned |
 
@@ -62,6 +62,8 @@ double[] results = cheb.VectorizedEvalMulti(
 
 After a one-time build cost of 1,800 function evaluations, each subsequent evaluation takes ~500 ns with all Greeks — orders of magnitude faster than the original model.
 
+For functions with discontinuities or singularities (e.g., digital options, barrier payoffs), use `ChebyshevSpline` to place knots at the trouble points and achieve spectral convergence on each smooth piece. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
 ## Relationship to PyChebyshev
 
 ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyChebyshev). The Python reference implementation is included as a git submodule at `ref/PyChebyshev/` for cross-validation. Both libraries produce numerically identical results within floating-point tolerance. On low-dimensional problems (1-3D), the C# implementation is 17-42x faster than Python due to eliminated interpreter overhead; see [Performance](performance.md) for benchmarks.
@@ -70,5 +72,5 @@ ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyCheb
 
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
 2. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
-3. Ruiz, G. & Zeron, M. (2021). *Machine Learning for Risk Calculations.* Wiley Finance.
+3. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance.
 4. Good, I. J. (1961). "The Colleague Matrix, a Chebyshev Analogue of the Companion Matrix." *The Quarterly Journal of Mathematics* 12(1):61-68.

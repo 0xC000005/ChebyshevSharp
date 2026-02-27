@@ -83,6 +83,8 @@ The extruded interpolant has one more dimension. You can extrude multiple dimens
 
 This is useful for building up multi-dimensional interpolants incrementally, or for combining interpolants that depend on different subsets of variables via arithmetic operators.
 
+`ChebyshevSpline` supports extrusion, which extrudes each piece independently. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
 ## Slicing
 
 Fix one or more dimensions at specific values, reducing the dimensionality:
@@ -99,6 +101,8 @@ Slicing performs barycentric interpolation along the fixed dimensions and return
 
 Slicing is used internally by `Roots`, `Minimize`, and `Maximize` to reduce multi-dimensional problems to 1D before applying root-finding or optimization (see [Calculus](calculus.md)).
 
+`ChebyshevSpline` supports slicing, selecting the piece containing the slice value. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
 ## Arithmetic Operators
 
 Interpolants defined on the same grid support pointwise arithmetic:
@@ -114,6 +118,8 @@ var halved = cheb1 / 2.0;       // scalar division
 Both operands must have the same number of dimensions, domain bounds, and node counts. The result is a new `ChebyshevApproximation` with tensor values computed pointwise.
 
 Arithmetic on interpolants is exact at the nodes. Between nodes, the result is the Chebyshev interpolant of the pointwise operation — which differs from the true pointwise result by the interpolation error. For well-resolved interpolants, this difference is negligible.
+
+`ChebyshevSpline` also supports arithmetic operators. Both operands must have the same knots, domain bounds, and node counts. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
 ## Derivative Orders
 

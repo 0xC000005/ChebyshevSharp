@@ -110,6 +110,62 @@ public static class TestFixtures
         return cheb;
     });
 
+    // ---------------------------------------------------------------
+    // Spline fixture builders
+    // ---------------------------------------------------------------
+
+    private static readonly Lazy<ChebyshevSpline> _splineAbs1D = new(() =>
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        return sp;
+    });
+
+    private static readonly Lazy<ChebyshevSpline> _splineBs2D = new(() =>
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => Math.Max(x[0] - 100.0, 0.0) * Math.Exp(-0.05 * x[1]),
+            2,
+            new[] { new[] { 80.0, 120.0 }, new[] { 0.25, 1.0 } },
+            new[] { 15, 15 },
+            new[] { new[] { 100.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+        return sp;
+    });
+
+    private static readonly Lazy<ChebyshevSpline> _algebraSplineF = new(() =>
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        return sp;
+    });
+
+    private static readonly Lazy<ChebyshevSpline> _algebraSplineG = new(() =>
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => x[0] * x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        return sp;
+    });
+
+    private static readonly Lazy<ChebyshevSpline> _calculusSplineAbs = new(() =>
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+        return sp;
+    });
+
     // Public accessors
     public static ChebyshevApproximation ChebSin3D => _chebSin3D.Value;
     public static ChebyshevApproximation ChebBs3D => _chebBs3D.Value;
@@ -120,6 +176,12 @@ public static class TestFixtures
     public static ChebyshevApproximation ExtrudeCheb2D => _extrudeCheb2D.Value;
     public static ChebyshevApproximation CalculusChebSin1D => _calculusChebSin1D.Value;
     public static ChebyshevApproximation CalculusCheb2D => _calculusCheb2D.Value;
+
+    public static ChebyshevSpline SplineAbs1D => _splineAbs1D.Value;
+    public static ChebyshevSpline SplineBs2D => _splineBs2D.Value;
+    public static ChebyshevSpline AlgebraSplineF => _algebraSplineF.Value;
+    public static ChebyshevSpline AlgebraSplineG => _algebraSplineG.Value;
+    public static ChebyshevSpline CalculusSplineAbs => _calculusSplineAbs.Value;
 
     // ---------------------------------------------------------------
     // Assertion helpers

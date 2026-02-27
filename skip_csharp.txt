@@ -2,15 +2,18 @@
 # Remove lines as tests are ported and passing.
 # Target: 457 tests (matching PyChebyshev v0.10.1)
 
-# Phase 1: ChebyshevApproximation — DONE (212 tests passing)
-# BarycentricTests: 42 tests ✓
-# FromValuesTests: 44 tests ✓
-# AlgebraTests: 37 tests ✓
+# Phase 1: ChebyshevApproximation — DONE (233 tests passing)
+# BarycentricTests: 51 tests ✓ (42 Python + 9 C#-specific)
+# FromValuesTests: 48 tests ✓ (44 Python + 4 C#-specific)
+# AlgebraTests: 40 tests ✓ (37 Python + 3 C#-specific)
 # ExtrudeSliceTests: 42 tests ✓
 # CalculusTests: 42 tests ✓
 
-# Phase 2: ChebyshevSpline (55 tests + remaining algebra/extrude-slice/calculus)
-SplineTests.*                   # 55 tests — piecewise construction, knots, eval, serialization
+# Phase 2: ChebyshevSpline — DONE (128 tests passing, 361 total)
+# SplineTests: 65 tests ✓ (55 Python + 10 C#-specific)
+# AlgebraTests (Spline): 21 tests ✓ (18 Python + 3 C#-specific)
+# ExtrudeSliceTests (Spline): 13 tests ✓ (11 Python + 2 C#-specific)
+# CalculusTests (Spline): 28 tests ✓ (26 Python + 2 C#-specific)
 
 # Phase 3: ChebyshevSlider (40 tests + remaining algebra/extrude-slice)
 SliderTests.*                   # 40 tests — sliding technique, pivot, groups, derivatives

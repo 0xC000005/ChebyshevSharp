@@ -1065,7 +1065,7 @@ public class ChebyshevApproximation
     /// Pre-compute transposed diff matrices as flat arrays for BLAS GEMM.
     /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice.
     /// </summary>
-    private void PrecomputeTransposedDiffMatrices()
+    internal void PrecomputeTransposedDiffMatrices()
     {
         if (DiffMatrices == null) return;
         DiffMatricesTFlat = new double[DiffMatrices.Length][];
@@ -1122,7 +1122,7 @@ public class ChebyshevApproximation
         return slice;
     }
 
-    private static double[] Flatten2D(double[,] matrix)
+    internal static double[] Flatten2D(double[,] matrix)
     {
         int rows = matrix.GetLength(0);
         int cols = matrix.GetLength(1);
@@ -1133,7 +1133,7 @@ public class ChebyshevApproximation
         return flat;
     }
 
-    private static double[,] Unflatten2D(double[] flat, int rows, int cols)
+    internal static double[,] Unflatten2D(double[] flat, int rows, int cols)
     {
         double[,] matrix = new double[rows, cols];
         for (int i = 0; i < rows; i++)
