@@ -96,6 +96,20 @@ Spline benchmarks are available in the `SplineBenchmarks` class in the benchmark
 dotnet run -c Release --project benchmarks/ChebyshevSharp.Benchmarks -- --filter '*Spline*'
 ```
 
+## ChebyshevSlider Performance
+
+`ChebyshevSlider` trades approximation fidelity for dramatically reduced build cost in high dimensions. Instead of a single tensor grid with $\prod_i n_i$ evaluations, it builds one small `ChebyshevApproximation` per partition group, with total build cost $\sum_g \prod_{i \in g} n_i$.
+
+For example, a 6D function with 10 nodes per dimension and partition `[[0,1],[2,3],[4,5]]`:
+- Full tensor grid: $10^6 = 1{,}000{,}000$ evaluations
+- Slider (three 2D groups): $3 \times 10^2 = 300$ evaluations
+
+Evaluation involves summing the contributions of each slide (one `VectorizedEval` per group) plus the pivot value. For k groups, each eval is approximately k times the cost of evaluating a single low-dimensional `ChebyshevApproximation`. The overhead from the additive decomposition is negligible compared to the build cost savings.
+
+**When to expect good accuracy:** Functions that are additively separable or nearly so — where cross-group interactions are weak relative to within-group effects. The error estimate (`ErrorEstimate()`) reports the sum of per-slide errors, providing a conservative bound.
+
+**When to expect reduced accuracy:** Functions with strong interactions between dimensions in different partition groups. The sliding technique cannot capture cross-group coupling beyond the pivot point. Consider using `ChebyshevApproximation` (for moderate dimensions) or `ChebyshevTT` (planned, for high dimensions with coupling).
+
 ## References
 
 1. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.

@@ -4,6 +4,8 @@
   href: getting-started.md
 - name: Piecewise Chebyshev (Splines)
   href: spline.md
+- name: Sliding Technique
+  href: slider.md
 - name: Advanced Usage
   href: advanced-usage.md
 - name: Calculus

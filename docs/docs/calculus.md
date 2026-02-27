@@ -92,6 +92,16 @@ This is guaranteed to find the global optimum of the interpolant (not a local on
 
 For `ChebyshevSpline`, optimization searches each piece independently and returns the global optimum across all pieces. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
+## Class Support
+
+| Operation | `ChebyshevApproximation` | `ChebyshevSpline` | `ChebyshevSlider` |
+|-----------|:---:|:---:|:---:|
+| Integrate | Yes | Yes | No |
+| Roots | Yes | Yes | No |
+| Minimize / Maximize | Yes | Yes | No |
+
+`ChebyshevSlider` does not support calculus operations because the additive decomposition does not preserve the polynomial structure needed for exact integration or root-finding. Use `ChebyshevApproximation` or `ChebyshevSpline` for these operations.
+
 ## References
 
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.

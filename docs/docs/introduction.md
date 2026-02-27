@@ -32,7 +32,7 @@ For multi-dimensional problems, the function values are stored as an N-dimension
 |-------|---------|--------|
 | `ChebyshevApproximation` | Core multi-dimensional Chebyshev interpolation with analytical derivatives | Available |
 | `ChebyshevSpline` | Piecewise Chebyshev interpolation with knots at singularities | Available |
-| `ChebyshevSlider` | High-dimensional approximation via the Sliding Technique | Planned |
+| `ChebyshevSlider` | High-dimensional approximation via the Sliding Technique | Available |
 | `ChebyshevTT` | Tensor Train Chebyshev interpolation for 5+ dimensions | Planned |
 
 ## Typical Use Case: Option Pricing
@@ -67,6 +67,8 @@ double[] results = cheb.VectorizedEvalMulti(
 After a one-time build cost of 1,800 function evaluations, each subsequent evaluation takes ~500 ns with all Greeks — orders of magnitude faster than the original model.
 
 For functions with discontinuities or singularities (e.g., digital options, barrier payoffs), use `ChebyshevSpline` to place knots at the trouble points and achieve spectral convergence on each smooth piece. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
+For high-dimensional problems where a full tensor grid is infeasible, `ChebyshevSlider` partitions the dimensions into small groups and builds a separate interpolant per group around a pivot point, reducing the cost from exponential to additive. See [Sliding Technique](slider.md) for details.
 
 ## Relationship to PyChebyshev
 

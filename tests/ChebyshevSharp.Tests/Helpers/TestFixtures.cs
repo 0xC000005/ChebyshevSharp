@@ -184,6 +184,39 @@ public static class TestFixtures
     public static ChebyshevSpline CalculusSplineAbs => _calculusSplineAbs.Value;
 
     // ---------------------------------------------------------------
+    // Slider fixture builders
+    // ---------------------------------------------------------------
+
+    private static readonly Lazy<ChebyshevSlider> _algebraSliderF = new(() =>
+    {
+        var sl = new ChebyshevSlider(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]),
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        sl.Build(verbose: false);
+        return sl;
+    });
+
+    private static readonly Lazy<ChebyshevSlider> _algebraSliderG = new(() =>
+    {
+        var sl = new ChebyshevSlider(
+            (x, _) => Math.Cos(x[0]) + Math.Cos(x[1]) + Math.Cos(x[2]),
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        sl.Build(verbose: false);
+        return sl;
+    });
+
+    public static ChebyshevSlider AlgebraSliderF => _algebraSliderF.Value;
+    public static ChebyshevSlider AlgebraSliderG => _algebraSliderG.Value;
+
+    // ---------------------------------------------------------------
     // Assertion helpers
     // ---------------------------------------------------------------
 

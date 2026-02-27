@@ -27,6 +27,8 @@ Loaded interpolants cannot call `Build()` since they do not retain the original 
 
 `ChebyshevSpline` also supports `Save` and `Load` with the same JSON format. The serialized file includes all pieces and knot positions. `Nodes()` and `FromValues()` are available for `ChebyshevSpline` as well. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
+`ChebyshevSlider` supports `Save` and `Load`. The serialized file includes the partition, pivot point, pivot value, and all slide states. `Nodes()` and `FromValues()` are not available for `ChebyshevSlider` — use the constructor and `Build()` workflow instead. See [Sliding Technique](slider.md) for details.
+
 ## FromValues
 
 If you already have function values at Chebyshev nodes, use `FromValues` to construct an interpolant directly without providing a function:

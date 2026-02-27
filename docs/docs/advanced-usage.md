@@ -66,6 +66,8 @@ The estimate is computed as the maximum of the last Chebyshev coefficient across
 
 The result is cached — repeated calls return the stored value without recomputation.
 
+For `ChebyshevSpline`, the error estimate is the maximum across all pieces — reflecting the worst-case error. For `ChebyshevSlider`, the error estimate is the **sum** across all slides — reflecting the additive nature of the approximation. See [Piecewise Chebyshev Interpolation](spline.md) and [Sliding Technique](slider.md) for details.
+
 ## Extrusion
 
 Add new dimensions to an existing interpolant. The function value is constant along the new dimensions:
@@ -85,6 +87,8 @@ This is useful for building up multi-dimensional interpolants incrementally, or 
 
 `ChebyshevSpline` supports extrusion, which extrudes each piece independently. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
+`ChebyshevSlider` supports extrusion, which adds a new singleton-group slide for the new dimension. The new dimension is constant at the pivot value. See [Sliding Technique](slider.md) for details.
+
 ## Slicing
 
 Fix one or more dimensions at specific values, reducing the dimensionality:
@@ -103,6 +107,8 @@ Slicing is used internally by `Roots`, `Minimize`, and `Maximize` to reduce mult
 
 `ChebyshevSpline` supports slicing, selecting the piece containing the slice value. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
+`ChebyshevSlider` supports slicing. If the sliced dimension belongs to a multi-dimension group, the slide is sliced within that group. If it is a singleton group, the slide is evaluated and its contribution is absorbed into the remaining slides. See [Sliding Technique](slider.md) for details.
+
 ## Arithmetic Operators
 
 Interpolants defined on the same grid support pointwise arithmetic:
@@ -120,6 +126,8 @@ Both operands must have the same number of dimensions, domain bounds, and node c
 Arithmetic on interpolants is exact at the nodes. Between nodes, the result is the Chebyshev interpolant of the pointwise operation — which differs from the true pointwise result by the interpolation error. For well-resolved interpolants, this difference is negligible.
 
 `ChebyshevSpline` also supports arithmetic operators. Both operands must have the same knots, domain bounds, and node counts. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+
+`ChebyshevSlider` also supports arithmetic operators. Both operands must have the same partition and pivot point in addition to domain and node counts. See [Sliding Technique](slider.md) for details.
 
 ## Derivative Orders
 

@@ -1,0 +1,1945 @@
+### YamlMime:ManagedReference
+items:
+- uid: ChebyshevSharp.ChebyshevSlider
+  commentId: T:ChebyshevSharp.ChebyshevSlider
+  id: ChebyshevSlider
+  parent: ChebyshevSharp
+  children:
+  - ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)
+  - ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+  - ChebyshevSharp.ChebyshevSlider.BuildTime
+  - ChebyshevSharp.ChebyshevSlider.Built
+  - ChebyshevSharp.ChebyshevSlider.Domain
+  - ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+  - ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32[])
+  - ChebyshevSharp.ChebyshevSlider.EvalMulti(System.Double[],System.Int32[][])
+  - ChebyshevSharp.ChebyshevSlider.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  - ChebyshevSharp.ChebyshevSlider.Function
+  - ChebyshevSharp.ChebyshevSlider.Load(System.String)
+  - ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevSlider.NNodes
+  - ChebyshevSharp.ChebyshevSlider.NumDimensions
+  - ChebyshevSharp.ChebyshevSlider.Partition
+  - ChebyshevSharp.ChebyshevSlider.PivotPoint
+  - ChebyshevSharp.ChebyshevSlider.PivotValue
+  - ChebyshevSharp.ChebyshevSlider.Save(System.String)
+  - ChebyshevSharp.ChebyshevSlider.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  - ChebyshevSharp.ChebyshevSlider.ToReprString
+  - ChebyshevSharp.ChebyshevSlider.ToString
+  - ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
+  - ChebyshevSharp.ChebyshevSlider.op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  - ChebyshevSharp.ChebyshevSlider.op_Division(ChebyshevSharp.ChebyshevSlider,System.Double)
+  - ChebyshevSharp.ChebyshevSlider.op_Multiply(ChebyshevSharp.ChebyshevSlider,System.Double)
+  - ChebyshevSharp.ChebyshevSlider.op_Multiply(System.Double,ChebyshevSharp.ChebyshevSlider)
+  - ChebyshevSharp.ChebyshevSlider.op_Subtraction(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  - ChebyshevSharp.ChebyshevSlider.op_UnaryNegation(ChebyshevSharp.ChebyshevSlider)
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevSlider
+  nameWithType: ChebyshevSlider
+  fullName: ChebyshevSharp.ChebyshevSlider
+  type: Class
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ChebyshevSlider
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 21
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Chebyshev Sliding approximation for high-dimensional functions.
+
+    Decomposes f(x₁, …, xₙ) into a sum of low-dimensional Chebyshev
+
+    interpolants (slides) around a pivot point z:
+        f(x) ≈ f(z) + Σᵢ [sᵢ(x_groupᵢ) - f(z)]
+    where each slide sᵢ is a <xref href="ChebyshevSharp.ChebyshevApproximation" data-throw-if-not-resolved="false"></xref> built on a
+
+    subset of dimensions with the remaining dimensions fixed at z.
+  remarks: >-
+    This trades accuracy for dramatically reduced build cost: instead of
+
+    evaluating f at n₁ × n₂ × … × nₐ grid points (exponential), the slider
+
+    evaluates at n₁ × n₂ + n₃ × n₄ + … (sum of products within each group).
+
+    Reference: Ruiz &amp; Zeron (2022), Ch. 7.
+  example: []
+  syntax:
+    content: public class ChebyshevSlider
+    content.vb: Public Class ChebyshevSlider
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.MemberwiseClone
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+- uid: ChebyshevSharp.ChebyshevSlider.Function
+  commentId: P:ChebyshevSharp.ChebyshevSlider.Function
+  id: Function
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Function
+  nameWithType: ChebyshevSlider.Function
+  fullName: ChebyshevSharp.ChebyshevSlider.Function
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Function
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 24
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: The function to approximate. Null after load.
+  example: []
+  syntax:
+    content: public Func<double[], object?, double>? Function { get; }
+    parameters: []
+    return:
+      type: System.Func{System.Double[],System.Object,System.Double}
+    content.vb: Public Property [Function] As Func(Of Double(), Object, Double)
+  overload: ChebyshevSharp.ChebyshevSlider.Function*
+- uid: ChebyshevSharp.ChebyshevSlider.NumDimensions
+  commentId: P:ChebyshevSharp.ChebyshevSlider.NumDimensions
+  id: NumDimensions
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: NumDimensions
+  nameWithType: ChebyshevSlider.NumDimensions
+  fullName: ChebyshevSharp.ChebyshevSlider.NumDimensions
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NumDimensions
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 27
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Number of input dimensions.
+  example: []
+  syntax:
+    content: public int NumDimensions { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property NumDimensions As Integer
+  overload: ChebyshevSharp.ChebyshevSlider.NumDimensions*
+- uid: ChebyshevSharp.ChebyshevSlider.Domain
+  commentId: P:ChebyshevSharp.ChebyshevSlider.Domain
+  id: Domain
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Domain
+  nameWithType: ChebyshevSlider.Domain
+  fullName: ChebyshevSharp.ChebyshevSlider.Domain
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Domain
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 30
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Domain bounds for each dimension, as list of [lo, hi].
+  example: []
+  syntax:
+    content: public double[][] Domain { get; }
+    parameters: []
+    return:
+      type: System.Double[][]
+    content.vb: Public Property Domain As Double()()
+  overload: ChebyshevSharp.ChebyshevSlider.Domain*
+- uid: ChebyshevSharp.ChebyshevSlider.NNodes
+  commentId: P:ChebyshevSharp.ChebyshevSlider.NNodes
+  id: NNodes
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: NNodes
+  nameWithType: ChebyshevSlider.NNodes
+  fullName: ChebyshevSharp.ChebyshevSlider.NNodes
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NNodes
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 33
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Number of Chebyshev nodes per dimension.
+  example: []
+  syntax:
+    content: public int[] NNodes { get; }
+    parameters: []
+    return:
+      type: System.Int32[]
+    content.vb: Public Property NNodes As Integer()
+  overload: ChebyshevSharp.ChebyshevSlider.NNodes*
+- uid: ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+  commentId: P:ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+  id: MaxDerivativeOrder
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: MaxDerivativeOrder
+  nameWithType: ChebyshevSlider.MaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: MaxDerivativeOrder
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 36
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Maximum supported derivative order.
+  example: []
+  syntax:
+    content: public int MaxDerivativeOrder { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property MaxDerivativeOrder As Integer
+  overload: ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder*
+- uid: ChebyshevSharp.ChebyshevSlider.Partition
+  commentId: P:ChebyshevSharp.ChebyshevSlider.Partition
+  id: Partition
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Partition
+  nameWithType: ChebyshevSlider.Partition
+  fullName: ChebyshevSharp.ChebyshevSlider.Partition
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Partition
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 39
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Grouping of dimension indices into slides.
+  example: []
+  syntax:
+    content: public int[][] Partition { get; }
+    parameters: []
+    return:
+      type: System.Int32[][]
+    content.vb: Public Property Partition As Integer()()
+  overload: ChebyshevSharp.ChebyshevSlider.Partition*
+- uid: ChebyshevSharp.ChebyshevSlider.PivotPoint
+  commentId: P:ChebyshevSharp.ChebyshevSlider.PivotPoint
+  id: PivotPoint
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: PivotPoint
+  nameWithType: ChebyshevSlider.PivotPoint
+  fullName: ChebyshevSharp.ChebyshevSlider.PivotPoint
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: PivotPoint
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 42
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Reference point z around which slides are built.
+  example: []
+  syntax:
+    content: public double[] PivotPoint { get; }
+    parameters: []
+    return:
+      type: System.Double[]
+    content.vb: Public Property PivotPoint As Double()
+  overload: ChebyshevSharp.ChebyshevSlider.PivotPoint*
+- uid: ChebyshevSharp.ChebyshevSlider.PivotValue
+  commentId: P:ChebyshevSharp.ChebyshevSlider.PivotValue
+  id: PivotValue
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: PivotValue
+  nameWithType: ChebyshevSlider.PivotValue
+  fullName: ChebyshevSharp.ChebyshevSlider.PivotValue
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: PivotValue
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 45
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Function value at the pivot point: f(z).'
+  example: []
+  syntax:
+    content: public double PivotValue { get; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public Property PivotValue As Double
+  overload: ChebyshevSharp.ChebyshevSlider.PivotValue*
+- uid: ChebyshevSharp.ChebyshevSlider.Built
+  commentId: P:ChebyshevSharp.ChebyshevSlider.Built
+  id: Built
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Built
+  nameWithType: ChebyshevSlider.Built
+  fullName: ChebyshevSharp.ChebyshevSlider.Built
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Built
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 54
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Whether Build() has been called.
+  example: []
+  syntax:
+    content: public bool Built { get; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property Built As Boolean
+  overload: ChebyshevSharp.ChebyshevSlider.Built*
+- uid: ChebyshevSharp.ChebyshevSlider.BuildTime
+  commentId: P:ChebyshevSharp.ChebyshevSlider.BuildTime
+  id: BuildTime
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: BuildTime
+  nameWithType: ChebyshevSlider.BuildTime
+  fullName: ChebyshevSharp.ChebyshevSlider.BuildTime
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: BuildTime
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 57
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Wall-clock time (seconds) for the most recent Build() call.
+  example: []
+  syntax:
+    content: public double BuildTime { get; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public Property BuildTime As Double
+  overload: ChebyshevSharp.ChebyshevSlider.BuildTime*
+- uid: ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)
+  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)'
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevSlider(Func<double[], object?, double>, int, double[][], int[], int[][], double[], int)
+  nameWithType: ChebyshevSlider.ChebyshevSlider(Func<double[], object?, double>, int, double[][], int[], int[][], double[], int)
+  fullName: ChebyshevSharp.ChebyshevSlider.ChebyshevSlider(System.Func<double[], object?, double>, int, double[][], int[], int[][], double[], int)
+  type: Constructor
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: .ctor
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 71
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Create a new ChebyshevSlider.
+  example: []
+  syntax:
+    content: public ChebyshevSlider(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] nNodes, int[][] partition, double[] pivotPoint, int maxDerivativeOrder = 2)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Object,System.Double}
+      description: 'Function to approximate: f(point, data) → double.'
+    - id: numDimensions
+      type: System.Int32
+      description: Total number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds for each dimension as double[ndim][2].
+    - id: nNodes
+      type: System.Int32[]
+      description: Number of Chebyshev nodes per dimension.
+    - id: partition
+      type: System.Int32[][]
+      description: Grouping of dimension indices into slides. Each dimension must appear exactly once.
+    - id: pivotPoint
+      type: System.Double[]
+      description: Reference point z around which slides are built.
+    - id: maxDerivativeOrder
+      type: System.Int32
+      description: Maximum derivative order to support (default 2).
+    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), partition As Integer()(), pivotPoint As Double(), maxDerivativeOrder As Integer = 2)
+  overload: ChebyshevSharp.ChebyshevSlider.#ctor*
+  nameWithType.vb: ChebyshevSlider.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer)
+  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer)
+- uid: ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+  id: Build(System.Boolean)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Build(bool)
+  nameWithType: ChebyshevSlider.Build(bool)
+  fullName: ChebyshevSharp.ChebyshevSlider.Build(bool)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Build
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 136
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Build all slides by evaluating the function at slide-specific grids.
+
+    For each slide, dimensions outside the group are fixed at pivot values.
+  example: []
+  syntax:
+    content: public void Build(bool verbose = true)
+    parameters:
+    - id: verbose
+      type: System.Boolean
+      description: If true, print build progress.
+    content.vb: Public Sub Build(verbose As Boolean = True)
+  overload: ChebyshevSharp.ChebyshevSlider.Build*
+  nameWithType.vb: ChebyshevSlider.Build(Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Build(Boolean)
+  name.vb: Build(Boolean)
+- uid: ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32[])
+  id: Eval(System.Double[],System.Int32[])
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Eval(double[], int[])
+  nameWithType: ChebyshevSlider.Eval(double[], int[])
+  fullName: ChebyshevSharp.ChebyshevSlider.Eval(double[], int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Eval
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 224
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Evaluate the slider approximation at a point.
+
+    Uses Equation 7.5: f(x) ≈ f(z) + Σᵢ [sᵢ(x_groupᵢ) - f(z)].
+
+    For derivatives, only the slide containing that dimension contributes.
+
+    Cross-group mixed partials are exactly zero.
+  example: []
+  syntax:
+    content: public double Eval(double[] point, int[] derivativeOrder)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Evaluation point in the full n-dimensional space.
+    - id: derivativeOrder
+      type: System.Int32[]
+      description: Derivative order for each dimension (0 = function value).
+    return:
+      type: System.Double
+      description: Approximated function value or derivative.
+    content.vb: Public Function Eval(point As Double(), derivativeOrder As Integer()) As Double
+  overload: ChebyshevSharp.ChebyshevSlider.Eval*
+  nameWithType.vb: ChebyshevSlider.Eval(Double(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Eval(Double(), Integer())
+  name.vb: Eval(Double(), Integer())
+- uid: ChebyshevSharp.ChebyshevSlider.EvalMulti(System.Double[],System.Int32[][])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.EvalMulti(System.Double[],System.Int32[][])
+  id: EvalMulti(System.Double[],System.Int32[][])
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: EvalMulti(double[], int[][])
+  nameWithType: ChebyshevSlider.EvalMulti(double[], int[][])
+  fullName: ChebyshevSharp.ChebyshevSlider.EvalMulti(double[], int[][])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: EvalMulti
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 297
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate slider at multiple derivative orders for the same point.
+  example: []
+  syntax:
+    content: public double[] EvalMulti(double[] point, int[][] derivativeOrders)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Evaluation point.
+    - id: derivativeOrders
+      type: System.Int32[][]
+      description: Each inner array specifies derivative order per dimension.
+    return:
+      type: System.Double[]
+      description: Results for each derivative order.
+    content.vb: Public Function EvalMulti(point As Double(), derivativeOrders As Integer()()) As Double()
+  overload: ChebyshevSharp.ChebyshevSlider.EvalMulti*
+  nameWithType.vb: ChebyshevSlider.EvalMulti(Double(), Integer()())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.EvalMulti(Double(), Integer()())
+  name.vb: EvalMulti(Double(), Integer()())
+- uid: ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+  commentId: M:ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+  id: ErrorEstimate
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: ErrorEstimate()
+  nameWithType: ChebyshevSlider.ErrorEstimate()
+  fullName: ChebyshevSharp.ChebyshevSlider.ErrorEstimate()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ErrorEstimate
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 316
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Estimate the sliding approximation error.
+
+    Returns the sum of per-slide Chebyshev error estimates.
+
+    Note: this captures per-slide interpolation error only; cross-group
+
+    interaction error inherent to the sliding decomposition is not included.
+  example: []
+  syntax:
+    content: public double ErrorEstimate()
+    return:
+      type: System.Double
+      description: Estimated interpolation error (per-slide sum).
+    content.vb: Public Function ErrorEstimate() As Double
+  overload: ChebyshevSharp.ChebyshevSlider.ErrorEstimate*
+- uid: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
+  commentId: P:ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
+  id: TotalBuildEvals
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: TotalBuildEvals
+  nameWithType: ChebyshevSlider.TotalBuildEvals
+  fullName: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: TotalBuildEvals
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 330
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Total number of function evaluations used during build.
+  example: []
+  syntax:
+    content: public int TotalBuildEvals { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public ReadOnly Property TotalBuildEvals As Integer
+  overload: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals*
+- uid: ChebyshevSharp.ChebyshevSlider.Save(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Save(System.String)
+  id: Save(System.String)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Save(string)
+  nameWithType: ChebyshevSlider.Save(string)
+  fullName: ChebyshevSharp.ChebyshevSlider.Save(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Save
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 354
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Save the built slider to a JSON file.
+  example: []
+  syntax:
+    content: public void Save(string path)
+    parameters:
+    - id: path
+      type: System.String
+      description: Destination file path.
+    content.vb: Public Sub Save(path As String)
+  overload: ChebyshevSharp.ChebyshevSlider.Save*
+  nameWithType.vb: ChebyshevSlider.Save(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Save(String)
+  name.vb: Save(String)
+- uid: ChebyshevSharp.ChebyshevSlider.Load(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Load(System.String)
+  id: Load(System.String)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Load(string)
+  nameWithType: ChebyshevSlider.Load(string)
+  fullName: ChebyshevSharp.ChebyshevSlider.Load(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Load
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 402
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Load a previously saved slider from a JSON file.
+  example: []
+  syntax:
+    content: public static ChebyshevSlider Load(string path)
+    parameters:
+    - id: path
+      type: System.String
+      description: Path to the saved file.
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+      description: A fully functional slider with Function=null.
+    content.vb: Public Shared Function Load(path As String) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.Load*
+  nameWithType.vb: ChebyshevSlider.Load(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Load(String)
+  name.vb: Load(String)
+- uid: ChebyshevSharp.ChebyshevSlider.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  id: Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
+  nameWithType: ChebyshevSlider.Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
+  fullName: ChebyshevSharp.ChebyshevSlider.Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Extrude
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 498
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Add new dimensions where the function is constant.
+
+    Each new dimension becomes its own single-dim slide group with constant
+
+    tensor values equal to PivotValue, so it contributes nothing to the
+
+    sliding sum.
+  example: []
+  syntax:
+    content: public ChebyshevSlider Extrude(params (int dimIndex, double[] bounds, int nNodes)[] extrudeParams)
+    parameters:
+    - id: extrudeParams
+      type: System.ValueTuple{System.Int32,System.Double[],System.Int32}[]
+      description: Tuples of (dimIndex, bounds, nNodes).
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+      description: A new, higher-dimensional slider (already built).
+    content.vb: Public Function Extrude(ParamArray extrudeParams As (dimIndex As Integer, bounds As Double(), nNodes As Integer)()) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.Extrude*
+  nameWithType.vb: ChebyshevSlider.Extrude(ParamArray (dimIndex As Integer, bounds As Double(), nNodes As Integer)())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Extrude(ParamArray (dimIndex As Integer, bounds As Double(), nNodes As Integer)())
+  name.vb: Extrude(ParamArray (dimIndex As Integer, bounds As Double(), nNodes As Integer)())
+- uid: ChebyshevSharp.ChebyshevSlider.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  id: Slice(System.ValueTuple{System.Int32,System.Double}[])
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Slice(params (int dimIndex, double value)[])
+  nameWithType: ChebyshevSlider.Slice(params (int dimIndex, double value)[])
+  fullName: ChebyshevSharp.ChebyshevSlider.Slice(params (int dimIndex, double value)[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Slice
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 580
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Fix one or more dimensions at given values, reducing dimensionality.
+  example: []
+  syntax:
+    content: public ChebyshevSlider Slice(params (int dimIndex, double value)[] sliceParams)
+    parameters:
+    - id: sliceParams
+      type: System.ValueTuple{System.Int32,System.Double}[]
+      description: Tuples of (dimIndex, value).
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+      description: A new, lower-dimensional slider (already built).
+    content.vb: Public Function Slice(ParamArray sliceParams As (dimIndex As Integer, value As Double)()) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.Slice*
+  nameWithType.vb: ChebyshevSlider.Slice(ParamArray (dimIndex As Integer, value As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Slice(ParamArray (dimIndex As Integer, value As Double)())
+  name.vb: Slice(ParamArray (dimIndex As Integer, value As Double)())
+- uid: ChebyshevSharp.ChebyshevSlider.op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  id: op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: operator +(ChebyshevSlider, ChebyshevSlider)
+  nameWithType: ChebyshevSlider.operator +(ChebyshevSlider, ChebyshevSlider)
+  fullName: ChebyshevSharp.ChebyshevSlider.operator +(ChebyshevSharp.ChebyshevSlider, ChebyshevSharp.ChebyshevSlider)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Addition
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 729
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Pointwise addition of two sliders on the same grid.
+  example: []
+  syntax:
+    content: public static ChebyshevSlider operator +(ChebyshevSlider a, ChebyshevSlider b)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevSlider
+    - id: b
+      type: ChebyshevSharp.ChebyshevSlider
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+    content.vb: Public Shared Operator +(a As ChebyshevSlider, b As ChebyshevSlider) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.op_Addition*
+  nameWithType.vb: ChebyshevSlider.+(ChebyshevSlider, ChebyshevSlider)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.+(ChebyshevSharp.ChebyshevSlider, ChebyshevSharp.ChebyshevSlider)
+  name.vb: +(ChebyshevSlider, ChebyshevSlider)
+- uid: ChebyshevSharp.ChebyshevSlider.op_Subtraction(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.op_Subtraction(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  id: op_Subtraction(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: operator -(ChebyshevSlider, ChebyshevSlider)
+  nameWithType: ChebyshevSlider.operator -(ChebyshevSlider, ChebyshevSlider)
+  fullName: ChebyshevSharp.ChebyshevSlider.operator -(ChebyshevSharp.ChebyshevSlider, ChebyshevSharp.ChebyshevSlider)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Subtraction
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 746
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Pointwise subtraction of two sliders on the same grid.
+  example: []
+  syntax:
+    content: public static ChebyshevSlider operator -(ChebyshevSlider a, ChebyshevSlider b)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevSlider
+    - id: b
+      type: ChebyshevSharp.ChebyshevSlider
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+    content.vb: Public Shared Operator -(a As ChebyshevSlider, b As ChebyshevSlider) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.op_Subtraction*
+  nameWithType.vb: ChebyshevSlider.-(ChebyshevSlider, ChebyshevSlider)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.-(ChebyshevSharp.ChebyshevSlider, ChebyshevSharp.ChebyshevSlider)
+  name.vb: -(ChebyshevSlider, ChebyshevSlider)
+- uid: ChebyshevSharp.ChebyshevSlider.op_Multiply(ChebyshevSharp.ChebyshevSlider,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.op_Multiply(ChebyshevSharp.ChebyshevSlider,System.Double)
+  id: op_Multiply(ChebyshevSharp.ChebyshevSlider,System.Double)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: operator *(ChebyshevSlider, double)
+  nameWithType: ChebyshevSlider.operator *(ChebyshevSlider, double)
+  fullName: ChebyshevSharp.ChebyshevSlider.operator *(ChebyshevSharp.ChebyshevSlider, double)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Multiply
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 763
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Scalar multiplication.
+  example: []
+  syntax:
+    content: public static ChebyshevSlider operator *(ChebyshevSlider a, double scalar)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevSlider
+    - id: scalar
+      type: System.Double
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+    content.vb: Public Shared Operator *(a As ChebyshevSlider, scalar As Double) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.op_Multiply*
+  nameWithType.vb: ChebyshevSlider.*(ChebyshevSlider, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.*(ChebyshevSharp.ChebyshevSlider, Double)
+  name.vb: '*(ChebyshevSlider, Double)'
+- uid: ChebyshevSharp.ChebyshevSlider.op_Multiply(System.Double,ChebyshevSharp.ChebyshevSlider)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.op_Multiply(System.Double,ChebyshevSharp.ChebyshevSlider)
+  id: op_Multiply(System.Double,ChebyshevSharp.ChebyshevSlider)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: operator *(double, ChebyshevSlider)
+  nameWithType: ChebyshevSlider.operator *(double, ChebyshevSlider)
+  fullName: ChebyshevSharp.ChebyshevSlider.operator *(double, ChebyshevSharp.ChebyshevSlider)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Multiply
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 778
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Scalar multiplication (scalar on left).
+  example: []
+  syntax:
+    content: public static ChebyshevSlider operator *(double scalar, ChebyshevSlider a)
+    parameters:
+    - id: scalar
+      type: System.Double
+    - id: a
+      type: ChebyshevSharp.ChebyshevSlider
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+    content.vb: Public Shared Operator *(scalar As Double, a As ChebyshevSlider) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.op_Multiply*
+  nameWithType.vb: ChebyshevSlider.*(Double, ChebyshevSlider)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.*(Double, ChebyshevSharp.ChebyshevSlider)
+  name.vb: '*(Double, ChebyshevSlider)'
+- uid: ChebyshevSharp.ChebyshevSlider.op_Division(ChebyshevSharp.ChebyshevSlider,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.op_Division(ChebyshevSharp.ChebyshevSlider,System.Double)
+  id: op_Division(ChebyshevSharp.ChebyshevSlider,System.Double)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: operator /(ChebyshevSlider, double)
+  nameWithType: ChebyshevSlider.operator /(ChebyshevSlider, double)
+  fullName: ChebyshevSharp.ChebyshevSlider.operator /(ChebyshevSharp.ChebyshevSlider, double)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Division
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 781
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Scalar division.
+  example: []
+  syntax:
+    content: public static ChebyshevSlider operator /(ChebyshevSlider a, double scalar)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevSlider
+    - id: scalar
+      type: System.Double
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+    content.vb: Public Shared Operator /(a As ChebyshevSlider, scalar As Double) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.op_Division*
+  nameWithType.vb: ChebyshevSlider./(ChebyshevSlider, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider./(ChebyshevSharp.ChebyshevSlider, Double)
+  name.vb: /(ChebyshevSlider, Double)
+- uid: ChebyshevSharp.ChebyshevSlider.op_UnaryNegation(ChebyshevSharp.ChebyshevSlider)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.op_UnaryNegation(ChebyshevSharp.ChebyshevSlider)
+  id: op_UnaryNegation(ChebyshevSharp.ChebyshevSlider)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: operator -(ChebyshevSlider)
+  nameWithType: ChebyshevSlider.operator -(ChebyshevSlider)
+  fullName: ChebyshevSharp.ChebyshevSlider.operator -(ChebyshevSharp.ChebyshevSlider)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_UnaryNegation
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 784
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Unary negation.
+  example: []
+  syntax:
+    content: public static ChebyshevSlider operator -(ChebyshevSlider a)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevSlider
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+    content.vb: Public Shared Operator -(a As ChebyshevSlider) As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.op_UnaryNegation*
+  nameWithType.vb: ChebyshevSlider.-(ChebyshevSlider)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.-(ChebyshevSharp.ChebyshevSlider)
+  name.vb: -(ChebyshevSlider)
+- uid: ChebyshevSharp.ChebyshevSlider.ToReprString
+  commentId: M:ChebyshevSharp.ChebyshevSlider.ToReprString
+  id: ToReprString
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: ToReprString()
+  nameWithType: ChebyshevSlider.ToReprString()
+  fullName: ChebyshevSharp.ChebyshevSlider.ToReprString()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ToReprString
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 791
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Compact repr string.
+  example: []
+  syntax:
+    content: public string ToReprString()
+    return:
+      type: System.String
+    content.vb: Public Function ToReprString() As String
+  overload: ChebyshevSharp.ChebyshevSlider.ToReprString*
+- uid: ChebyshevSharp.ChebyshevSlider.ToString
+  commentId: M:ChebyshevSharp.ChebyshevSlider.ToString
+  id: ToString
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: ToString()
+  nameWithType: ChebyshevSlider.ToString()
+  fullName: ChebyshevSharp.ChebyshevSlider.ToString()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ToString
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 801
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Multi-line display string.
+  example: []
+  syntax:
+    content: public override string ToString()
+    return:
+      type: System.String
+    content.vb: Public Overrides Function ToString() As String
+  overridden: System.Object.ToString
+  overload: ChebyshevSharp.ChebyshevSlider.ToString*
+references:
+- uid: ChebyshevSharp.ChebyshevApproximation
+  commentId: T:ChebyshevSharp.ChebyshevApproximation
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevApproximation.html
+  name: ChebyshevApproximation
+  nameWithType: ChebyshevApproximation
+  fullName: ChebyshevSharp.ChebyshevApproximation
+- uid: ChebyshevSharp
+  commentId: N:ChebyshevSharp
+  href: ChebyshevSharp.html
+  name: ChebyshevSharp
+  nameWithType: ChebyshevSharp
+  fullName: ChebyshevSharp
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.MemberwiseClone
+  commentId: M:System.Object.MemberwiseClone
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  name: MemberwiseClone()
+  nameWithType: object.MemberwiseClone()
+  fullName: object.MemberwiseClone()
+  nameWithType.vb: Object.MemberwiseClone()
+  fullName.vb: Object.MemberwiseClone()
+  spec.csharp:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.MemberwiseClone
+    name: MemberwiseClone
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: ChebyshevSharp.ChebyshevSlider.Function*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Function
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Function
+  name: Function
+  nameWithType: ChebyshevSlider.Function
+  fullName: ChebyshevSharp.ChebyshevSlider.Function
+- uid: System.Func{System.Double[],System.Object,System.Double}
+  commentId: T:System.Func{System.Double[],System.Object,System.Double}
+  parent: System
+  definition: System.Func`3
+  href: https://learn.microsoft.com/dotnet/api/system.func-3
+  name: Func<double[], object, double>
+  nameWithType: Func<double[], object, double>
+  fullName: System.Func<double[], object, double>
+  nameWithType.vb: Func(Of Double(), Object, Double)
+  fullName.vb: System.Func(Of Double(), Object, Double)
+  name.vb: Func(Of Double(), Object, Double)
+  spec.csharp:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: <
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  spec.vb:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.Func`3
+  commentId: T:System.Func`3
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.func-3
+  name: Func<T1, T2, TResult>
+  nameWithType: Func<T1, T2, TResult>
+  fullName: System.Func<T1, T2, TResult>
+  nameWithType.vb: Func(Of T1, T2, TResult)
+  fullName.vb: System.Func(Of T1, T2, TResult)
+  name.vb: Func(Of T1, T2, TResult)
+  spec.csharp:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: <
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: ','
+  - name: " "
+  - name: TResult
+  - name: '>'
+  spec.vb:
+  - uid: System.Func`3
+    name: Func
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.func-3
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: ','
+  - name: " "
+  - name: TResult
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.NumDimensions*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.NumDimensions
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_NumDimensions
+  name: NumDimensions
+  nameWithType: ChebyshevSlider.NumDimensions
+  fullName: ChebyshevSharp.ChebyshevSlider.NumDimensions
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: ChebyshevSharp.ChebyshevSlider.Domain*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Domain
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Domain
+  name: Domain
+  nameWithType: ChebyshevSlider.Domain
+  fullName: ChebyshevSharp.ChebyshevSlider.Domain
+- uid: System.Double[][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double[][]
+  nameWithType: double[][]
+  fullName: double[][]
+  nameWithType.vb: Double()()
+  fullName.vb: Double()()
+  name.vb: Double()()
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.NNodes*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.NNodes
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_NNodes
+  name: NNodes
+  nameWithType: ChebyshevSlider.NNodes
+  fullName: ChebyshevSharp.ChebyshevSlider.NNodes
+- uid: System.Int32[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int[]
+  nameWithType: int[]
+  fullName: int[]
+  nameWithType.vb: Integer()
+  fullName.vb: Integer()
+  name.vb: Integer()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_MaxDerivativeOrder
+  name: MaxDerivativeOrder
+  nameWithType: ChebyshevSlider.MaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+- uid: ChebyshevSharp.ChebyshevSlider.Partition*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Partition
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Partition
+  name: Partition
+  nameWithType: ChebyshevSlider.Partition
+  fullName: ChebyshevSharp.ChebyshevSlider.Partition
+- uid: System.Int32[][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int[][]
+  nameWithType: int[][]
+  fullName: int[][]
+  nameWithType.vb: Integer()()
+  fullName.vb: Integer()()
+  name.vb: Integer()()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.PivotPoint*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.PivotPoint
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_PivotPoint
+  name: PivotPoint
+  nameWithType: ChebyshevSlider.PivotPoint
+  fullName: ChebyshevSharp.ChebyshevSlider.PivotPoint
+- uid: System.Double[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double[]
+  nameWithType: double[]
+  fullName: double[]
+  nameWithType.vb: Double()
+  fullName.vb: Double()
+  name.vb: Double()
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.PivotValue*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.PivotValue
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_PivotValue
+  name: PivotValue
+  nameWithType: ChebyshevSlider.PivotValue
+  fullName: ChebyshevSharp.ChebyshevSlider.PivotValue
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ChebyshevSharp.ChebyshevSlider.Built*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Built
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Built
+  name: Built
+  nameWithType: ChebyshevSlider.Built
+  fullName: ChebyshevSharp.ChebyshevSlider.Built
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
+- uid: ChebyshevSharp.ChebyshevSlider.BuildTime*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.BuildTime
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_BuildTime
+  name: BuildTime
+  nameWithType: ChebyshevSlider.BuildTime
+  fullName: ChebyshevSharp.ChebyshevSlider.BuildTime
+- uid: ChebyshevSharp.ChebyshevSlider.#ctor*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.#ctor
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider__ctor_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Int32_____System_Double___System_Int32_
+  name: ChebyshevSlider
+  nameWithType: ChebyshevSlider.ChebyshevSlider
+  fullName: ChebyshevSharp.ChebyshevSlider.ChebyshevSlider
+  nameWithType.vb: ChebyshevSlider.New
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.New
+  name.vb: New
+- uid: ChebyshevSharp.ChebyshevSlider.Build*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Build
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Build_System_Boolean_
+  name: Build
+  nameWithType: ChebyshevSlider.Build
+  fullName: ChebyshevSharp.ChebyshevSlider.Build
+- uid: ChebyshevSharp.ChebyshevSlider.Eval*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Eval
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Eval_System_Double___System_Int32___
+  name: Eval
+  nameWithType: ChebyshevSlider.Eval
+  fullName: ChebyshevSharp.ChebyshevSlider.Eval
+- uid: ChebyshevSharp.ChebyshevSlider.EvalMulti*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.EvalMulti
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_EvalMulti_System_Double___System_Int32_____
+  name: EvalMulti
+  nameWithType: ChebyshevSlider.EvalMulti
+  fullName: ChebyshevSharp.ChebyshevSlider.EvalMulti
+- uid: ChebyshevSharp.ChebyshevSlider.ErrorEstimate*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_ErrorEstimate
+  name: ErrorEstimate
+  nameWithType: ChebyshevSlider.ErrorEstimate
+  fullName: ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+- uid: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_TotalBuildEvals
+  name: TotalBuildEvals
+  nameWithType: ChebyshevSlider.TotalBuildEvals
+  fullName: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
+- uid: ChebyshevSharp.ChebyshevSlider.Save*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Save
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Save_System_String_
+  name: Save
+  nameWithType: ChebyshevSlider.Save
+  fullName: ChebyshevSharp.ChebyshevSlider.Save
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: ChebyshevSharp.ChebyshevSlider.Load*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Load
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Load_System_String_
+  name: Load
+  nameWithType: ChebyshevSlider.Load
+  fullName: ChebyshevSharp.ChebyshevSlider.Load
+- uid: ChebyshevSharp.ChebyshevSlider
+  commentId: T:ChebyshevSharp.ChebyshevSlider
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevSlider.html
+  name: ChebyshevSlider
+  nameWithType: ChebyshevSlider
+  fullName: ChebyshevSharp.ChebyshevSlider
+- uid: ChebyshevSharp.ChebyshevSlider.Extrude*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Extrude
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Extrude_System_ValueTuple_System_Int32_System_Double___System_Int32____
+  name: Extrude
+  nameWithType: ChebyshevSlider.Extrude
+  fullName: ChebyshevSharp.ChebyshevSlider.Extrude
+- uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: (int dimIndex, double[] bounds, int nNodes)[]
+  nameWithType: (int dimIndex, double[] bounds, int nNodes)[]
+  fullName: (int dimIndex, double[] bounds, int nNodes)[]
+  nameWithType.vb: (dimIndex As Integer, bounds As Double(), nNodes As Integer)()
+  fullName.vb: (dimIndex As Integer, bounds As Double(), nNodes As Integer)()
+  name.vb: (dimIndex As Integer, bounds As Double(), nNodes As Integer)()
+  spec.csharp:
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.dimindex
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.bounds
+    name: bounds
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.bounds
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.nNodes
+    name: nNodes
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.nnodes
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.dimindex
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.bounds
+    name: bounds
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.bounds
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double[],System.Int32}.nNodes
+    name: nNodes
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double[],system.int32-.nnodes
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.Slice*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Slice
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Slice_System_ValueTuple_System_Int32_System_Double____
+  name: Slice
+  nameWithType: ChebyshevSlider.Slice
+  fullName: ChebyshevSharp.ChebyshevSlider.Slice
+- uid: System.ValueTuple{System.Int32,System.Double}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: (int dimIndex, double value)[]
+  nameWithType: (int dimIndex, double value)[]
+  fullName: (int dimIndex, double value)[]
+  nameWithType.vb: (dimIndex As Integer, value As Double)()
+  fullName.vb: (dimIndex As Integer, value As Double)()
+  name.vb: (dimIndex As Integer, value As Double)()
+  spec.csharp:
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.dimindex
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double}.value
+    name: value
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.value
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Int32,System.Double}.dimIndex
+    name: dimIndex
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.dimindex
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Int32,System.Double}.value
+    name: value
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.int32,system.double-.value
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.op_Addition*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.op_Addition
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Addition_ChebyshevSharp_ChebyshevSlider_ChebyshevSharp_ChebyshevSlider_
+  name: operator +
+  nameWithType: ChebyshevSlider.operator +
+  fullName: ChebyshevSharp.ChebyshevSlider.operator +
+  nameWithType.vb: ChebyshevSlider.+
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.+
+  name.vb: +
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevSlider.op_Addition*
+    name: +
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Addition_ChebyshevSharp_ChebyshevSlider_ChebyshevSharp_ChebyshevSlider_
+- uid: ChebyshevSharp.ChebyshevSlider.op_Subtraction*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.op_Subtraction
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Subtraction_ChebyshevSharp_ChebyshevSlider_ChebyshevSharp_ChebyshevSlider_
+  name: operator -
+  nameWithType: ChebyshevSlider.operator -
+  fullName: ChebyshevSharp.ChebyshevSlider.operator -
+  nameWithType.vb: ChebyshevSlider.-
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.-
+  name.vb: '-'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevSlider.op_Subtraction*
+    name: '-'
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Subtraction_ChebyshevSharp_ChebyshevSlider_ChebyshevSharp_ChebyshevSlider_
+- uid: ChebyshevSharp.ChebyshevSlider.op_Multiply*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.op_Multiply
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Multiply_ChebyshevSharp_ChebyshevSlider_System_Double_
+  name: operator *
+  nameWithType: ChebyshevSlider.operator *
+  fullName: ChebyshevSharp.ChebyshevSlider.operator *
+  nameWithType.vb: ChebyshevSlider.*
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.*
+  name.vb: '*'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevSlider.op_Multiply*
+    name: '*'
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Multiply_ChebyshevSharp_ChebyshevSlider_System_Double_
+- uid: ChebyshevSharp.ChebyshevSlider.op_Division*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.op_Division
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Division_ChebyshevSharp_ChebyshevSlider_System_Double_
+  name: operator /
+  nameWithType: ChebyshevSlider.operator /
+  fullName: ChebyshevSharp.ChebyshevSlider.operator /
+  nameWithType.vb: ChebyshevSlider./
+  fullName.vb: ChebyshevSharp.ChebyshevSlider./
+  name.vb: /
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevSlider.op_Division*
+    name: /
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Division_ChebyshevSharp_ChebyshevSlider_System_Double_
+- uid: ChebyshevSharp.ChebyshevSlider.op_UnaryNegation*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.op_UnaryNegation
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_UnaryNegation_ChebyshevSharp_ChebyshevSlider_
+  name: operator -
+  nameWithType: ChebyshevSlider.operator -
+  fullName: ChebyshevSharp.ChebyshevSlider.operator -
+  nameWithType.vb: ChebyshevSlider.-
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.-
+  name.vb: '-'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevSlider.op_UnaryNegation*
+    name: '-'
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_UnaryNegation_ChebyshevSharp_ChebyshevSlider_
+- uid: ChebyshevSharp.ChebyshevSlider.ToReprString*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.ToReprString
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_ToReprString
+  name: ToReprString
+  nameWithType: ChebyshevSlider.ToReprString
+  fullName: ChebyshevSharp.ChebyshevSlider.ToReprString
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.ToString*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.ToString
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_ToString
+  name: ToString
+  nameWithType: ChebyshevSlider.ToString
+  fullName: ChebyshevSharp.ChebyshevSlider.ToString

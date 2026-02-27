@@ -5,6 +5,7 @@ items:
   id: ChebyshevSharp
   children:
   - ChebyshevSharp.ChebyshevApproximation
+  - ChebyshevSharp.ChebyshevSlider
   - ChebyshevSharp.ChebyshevSpline
   - ChebyshevSharp.NodeInfo
   - ChebyshevSharp.SplineNodeInfo
@@ -33,6 +34,13 @@ references:
   name: NodeInfo
   nameWithType: NodeInfo
   fullName: ChebyshevSharp.NodeInfo
+- uid: ChebyshevSharp.ChebyshevSlider
+  commentId: T:ChebyshevSharp.ChebyshevSlider
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevSlider.html
+  name: ChebyshevSlider
+  nameWithType: ChebyshevSlider
+  fullName: ChebyshevSharp.ChebyshevSlider
 - uid: ChebyshevSharp.ChebyshevSpline
   commentId: T:ChebyshevSharp.ChebyshevSpline
   parent: ChebyshevSharp

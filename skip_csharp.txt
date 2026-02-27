@@ -15,8 +15,13 @@
 # ExtrudeSliceTests (Spline): 13 tests ✓ (11 Python + 2 C#-specific)
 # CalculusTests (Spline): 28 tests ✓ (26 Python + 2 C#-specific)
 
-# Phase 3: ChebyshevSlider (40 tests + remaining algebra/extrude-slice)
-SliderTests.*                   # 40 tests — sliding technique, pivot, groups, derivatives
+# Phase 3: ChebyshevSlider — DONE (122 tests passing, 483 total)
+# SliderTests: 40 tests ✓ (40 Python)
+# SliderTests (C#-specific): 33 tests ✓ (validation, serialization, eval, properties, error estimation)
+# AlgebraTests (Slider): 19 tests ✓ (17 Python + 2 C#-specific)
+# AlgebraTests (Slider C#-specific): 10 tests ✓ (IEEE 754, compatibility, roundtrip)
+# ExtrudeSliceTests (Slider): 10 tests ✓ (10 Python)
+# ExtrudeSliceTests (Slider C#-specific): 10 tests ✓ (boundaries, roundtrip, serialization)
 
 # Phase 4: ChebyshevTT (35 tests)
 TensorTrainTests.*              # 35 tests — TT-Cross, TT-SVD, batch eval, FD derivatives

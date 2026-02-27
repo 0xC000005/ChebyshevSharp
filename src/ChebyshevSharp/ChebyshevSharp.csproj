@@ -7,7 +7,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>ChebyshevSharp</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Max</Authors>
     <Description>Multi-dimensional Chebyshev tensor interpolation with analytical derivatives for .NET</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

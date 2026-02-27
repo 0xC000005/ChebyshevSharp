@@ -936,3 +936,384 @@ public class TestArithmeticEdgeCases
         }
     }
 }
+
+// ================================================================
+// TestSliderArithmetic (ported from Python TestSliderArithmetic)
+// ================================================================
+
+public class TestSliderArithmetic
+{
+    private static ChebyshevSlider SlF => TestFixtures.AlgebraSliderF; // sin(x)+sin(y)+sin(z)
+    private static ChebyshevSlider SlG => TestFixtures.AlgebraSliderG; // cos(x)+cos(y)+cos(z)
+
+    private static readonly double[][] SliderTestPoints =
+    {
+        new[] { 0.5, 0.3, 0.7 },
+        new[] { -0.5, 0.8, -0.2 },
+    };
+
+    [Fact]
+    public void Slider_AddValues()
+    {
+        var c = SlF + SlG;
+        var pts = new[] { new[] { 0.5, 0.3, 0.7 }, new[] { -0.5, 0.8, -0.2 }, new[] { 0.1, -0.3, 0.9 } };
+        foreach (var p in pts)
+        {
+            double exact = 0;
+            for (int i = 0; i < p.Length; i++)
+                exact += Math.Sin(p[i]) + Math.Cos(p[i]);
+            double approx = c.Eval(p, new[] { 0, 0, 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-6,
+                $"Slider add failed at [{string.Join(", ", p)}]");
+        }
+    }
+
+    [Fact]
+    public void Slider_SubValues()
+    {
+        var c = SlF - SlG;
+        foreach (var p in SliderTestPoints)
+        {
+            double exact = 0;
+            for (int i = 0; i < p.Length; i++)
+                exact += Math.Sin(p[i]) - Math.Cos(p[i]);
+            double approx = c.Eval(p, new[] { 0, 0, 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-6);
+        }
+    }
+
+    [Fact]
+    public void Slider_MulScalar()
+    {
+        var c = 2.0 * SlF;
+        foreach (var p in SliderTestPoints)
+        {
+            double exact = 2.0 * (Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2]));
+            double approx = c.Eval(p, new[] { 0, 0, 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-6);
+        }
+    }
+
+    [Fact]
+    public void Slider_MulScalarDerivative()
+    {
+        // d/dx0(2*sin(x)+...) = 2*cos(x)
+        var c = 2.0 * SlF;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = 2.0 * Math.Cos(p[0]);
+        double approx = c.Eval(p, new[] { 1, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-6);
+    }
+
+    [Fact]
+    public void Slider_Neg()
+    {
+        var c = -SlF;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = -(Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2]));
+        double approx = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-6);
+    }
+
+    [Fact]
+    public void Slider_TruedivScalar()
+    {
+        var c = SlF / 2.0;
+        foreach (var p in SliderTestPoints)
+        {
+            double exact = (Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2])) / 2.0;
+            double approx = c.Eval(p, new[] { 0, 0, 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-6);
+        }
+    }
+
+    [Fact]
+    public void Slider_RmulScalar()
+    {
+        var c1 = 2.0 * SlF;
+        var c2 = SlF * 2.0;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double v1 = c1.Eval(p, new[] { 0, 0, 0 });
+        double v2 = c2.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(Math.Abs(v1 - v2) < 1e-15);
+    }
+
+    [Fact]
+    public void Slider_AddDerivative()
+    {
+        // d/dx0(sin(x)+cos(x)+...) = cos(x0) - sin(x0)
+        var c = SlF + SlG;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = Math.Cos(p[0]) - Math.Sin(p[0]);
+        double approx = c.Eval(p, new[] { 1, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-5);
+    }
+
+    [Fact]
+    public void Slider_SubDerivative()
+    {
+        // d/dx0(sin(x)-cos(x)+...) = cos(x0) + sin(x0)
+        var c = SlF - SlG;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = Math.Cos(p[0]) + Math.Sin(p[0]);
+        double approx = c.Eval(p, new[] { 1, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-5);
+    }
+
+    [Fact]
+    public void Slider_Iadd()
+    {
+        var c = 1.0 * SlF;
+        c = c + SlG;
+        foreach (var p in SliderTestPoints)
+        {
+            double exact = 0;
+            for (int i = 0; i < p.Length; i++)
+                exact += Math.Sin(p[i]) + Math.Cos(p[i]);
+            double approx = c.Eval(p, new[] { 0, 0, 0 });
+            Assert.True(Math.Abs(approx - exact) < 1e-6,
+                $"Slider iadd failed at [{string.Join(", ", p)}]");
+        }
+    }
+
+    [Fact]
+    public void Slider_Isub()
+    {
+        var c = 1.0 * SlF;
+        c = c - SlG;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = (Math.Sin(p[0]) - Math.Cos(p[0]))
+                     + (Math.Sin(p[1]) - Math.Cos(p[1]))
+                     + (Math.Sin(p[2]) - Math.Cos(p[2]));
+        double approx = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-6);
+    }
+
+    [Fact]
+    public void Slider_Imul()
+    {
+        var c = 1.0 * SlF;
+        c = c * 2.0;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = 2.0 * (Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2]));
+        double approx = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-6);
+    }
+
+    [Fact]
+    public void Slider_Itruediv()
+    {
+        var c = 1.0 * SlF;
+        c = c / 2.0;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double exact = (Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2])) / 2.0;
+        double approx = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(Math.Abs(approx - exact) < 1e-6);
+    }
+
+    [Fact]
+    public void Slider_DifferentPartitionRaises()
+    {
+        double H(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]);
+        var s2 = new ChebyshevSlider(H, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0, 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        s2.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() => { var _ = SlF + s2; });
+        Assert.Matches("[Pp]artition", ex.Message);
+    }
+
+    [Fact]
+    public void Slider_DifferentPivotRaises()
+    {
+        double H(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]);
+        var s2 = new ChebyshevSlider(H, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.5, 0.0, 0.0 });
+        s2.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() => { var _ = SlF + s2; });
+        Assert.Matches("[Pp]ivot", ex.Message);
+    }
+
+    [Fact]
+    public void Slider_ResultPivotValue()
+    {
+        var c = SlF + SlG;
+        double expected = SlF.PivotValue + SlG.PivotValue;
+        Assert.True(Math.Abs(c.PivotValue - expected) < 1e-14);
+    }
+
+    [Fact]
+    public void Slider_Serializable()
+    {
+        var c = SlF + SlG;
+        string path = Path.Combine(Path.GetTempPath(), $"slider_algebra_test_{Guid.NewGuid()}.json");
+        try
+        {
+            c.Save(path);
+            var loaded = ChebyshevSlider.Load(path);
+            double[] p = { 0.5, 0.3, 0.7 };
+            double vOrig = c.Eval(p, new[] { 0, 0, 0 });
+            double vLoaded = loaded.Eval(p, new[] { 0, 0, 0 });
+            Assert.True(Math.Abs(vOrig - vLoaded) < 1e-15);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Slider_Repr()
+    {
+        var c = SlF + SlG;
+        string r = c.ToReprString();
+        Assert.Contains("built=True", r);
+        Assert.Contains("ChebyshevSlider", r);
+    }
+
+    [Fact]
+    public void Slider_UnbuiltRaises()
+    {
+        double F(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]);
+        var a = new ChebyshevSlider(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        var b = new ChebyshevSlider(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        b.Build(verbose: false);
+        var ex = Assert.Throws<InvalidOperationException>(() => { var _ = a + b; });
+        Assert.Contains("built", ex.Message);
+    }
+}
+
+// ================================================================
+// C#-Specific: Slider Arithmetic Edge Cases
+// ================================================================
+
+/// <summary>
+/// C#-specific slider arithmetic edge case tests not in the Python baseline.
+/// Covers IEEE 754 behavior, compatibility errors, and cross-type checks.
+/// </summary>
+public class TestSliderArithmeticCSharpEdgeCases
+{
+    private static ChebyshevSlider SlF => TestFixtures.AlgebraSliderF;
+    private static ChebyshevSlider SlG => TestFixtures.AlgebraSliderG;
+
+    [Fact]
+    public void Test_slider_divide_by_zero_scalar()
+    {
+        var c = SlF / 0.0;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double val = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(double.IsInfinity(val) || double.IsNaN(val),
+            $"Expected Infinity or NaN from division by zero, got {val}");
+    }
+
+    [Fact]
+    public void Test_slider_multiply_by_nan()
+    {
+        var c = SlF * double.NaN;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double val = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(double.IsNaN(val), $"Expected NaN, got {val}");
+    }
+
+    [Fact]
+    public void Test_slider_subtract_self_exactly_zero()
+    {
+        var c = SlF - SlF;
+        foreach (var p in new[] { new[] { 0.5, 0.3, 0.7 }, new[] { -0.5, 0.8, -0.2 }, new[] { 0.0, 0.0, 0.0 } })
+        {
+            double val = c.Eval(p, new[] { 0, 0, 0 });
+            Assert.Equal(0.0, val);
+        }
+    }
+
+    [Fact]
+    public void Test_slider_multiply_by_zero_gives_zero()
+    {
+        var c = SlF * 0.0;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double val = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.Equal(0.0, val);
+    }
+
+    [Fact]
+    public void Test_slider_add_subtract_roundtrip()
+    {
+        // (F + G) - G should approximately equal F.
+        var c = (SlF + SlG) - SlG;
+        double[] p = { 0.5, 0.3, 0.7 };
+        double expected = SlF.Eval(p, new[] { 0, 0, 0 });
+        double actual = c.Eval(p, new[] { 0, 0, 0 });
+        Assert.True(Math.Abs(actual - expected) < 1e-10,
+            $"(F+G)-G != F: {actual} vs {expected}");
+    }
+
+    [Fact]
+    public void Test_slider_different_dim_count_raises()
+    {
+        // Sliders with different dimension counts cannot be combined.
+        double F2(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]);
+        var sl2d = new ChebyshevSlider(F2, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 } },
+            new[] { 0.0, 0.0 });
+        sl2d.Build(verbose: false);
+        var ex = Assert.Throws<InvalidOperationException>(() => { var _ = SlF + sl2d; });
+        Assert.Contains("mismatch", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_slider_different_nNodes_raises()
+    {
+        double F(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]);
+        var s2 = new ChebyshevSlider(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10, 10 }, // different from [8,8,8]
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        s2.Build(verbose: false);
+        var ex = Assert.Throws<InvalidOperationException>(() => { var _ = SlF + s2; });
+        Assert.Contains("mismatch", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_slider_different_domain_raises()
+    {
+        double F(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]);
+        var s2 = new ChebyshevSlider(F, 3,
+            new[] { new[] { -2.0, 2.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, // different domain
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+        s2.Build(verbose: false);
+        var ex = Assert.Throws<InvalidOperationException>(() => { var _ = SlF + s2; });
+        Assert.Contains("mismatch", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_slider_scalar_mul_preserves_pivot_value()
+    {
+        var c = SlF * 3.0;
+        Assert.True(Math.Abs(c.PivotValue - SlF.PivotValue * 3.0) < 1e-14);
+    }
+
+    [Fact]
+    public void Test_slider_neg_pivot_value()
+    {
+        var c = -SlF;
+        Assert.True(Math.Abs(c.PivotValue - (-SlF.PivotValue)) < 1e-14);
+    }
+}
