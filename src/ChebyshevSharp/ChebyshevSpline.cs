@@ -52,6 +52,15 @@ public class ChebyshevSpline
     /// <summary>Wall-clock time (seconds) for the most recent Build() call.</summary>
     public double BuildTime { get; internal set; }
 
+    /// <summary>Target supremum-norm error for per-piece auto-N construction. Null in fixed-N mode.</summary>
+    public double? ErrorThreshold { get; internal set; }
+
+    /// <summary>Maximum nodes per dimension per piece for the auto-N doubling loop. Default 64.</summary>
+    public int MaxN { get; internal set; } = 64;
+
+    /// <summary>The user's original nNodes argument with null sentinels intact.</summary>
+    internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
+
     private double? _cachedErrorEstimate;
 
     /// <summary>
@@ -96,6 +105,80 @@ public class ChebyshevSpline
         BuildTime = 0.0;
         _cachedErrorEstimate = null;
     }
+
+    /// <summary>
+    /// Create a piecewise Chebyshev spline with optional error-driven auto-N construction.
+    /// </summary>
+    /// <param name="function">Function to approximate.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds per dimension.</param>
+    /// <param name="nNodes">Number of nodes per dimension; null entries signal auto-N. Pass null to make every dim auto-N (requires errorThreshold).</param>
+    /// <param name="knots">Interior knots per dimension. Null defaults to empty arrays (single piece per dim).</param>
+    /// <param name="errorThreshold">Target supremum-norm error per piece. Required if any nNodes entry is null.</param>
+    /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    public ChebyshevSpline(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int?[]? nNodes = null,
+        double[][]? knots = null,
+        double? errorThreshold = null,
+        int maxN = 64,
+        int maxDerivativeOrder = 2)
+    {
+        if (maxN < 3)
+            throw new ArgumentException(
+                $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}.");
+
+        knots ??= Enumerable.Range(0, numDimensions).Select(_ => Array.Empty<double>()).ToArray();
+
+        // Normalize nNodes
+        int?[] resolvedOriginal;
+        if (nNodes == null)
+        {
+            if (errorThreshold == null)
+                throw new ArgumentException(
+                    "Must provide either nNodes (explicit) or errorThreshold (auto-N). Got neither.");
+            resolvedOriginal = new int?[numDimensions];
+        }
+        else
+        {
+            resolvedOriginal = (int?[])nNodes.Clone();
+            if (resolvedOriginal.Any(n => n == null) && errorThreshold == null)
+                throw new ArgumentException(
+                    "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
+        }
+
+        Function = function;
+        NumDimensions = numDimensions;
+        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        ErrorThreshold = errorThreshold;
+        MaxN = maxN;
+        MaxDerivativeOrder = maxDerivativeOrder;
+        OriginalNNodes = (int?[])resolvedOriginal.Clone();
+
+        // Public NNodes is meaningful only after Build resolves the auto-N values.
+        // For now, fill with 0 as placeholders (will be populated per-piece after Build).
+        NNodes = resolvedOriginal.Select(n => n ?? 0).ToArray();
+
+        ValidateKnots(numDimensions, domain, knots);
+        Knots = knots.Select(k => (double[])k.Clone()).ToArray();
+
+        Intervals = ComputeIntervals(numDimensions, domain, knots);
+        Shape = Intervals.Select(iv => iv.Length).ToArray();
+
+        int totalPieces = 1;
+        foreach (int s in Shape) totalPieces *= s;
+        Pieces = new ChebyshevApproximation?[totalPieces];
+
+        Built = false;
+        BuildTime = 0.0;
+        _cachedErrorEstimate = null;
+    }
+
+    /// <summary>Return the error threshold passed to the constructor, or null in fixed-N mode.</summary>
+    public double? GetErrorThreshold() => ErrorThreshold;
 
     // Internal parameterless constructor for factories
     internal ChebyshevSpline() { }
@@ -198,9 +281,25 @@ public class ChebyshevSpline
                 subDomain[d] = new[] { iv.lo, iv.hi };
             }
 
-            var piece = new ChebyshevApproximation(
-                Function, NumDimensions, subDomain, NNodes,
-                maxDerivativeOrder: MaxDerivativeOrder);
+            ChebyshevApproximation piece;
+            if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
+            {
+                // Auto-N or threshold-driven: construct via the int?[] overload
+                int?[] pieceNNodes = OriginalNNodes.Select(n => n).ToArray();
+                piece = new ChebyshevApproximation(
+                    Function!, NumDimensions, subDomain,
+                    nNodes: pieceNNodes,
+                    errorThreshold: ErrorThreshold,
+                    maxN: MaxN,
+                    maxDerivativeOrder: MaxDerivativeOrder);
+            }
+            else
+            {
+                // Fixed-N: existing path
+                piece = new ChebyshevApproximation(
+                    Function!, NumDimensions, subDomain, NNodes,
+                    maxDerivativeOrder: MaxDerivativeOrder);
+            }
             piece.Build(verbose: false);
             Pieces[flatIdx] = piece;
 

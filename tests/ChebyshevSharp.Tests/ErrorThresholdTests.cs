@@ -305,6 +305,84 @@ public class GetOptimalN1Tests
     }
 }
 
+public class SplineErrorThresholdTests
+{
+    private static readonly Func<double[], object?, double> Sin2D = (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]);
+
+    [Fact]
+    public void Test_1d_with_knot()
+    {
+        var spl = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]),
+            1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { null },
+            knots: new[] { new[] { 0.0 } },
+            errorThreshold: 1e-6);
+        spl.Build(verbose: false);
+        foreach (var piece in spl.Pieces)
+        {
+            Assert.NotNull(piece);
+            Assert.True(piece!.ErrorEstimate() <= 1e-6);
+        }
+    }
+
+    [Fact]
+    public void Test_2d_no_knots_matches_flat()
+    {
+        var spl = new ChebyshevSpline(
+            Sin2D,
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { null, null },
+            knots: new[] { Array.Empty<double>(), Array.Empty<double>() },
+            errorThreshold: 1e-6);
+        spl.Build(verbose: false);
+        Assert.Single(spl.Pieces);
+        Assert.True(spl.Pieces[0]!.ErrorEstimate() <= 1e-6);
+    }
+
+    [Fact]
+    public void Test_explicit_n_still_works()
+    {
+        var spl = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]),
+            1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { 15 },
+            knots: new[] { new[] { 0.0 } });
+        spl.Build(verbose: false);
+        foreach (var piece in spl.Pieces)
+            Assert.Equal(new[] { 15 }, piece!.NNodes);
+    }
+
+    [Fact]
+    public void Test_spline_neither_n_nor_threshold_raises()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new ChebyshevSpline(Sin2D, 2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                nNodes: (int?[]?)null, knots: null));
+    }
+
+    [Fact]
+    public void Test_spline_max_n_below_minimum_raises()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new ChebyshevSpline(Sin2D, 2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                nNodes: null, knots: null, errorThreshold: 1e-6, maxN: 2));
+    }
+
+    [Fact]
+    public void Test_spline_knots_default_to_empty_per_dim()
+    {
+        var spl = new ChebyshevSpline(
+            Sin2D, 2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: null, knots: null, errorThreshold: 1e-6);
+        Assert.Equal(2, spl.Knots.Length);
+        Assert.Empty(spl.Knots[0]);
+        Assert.Empty(spl.Knots[1]);
+        spl.Build(verbose: false);
+        Assert.Single(spl.Pieces);
+    }
+}
+
 public class JsonMigrationTests
 {
     [Fact]
