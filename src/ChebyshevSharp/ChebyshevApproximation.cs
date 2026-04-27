@@ -47,6 +47,18 @@ public class ChebyshevApproximation
     /// <summary>Number of function evaluations during Build().</summary>
     public int NEvaluations { get; internal set; }
 
+    /// <summary>Target supremum-norm error for auto-N construction. Null in fixed-N mode.</summary>
+    public double? ErrorThreshold { get; internal set; }
+
+    /// <summary>Maximum nodes per dimension for the auto-N doubling loop. Default 64.</summary>
+    public int MaxN { get; internal set; } = 64;
+
+    /// <summary>Warning emitted by Build() if maxN was reached before errorThreshold was satisfied. Null otherwise.</summary>
+    public string? BuildWarning { get; internal set; }
+
+    /// <summary>The user's original nNodes argument with null sentinels intact, used to dispatch a re-run of the doubling loop on a second Build() call.</summary>
+    internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
+
     private double? _cachedErrorEstimate;
 
     /// <summary>
@@ -80,6 +92,71 @@ public class ChebyshevApproximation
 
     // Internal parameterless constructor for factories
     internal ChebyshevApproximation() { }
+
+    /// <summary>
+    /// Create a new ChebyshevApproximation with optional error-driven auto-N construction.
+    /// </summary>
+    /// <param name="function">Function to approximate: f(point, data) -&gt; double.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
+    /// <param name="nNodes">Number of Chebyshev nodes per dimension; null entries signal auto-N for that dim. Pass null to make every dim auto-N (requires errorThreshold).</param>
+    /// <param name="errorThreshold">Target supremum-norm error. Required if any nNodes entry is null.</param>
+    /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    public ChebyshevApproximation(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int?[]? nNodes = null,
+        double? errorThreshold = null,
+        int maxN = 64,
+        int maxDerivativeOrder = 2)
+    {
+        if (maxN < 3)
+            throw new ArgumentException(
+                $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}. " +
+                "For a grid smaller than 3 per dimension, pass nNodes explicitly.");
+
+        // Normalize nNodes: null array means "all dims auto-N"
+        int?[] resolved;
+        if (nNodes == null)
+        {
+            if (errorThreshold == null)
+                throw new ArgumentException(
+                    "Must provide either nNodes (explicit) or errorThreshold (auto-N). Got neither.");
+            resolved = new int?[numDimensions];
+        }
+        else
+        {
+            resolved = (int?[])nNodes.Clone();
+            if (resolved.Any(n => n == null) && errorThreshold == null)
+                throw new ArgumentException(
+                    "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
+        }
+
+        Function = function;
+        NumDimensions = numDimensions;
+        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        ErrorThreshold = errorThreshold;
+        MaxN = maxN;
+        MaxDerivativeOrder = maxDerivativeOrder;
+        OriginalNNodes = (int?[])resolved.Clone();
+
+        // If all entries are non-null, populate NNodes + nodes immediately (matches existing fixed-N behavior).
+        if (resolved.All(n => n != null))
+        {
+            NNodes = resolved.Select(n => n!.Value).ToArray();
+            NodeArrays = new double[numDimensions][];
+            for (int d = 0; d < numDimensions; d++)
+                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], NNodes[d]);
+        }
+        else
+        {
+            // Auto-N path: NNodes left empty until Build() resolves.
+            NNodes = Array.Empty<int>();
+            NodeArrays = Array.Empty<double[]>();
+        }
+    }
 
     /// <summary>
     /// Evaluate the function at all node combinations and pre-compute weights.
