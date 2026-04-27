@@ -159,7 +159,9 @@ public class ChebyshevApproximation
     }
 
     /// <summary>
-    /// Evaluate the function at all node combinations and pre-compute weights.
+    /// Build the Chebyshev approximation. Dispatches to the doubling loop if any
+    /// dimension was constructed with a null entry in nNodes (auto-N), otherwise
+    /// builds on the resolved fixed grid.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
     public void Build(bool verbose = true)
@@ -169,6 +171,21 @@ public class ChebyshevApproximation
                 "Cannot build: no function assigned. " +
                 "This object was created via FromValues() or Load().");
 
+        if (OriginalNNodes.Length > 0 && OriginalNNodes.Any(n => n == null))
+        {
+            // Doubling loop wired in Task 5.
+            throw new NotImplementedException("Auto-N build not yet implemented (Task 5).");
+        }
+
+        BuildFixedGrid(verbose);
+    }
+
+    /// <summary>
+    /// Build on the already-resolved (all-int) grid. The original Build() body,
+    /// extracted so the doubling loop can call it once per iteration.
+    /// </summary>
+    internal void BuildFixedGrid(bool verbose = true)
+    {
         int total = 1;
         for (int d = 0; d < NumDimensions; d++)
             total *= NNodes[d];
@@ -197,7 +214,7 @@ public class ChebyshevApproximation
             for (int d = 0; d < NumDimensions; d++)
                 point[d] = NodeArrays[d][indices[d]];
 
-            TensorValues[flat] = Function(point, null);
+            TensorValues[flat] = Function!(point, null);
         }
         NEvaluations = total;
 
