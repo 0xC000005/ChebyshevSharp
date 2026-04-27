@@ -25,6 +25,10 @@
   href: extrude-slice.md
 - name: Pre-computed Values
   href: from-values.md
+- name: Error-Driven Construction
+  href: error-driven-construction.md
+- name: Special Points
+  href: special-points.md
 - name: Calculus
   href: calculus.md
 - name: Error Estimation

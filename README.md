@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/0xC000005/ChebyshevSharp/graph/badge.svg)](https://codecov.io/gh/0xC000005/ChebyshevSharp)
 [![NuGet](https://img.shields.io/nuget/v/ChebyshevSharp.svg)](https://www.nuget.org/packages/ChebyshevSharp)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ChebyshevSharp.svg)](https://www.nuget.org/packages/ChebyshevSharp)
+[![PyChebyshev parity](https://img.shields.io/badge/PyChebyshev_parity-v0.12.0-blue)](https://github.com/0xC000005/PyChebyshev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
