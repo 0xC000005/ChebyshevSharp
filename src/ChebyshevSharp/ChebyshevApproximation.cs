@@ -620,7 +620,10 @@ public class ChebyshevApproximation
             DiffMatrices = DiffMatrices!.Select(Flatten2D).ToArray(),
             BuildTime = BuildTime,
             NEvaluations = NEvaluations,
-            Version = "0.1.0"
+            OriginalNNodes = OriginalNNodes,
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            Version = "0.5.0"
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -663,6 +666,14 @@ public class ChebyshevApproximation
         }
 
         obj.PrecomputeTransposedDiffMatrices();
+
+        // v0.5.0 migration: OriginalNNodes / ErrorThreshold / MaxN may be absent in older files.
+        if (state.OriginalNNodes != null)
+            obj.OriginalNNodes = state.OriginalNNodes;
+        else
+            obj.OriginalNNodes = obj.NNodes.Select(n => (int?)n).ToArray();
+        obj.ErrorThreshold = state.ErrorThreshold;
+        obj.MaxN = state.MaxN ?? 64;
 
         return obj;
     }
@@ -1289,6 +1300,9 @@ public class ChebyshevApproximation
         public double[][] DiffMatrices { get; set; } = Array.Empty<double[]>();
         public double BuildTime { get; set; }
         public int NEvaluations { get; set; }
+        public int?[]? OriginalNNodes { get; set; }
+        public double? ErrorThreshold { get; set; }
+        public int? MaxN { get; set; }
         public string Version { get; set; } = "";
     }
 }

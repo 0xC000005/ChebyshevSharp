@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Xunit;
 using ChebyshevSharp;
 using ChebyshevSharp.Tests.Helpers;
@@ -301,5 +302,68 @@ public class GetOptimalN1Tests
             errorThreshold: 1e-14,
             maxN: 8);
         Assert.Equal(8, n);
+    }
+}
+
+public class JsonMigrationTests
+{
+    [Fact]
+    public void Test_save_load_roundtrip_auto_n()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            var cheb = new ChebyshevApproximation(
+                (x, _) => Math.Sin(x[0]),
+                1, new[] { new[] { -1.0, 1.0 } },
+                nNodes: null, errorThreshold: 1e-6);
+            cheb.Build(verbose: false);
+            cheb.Save(path);
+
+            var loaded = ChebyshevApproximation.Load(path);
+            Assert.Equal(cheb.NNodes, loaded.NNodes);
+            Assert.Equal(cheb.OriginalNNodes.Length, loaded.OriginalNNodes.Length);
+            Assert.Equal(cheb.OriginalNNodes[0], loaded.OriginalNNodes[0]);
+            Assert.Equal(cheb.ErrorThreshold, loaded.ErrorThreshold);
+            Assert.Equal(cheb.MaxN, loaded.MaxN);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_load_pre_v05_file_backfills_original_n_nodes()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            // Save a fixed-N file the new way, then strip the new fields by re-serializing without them.
+            var cheb = new ChebyshevApproximation(
+                (x, _) => x[0] + x[1],
+                2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                new[] { 5, 5 });
+            cheb.Build(verbose: false);
+            cheb.Save(path);
+
+            string json = File.ReadAllText(path);
+            // Remove the v0.5.0 fields to mimic an older file. (Keys must match property names.)
+            string oldJson = System.Text.RegularExpressions.Regex.Replace(
+                json, @",\s*""(OriginalNNodes|ErrorThreshold|MaxN)""\s*:\s*[^,}]+", "");
+            File.WriteAllText(path, oldJson);
+
+            var loaded = ChebyshevApproximation.Load(path);
+            // OriginalNNodes backfilled from NNodes (fully-resolved fixed-N intent)
+            Assert.Equal(2, loaded.OriginalNNodes.Length);
+            Assert.Equal(5, loaded.OriginalNNodes[0]);
+            Assert.Equal(5, loaded.OriginalNNodes[1]);
+            Assert.Null(loaded.ErrorThreshold);
+            Assert.Equal(64, loaded.MaxN);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
     }
 }
