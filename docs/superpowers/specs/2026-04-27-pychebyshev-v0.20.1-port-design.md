@@ -42,9 +42,23 @@ Two merges:
 
 All other Python tags map 1:1 to a C# phase.
 
-### 4. Release cadence (Q4: option A)
+### 4. Release cadence + version tracking (Q4: option A)
 
-NuGet release per phase. The C# `<Version>` doesn't track the Python version directly; instead each phase has a documented "Python parity" claim.
+**NuGet release per phase, natural C# version increments. Parity is surfaced as metadata.**
+
+- ChebyshevSharp keeps its own version line, continuing naturally from current `v0.4.0`. Each phase bumps the next minor: phase 1 → `v0.5.0`, phase 2 → `v0.6.0`, …, phase 9 → `v0.13.0`.
+- PyChebyshev parity is tracked through a new MSBuild property in `src/ChebyshevSharp/ChebyshevSharp.csproj`:
+  ```xml
+  <PyChebyshevParity>0.11.0</PyChebyshevParity>
+  ```
+  Surfaced in:
+  - **README badge** — `![PyChebyshev parity](https://img.shields.io/badge/PyChebyshev_parity-0.11.0-blue)` (regenerated per release).
+  - **Package `<Description>`** — auto-generated to include "feature parity with PyChebyshev v0.X.Y".
+  - **Assembly `InformationalVersion`** — `0.5.0+pychebyshev.0.11.0` (visible in `nuget package details` and runtime reflection; does not affect SemVer ordering since `+build_metadata` is ignored by version comparators).
+  - **`docs/docs/changelog.md`** — every entry leads with the parity claim.
+- No `v1.0.0` reservation in this spec. The major bump happens whenever the API is declared stable (likely once PyChebyshev v1.0.0 lands upstream and we mirror it). Phase 7's TT parity is a changelog note only.
+
+Rationale: existing NuGet consumers (`v0.1.0`–`v0.4.0`) see continuous SemVer history; ports/bindings conventionally track upstream via metadata, not the package version itself (e.g., NumSharp ↔ NumPy).
 
 ### 5. Target version (Q5: option A)
 
@@ -54,21 +68,21 @@ Chase upstream `main`. PyChebyshev v1.0.0 is in progress upstream — when it la
 
 ## Phase Overview
 
-| # | C# Version | Python Parity | Headline | Tests Added (est.) |
+| # | C# Version | PyChebyshev Parity | Headline | Tests Added (est.) |
 |---|---|---|---|---|
-| 1 | 0.5.0 | v0.11 | Error-driven build (`error_threshold`, `max_n`, `None` n_nodes), doubling loop, `GetOptimalN1()` | ~30 |
-| 2 | 0.6.0 | v0.12 | `special_points` ctor → Spline dispatch; per-sub-interval nested `n_nodes` | ~15 |
-| 3 | 0.7.0 | v0.13 | TT `method='als'`, `RunCompletion`, `InnerProduct`, `OrthLeft`/`OrthRight` | ~25 |
-| 4 | 0.8.0 | v0.14 | `.pcb` binary format reader+writer; `Save(format=...)`; **T2 fixture infrastructure** | ~30 |
-| 5 | 0.9.0 | v0.15+v0.16 | `additional_data`, `Set/GetDescriptor`, `GetDerivativeId` registry, introspection getters, `Clone()`, `defer_build`, typed helpers (`Domain`/`Ns`/`SpecialPoints` records), `PeekFormatVersion` | ~50 |
-| 6 | 0.10.0 | v0.17 | `Slider.Integrate()` + `TT.Integrate()` (full + partial) | ~25 |
-| 7 | 1.0.0 | v0.18 | TT parity: `Nodes()`, `FromValues()`, `Extrude()`, `Slice()`, `ToDense()`, full TT algebra (`+ - * /` scalar + in-place) | ~50 |
-| 8 | 1.1.0 | v0.19 (filtered) | Parallel build via `Parallel.For`, `IProgress<int>` progress; **plotting skipped** | ~15 |
-| 9 | 1.2.0 | v0.20.0+v0.20.1 | `Spline.AutoKnots`, `SobolIndices`, TT `WithAutoOrder` + `Reorder` + full `_dim_order` threading | ~50 |
+| 1 | 0.5.0 | v0.11.0 | Error-driven build (`error_threshold`, `max_n`, `None` n_nodes), doubling loop, `GetOptimalN1()` | ~30 |
+| 2 | 0.6.0 | v0.12.0 | `special_points` ctor → Spline dispatch; per-sub-interval nested `n_nodes` | ~15 |
+| 3 | 0.7.0 | v0.13.0 | TT `method='als'`, `RunCompletion`, `InnerProduct`, `OrthLeft`/`OrthRight` | ~25 |
+| 4 | 0.8.0 | v0.14.0 | `.pcb` binary format reader+writer; `Save(format=...)`; **T2 fixture infrastructure** | ~30 |
+| 5 | 0.9.0 | v0.15.0 + v0.16.0 | `additional_data`, `Set/GetDescriptor`, `GetDerivativeId` registry, introspection getters, `Clone()`, `defer_build`, typed helpers (`Domain`/`Ns`/`SpecialPoints` records), `PeekFormatVersion` | ~50 |
+| 6 | 0.10.0 | v0.17.0 | `Slider.Integrate()` + `TT.Integrate()` (full + partial) | ~25 |
+| 7 | 0.11.0 | v0.18.0 | TT parity: `Nodes()`, `FromValues()`, `Extrude()`, `Slice()`, `ToDense()`, full TT algebra (`+ - * /` scalar + in-place) | ~50 |
+| 8 | 0.12.0 | v0.19.0 (filtered) | Parallel build via `Parallel.For`, `IProgress<int>` progress; **plotting skipped** | ~15 |
+| 9 | 0.13.0 | v0.20.0 + v0.20.1 | `Spline.AutoKnots`, `SobolIndices`, TT `WithAutoOrder` + `Reorder` + full `_dim_order` threading | ~50 |
 
 **Test growth:** 613 → ~900 (Python-parity additions only; C#-specific gap tests carry over).
 
-**v1.0.0 milestone:** at end of phase 7 (Python v0.18 parity), the API surface for non-build-perf, non-adaptive features is complete. Build-perf (phase 8) and adaptive features (phase 9) are additive.
+**No `v1.0.0` reserved in this spec.** The major bump happens later, naturally — likely when PyChebyshev itself ships v1.0.0 upstream and we mirror that API stability claim. Phase 7's TT parity is a changelog note only.
 
 ## Plan–Spec Boundary
 
@@ -93,13 +107,14 @@ Each phase ships with all of the following:
 6. **Tracker update** — `skip_csharp.txt` updated with new test counts and which Python file they came from.
 7. **CHANGELOG entry** — `docs/docs/changelog.md` documents what shipped, with Python parity mapping.
 8. **Submodule advance** — `git -C ref/PyChebyshev checkout v0.X.Y` committed as the phase's first commit.
-9. **NuGet release** — `<Version>` bump in `src/ChebyshevSharp/ChebyshevSharp.csproj`, git tag, GitHub release; `publish.yml` ships the package.
+9. **Parity metadata bump** — `<PyChebyshevParity>0.X.Y</PyChebyshevParity>` updated in `src/ChebyshevSharp/ChebyshevSharp.csproj`; README badge regenerated; package `<Description>` rebuilt to include parity claim.
+10. **NuGet release** — `<Version>` bump in `src/ChebyshevSharp/ChebyshevSharp.csproj`, git tag, GitHub release; `publish.yml` ships the package.
 
 ## Per-Phase Detail
 
 ### Phase 1 — v0.11 (Error-Driven Construction)
 
-**C# version:** 0.5.0
+**C# version:** 0.5.0 (PyChebyshev parity: v0.11.0)
 **Python source:** `barycentric.py`, `spline.py`
 **New internal:** `Internal/AdaptiveBuild.cs` — doubling loop driver.
 
@@ -120,7 +135,7 @@ Each phase ships with all of the following:
 
 ### Phase 2 — v0.12 (Special Points + Per-Piece Ns)
 
-**C# version:** 0.6.0
+**C# version:** 0.6.0 (PyChebyshev parity: v0.12.0)
 **Python source:** `barycentric.py`, `spline.py`
 
 **Public API additions:**
@@ -133,7 +148,7 @@ Each phase ships with all of the following:
 
 ### Phase 3 — v0.13 (TT Algebra + ALS + Inner Product + Orth)
 
-**C# version:** 0.7.0
+**C# version:** 0.7.0 (PyChebyshev parity: v0.13.0)
 **Python source:** `tensor_train.py`, `_algebra.py`
 
 **Public API additions on `ChebyshevTT`:**
@@ -148,7 +163,7 @@ Each phase ships with all of the following:
 
 ### Phase 4 — v0.14 (Binary `.pcb` Format)
 
-**C# version:** 0.8.0
+**C# version:** 0.8.0 (PyChebyshev parity: v0.14.0)
 **Python source:** `barycentric.py`, `spline.py` (Save/Load), `docs/user-guide/binary-format.md` (format spec)
 
 **Public API additions:**
@@ -173,7 +188,7 @@ Each phase ships with all of the following:
 
 ### Phase 5 — v0.15 + v0.16 (Ergonomics Bundle)
 
-**C# version:** 0.9.0
+**C# version:** 0.9.0 (PyChebyshev parity: v0.16.0; bundles upstream v0.15.0 + v0.16.0)
 **Python source:** all four class files
 
 **Public API additions (across all four classes unless noted):**
@@ -194,7 +209,7 @@ Each phase ships with all of the following:
 
 ### Phase 6 — v0.17 (Integrate Everywhere)
 
-**C# version:** 0.10.0
+**C# version:** 0.10.0 (PyChebyshev parity: v0.17.0)
 **Python source:** `slider.py`, `tensor_train.py`, `_calculus.py`
 
 **Public API additions:**
@@ -205,9 +220,9 @@ Each phase ships with all of the following:
 
 **Tests:** ~25.
 
-### Phase 7 — v0.18 (TT Feature Parity) — **v1.0.0 milestone**
+### Phase 7 — v0.18 (TT Feature Parity)
 
-**C# version:** 1.0.0
+**C# version:** 0.11.0 (PyChebyshev parity: v0.18.0)
 **Python source:** `tensor_train.py`, `_extrude_slice.py`, `_algebra.py`
 
 **Public API additions on `ChebyshevTT`:**
@@ -228,7 +243,7 @@ Each phase ships with all of the following:
 
 ### Phase 8 — v0.19 filtered (Parallel Build + Progress)
 
-**C# version:** 1.1.0
+**C# version:** 0.12.0 (PyChebyshev parity: v0.19.0, plotting omitted)
 **Python source:** `barycentric.py`, `spline.py`, `tensor_train.py`, `slider.py`
 
 **Public API additions:**
@@ -241,7 +256,7 @@ Each phase ships with all of the following:
 
 ### Phase 9 — v0.20.0 + v0.20.1 (Adaptive + Dim Threading)
 
-**C# version:** 1.2.0
+**C# version:** 0.13.0 (PyChebyshev parity: v0.20.1; bundles upstream v0.20.0 + v0.20.1)
 **Python source:** `spline.py`, `tensor_train.py`, `_algebra.py`, `_sensitivity.py`
 
 **Public API additions:**
@@ -255,7 +270,7 @@ Each phase ships with all of the following:
 **Internal:**
 - `Internal/Sensitivity.cs` — `_ComputeSobolFromCoeffs()`.
 - `_TtSwapAdjacent()` helper.
-- TT JSON migration: backfill `dimOrder = [0, 1, ..., n-1]` for pre-v1.2.0 files.
+- TT JSON migration: backfill `dimOrder = [0, 1, ..., n-1]` for pre-v0.13.0 C# JSON files.
 
 **Cross-language readers note:** v0.20.0 ships Rust+Julia readers consuming the same `tests/fixtures/*.pcb` files. C# already became the third such consumer in phase 4 — no new work, but the changelog should mention "ChebyshevSharp joins Rust+Julia in the cross-language reader club."
 
@@ -321,7 +336,7 @@ Plus a one-time `MOCAX_PARITY.md` documenting our T3 stance.
 
 ## Definition of Done (whole-port)
 
-- [ ] All 9 phases shipped, NuGet releases v0.5.0 → v1.2.0
+- [ ] All 9 phases shipped, NuGet releases v0.5.0 → v0.13.0
 - [ ] `dotnet test` ~900 passing across net8.0 + net10.0
 - [ ] Submodule pinned at `v0.20.1` or later stable upstream tag
 - [ ] `tests/fixtures/*.pcb` cross-loadable by Python, Rust, Julia, C# readers
@@ -337,7 +352,8 @@ Plus a one-time `MOCAX_PARITY.md` documenting our T3 stance.
 - [ ] `dotnet build` zero warnings
 - [ ] `dotnet test` 100% pass on net8.0 + net10.0
 - [ ] `skip_csharp.txt` updated
-- [ ] `docs/docs/changelog.md` entry
+- [ ] `docs/docs/changelog.md` entry leads with PyChebyshev parity claim
 - [ ] Submodule advanced to phase's Python tag
-- [ ] `<Version>` bumped in `.csproj`
+- [ ] `<Version>` and `<PyChebyshevParity>` bumped in `.csproj`
+- [ ] README parity badge regenerated
 - [ ] git tag + GitHub release → NuGet ships
