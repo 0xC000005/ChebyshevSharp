@@ -61,6 +61,9 @@ public class ChebyshevSpline
     /// <summary>The user's original nNodes argument with null sentinels intact.</summary>
     internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
 
+    /// <summary>Per-piece, per-dim node counts (when constructed with nested nNodesNested form). Null otherwise.</summary>
+    internal int[][]? NestedNNodes { get; set; }
+
     private double? _cachedErrorEstimate;
 
     /// <summary>
@@ -177,6 +180,62 @@ public class ChebyshevSpline
         _cachedErrorEstimate = null;
     }
 
+    /// <summary>
+    /// Create a piecewise Chebyshev spline with per-sub-interval node counts.
+    /// </summary>
+    /// <param name="function">Function to approximate.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds per dimension.</param>
+    /// <param name="nNodesNested">Nested array: nNodesNested[d][i] is the node count for piece i along dim d. Length per dim must equal knots[d].Length + 1.</param>
+    /// <param name="knots">Interior knots per dimension. Required (no default) when using nested form.</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    public ChebyshevSpline(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int[][] nNodesNested,
+        double[][] knots,
+        int maxDerivativeOrder = 2)
+    {
+        if (nNodesNested.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodesNested must have {numDimensions} entries (one list per dim), got {nNodesNested.Length}");
+        for (int d = 0; d < numDimensions; d++)
+        {
+            int expected = knots[d].Length + 1;
+            if (nNodesNested[d].Length != expected)
+                throw new ArgumentException(
+                    $"nNodesNested[{d}] must have {expected} entries (one per piece), got {nNodesNested[d].Length}");
+        }
+
+        Function = function;
+        NumDimensions = numDimensions;
+        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        MaxDerivativeOrder = maxDerivativeOrder;
+        MaxN = 64;
+        ErrorThreshold = null;
+        OriginalNNodes = Array.Empty<int?>();
+        NestedNNodes = nNodesNested.Select(row => (int[])row.Clone()).ToArray();
+
+        ValidateKnots(numDimensions, domain, knots);
+        Knots = knots.Select(k => (double[])k.Clone()).ToArray();
+
+        Intervals = ComputeIntervals(numDimensions, domain, knots);
+        Shape = Intervals.Select(iv => iv.Length).ToArray();
+
+        // Public NNodes surfaces piece 0's counts as a representative summary;
+        // full per-piece data lives in NestedNNodes.
+        NNodes = nNodesNested.Select(row => row[0]).ToArray();
+
+        int totalPieces = 1;
+        foreach (int s in Shape) totalPieces *= s;
+        Pieces = new ChebyshevApproximation?[totalPieces];
+
+        Built = false;
+        BuildTime = 0.0;
+        _cachedErrorEstimate = null;
+    }
+
     /// <summary>Return the error threshold passed to the constructor, or null in fixed-N mode.</summary>
     public double? GetErrorThreshold() => ErrorThreshold;
 
@@ -282,7 +341,17 @@ public class ChebyshevSpline
             }
 
             ChebyshevApproximation piece;
-            if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
+            if (NestedNNodes != null)
+            {
+                // Per-piece nested node counts: look up nNodes from the piece's multi-index
+                int[] pieceN = new int[NumDimensions];
+                for (int d = 0; d < NumDimensions; d++)
+                    pieceN[d] = NestedNNodes[d][multiIdx[d]];
+                piece = new ChebyshevApproximation(
+                    Function!, NumDimensions, subDomain, pieceN,
+                    maxDerivativeOrder: MaxDerivativeOrder);
+            }
+            else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
                 // Auto-N or threshold-driven: construct via the int?[] overload
                 int?[] pieceNNodes = OriginalNNodes.Select(n => n).ToArray();
