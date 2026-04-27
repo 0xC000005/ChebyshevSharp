@@ -209,3 +209,98 @@ public class CrossFeatureTests
         TestFixtures.AssertClose(1.0, result, atol: 1e-12);
     }
 }
+
+public class SplineSerializationMetadataTests
+{
+    private static readonly Func<double[], object?, double> Abs1D = (x, _) => Math.Abs(x[0]);
+
+    [Fact]
+    public void Test_save_load_preserves_error_threshold()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            var spl = new ChebyshevSpline(
+                Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+                nNodes: new int?[] { null },
+                knots: new[] { new[] { 0.0 } },
+                errorThreshold: 1e-6,
+                maxN: 32);
+            spl.Build(verbose: false);
+            spl.Save(path);
+
+            var loaded = ChebyshevSpline.Load(path);
+            Assert.Equal(1e-6, loaded.ErrorThreshold);
+            Assert.Equal(32, loaded.MaxN);
+            Assert.Single(loaded.OriginalNNodes);
+            Assert.Null(loaded.OriginalNNodes[0]);
+            Assert.Equal(spl.GetErrorThreshold(), loaded.GetErrorThreshold());
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_save_load_preserves_nested_n_nodes()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            var spl = ChebyshevSpline.WithSpecialPoints(
+                Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+                specialPoints: new[] { new[] { 0.0 } },
+                nNodesNested: new[] { new[] { 11, 13 } });
+            spl.Build(verbose: false);
+            spl.Save(path);
+
+            var loaded = ChebyshevSpline.Load(path);
+            Assert.NotNull(loaded.GetType().GetProperty("NestedNNodes",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance));
+            // Eval still matches exactly (the pieces themselves carry their own resolved NNodes).
+            foreach (double x in new[] { -0.5, 0.3 })
+                TestFixtures.AssertClose(spl.Eval(new[] { x }, new[] { 0 }),
+                                         loaded.Eval(new[] { x }, new[] { 0 }), atol: 1e-14);
+            // Per-piece NNodes survive (asymmetric 11 vs 13).
+            Assert.Equal(11, loaded.Pieces[0]!.NNodes[0]);
+            Assert.Equal(13, loaded.Pieces[1]!.NNodes[0]);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_load_pre_v05_spline_file_uses_defaults()
+    {
+        // Simulate a pre-v0.5.0 spline file by saving then stripping the new fields.
+        string path = Path.GetTempFileName();
+        try
+        {
+            var spl = new ChebyshevSpline(
+                (x, _) => x[0] + x[1],
+                2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                new[] { 5, 5 },
+                new[] { Array.Empty<double>(), Array.Empty<double>() });
+            spl.Build(verbose: false);
+            spl.Save(path);
+
+            string json = File.ReadAllText(path);
+            string oldJson = System.Text.RegularExpressions.Regex.Replace(
+                json, @",\s*""(OriginalNNodes|ErrorThreshold|MaxN|NestedNNodes)""\s*:\s*[^,}]+", "");
+            File.WriteAllText(path, oldJson);
+
+            var loaded = ChebyshevSpline.Load(path);
+            // Defaults: empty OriginalNNodes, null ErrorThreshold, MaxN=64.
+            Assert.Empty(loaded.OriginalNNodes);
+            Assert.Null(loaded.ErrorThreshold);
+            Assert.Equal(64, loaded.MaxN);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+}

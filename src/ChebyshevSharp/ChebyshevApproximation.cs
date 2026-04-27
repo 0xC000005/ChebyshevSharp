@@ -176,7 +176,7 @@ public class ChebyshevApproximation
 
         if (OriginalNNodes.Length > 0 && OriginalNNodes.Any(n => n == null))
         {
-            ChebyshevSharp.Internal.AdaptiveBuild.RunDoublingLoop(this, verbose);
+            AdaptiveBuild.RunDoublingLoop(this, verbose);
             return;
         }
 

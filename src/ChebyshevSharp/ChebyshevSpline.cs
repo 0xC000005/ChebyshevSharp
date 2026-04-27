@@ -353,8 +353,9 @@ public class ChebyshevSpline
             }
             else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
-                // Auto-N or threshold-driven: construct via the int?[] overload
-                int?[] pieceNNodes = OriginalNNodes.Select(n => n).ToArray();
+                // Auto-N or threshold-driven: construct via the int?[] overload.
+                // Clone so each piece's ctor cannot mutate this Spline's stored array.
+                int?[] pieceNNodes = (int?[])OriginalNNodes.Clone();
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain,
                     nNodes: pieceNNodes,
@@ -702,7 +703,11 @@ public class ChebyshevSpline
                 };
                 return ps;
             }).ToArray(),
-            Version = "0.1.0",
+            OriginalNNodes = OriginalNNodes.Length > 0 ? OriginalNNodes : null,
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = NestedNNodes,
+            Version = "0.5.0",
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -755,6 +760,9 @@ public class ChebyshevSpline
         // Reconstruct intervals from knots
         var intervals = ComputeIntervals(state.NumDimensions, state.Domain, state.Knots);
 
+        // v0.5.0 migration: OriginalNNodes / ErrorThreshold / MaxN / NestedNNodes may be absent in older files.
+        int?[] originalNNodes = state.OriginalNNodes ?? Array.Empty<int?>();
+
         return new ChebyshevSpline
         {
             Function = null,
@@ -768,6 +776,10 @@ public class ChebyshevSpline
             Pieces = pieces.Cast<ChebyshevApproximation?>().ToArray(),
             Built = true,
             BuildTime = state.BuildTime,
+            OriginalNNodes = originalNNodes,
+            ErrorThreshold = state.ErrorThreshold,
+            MaxN = state.MaxN ?? 64,
+            NestedNNodes = state.NestedNNodes,
             _cachedErrorEstimate = null,
         };
     }
@@ -1700,6 +1712,10 @@ public class ChebyshevSpline
         public int[] Shape { get; set; } = Array.Empty<int>();
         public double BuildTime { get; set; }
         public PieceState[] PieceStates { get; set; } = Array.Empty<PieceState>();
+        public int?[]? OriginalNNodes { get; set; }
+        public double? ErrorThreshold { get; set; }
+        public int? MaxN { get; set; }
+        public int[][]? NestedNNodes { get; set; }
         public string Version { get; set; } = "0.1.0";
     }
 
