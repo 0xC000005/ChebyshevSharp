@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Xunit;
 using ChebyshevSharp;
 using ChebyshevSharp.Tests.Helpers;
@@ -142,5 +143,69 @@ public class NestedNNodesTests
                 nNodesNested: new[] { new[] { 11 } },  // 1 entry, should be 2 (since knots has 1 knot)
                 knots: new[] { new[] { 0.0 } }));
         Assert.Contains("must have 2 entries", ex.Message);
+    }
+}
+
+public class CrossFeatureTests
+{
+    private static readonly Func<double[], object?, double> Abs1D = (x, _) => Math.Abs(x[0]);
+
+    [Fact]
+    public void Test_save_load_roundtrip()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            var spl = ChebyshevSpline.WithSpecialPoints(
+                Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+                specialPoints: new[] { new[] { 0.0 } },
+                nNodesNested: new[] { new[] { 11, 11 } });
+            spl.Build(verbose: false);
+            spl.Save(path);
+
+            var loaded = ChebyshevSpline.Load(path);
+            foreach (double x in new[] { -0.5, 0.2, 0.8 })
+                TestFixtures.AssertClose(spl.Eval(new[] { x }, new[] { 0 }),
+                                         loaded.Eval(new[] { x }, new[] { 0 }), atol: 1e-14);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_algebra_with_sibling()
+    {
+        var a = ChebyshevSpline.WithSpecialPoints(
+            Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+            specialPoints: new[] { new[] { 0.0 } },
+            nNodesNested: new[] { new[] { 11, 11 } });
+        a.Build(verbose: false);
+        var b = ChebyshevSpline.WithSpecialPoints(
+            (x, _) => x[0] * x[0], 1, new[] { new[] { -1.0, 1.0 } },
+            specialPoints: new[] { new[] { 0.0 } },
+            nNodesNested: new[] { new[] { 11, 11 } });
+        b.Build(verbose: false);
+
+        var c = a + b;
+        foreach (double x in new[] { -0.5, 0.3, 0.7 })
+        {
+            double expected = Math.Abs(x) + x * x;
+            TestFixtures.AssertClose(expected, c.Eval(new[] { x }, new[] { 0 }), atol: 1e-12);
+        }
+    }
+
+    [Fact]
+    public void Test_integrate()
+    {
+        var spl = ChebyshevSpline.WithSpecialPoints(
+            Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+            specialPoints: new[] { new[] { 0.0 } },
+            nNodesNested: new[] { new[] { 11, 11 } });
+        spl.Build(verbose: false);
+        // Integral of |x| over [-1, 1] is 1.0 exactly.
+        var result = (double)spl.Integrate();
+        TestFixtures.AssertClose(1.0, result, atol: 1e-12);
     }
 }
