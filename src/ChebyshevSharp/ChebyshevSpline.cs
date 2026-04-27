@@ -584,6 +584,84 @@ public class ChebyshevSpline
     }
 
     // ------------------------------------------------------------------
+    // Static factory: WithSpecialPoints
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Create a <see cref="ChebyshevSpline"/> with kinks declared via <paramref name="specialPoints"/>
+    /// (a more user-friendly name than <c>knots</c> when the function has known non-smooth points).
+    /// Functionally equivalent to passing the same values as knots to a regular constructor.
+    /// </summary>
+    /// <remarks>
+    /// Python's <c>ChebyshevApproximation(special_points=...)</c> returns a
+    /// <c>ChebyshevSpline</c> at construction time.  C# constructors cannot return a
+    /// different type; this static factory is the C#-idiomatic equivalent.
+    /// Exactly one of <paramref name="nNodesNested"/>, <paramref name="nNodes"/>, or
+    /// <paramref name="errorThreshold"/> must be supplied.
+    /// </remarks>
+    /// <param name="function">Function to approximate.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds per dimension.</param>
+    /// <param name="specialPoints">Per-dim list of kink locations. Equivalent to knots;
+    /// outer length must equal <paramref name="numDimensions"/>.</param>
+    /// <param name="nNodesNested">Per-sub-interval node counts (per dim, per piece).
+    /// Mutually exclusive with <paramref name="errorThreshold"/>.</param>
+    /// <param name="nNodes">Flat per-dim node counts (shared across pieces).
+    /// Mutually exclusive with <paramref name="nNodesNested"/> and <paramref name="errorThreshold"/>.</param>
+    /// <param name="errorThreshold">Target error per piece.
+    /// Mutually exclusive with <paramref name="nNodes"/>/<paramref name="nNodesNested"/>.</param>
+    /// <param name="maxN">Cap on doubling-loop nodes per dimension (default 64).</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <returns>An unbuilt <see cref="ChebyshevSpline"/> ready for <c>Build()</c>.</returns>
+    public static ChebyshevSpline WithSpecialPoints(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        double[][] specialPoints,
+        int[][]? nNodesNested = null,
+        int[]? nNodes = null,
+        double? errorThreshold = null,
+        int maxN = 64,
+        int maxDerivativeOrder = 2)
+    {
+        if (specialPoints.Length != numDimensions)
+            throw new ArgumentException(
+                $"specialPoints must have {numDimensions} entries, got {specialPoints.Length}");
+
+        // Validate using existing knots validator (sorted, strictly inside, no dupes).
+        ValidateKnots(numDimensions, domain, specialPoints);
+
+        int suppliedFormCount =
+            (nNodesNested != null ? 1 : 0) +
+            (nNodes != null ? 1 : 0) +
+            (errorThreshold != null ? 1 : 0);
+
+        if (suppliedFormCount == 0)
+            throw new ArgumentException(
+                "WithSpecialPoints requires exactly one of: nNodesNested, nNodes, or errorThreshold.");
+        if (suppliedFormCount > 1)
+            throw new ArgumentException(
+                "WithSpecialPoints accepts only one of nNodesNested, nNodes, or errorThreshold (not multiple).");
+
+        if (nNodesNested != null)
+            return new ChebyshevSpline(function, numDimensions, domain,
+                nNodesNested, specialPoints, maxDerivativeOrder);
+
+        if (nNodes != null)
+        {
+            // Delegate to the flat int[] ctor (no errorThreshold, no maxN on that overload).
+            int[] flatNodes = nNodes;
+            return new ChebyshevSpline(function, numDimensions, domain,
+                flatNodes, specialPoints, maxDerivativeOrder);
+        }
+
+        // errorThreshold path: every dim auto-N.
+        return new ChebyshevSpline(function, numDimensions, domain,
+            nNodes: (int?[]?)null, knots: specialPoints,
+            errorThreshold: errorThreshold, maxN: maxN, maxDerivativeOrder: maxDerivativeOrder);
+    }
+
+    // ------------------------------------------------------------------
     // Serialization
     // ------------------------------------------------------------------
 

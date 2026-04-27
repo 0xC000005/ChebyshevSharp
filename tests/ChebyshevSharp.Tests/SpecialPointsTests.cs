@@ -11,6 +11,83 @@ public class SpecialPointsTests
 {
 }
 
+public class WithSpecialPointsTests
+{
+    private static readonly Func<double[], object?, double> Abs1D = (x, _) => Math.Abs(x[0]);
+
+    [Fact]
+    public void Test_factory_returns_spline_with_kink_as_knot()
+    {
+        var spl = ChebyshevSpline.WithSpecialPoints(
+            Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+            specialPoints: new[] { new[] { 0.0 } },
+            nNodesNested: new[] { new[] { 11, 11 } });
+        spl.Build(verbose: false);
+        Assert.Equal(new[] { new[] { 0.0 } }, spl.Knots);
+        Assert.Equal(2, spl.Pieces.Length);
+    }
+
+    [Fact]
+    public void Test_abs_kink_reaches_machine_precision()
+    {
+        var spl = ChebyshevSpline.WithSpecialPoints(
+            Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+            specialPoints: new[] { new[] { 0.0 } },
+            nNodesNested: new[] { new[] { 11, 11 } });
+        spl.Build(verbose: false);
+        for (double x = -0.95; x <= 0.95; x += 0.05)
+        {
+            if (Math.Abs(x) < 1e-8) continue;
+            double v = spl.Eval(new[] { x }, new[] { 0 });
+            TestFixtures.AssertClose(Math.Abs(x), v, atol: 1e-13);
+        }
+    }
+
+    [Fact]
+    public void Test_unsorted_points_raise()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevSpline.WithSpecialPoints(
+                Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+                specialPoints: new[] { new[] { 0.5, -0.5 } },
+                nNodesNested: new[] { new[] { 11, 11, 11 } }));
+        Assert.Contains("must be sorted", ex.Message);
+    }
+
+    [Fact]
+    public void Test_point_on_boundary_raises()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            ChebyshevSpline.WithSpecialPoints(
+                Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+                specialPoints: new[] { new[] { 1.0 } },
+                nNodesNested: new[] { new[] { 11, 11 } }));
+    }
+
+    [Fact]
+    public void Test_outer_length_mismatch_raises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevSpline.WithSpecialPoints(
+                (x, _) => Math.Abs(x[0]) + Math.Abs(x[1]),
+                2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                specialPoints: new[] { new[] { 0.0 } },  // missing dim 1
+                nNodesNested: new[] { new[] { 11, 11 }, new[] { 13 } }));
+        Assert.Contains("must have 2 entries", ex.Message);
+    }
+
+    [Fact]
+    public void Test_factory_with_error_threshold()
+    {
+        var spl = ChebyshevSpline.WithSpecialPoints(
+            Abs1D, 1, new[] { new[] { -1.0, 1.0 } },
+            specialPoints: new[] { new[] { 0.0 } },
+            errorThreshold: 1e-10);
+        spl.Build(verbose: false);
+        TestFixtures.AssertClose(0.5, spl.Eval(new[] { 0.5 }, new[] { 0 }), atol: 1e-10);
+    }
+}
+
 public class NestedNNodesTests
 {
     [Fact]
