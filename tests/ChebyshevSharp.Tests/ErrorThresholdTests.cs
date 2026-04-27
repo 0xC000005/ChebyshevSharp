@@ -79,6 +79,121 @@ public class ConstructorValidation
     }
 }
 
+public class DoublingLoopTests
+{
+    private static readonly double[][] UnitSq = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+
+    [Fact]
+    public void Test_1d_converges()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]),
+            1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: null, errorThreshold: 1e-8);
+        cheb.Build(verbose: false);
+        Assert.True(cheb.NNodes[0] <= 64);
+        Assert.True(cheb.ErrorEstimate() <= 1e-8);
+    }
+
+    [Fact]
+    public void Test_2d_auto_converges()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]),
+            2, UnitSq, nNodes: null, errorThreshold: 1e-6);
+        cheb.Build(verbose: false);
+        Assert.True(cheb.ErrorEstimate() <= 1e-6);
+    }
+
+    [Fact]
+    public void Test_3d_auto_converges()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]),
+            3, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: null, errorThreshold: 1e-6);
+        cheb.Build(verbose: false);
+        Assert.True(cheb.ErrorEstimate() <= 1e-6);
+    }
+
+    [Fact]
+    public void Test_semi_variable_respects_fixed_dims()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]),
+            3, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { null, 15, 15 }, errorThreshold: 1e-6);
+        cheb.Build(verbose: false);
+        Assert.Equal(15, cheb.NNodes[1]);
+        Assert.Equal(15, cheb.NNodes[2]);
+    }
+
+    [Fact]
+    public void Test_already_accurate_stops_immediately()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] + x[1],  // linear; exact at N=3
+            2, UnitSq, nNodes: null, errorThreshold: 1e-6);
+        cheb.Build(verbose: false);
+        Assert.Equal(3, cheb.NNodes[0]);
+        Assert.Equal(3, cheb.NNodes[1]);
+    }
+
+    [Fact]
+    public void Test_tight_threshold_eventual()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Exp(-x[0] * x[0]),
+            1, new[] { new[] { -2.0, 2.0 } },
+            nNodes: null, errorThreshold: 1e-12);
+        cheb.Build(verbose: false);
+        Assert.True(cheb.ErrorEstimate() <= 1e-12);
+    }
+
+    [Fact]
+    public void Test_max_n_cap_emits_warning_and_remains_usable()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(20 * x[0]) + Math.Cos(17 * x[0]),
+            1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: null, errorThreshold: 1e-12, maxN: 16);
+        cheb.Build(verbose: false);
+
+        Assert.NotNull(cheb.BuildWarning);
+        Assert.Contains("maxN", cheb.BuildWarning);
+        Assert.True(cheb.NNodes[0] <= 16);
+        double v = cheb.VectorizedEval(new[] { 0.1 }, new[] { 0 });
+        Assert.True(double.IsFinite(v));
+    }
+
+    [Fact]
+    public void Test_no_warning_when_threshold_met()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]),
+            2, UnitSq, nNodes: null, errorThreshold: 1e-6);
+        cheb.Build(verbose: false);
+        Assert.Null(cheb.BuildWarning);
+    }
+
+    [Fact]
+    public void Test_rebuild_with_tighter_threshold_rebuilds_auto_dims()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]),
+            1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: null, errorThreshold: 1e-4);
+        cheb.Build(verbose: false);
+        int nFirst = cheb.NNodes[0];
+        Assert.True(cheb.ErrorEstimate() <= 1e-4);
+
+        cheb.ErrorThreshold = 1e-10;
+        cheb.Build(verbose: false);
+        Assert.True(cheb.ErrorEstimate() <= 1e-10);
+        Assert.True(cheb.NNodes[0] >= nFirst);
+    }
+}
+
 public class ErrorEstimatePerDimTests
 {
     [Fact]

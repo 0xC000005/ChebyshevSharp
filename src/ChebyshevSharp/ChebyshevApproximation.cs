@@ -61,6 +61,9 @@ public class ChebyshevApproximation
 
     private double? _cachedErrorEstimate;
 
+    /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
+    internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
+
     /// <summary>
     /// Create a new ChebyshevApproximation.
     /// </summary>
@@ -173,8 +176,8 @@ public class ChebyshevApproximation
 
         if (OriginalNNodes.Length > 0 && OriginalNNodes.Any(n => n == null))
         {
-            // Doubling loop wired in Task 5.
-            throw new NotImplementedException("Auto-N build not yet implemented (Task 5).");
+            ChebyshevSharp.Internal.AdaptiveBuild.RunDoublingLoop(this, verbose);
+            return;
         }
 
         BuildFixedGrid(verbose);
