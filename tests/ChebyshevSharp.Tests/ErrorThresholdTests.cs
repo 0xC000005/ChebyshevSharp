@@ -232,3 +232,74 @@ public class ErrorEstimatePerDimTests
         Assert.Throws<InvalidOperationException>(() => cheb.ErrorEstimatePerDim());
     }
 }
+
+public class GetErrorThresholdTests
+{
+    [Fact]
+    public void Test_returns_threshold_when_set()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]),
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: null, errorThreshold: 1e-6);
+        cheb.Build(verbose: false);
+        Assert.Equal(1e-6, cheb.GetErrorThreshold());
+    }
+
+    [Fact]
+    public void Test_returns_null_when_not_set()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]),
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 });
+        cheb.Build(verbose: false);
+        Assert.Null(cheb.GetErrorThreshold());
+    }
+}
+
+public class GetOptimalN1Tests
+{
+    [Fact]
+    public void Test_returns_int_above_minimum()
+    {
+        int n = ChebyshevApproximation.GetOptimalN1(
+            (x, _) => Math.Sin(x[0]),
+            (-1.0, 1.0),
+            errorThreshold: 1e-8);
+        Assert.True(n >= 3 && n <= 64);
+    }
+
+    [Fact]
+    public void Test_smooth_low_freq_small_n()
+    {
+        int n = ChebyshevApproximation.GetOptimalN1(
+            (x, _) => x[0],
+            (-1.0, 1.0),
+            errorThreshold: 1e-10);
+        Assert.Equal(3, n);
+    }
+
+    [Fact]
+    public void Test_high_freq_larger_n()
+    {
+        int nLow = ChebyshevApproximation.GetOptimalN1(
+            (x, _) => Math.Sin(x[0]) + Math.Cos(x[0]),
+            (-1.0, 1.0), errorThreshold: 1e-8);
+        int nHigh = ChebyshevApproximation.GetOptimalN1(
+            (x, _) => Math.Sin(10 * x[0]) + Math.Cos(10 * x[0]),
+            (-1.0, 1.0), errorThreshold: 1e-8);
+        Assert.True(nHigh > nLow);
+    }
+
+    [Fact]
+    public void Test_respects_max_n()
+    {
+        int n = ChebyshevApproximation.GetOptimalN1(
+            (x, _) => Math.Sin(50 * x[0]) + Math.Cos(43 * x[0]),
+            (-1.0, 1.0),
+            errorThreshold: 1e-14,
+            maxN: 8);
+        Assert.Equal(8, n);
+    }
+}

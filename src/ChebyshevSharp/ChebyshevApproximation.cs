@@ -559,6 +559,32 @@ public class ChebyshevApproximation
         return total;
     }
 
+    /// <summary>Return the error threshold passed to the constructor, or null in fixed-N mode.</summary>
+    public double? GetErrorThreshold() => ErrorThreshold;
+
+    /// <summary>
+    /// 1-D capacity estimator: the smallest N at which a 1-D Chebyshev build
+    /// over <paramref name="domain"/> hits <paramref name="errorThreshold"/>.
+    /// Useful as a sizing pass before committing to a multi-dimensional build.
+    /// </summary>
+    /// <param name="function">Function to approximate; signature f(point[1], data) -&gt; double.</param>
+    /// <param name="domain">(lo, hi) bounds for the single dimension.</param>
+    /// <param name="errorThreshold">Target supremum-norm error.</param>
+    /// <param name="maxN">Cap on the returned N. Default 64. If the doubling loop cannot achieve <paramref name="errorThreshold"/> within this cap, returns <paramref name="maxN"/> with BuildWarning set on the temporary internal interpolant.</param>
+    /// <returns>Resolved N on the single dimension.</returns>
+    public static int GetOptimalN1(
+        Func<double[], object?, double> function,
+        (double lo, double hi) domain,
+        double errorThreshold,
+        int maxN = 64)
+    {
+        var cheb = new ChebyshevApproximation(
+            function, 1, new[] { new[] { domain.lo, domain.hi } },
+            nNodes: null, errorThreshold: errorThreshold, maxN: maxN);
+        cheb.Build(verbose: false);
+        return cheb.NNodes[0];
+    }
+
     /// <summary>
     /// Get Chebyshev coefficients for a 1D array of values at Type I nodes.
     /// Public for testing.
