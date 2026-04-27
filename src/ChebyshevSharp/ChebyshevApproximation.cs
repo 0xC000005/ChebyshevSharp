@@ -510,23 +510,20 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Estimate the supremum-norm interpolation error using Chebyshev coefficient decay.
+    /// Compute per-dimension max last-coefficient magnitudes.
+    /// Returns one entry per dimension; ErrorEstimate() returns the sum.
+    /// Used by the auto-N doubling loop to pick the worst-contributing dim.
     /// </summary>
-    /// <returns>Estimated maximum interpolation error.</returns>
-    public double ErrorEstimate()
+    /// <returns>Per-dimension last-coefficient magnitudes, one entry per dim.</returns>
+    public double[] ErrorEstimatePerDim()
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
-        if (_cachedErrorEstimate.HasValue)
-            return _cachedErrorEstimate.Value;
-
-        double totalError = 0.0;
+        var perDim = new double[NumDimensions];
         for (int d = 0; d < NumDimensions; d++)
         {
             double maxErrThisDim = 0.0;
-
-            // Iterate over all indices except dimension d
             int[] otherShape = NNodes.Where((_, i) => i != d).ToArray();
             int otherTotal = 1;
             for (int i = 0; i < otherShape.Length; i++)
@@ -534,18 +531,29 @@ public class ChebyshevApproximation
 
             for (int otherFlat = 0; otherFlat < otherTotal; otherFlat++)
             {
-                // Extract 1D slice along dimension d
                 double[] values1d = Extract1DSlice(TensorValues, NNodes, d, otherFlat, otherShape);
                 double[] coeffs = BarycentricKernel.ChebyshevCoefficients1D(values1d);
-                double lastCoeff = Math.Abs(coeffs[coeffs.Length - 1]);
+                double lastCoeff = Math.Abs(coeffs[^1]);
                 if (lastCoeff > maxErrThisDim)
                     maxErrThisDim = lastCoeff;
             }
-            totalError += maxErrThisDim;
+            perDim[d] = maxErrThisDim;
         }
+        return perDim;
+    }
 
-        _cachedErrorEstimate = totalError;
-        return totalError;
+    /// <summary>
+    /// Estimate the supremum-norm interpolation error using Chebyshev coefficient decay.
+    /// Sums per-dimension max last-coefficient magnitudes.
+    /// </summary>
+    /// <returns>Estimated maximum interpolation error.</returns>
+    public double ErrorEstimate()
+    {
+        if (_cachedErrorEstimate.HasValue)
+            return _cachedErrorEstimate.Value;
+        double total = ErrorEstimatePerDim().Sum();
+        _cachedErrorEstimate = total;
+        return total;
     }
 
     /// <summary>

@@ -78,3 +78,42 @@ public class ConstructorValidation
         Assert.Equal(3, cheb.MaxN);
     }
 }
+
+public class ErrorEstimatePerDimTests
+{
+    [Fact]
+    public void Test_per_dim_returns_one_entry_per_dimension()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]),
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 });
+        cheb.Build(verbose: false);
+        double[] perDim = cheb.ErrorEstimatePerDim();
+        Assert.Equal(2, perDim.Length);
+        Assert.All(perDim, e => Assert.True(e >= 0.0));
+    }
+
+    [Fact]
+    public void Test_per_dim_sum_equals_error_estimate()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]),
+            3, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 9, 11, 13 });
+        cheb.Build(verbose: false);
+        double[] perDim = cheb.ErrorEstimatePerDim();
+        double total = perDim.Sum();
+        Assert.Equal(cheb.ErrorEstimate(), total, precision: 14);
+    }
+
+    [Fact]
+    public void Test_per_dim_throws_before_build()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0],
+            1, new[] { new[] { -1.0, 1.0 } },
+            new[] { 5 });
+        Assert.Throws<InvalidOperationException>(() => cheb.ErrorEstimatePerDim());
+    }
+}
