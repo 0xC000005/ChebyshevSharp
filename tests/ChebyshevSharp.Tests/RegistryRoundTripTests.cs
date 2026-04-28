@@ -58,4 +58,53 @@ public class RegistryRoundTripTests
         }
         finally { File.Delete(tmp); }
     }
+
+    [Fact]
+    public void Spline_DerivativeIdRegistry_survives_Save_and_Load()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => p[0] + p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 },
+            knots: new[] { System.Array.Empty<double>(), System.Array.Empty<double>() });
+        spline.Build(verbose: false);
+        int id = spline.GetDerivativeId(new[] { 1, 0 });
+        string tmp = System.IO.Path.GetTempFileName();
+        try
+        {
+            spline.Save(tmp);
+            var loaded = ChebyshevSpline.Load(tmp);
+            Assert.Equal(id, loaded.GetDerivativeId(new[] { 1, 0 }));
+            double byId = loaded.Eval(new[] { 0.3, 0.5 }, id);
+            double byOrders = loaded.Eval(new[] { 0.3, 0.5 }, new[] { 1, 0 });
+            Assert.Equal(byOrders, byId, precision: 12);
+        }
+        finally { System.IO.File.Delete(tmp); }
+    }
+
+    [Fact]
+    public void Slider_DerivativeIdRegistry_survives_Save_and_Load()
+    {
+        var slider = new ChebyshevSlider(
+            (p, _) => p[0] + p[1] + p[2],
+            numDimensions: 3,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5, 5 },
+            partition: new[] { new[] { 0 }, new[] { 1, 2 } },
+            pivotPoint: new[] { 0.0, 0.0, 0.0 });
+        slider.Build(verbose: false);
+        int id = slider.GetDerivativeId(new[] { 1, 0, 0 });
+        string tmp = System.IO.Path.GetTempFileName();
+        try
+        {
+            slider.Save(tmp);
+            var loaded = ChebyshevSlider.Load(tmp);
+            Assert.Equal(id, loaded.GetDerivativeId(new[] { 1, 0, 0 }));
+            double byId = loaded.Eval(new[] { 0.3, 0.5, 0.2 }, id);
+            double byOrders = loaded.Eval(new[] { 0.3, 0.5, 0.2 }, new[] { 1, 0, 0 });
+            Assert.Equal(byOrders, byId, precision: 12);
+        }
+        finally { System.IO.File.Delete(tmp); }
+    }
 }

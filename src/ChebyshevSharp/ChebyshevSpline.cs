@@ -756,6 +756,9 @@ public class ChebyshevSpline
             NestedNNodes = NestedNNodes,
             Version = "0.8.0",
             Descriptor = _descriptor,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.Select(o => (int[])o.Clone()).ToArray()
+                : null,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -880,6 +883,16 @@ public class ChebyshevSpline
         spline._descriptor = state.Descriptor;
         // ConstructorType is intentionally NOT restored from state — Load always sets "load".
         spline._constructorType = "load";
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = spline._registeredDerivativeOrders.Count;
+                spline._registeredDerivativeOrders.Add((int[])orders.Clone());
+                spline._derivativeIdRegistry[key] = id;
+            }
+        }
         return spline;
     }
 
@@ -2057,6 +2070,7 @@ public class ChebyshevSpline
         // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
         public string? Descriptor { get; set; }
         public string? ConstructorType { get; set; }
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 
     internal class PieceState
