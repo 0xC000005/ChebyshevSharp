@@ -64,6 +64,7 @@ public class ChebyshevApproximation
     private string _constructorType = "function";
     private bool _isConstructionFinished;
     private object? _additionalData;
+    private double[]? _evaluationPointsCache;
 
     /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
     internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
@@ -1397,6 +1398,49 @@ public class ChebyshevApproximation
 
     /// <summary>Internal accessor for AdaptiveBuild to read _additionalData.</summary>
     internal object? AdditionalData => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points (product of nNodes across all dimensions).
+    /// </summary>
+    /// <returns>The total count of Chebyshev nodes in the tensor grid.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        int total = 1;
+        foreach (int n in NNodes) total *= n;
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of all Chebyshev node coordinates.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of shape [numPoints, ndim] flattened to 1D in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int num = GetNumEvaluationPoints();
+        int ndim = NumDimensions;
+        var points = new double[num * ndim];
+        var indices = new int[ndim];
+
+        for (int flat = 0; flat < num; flat++)
+        {
+            int rem = flat;
+            for (int d = ndim - 1; d >= 0; d--)
+            {
+                indices[d] = rem % NNodes[d];
+                rem /= NNodes[d];
+            }
+            for (int d = 0; d < ndim; d++)
+            {
+                points[flat * ndim + d] = NodeArrays[d][indices[d]];
+            }
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
 
     // ------------------------------------------------------------------
     // Serialization state

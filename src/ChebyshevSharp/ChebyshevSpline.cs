@@ -68,6 +68,7 @@ public class ChebyshevSpline
     private string? _descriptor;
     private string _constructorType = "function";
     private object? _additionalData;
+    private double[]? _evaluationPointsCache;
 
     /// <summary>
     /// Create a new ChebyshevSpline.
@@ -1817,6 +1818,46 @@ public class ChebyshevSpline
     /// call during <see cref="Build"/>.
     /// </summary>
     public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points across all spline pieces.
+    /// </summary>
+    /// <returns>The sum of GetNumEvaluationPoints() from each piece.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        int total = 0;
+        if (Pieces == null) return 0;
+        foreach (var piece in Pieces)
+        {
+            if (piece != null) total += piece.GetNumEvaluationPoints();
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of all spline piece evaluation points, concatenated sequentially.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of concatenated piece node coordinates, flattened in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int total = GetNumEvaluationPoints();
+        var points = new double[total * NumDimensions];
+        int offset = 0;
+
+        foreach (var piece in Pieces!)
+        {
+            if (piece == null) continue;
+            var piecePts = piece.GetEvaluationPoints();
+            Array.Copy(piecePts, 0, points, offset, piecePts.Length);
+            offset += piecePts.Length;
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
 
     // ------------------------------------------------------------------
     // Serialization state

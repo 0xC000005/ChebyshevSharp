@@ -90,4 +90,23 @@ public class SliderErgonomicsTests
         var slider = BuildSimple();
         Assert.Null(slider.GetAdditionalData());
     }
+
+    [Fact]
+    public void GetEvaluationPoints_layout_is_row_major()
+    {
+        var slider = BuildSimple();  // 3D, partition=[[0],[1,2]], nNodes=[5,5,5]
+        double[] pts = slider.GetEvaluationPoints();
+        int num = slider.GetNumEvaluationPoints();
+        // Slide 0: 5 points × 3 dims = 15 doubles
+        // Slide 1: 25 points × 3 dims = 75 doubles
+        Assert.Equal(30, num);  // 5 + 25
+        Assert.Equal(90, pts.Length);
+    }
+
+    [Fact]
+    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    {
+        var slider = BuildSimple();
+        Assert.Same(slider.GetEvaluationPoints(), slider.GetEvaluationPoints());
+    }
 }

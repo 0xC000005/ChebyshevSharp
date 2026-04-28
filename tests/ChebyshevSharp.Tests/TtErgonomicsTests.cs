@@ -77,4 +77,21 @@ public class TtErgonomicsTests
         tt.Build(verbose: false, seed: 42);
         Assert.Equal("tt-context", tt.GetAdditionalData());
     }
+
+    [Fact]
+    public void GetEvaluationPoints_full_chebyshev_grid()
+    {
+        var tt = BuildSimple();
+        double[] pts = tt.GetEvaluationPoints();
+        int num = tt.GetNumEvaluationPoints();
+        Assert.Equal(125, num);  // 5*5*5
+        Assert.Equal(375, pts.Length);
+    }
+
+    [Fact]
+    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    {
+        var tt = BuildSimple();
+        Assert.Same(tt.GetEvaluationPoints(), tt.GetEvaluationPoints());
+    }
 }

@@ -33,6 +33,7 @@ public class ChebyshevTT
     private string? _descriptor;
     private int _maxDerivativeOrder = 2;
     private object? _additionalData;
+    private double[]? _evaluationPointsCache;
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
@@ -1294,6 +1295,53 @@ public class ChebyshevTT
     /// is <c>Func&lt;double[], double&gt;</c> (no data arg); wrap with a closure if you need data threading.
     /// </summary>
     public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points in the full Chebyshev grid (product of nNodes).
+    /// </summary>
+    /// <returns>The total count of Chebyshev nodes across all dimensions.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        int total = 1;
+        foreach (int n in _nNodes) total *= n;
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of the full Chebyshev grid coordinates.
+    /// Generated on-demand using the domain and nNodes, independent of the sparse TT sampling.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of full-grid node coordinates, flattened in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int num = GetNumEvaluationPoints();
+        int ndim = _numDimensions;
+
+        var nodeArrays = new double[ndim][];
+        for (int d = 0; d < ndim; d++)
+            nodeArrays[d] = BarycentricKernel.MakeNodesForDim(_domain[d][0], _domain[d][1], _nNodes[d]);
+
+        var points = new double[num * ndim];
+        var indices = new int[ndim];
+
+        for (int flat = 0; flat < num; flat++)
+        {
+            int rem = flat;
+            for (int d = ndim - 1; d >= 0; d--)
+            {
+                indices[d] = rem % _nNodes[d];
+                rem /= _nNodes[d];
+            }
+            for (int d = 0; d < ndim; d++)
+                points[flat * ndim + d] = nodeArrays[d][indices[d]];
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
 
     // ------------------------------------------------------------------
     // Serialization DTO

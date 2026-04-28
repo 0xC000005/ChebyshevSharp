@@ -108,4 +108,31 @@ public class ApproxErgonomicsTests
         var approx = BuildSimple();
         Assert.Null(approx.GetAdditionalData());
     }
+
+    [Fact]
+    public void GetEvaluationPoints_layout_is_row_major()
+    {
+        var approx = BuildSimple();  // 2D, nNodes=[5,5]
+        double[] pts = approx.GetEvaluationPoints();
+        int num = approx.GetNumEvaluationPoints();
+
+        Assert.Equal(25, num);
+        Assert.Equal(50, pts.Length);  // 25 points × 2 dims
+
+        var nodeArrays = approx.NodeArrays;
+        Assert.Equal(nodeArrays[0][0], pts[0]);
+        Assert.Equal(nodeArrays[1][0], pts[1]);
+
+        Assert.Equal(nodeArrays[0][4], pts[48]);
+        Assert.Equal(nodeArrays[1][4], pts[49]);
+    }
+
+    [Fact]
+    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    {
+        var approx = BuildSimple();
+        double[] first = approx.GetEvaluationPoints();
+        double[] second = approx.GetEvaluationPoints();
+        Assert.Same(first, second);
+    }
 }

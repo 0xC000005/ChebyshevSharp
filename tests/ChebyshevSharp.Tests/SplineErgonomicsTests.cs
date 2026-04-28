@@ -97,4 +97,22 @@ public class SplineErgonomicsTests
         var spline = BuildSimple();
         Assert.Null(spline.GetAdditionalData());
     }
+
+    [Fact]
+    public void GetEvaluationPoints_layout_is_row_major()
+    {
+        var spline = BuildSimple();
+        double[] pts = spline.GetEvaluationPoints();
+        int num = spline.GetNumEvaluationPoints();
+
+        Assert.Equal(25, num);  // single-piece, nNodes=[5,5]
+        Assert.Equal(50, pts.Length);
+    }
+
+    [Fact]
+    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    {
+        var spline = BuildSimple();
+        Assert.Same(spline.GetEvaluationPoints(), spline.GetEvaluationPoints());
+    }
 }

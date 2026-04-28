@@ -62,6 +62,7 @@ public class ChebyshevSlider
     private string _constructorType = "function";
     private bool _isConstructionFinished;
     private object? _additionalData;
+    private double[]? _evaluationPointsCache;
 
     /// <summary>
     /// Create a new ChebyshevSlider.
@@ -925,6 +926,54 @@ public class ChebyshevSlider
     /// call during <see cref="Build"/>.
     /// </summary>
     public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points across all slides.
+    /// </summary>
+    /// <returns>The sum of GetNumEvaluationPoints() from each slide.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        if (Slides == null) return 0;
+        int total = 0;
+        foreach (var slide in Slides) total += slide.GetNumEvaluationPoints();
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of all slider evaluation points, expanded to full ndim using PivotPoint.
+    /// Each slide's local coordinates are mapped to full-ndim space via the Partition and PivotPoint.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of full-ndim node coordinates, flattened in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int total = GetNumEvaluationPoints();
+        var points = new double[total * NumDimensions];
+        int offset = 0;
+
+        for (int slideIdx = 0; slideIdx < Slides!.Length; slideIdx++)
+        {
+            var slide = Slides[slideIdx];
+            var group = Partition[slideIdx];
+            var slidePts = slide.GetEvaluationPoints();
+            int slideNum = slide.GetNumEvaluationPoints();
+            int gdim = group.Length;
+
+            for (int p = 0; p < slideNum; p++)
+            {
+                for (int d = 0; d < NumDimensions; d++)
+                    points[offset + p * NumDimensions + d] = PivotPoint[d];
+                for (int gi = 0; gi < gdim; gi++)
+                    points[offset + p * NumDimensions + group[gi]] = slidePts[p * gdim + gi];
+            }
+            offset += slideNum * NumDimensions;
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
 
     // ------------------------------------------------------------------
     // Serialization state classes
