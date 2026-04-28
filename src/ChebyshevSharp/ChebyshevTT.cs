@@ -549,6 +549,62 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Canonicalization (Phase 2 — PyChebyshev v0.13)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Left-orthogonalize cores [0..position-1] in place by absorbing each
+    /// core's R factor into the next core's left bond. The represented tensor
+    /// is unchanged.
+    /// </summary>
+    /// <param name="position">Pivot index, must be in [1, NumDimensions - 1].</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If position is outside [1, NumDimensions - 1].</exception>
+    public void OrthLeft(int position)
+    {
+        CheckBuilt();
+        if (position < 1 || position >= _numDimensions)
+            throw new ArgumentOutOfRangeException(nameof(position),
+                $"position must be in [1, {_numDimensions - 1}] for OrthLeft, got {position}");
+        TensorTrainKernel.OrthLeftSweep(_coeffCores!, position);
+        _cachedErrorEstimate = null;
+        // TT ranks may change (QR reduces rank to min(rL*n, rR)); refresh.
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores![i].RRight;
+    }
+
+    /// <summary>
+    /// Right-orthogonalize cores [position+1..NumDimensions-1] in place by
+    /// absorbing each core's L factor into the previous core's right bond.
+    /// The represented tensor is unchanged.
+    /// </summary>
+    /// <param name="position">Pivot index, must be in [0, NumDimensions - 2].</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If position is outside [0, NumDimensions - 2].</exception>
+    public void OrthRight(int position)
+    {
+        CheckBuilt();
+        if (position < 0 || position >= _numDimensions - 1)
+            throw new ArgumentOutOfRangeException(nameof(position),
+                $"position must be in [0, {_numDimensions - 2}] for OrthRight, got {position}");
+        TensorTrainKernel.OrthRightSweep(_coeffCores!, position);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores![i].RRight;
+    }
+
+    /// <summary>
+    /// Internal accessor for tests: return (rLeft, nNodes, rRight, flat data) of
+    /// core <paramref name="k"/>. Exposes the live data buffer (not a copy).
+    /// </summary>
+    internal (int RLeft, int NNodes, int RRight, double[] Data) GetCoreShape(int k)
+    {
+        CheckBuilt();
+        var c = _coeffCores![k];
+        return (c.RLeft, c.NNodes, c.RRight, c.Data);
+    }
+
+    // ------------------------------------------------------------------
     // Chebyshev polynomial evaluation
     // ------------------------------------------------------------------
 

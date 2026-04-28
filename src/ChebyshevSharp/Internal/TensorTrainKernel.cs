@@ -898,4 +898,133 @@ internal static class TensorTrainKernel
         }
         return coeffCores;
     }
+
+    // ------------------------------------------------------------------
+    // Orthogonalization primitives (Phase 2 — PyChebyshev v0.13)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Left-orthogonalize cores [0..position-1] in place by absorbing each
+    /// core's R factor into the next core's left bond. After the call, each
+    /// core C_k for k &lt; position satisfies Q^T Q = I when reshaped as
+    /// (rLeft*nNodes, rRight). The represented tensor is unchanged.
+    /// </summary>
+    /// <param name="cores">The TT cores to orthogonalize in place.</param>
+    /// <param name="position">Pivot index, 1 &lt;= position &lt; cores.Length.</param>
+    internal static void OrthLeftSweep(TtCore[] cores, int position)
+    {
+        for (int k = 0; k < position; k++)
+        {
+            var (newCk, newCk1) = OrthLeftCore(cores[k], cores[k + 1]);
+            cores[k] = newCk;
+            cores[k + 1] = newCk1;
+        }
+    }
+
+    /// <summary>
+    /// Right-orthogonalize cores [position+1..d-1] in place by absorbing each
+    /// core's L factor into the previous core's right bond. After the call,
+    /// each core C_k for k &gt; position satisfies Q Q^T = I when reshaped as
+    /// (rLeft, nNodes*rRight). The represented tensor is unchanged.
+    /// </summary>
+    /// <param name="cores">The TT cores to orthogonalize in place.</param>
+    /// <param name="position">Pivot index, 0 &lt;= position &lt; cores.Length - 1.</param>
+    internal static void OrthRightSweep(TtCore[] cores, int position)
+    {
+        for (int k = cores.Length - 1; k > position; k--)
+        {
+            var (newCkm1, newCk) = OrthRightCore(cores[k - 1], cores[k]);
+            cores[k - 1] = newCkm1;
+            cores[k] = newCk;
+        }
+    }
+
+    /// <summary>
+    /// QR-orthogonalize core_k from the left; absorb R into core_{k+1}.
+    /// Mirror of Python's _orth_left_core (tensor_train.py:695).
+    /// </summary>
+    private static (TtCore NewCk, TtCore NewCk1) OrthLeftCore(TtCore coreK, TtCore coreK1)
+    {
+        int r0 = coreK.RLeft, n = coreK.NNodes, r1 = coreK.RRight;
+        // Unfold (r0, n, r1) → (r0*n, r1) row-major
+        var matrix = new double[r0 * n, r1];
+        for (int i = 0; i < r0; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < r1; k++)
+                    matrix[i * n + j, k] = coreK[i, j, k];
+
+        var M = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(matrix);
+        var qr = M.QR(MathNet.Numerics.LinearAlgebra.Factorization.QRMethod.Thin);
+        var Q = qr.Q;     // shape (r0*n, qCols), qCols = min(r0*n, r1)
+        var R = qr.R;     // shape (qCols, r1)
+        int qCols = Q.ColumnCount;
+
+        // Pack new core_k as TtCore(r0, n, qCols)
+        var newCk = new TtCore(r0, n, qCols);
+        for (int i = 0; i < r0; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < qCols; k++)
+                    newCk[i, j, k] = Q[i * n + j, k];
+
+        // Contract R into core_k1 left bond:
+        // newCk1[i, p, k] = sum_j R[i, j] * coreK1[j, p, k]
+        int rk1Right = coreK1.RRight, nk1 = coreK1.NNodes;
+        var newCk1 = new TtCore(qCols, nk1, rk1Right);
+        for (int i = 0; i < qCols; i++)
+            for (int p = 0; p < nk1; p++)
+                for (int k = 0; k < rk1Right; k++)
+                {
+                    double s = 0;
+                    for (int j = 0; j < r1; j++)
+                        s += R[i, j] * coreK1[j, p, k];
+                    newCk1[i, p, k] = s;
+                }
+        return (newCk, newCk1);
+    }
+
+    /// <summary>
+    /// LQ-orthogonalize core_k from the right; absorb L into core_{k-1}.
+    /// Mirror of Python's _orth_right_core (tensor_train.py:717).
+    /// Implemented via QR on the transposed unfolding.
+    /// </summary>
+    private static (TtCore NewCkm1, TtCore NewCk) OrthRightCore(TtCore coreKm1, TtCore coreK)
+    {
+        int rPrev = coreK.RLeft, n = coreK.NNodes, rNext = coreK.RRight;
+        // Unfold core_k as (r_prev, n*r_next), then QR of its transpose gives
+        // Qt of shape (n*r_next, k_rank), Rt of shape (k_rank, r_prev).
+        var Mt = new double[n * rNext, rPrev];
+        for (int i = 0; i < rPrev; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < rNext; k++)
+                    Mt[j * rNext + k, i] = coreK[i, j, k];
+
+        var Mtm = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(Mt);
+        var qr = Mtm.QR(MathNet.Numerics.LinearAlgebra.Factorization.QRMethod.Thin);
+        var Qt = qr.Q;   // (n*r_next, kRank)
+        var Rt = qr.R;   // (kRank, r_prev)
+        int kRank = Qt.ColumnCount;
+
+        // newCk = Qt.T.reshape(kRank, n, r_next)
+        var newCk = new TtCore(kRank, n, rNext);
+        for (int a = 0; a < kRank; a++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < rNext; k++)
+                    newCk[a, j, k] = Qt[j * rNext + k, a];
+
+        // L = Rt^T  shape (r_prev, kRank).
+        // newCkm1[i, p, j] = sum_k coreKm1[i, p, k] * L[k, j]
+        //                  = sum_k coreKm1[i, p, k] * Rt[j, k]
+        int rPrevPrev = coreKm1.RLeft, nPrev = coreKm1.NNodes;
+        var newCkm1 = new TtCore(rPrevPrev, nPrev, kRank);
+        for (int i = 0; i < rPrevPrev; i++)
+            for (int p = 0; p < nPrev; p++)
+                for (int j = 0; j < kRank; j++)
+                {
+                    double s = 0;
+                    for (int k = 0; k < rPrev; k++)
+                        s += coreKm1[i, p, k] * Rt[j, k];
+                    newCkm1[i, p, j] = s;
+                }
+        return (newCkm1, newCk);
+    }
 }
