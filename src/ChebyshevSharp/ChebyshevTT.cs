@@ -1138,6 +1138,9 @@ public class ChebyshevTT
             Cores = new CoreData[_numDimensions],
             Descriptor = _descriptor,
             MaxDerivativeOrder = _maxDerivativeOrder,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.ToArray()
+                : null,
         };
 
         for (int i = 0; i < _numDimensions; i++)
@@ -1195,6 +1198,18 @@ public class ChebyshevTT
 
         // v0.8.0 migration: Descriptor may be absent in older files.
         tt._descriptor = state.Descriptor;
+
+        // Restore derivative-id registry (absent in older JSON; skip if null).
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = tt._registeredDerivativeOrders.Count;
+                tt._registeredDerivativeOrders.Add((int[])orders.Clone());
+                tt._derivativeIdRegistry[key] = id;
+            }
+        }
 
         string currentVersion = GetLibraryVersion();
         if (state.Version != null && state.Version != currentVersion)
@@ -1462,6 +1477,8 @@ public class ChebyshevTT
         public string? ConstructorType { get; set; }
         // Nullable so pre-v0.8.0 files (which lack this field) default to null => 2
         public int? MaxDerivativeOrder { get; set; }
+        // Derivative-id registry (absent in older JSON; null == not set)
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 
     internal class CoreData

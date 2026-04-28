@@ -753,7 +753,7 @@ public class ChebyshevApproximation
             NumDimensions = state.NumDimensions,
             Domain = state.Domain,
             NNodes = state.NNodes,
-            MaxDerivativeOrder = state.MaxDerivativeOrder,
+            MaxDerivativeOrder = state.MaxDerivativeOrder ?? 2,
             NodeArrays = state.NodeArrays,
             TensorValues = state.TensorValues,
             Weights = state.Weights,
@@ -1618,7 +1618,7 @@ public class ChebyshevApproximation
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = Array.Empty<double[]>();
         public int[] NNodes { get; set; } = Array.Empty<int>();
-        public int MaxDerivativeOrder { get; set; }
+        public int? MaxDerivativeOrder { get; set; }
         public double[][] NodeArrays { get; set; } = Array.Empty<double[]>();
         public double[] TensorValues { get; set; } = Array.Empty<double>();
         public double[][] Weights { get; set; } = Array.Empty<double[]>();

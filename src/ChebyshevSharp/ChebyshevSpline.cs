@@ -832,7 +832,7 @@ public class ChebyshevSpline
                 NumDimensions = ps.NumDimensions,
                 Domain = ps.Domain,
                 NNodes = ps.NNodes,
-                MaxDerivativeOrder = ps.MaxDerivativeOrder,
+                MaxDerivativeOrder = ps.MaxDerivativeOrder ?? 2,
                 NodeArrays = ps.NodeArrays,
                 TensorValues = ps.TensorValues,
                 Weights = ps.Weights,
@@ -863,7 +863,7 @@ public class ChebyshevSpline
             NumDimensions = state.NumDimensions,
             Domain = state.Domain,
             NNodes = state.NNodes,
-            MaxDerivativeOrder = state.MaxDerivativeOrder,
+            MaxDerivativeOrder = state.MaxDerivativeOrder ?? 2,
             Knots = state.Knots,
             Intervals = intervals,
             Shape = state.Shape,
@@ -2044,7 +2044,7 @@ public class ChebyshevSpline
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = Array.Empty<double[]>();
         public int[] NNodes { get; set; } = Array.Empty<int>();
-        public int MaxDerivativeOrder { get; set; }
+        public int? MaxDerivativeOrder { get; set; }
         public double[][] Knots { get; set; } = Array.Empty<double[]>();
         public int[] Shape { get; set; } = Array.Empty<int>();
         public double BuildTime { get; set; }
@@ -2064,7 +2064,7 @@ public class ChebyshevSpline
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = Array.Empty<double[]>();
         public int[] NNodes { get; set; } = Array.Empty<int>();
-        public int MaxDerivativeOrder { get; set; }
+        public int? MaxDerivativeOrder { get; set; }
         public double[][] NodeArrays { get; set; } = Array.Empty<double[]>();
         public double[] TensorValues { get; set; } = Array.Empty<double>();
         public double[][] Weights { get; set; } = Array.Empty<double[]>();
