@@ -78,4 +78,150 @@ internal static class TensorTrainExtrude
         cores[d - 1] = lastCore;
         return cores;
     }
+
+    /// <summary>
+    /// Materialize the TT chain into a flat row-major dense tensor of length Π nNodes.
+    /// Converts coefficient cores to value cores first, then chains contractions.
+    /// Mirror of Python's <c>ChebyshevTT.to_dense</c> (tensor_train.py:1637).
+    /// </summary>
+    internal static double[] ToDenseEinsumChain(TensorTrainKernel.TtCore[] coeffCores, int[] nNodes)
+    {
+        // Convert all coefficient cores to value cores.
+        var valueCores = new TensorTrainKernel.TtCore[coeffCores.Length];
+        for (int i = 0; i < coeffCores.Length; i++)
+            valueCores[i] = TensorTrainKernel.CoeffCoreToValueCore(coeffCores[i]);
+        return TensorTrainKernel.ReconstructDense(valueCores, nNodes);
+    }
+
+    /// <summary>
+    /// Insert a constant rank-preserving core at position <paramref name="dim"/>
+    /// into a TT. The new core encodes the constant function 1 in DCT-II
+    /// coefficient space (only c_0 = 1.0 is set; the core is rank-preserving:
+    /// new_core[i, 0, i] = 1.0 for all i).
+    /// Mirror of Python's <c>_extrude_tt_core</c>.
+    /// </summary>
+    internal static TensorTrainKernel.TtCore[] ExtrudeCores(
+        TensorTrainKernel.TtCore[] coeffCores, int dim, int nNew)
+    {
+        int d = coeffCores.Length;
+        if (dim < 0 || dim > d)
+            throw new ArgumentOutOfRangeException(nameof(dim),
+                $"dim={dim} out of range [0, {d}]");
+        if (nNew < 2)
+            throw new ArgumentException($"newN must be >= 2, got {nNew}", nameof(nNew));
+
+        // Determine rank at insertion boundary.
+        int rAt;
+        if (dim == 0) rAt = 1;
+        else if (dim == d) rAt = 1;
+        else rAt = coeffCores[dim - 1].RRight;
+
+        var newCore = new TensorTrainKernel.TtCore(rAt, nNew, rAt);
+        for (int i = 0; i < rAt; i++)
+            newCore[i, 0, i] = 1.0;
+
+        var result = new TensorTrainKernel.TtCore[d + 1];
+        for (int k = 0; k < dim; k++) result[k] = coeffCores[k];
+        result[dim] = newCore;
+        for (int k = dim; k < d; k++) result[k + 1] = coeffCores[k];
+        return result;
+    }
+
+    /// <summary>
+    /// Contract a TT coefficient core along <paramref name="dim"/> at <paramref name="value"/>.
+    /// Converts the target core to value space, evaluates the barycentric interpolant at
+    /// <paramref name="value"/> to produce a matrix M of shape (rL, rR), then absorbs M
+    /// into the right neighbor (or left neighbor for the rightmost core).
+    /// Mirror of Python's <c>_slice_tt_core</c>.
+    /// </summary>
+    internal static TensorTrainKernel.TtCore[] SliceCores(
+        TensorTrainKernel.TtCore[] coeffCores, int dim, double value, double[] nodes)
+    {
+        var coeffCore = coeffCores[dim];
+        var valueCore = TensorTrainKernel.CoeffCoreToValueCore(coeffCore);
+        int rL = valueCore.RLeft, n = valueCore.NNodes, rR = valueCore.RRight;
+
+        // Find nearest node and check fast-path.
+        int exactIdx = 0;
+        double minAbs = double.PositiveInfinity;
+        double[] diff = new double[n];
+        for (int j = 0; j < n; j++)
+        {
+            diff[j] = value - nodes[j];
+            double abs = Math.Abs(diff[j]);
+            if (abs < minAbs) { minAbs = abs; exactIdx = j; }
+        }
+
+        double[] M = new double[rL * rR];
+        if (minAbs < 1e-14)
+        {
+            // Fast path: value coincides with a node — just take a slice.
+            for (int i = 0; i < rL; i++)
+                for (int k = 0; k < rR; k++)
+                    M[i * rR + k] = valueCore[i, exactIdx, k];
+        }
+        else
+        {
+            // Compute barycentric weights for nodes.
+            double[] baryW = BarycentricKernel.ComputeBarycentricWeights(nodes);
+            double[] wOverDiff = new double[n];
+            double sum = 0;
+            for (int j = 0; j < n; j++)
+            {
+                wOverDiff[j] = baryW[j] / diff[j];
+                sum += wOverDiff[j];
+            }
+            for (int j = 0; j < n; j++) wOverDiff[j] /= sum;
+
+            for (int i = 0; i < rL; i++)
+                for (int k = 0; k < rR; k++)
+                {
+                    double s = 0;
+                    for (int j = 0; j < n; j++) s += wOverDiff[j] * valueCore[i, j, k];
+                    M[i * rR + k] = s;
+                }
+        }
+
+        int d = coeffCores.Length;
+        var result = new TensorTrainKernel.TtCore[d - 1];
+
+        if (dim < d - 1)
+        {
+            // Absorb M into right neighbor: newNeighbor[l, j, s] = sum_r M[l, r] * neighbor[r, j, s]
+            var neighbor = coeffCores[dim + 1];
+            int n2 = neighbor.NNodes, rR2 = neighbor.RRight;
+            var newNeighbor = new TensorTrainKernel.TtCore(rL, n2, rR2);
+            for (int i = 0; i < rL; i++)
+                for (int j = 0; j < n2; j++)
+                    for (int k = 0; k < rR2; k++)
+                    {
+                        double s = 0;
+                        for (int r = 0; r < rR; r++)
+                            s += M[i * rR + r] * neighbor[r, j, k];
+                        newNeighbor[i, j, k] = s;
+                    }
+            for (int k = 0; k < dim; k++) result[k] = coeffCores[k];
+            result[dim] = newNeighbor;
+            for (int k = dim + 2; k < d; k++) result[k - 1] = coeffCores[k];
+        }
+        else
+        {
+            // Rightmost core: absorb M into left neighbor.
+            var neighbor = coeffCores[dim - 1];
+            int rLp = neighbor.RLeft, np = neighbor.NNodes;
+            var newNeighbor = new TensorTrainKernel.TtCore(rLp, np, rR);
+            for (int i = 0; i < rLp; i++)
+                for (int j = 0; j < np; j++)
+                    for (int k = 0; k < rR; k++)
+                    {
+                        double s = 0;
+                        for (int r = 0; r < rL; r++)
+                            s += neighbor[i, j, r] * M[r * rR + k];
+                        newNeighbor[i, j, k] = s;
+                    }
+            for (int k = 0; k < dim - 1; k++) result[k] = coeffCores[k];
+            result[dim - 1] = newNeighbor;
+        }
+        return result;
+    }
 }

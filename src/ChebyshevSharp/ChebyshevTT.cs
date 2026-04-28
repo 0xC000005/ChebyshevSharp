@@ -796,6 +796,128 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Materialization, extrusion, slicing (Phase 2 — PyChebyshev v0.18)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Materialize the TT chain into a full row-major dense tensor.
+    /// Length is Π NNodes; <c>dense[flat]</c> equals <c>Eval(point_at_grid_idx)</c>
+    /// where flat is the row-major index into the grid shape.
+    /// Use sparingly: storage is Π NNodes doubles.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="OverflowException">If Π NNodes * 8 exceeds <c>int.MaxValue</c>.</exception>
+    public double[] ToDense()
+    {
+        CheckBuilt();
+        long total = 1;
+        for (int i = 0; i < _numDimensions; i++)
+            total = checked(total * _nNodes[i]);
+        if (total * 8 > int.MaxValue)
+            throw new OverflowException(
+                $"ToDense would allocate {total} doubles ({total * 8} bytes), exceeding int.MaxValue. " +
+                "Use ToDense for low-dimensional inspection only.");
+        return TensorTrainExtrude.ToDenseEinsumChain(_coeffCores!, _nNodes);
+    }
+
+    /// <summary>
+    /// Insert a new dimension at index <paramref name="dim"/> where the function
+    /// is constant. The extruded TT evaluates identically to the original over
+    /// the existing dimensions, regardless of the new dimension's coordinate.
+    /// </summary>
+    /// <param name="dim">Insertion index, 0 &lt;= dim &lt;= NumDimensions.</param>
+    /// <param name="newDomain">Domain (lo, hi) for the new dimension.</param>
+    /// <param name="newN">Number of nodes for the new dimension.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If dim is outside [0, NumDimensions].</exception>
+    /// <exception cref="ArgumentException">If newDomain.Lo >= newDomain.Hi, or newN &lt; 2.</exception>
+    public ChebyshevTT Extrude(int dim, (double Lo, double Hi) newDomain, int newN)
+    {
+        CheckBuilt();
+        if (newDomain.Lo >= newDomain.Hi)
+            throw new ArgumentException(
+                $"newDomain bounds must satisfy lo < hi; got ({newDomain.Lo}, {newDomain.Hi})",
+                nameof(newDomain));
+        var newCores = TensorTrainExtrude.ExtrudeCores(_coeffCores!, dim, newN);
+        var newDomainArr = new double[_numDimensions + 1][];
+        for (int k = 0; k < dim; k++) newDomainArr[k] = (double[])_domain[k].Clone();
+        newDomainArr[dim] = new[] { newDomain.Lo, newDomain.Hi };
+        for (int k = dim; k < _numDimensions; k++) newDomainArr[k + 1] = (double[])_domain[k].Clone();
+
+        var newNNodes = new int[_numDimensions + 1];
+        for (int k = 0; k < dim; k++) newNNodes[k] = _nNodes[k];
+        newNNodes[dim] = newN;
+        for (int k = dim; k < _numDimensions; k++) newNNodes[k + 1] = _nNodes[k];
+
+        return BuildResultFromCores(newCores, newDomainArr, newNNodes);
+    }
+
+    /// <summary>
+    /// Fix dimension <paramref name="dim"/> at <paramref name="value"/>, returning
+    /// a TT over the remaining (NumDimensions - 1) dimensions.
+    /// </summary>
+    /// <param name="dim">Dimension to slice, 0 &lt;= dim &lt; NumDimensions.</param>
+    /// <param name="value">Value at which to fix the dimension; must lie within the domain.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If dim is out of range or value is outside the domain.</exception>
+    /// <exception cref="InvalidOperationException">If NumDimensions == 1 (would produce 0D result).</exception>
+    public ChebyshevTT Slice(int dim, double value)
+    {
+        CheckBuilt();
+        if (dim < 0 || dim >= _numDimensions)
+            throw new ArgumentOutOfRangeException(nameof(dim),
+                $"dim={dim} out of range [0, {_numDimensions - 1}]");
+        double lo = _domain[dim][0], hi = _domain[dim][1];
+        if (value < lo || value > hi)
+            throw new ArgumentOutOfRangeException(nameof(value),
+                $"Slice value {value} for dim {dim} is outside domain [{lo}, {hi}]");
+        if (_numDimensions == 1)
+            throw new InvalidOperationException("Cannot slice a 1D TT (would produce 0D result).");
+
+        double[] nodes = BarycentricKernel.MakeNodesForDim(lo, hi, _nNodes[dim]);
+        var newCores = TensorTrainExtrude.SliceCores(_coeffCores!, dim, value, nodes);
+
+        var newDomain = new double[_numDimensions - 1][];
+        var newNNodes = new int[_numDimensions - 1];
+        int writeIdx = 0;
+        for (int k = 0; k < _numDimensions; k++)
+        {
+            if (k == dim) continue;
+            newDomain[writeIdx] = (double[])_domain[k].Clone();
+            newNNodes[writeIdx] = _nNodes[k];
+            writeIdx++;
+        }
+
+        return BuildResultFromCores(newCores, newDomain, newNNodes);
+    }
+
+    /// <summary>
+    /// Internal helper: assemble a fresh ChebyshevTT from a set of coefficient cores.
+    /// Used by Extrude, Slice, and the algebra operators (Tasks 9 + 10).
+    /// </summary>
+    internal ChebyshevTT BuildResultFromCores(
+        TensorTrainKernel.TtCore[] cores, double[][] newDomain, int[] newNNodes)
+    {
+        int newD = newNNodes.Length;
+        var ttRanks = new int[newD + 1];
+        ttRanks[0] = 1;
+        for (int i = 0; i < newD; i++) ttRanks[i + 1] = cores[i].RRight;
+        var tt = new ChebyshevTT(
+            numDimensions: newD,
+            domain: newDomain,
+            nNodes: newNNodes,
+            maxRank: _maxRank,
+            tolerance: _tolerance,
+            maxSweeps: _maxSweeps,
+            coeffCores: cores,
+            ttRanks: ttRanks,
+            buildTime: 0.0,
+            totalBuildEvals: 0);
+        tt.Method = Method;
+        return tt;
+    }
+
+    // ------------------------------------------------------------------
     // Chebyshev polynomial evaluation
     // ------------------------------------------------------------------
 
