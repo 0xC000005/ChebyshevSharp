@@ -61,6 +61,7 @@ public class ChebyshevSlider
     private string? _descriptor;
     private string _constructorType = "function";
     private bool _isConstructionFinished;
+    private object? _additionalData;
 
     /// <summary>
     /// Create a new ChebyshevSlider.
@@ -72,6 +73,7 @@ public class ChebyshevSlider
     /// <param name="partition">Grouping of dimension indices into slides. Each dimension must appear exactly once.</param>
     /// <param name="pivotPoint">Reference point z around which slides are built.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevSlider(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -79,13 +81,15 @@ public class ChebyshevSlider
         int[] nNodes,
         int[][] partition,
         double[] pivotPoint,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         Partition = partition.Select(g => (int[])g.Clone()).ToArray();
         PivotPoint = (double[])pivotPoint.Clone();
 
@@ -146,7 +150,7 @@ public class ChebyshevSlider
         _cachedErrorEstimate = null;
 
         // Evaluate pivot value
-        PivotValue = Function(PivotPoint, null);
+        PivotValue = Function(PivotPoint, _additionalData);
 
         int totalEvals = TotalBuildEvals;
         int fullTensor = 1;
@@ -189,7 +193,8 @@ public class ChebyshevSlider
 
             var slide = new ChebyshevApproximation(
                 slideFunc, slideDim, slideDomain, slideNNodes,
-                maxDerivativeOrder: MaxDerivativeOrder);
+                maxDerivativeOrder: MaxDerivativeOrder,
+                additionalData: _additionalData);
             slide.Build(verbose: false);
             Slides[slideIdx] = slide;
 
@@ -913,6 +918,13 @@ public class ChebyshevSlider
 
     /// <summary>Maximum derivative order this slider supports.</summary>
     public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Same value is threaded through every <c>f(point, data)</c>
+    /// call during <see cref="Build"/>.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
 
     // ------------------------------------------------------------------
     // Serialization state classes

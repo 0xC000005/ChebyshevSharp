@@ -64,4 +64,17 @@ public class TtErgonomicsTests
         tt.Build(verbose: false, seed: 42);
         Assert.Equal(3, tt.GetMaxDerivativeOrder());
     }
+
+    [Fact]
+    public void AdditionalData_stored_for_introspection()
+    {
+        var tt = new ChebyshevTT(
+            p => p[0] + p[1] + p[2],
+            numDimensions: 3,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5, 5 },
+            additionalData: "tt-context");
+        tt.Build(verbose: false, seed: 42);
+        Assert.Equal("tt-context", tt.GetAdditionalData());
+    }
 }

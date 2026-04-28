@@ -78,4 +78,34 @@ public class ApproxErgonomicsTests
         approx.Build(verbose: false);
         Assert.Equal(3, approx.GetMaxDerivativeOrder());
     }
+
+    [Fact]
+    public void AdditionalData_threaded_through_Build()
+    {
+        int callCount = 0;
+        string? receivedTag = null;
+        var approx = new ChebyshevApproximation(
+            (p, data) =>
+            {
+                callCount++;
+                receivedTag = (string?)data;
+                return p[0];
+            },
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5 },
+            additionalData: "context-tag");
+        approx.Build(verbose: false);
+
+        Assert.Equal(5, callCount);
+        Assert.Equal("context-tag", receivedTag);
+        Assert.Equal("context-tag", approx.GetAdditionalData());
+    }
+
+    [Fact]
+    public void AdditionalData_default_is_null()
+    {
+        var approx = BuildSimple();
+        Assert.Null(approx.GetAdditionalData());
+    }
 }

@@ -61,4 +61,33 @@ public class SliderErgonomicsTests
         slider.Build(verbose: false);
         Assert.Equal(3, slider.GetMaxDerivativeOrder());
     }
+
+    [Fact]
+    public void AdditionalData_threaded_through_Build()
+    {
+        string? receivedTag = null;
+        var slider = new ChebyshevSlider(
+            (p, data) =>
+            {
+                receivedTag = (string?)data;
+                return p[0] + p[1];
+            },
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 },
+            partition: new[] { new[] { 0 }, new[] { 1 } },
+            pivotPoint: new[] { 0.0, 0.0 },
+            additionalData: "slider-context");
+        slider.Build(verbose: false);
+
+        Assert.Equal("slider-context", receivedTag);
+        Assert.Equal("slider-context", slider.GetAdditionalData());
+    }
+
+    [Fact]
+    public void AdditionalData_default_is_null()
+    {
+        var slider = BuildSimple();
+        Assert.Null(slider.GetAdditionalData());
+    }
 }

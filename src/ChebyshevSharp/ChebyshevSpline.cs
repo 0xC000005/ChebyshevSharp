@@ -67,6 +67,7 @@ public class ChebyshevSpline
     private double? _cachedErrorEstimate;
     private string? _descriptor;
     private string _constructorType = "function";
+    private object? _additionalData;
 
     /// <summary>
     /// Create a new ChebyshevSpline.
@@ -77,19 +78,22 @@ public class ChebyshevSpline
     /// <param name="nNodes">Number of Chebyshev nodes per dimension per piece.</param>
     /// <param name="knots">Interior knots for each dimension. Empty array for no knots.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[] nNodes,
         double[][] knots,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
 
         // Validate and store knots
         ValidateKnots(numDimensions, domain, knots);
@@ -122,6 +126,7 @@ public class ChebyshevSpline
     /// <param name="errorThreshold">Target supremum-norm error per piece. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -130,7 +135,8 @@ public class ChebyshevSpline
         double[][]? knots = null,
         double? errorThreshold = null,
         int maxN = 64,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -161,6 +167,7 @@ public class ChebyshevSpline
         ErrorThreshold = errorThreshold;
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         OriginalNNodes = (int?[])resolvedOriginal.Clone();
 
         // Public NNodes is meaningful only after Build resolves the auto-N values.
@@ -191,13 +198,15 @@ public class ChebyshevSpline
     /// <param name="nNodesNested">Nested array: nNodesNested[d][i] is the node count for piece i along dim d. Length per dim must equal knots[d].Length + 1.</param>
     /// <param name="knots">Interior knots per dimension. Required (no default) when using nested form.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[][] nNodesNested,
         double[][] knots,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         if (nNodesNested.Length != numDimensions)
             throw new ArgumentException(
@@ -214,6 +223,7 @@ public class ChebyshevSpline
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         MaxN = 64;
         ErrorThreshold = null;
         OriginalNNodes = Array.Empty<int?>();
@@ -351,7 +361,8 @@ public class ChebyshevSpline
                     pieceN[d] = NestedNNodes[d][multiIdx[d]];
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, pieceN,
-                    maxDerivativeOrder: MaxDerivativeOrder);
+                    maxDerivativeOrder: MaxDerivativeOrder,
+                    additionalData: _additionalData);
             }
             else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
@@ -363,14 +374,16 @@ public class ChebyshevSpline
                     nNodes: pieceNNodes,
                     errorThreshold: ErrorThreshold,
                     maxN: MaxN,
-                    maxDerivativeOrder: MaxDerivativeOrder);
+                    maxDerivativeOrder: MaxDerivativeOrder,
+                    additionalData: _additionalData);
             }
             else
             {
                 // Fixed-N: existing path
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, NNodes,
-                    maxDerivativeOrder: MaxDerivativeOrder);
+                    maxDerivativeOrder: MaxDerivativeOrder,
+                    additionalData: _additionalData);
             }
             piece.Build(verbose: false);
             Pieces[flatIdx] = piece;
@@ -1797,6 +1810,13 @@ public class ChebyshevSpline
 
     /// <summary>Maximum derivative order this spline supports.</summary>
     public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Same value is threaded through every <c>f(point, data)</c>
+    /// call during <see cref="Build"/>.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
 
     // ------------------------------------------------------------------
     // Serialization state

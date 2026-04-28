@@ -63,6 +63,7 @@ public class ChebyshevApproximation
     private string? _descriptor;
     private string _constructorType = "function";
     private bool _isConstructionFinished;
+    private object? _additionalData;
 
     /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
     internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
@@ -75,18 +76,21 @@ public class ChebyshevApproximation
     /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[] nNodes,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
 
         // Generate Chebyshev nodes for each dimension
         NodeArrays = new double[numDimensions][];
@@ -109,6 +113,7 @@ public class ChebyshevApproximation
     /// <param name="errorThreshold">Target supremum-norm error. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -116,7 +121,8 @@ public class ChebyshevApproximation
         int?[]? nNodes = null,
         double? errorThreshold = null,
         int maxN = 64,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -146,6 +152,7 @@ public class ChebyshevApproximation
         ErrorThreshold = errorThreshold;
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         OriginalNNodes = (int?[])resolved.Clone();
 
         // If all entries are non-null, populate NNodes + nodes immediately (matches existing fixed-N behavior).
@@ -220,7 +227,7 @@ public class ChebyshevApproximation
             for (int d = 0; d < NumDimensions; d++)
                 point[d] = NodeArrays[d][indices[d]];
 
-            TensorValues[flat] = Function!(point, null);
+            TensorValues[flat] = Function!(point, _additionalData);
         }
         NEvaluations = total;
 
@@ -1380,6 +1387,16 @@ public class ChebyshevApproximation
 
     /// <summary>Maximum derivative order this approximation supports.</summary>
     public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Same value is threaded through every <c>f(point, data)</c>
+    /// call during <see cref="Build"/>.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>Internal accessor for AdaptiveBuild to read _additionalData.</summary>
+    internal object? AdditionalData => _additionalData;
 
     // ------------------------------------------------------------------
     // Serialization state

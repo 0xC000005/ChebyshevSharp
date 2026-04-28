@@ -32,6 +32,7 @@ public class ChebyshevTT
     private double? _cachedErrorEstimate;
     private string? _descriptor;
     private int _maxDerivativeOrder = 2;
+    private object? _additionalData;
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
@@ -102,6 +103,7 @@ public class ChebyshevTT
     /// <param name="tolerance">Convergence tolerance for TT-Cross. Default is 1e-6.</param>
     /// <param name="maxSweeps">Maximum number of TT-Cross sweeps. Default is 10.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support. Default is 2.</param>
+    /// <param name="additionalData">Optional user data object stored for introspection via <see cref="GetAdditionalData"/>. NOT threaded through build calls (TT function signature has no data arg).</param>
     public ChebyshevTT(
         Func<double[], double> function,
         int numDimensions,
@@ -110,7 +112,8 @@ public class ChebyshevTT
         int maxRank = 10,
         double tolerance = 1e-6,
         int maxSweeps = 10,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         if (domain.Length != numDimensions)
             throw new ArgumentException(
@@ -127,6 +130,7 @@ public class ChebyshevTT
         _tolerance = tolerance;
         _maxSweeps = maxSweeps;
         _maxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
     }
 
     // Private constructor for deserialization
@@ -1283,6 +1287,13 @@ public class ChebyshevTT
 
     /// <summary>Maximum derivative order this tensor train supports.</summary>
     public int GetMaxDerivativeOrder() => _maxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Stored for introspection only — TT's function signature
+    /// is <c>Func&lt;double[], double&gt;</c> (no data arg); wrap with a closure if you need data threading.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
 
     // ------------------------------------------------------------------
     // Serialization DTO

@@ -66,4 +66,35 @@ public class SplineErgonomicsTests
         spline.Build(verbose: false);
         Assert.Equal(4, spline.GetMaxDerivativeOrder());
     }
+
+    [Fact]
+    public void AdditionalData_threaded_to_each_piece()
+    {
+        int callCount = 0;
+        string? receivedTag = null;
+        var spline = new ChebyshevSpline(
+            (p, data) =>
+            {
+                callCount++;
+                receivedTag = (string?)data;
+                return p[0];
+            },
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5 },
+            knots: new[] { new[] { 0.0 } },
+            additionalData: "spline-context");
+        spline.Build(verbose: false);
+
+        Assert.Equal(10, callCount);  // 2 pieces × 5 nodes
+        Assert.Equal("spline-context", receivedTag);
+        Assert.Equal("spline-context", spline.GetAdditionalData());
+    }
+
+    [Fact]
+    public void AdditionalData_default_is_null()
+    {
+        var spline = BuildSimple();
+        Assert.Null(spline.GetAdditionalData());
+    }
 }
