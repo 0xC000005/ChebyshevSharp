@@ -699,10 +699,6 @@ public class ChebyshevSpline
 
     private void SaveJson(string path)
     {
-        if (!Built)
-            throw new InvalidOperationException(
-                "Cannot save an unbuilt spline. Call Build() first.");
-
         var state = new SplineSerializationState
         {
             Type = "ChebyshevSpline",
