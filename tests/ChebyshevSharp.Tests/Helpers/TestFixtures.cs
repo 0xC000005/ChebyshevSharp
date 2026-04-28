@@ -234,6 +234,18 @@ public static class TestFixtures
     public static double Bs5DFunc(double[] x) =>
         BlackScholes.BsCallPrice(S: x[0], K: x[1], T: x[2], r: x[4], sigma: x[3], q: 0.02);
 
+    private static readonly Lazy<ChebyshevTT> _ttAlsSin3D = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            p => Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2]),
+            3, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10, 10 }, tolerance: 1e-3, maxRank: 5);
+        tt.Build(verbose: false, seed: 42, method: "als");
+        return tt;
+    });
+
+    public static ChebyshevTT TtAlsSin3D => _ttAlsSin3D.Value;
+
     private static readonly Lazy<ChebyshevTT> _ttSin3D = new(() =>
     {
         var tt = new ChebyshevTT(

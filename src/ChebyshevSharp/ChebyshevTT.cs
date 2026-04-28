@@ -33,6 +33,12 @@ public class ChebyshevTT
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
 
+    /// <summary>Warning emitted by Build() if maxRank was reached before tolerance was satisfied during ALS. Null otherwise.</summary>
+    public string? BuildWarning { get; private set; }
+
+    /// <summary>Build method that produced the current cores: "cross", "svd", or "als". Null if not built.</summary>
+    public string? Method { get; private set; }
+
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions => _numDimensions;
 
@@ -148,13 +154,15 @@ public class ChebyshevTT
     /// Build TT approximation and convert to Chebyshev coefficient cores.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
-    /// <param name="seed">Random seed for TT-Cross initialization. Ignored for method="svd".</param>
-    /// <param name="method">"cross" (default) or "svd".</param>
-    /// <exception cref="ArgumentException">If method is not "cross" or "svd".</exception>
+    /// <param name="seed">Random seed for TT-Cross/ALS initialization. Ignored for method="svd".</param>
+    /// <param name="method">"cross" (default), "svd", or "als".</param>
+    /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als".</exception>
     public void Build(bool verbose = true, int? seed = null, string method = "cross")
     {
-        if (method != "cross" && method != "svd")
-            throw new ArgumentException($"method must be 'cross' or 'svd', got '{method}'");
+        if (method != "cross" && method != "svd" && method != "als")
+            throw new ArgumentException($"method must be 'cross', 'svd', or 'als', got '{method}'");
+        Method = method;
+        BuildWarning = null;
 
         var sw = Stopwatch.StartNew();
         _cachedErrorEstimate = null;
@@ -183,10 +191,21 @@ public class ChebyshevTT
             (valueCores, nEvals) = TensorTrainKernel.TtCross(
                 _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed);
         }
-        else
+        else if (method == "svd")
         {
             (valueCores, nEvals) = TensorTrainKernel.TtSvd(
                 _function!, grids, _maxRank, _tolerance, verbose);
+        }
+        else  // method == "als"
+        {
+            if (verbose) Console.WriteLine("  Running TT-ALS...");
+            bool hitCap;
+            (valueCores, nEvals, hitCap) = TensorTrainKernel.AlsAdaptiveRank(
+                _function!, grids, _maxRank, _tolerance, seed, verbose);
+            if (hitCap)
+                BuildWarning =
+                    $"maxRank={_maxRank} reached before ALS tolerance={_tolerance:e2} satisfied. " +
+                    "Increase maxRank or relax tolerance.";
         }
         _totalBuildEvals = nEvals;
 
@@ -671,6 +690,7 @@ public class ChebyshevTT
         var state = new TTSerializationState
         {
             Version = GetLibraryVersion(),
+            Method = Method,
             NumDimensions = _numDimensions,
             Domain = _domain,
             NNodes = _nNodes,
@@ -731,6 +751,8 @@ public class ChebyshevTT
             state.TtRanks,
             state.BuildTime,
             state.TotalBuildEvals);
+
+        tt.Method = state.Method;
 
         string currentVersion = GetLibraryVersion();
         if (state.Version != null && state.Version != currentVersion)
@@ -820,6 +842,7 @@ public class ChebyshevTT
     internal class TTSerializationState
     {
         public string? Version { get; set; }
+        public string? Method { get; set; }
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = null!;
         public int[] NNodes { get; set; } = null!;

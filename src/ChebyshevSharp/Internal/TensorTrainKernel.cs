@@ -1027,4 +1027,313 @@ internal static class TensorTrainKernel
                 }
         return (newCkm1, newCk);
     }
+
+    // ------------------------------------------------------------------
+    // ALS (Phase 2 — PyChebyshev v0.13.c)
+    // ------------------------------------------------------------------
+
+    /// <summary>Convert a flat row-major index to a multi-index over the given shape.</summary>
+    internal static void FlatToMulti(int flat, int[] shape, int[] outIdx)
+    {
+        int d = shape.Length;
+        for (int i = d - 1; i >= 0; i--)
+        {
+            outIdx[i] = flat % shape[i];
+            flat /= shape[i];
+        }
+    }
+
+    /// <summary>
+    /// Compute relative Frobenius residual ||reconstruct(cores) - target||_F /
+    /// ||target||_F, with target stored as flat row-major over the grid shape.
+    /// </summary>
+    internal static double GridResidual(TtCore[] cores, double[] target, int[] nNodes)
+    {
+        // Reconstruct the dense tensor from cores.
+        double[] dense = ReconstructDense(cores, nNodes);
+        double num = 0, den = 0;
+        for (int i = 0; i < target.Length; i++)
+        {
+            double diff = dense[i] - target[i];
+            num += diff * diff;
+            den += target[i] * target[i];
+        }
+        return Math.Sqrt(num) / Math.Sqrt(Math.Max(den, 1e-60));
+    }
+
+    /// <summary>
+    /// Reconstruct a flat row-major dense tensor of shape <paramref name="nNodes"/>
+    /// from a TT core list, by sequentially contracting cores left-to-right.
+    /// </summary>
+    internal static double[] ReconstructDense(TtCore[] cores, int[] nNodes)
+    {
+        int d = cores.Length;
+        double[] acc = new double[1];
+        acc[0] = 1.0;
+        int prodN = 1;
+
+        for (int k = 0; k < d; k++)
+        {
+            var c = cores[k];
+            int rL = c.RLeft, n = c.NNodes, rR = c.RRight;
+            // newAcc[(prevProd * n + j), b] = sum_a acc[prevProd, a] * c[a, j, b]
+            int newProd = prodN * n;
+            var newAcc = new double[newProd * rR];
+            for (int p = 0; p < prodN; p++)
+                for (int j = 0; j < n; j++)
+                    for (int b = 0; b < rR; b++)
+                    {
+                        double s = 0;
+                        for (int a = 0; a < rL; a++)
+                            s += acc[p * rL + a] * c[a, j, b];
+                        newAcc[(p * n + j) * rR + b] = s;
+                    }
+            acc = newAcc;
+            prodN = newProd;
+        }
+        // Final rank should be 1; output is flat length prodN.
+        return acc;
+    }
+
+    /// <summary>
+    /// Fixed-rank ALS sweeps: hold all but core k fixed, solve LS for core k,
+    /// sweep left-to-right then right-to-left, repeat up to <paramref name="maxIter"/>
+    /// outer iterations or until inner relative change &lt; <paramref name="tolerance"/>.
+    /// Mirror of Python's <c>_als_fixed_rank_sweeps</c> (tensor_train.py:736).
+    /// </summary>
+    internal static void AlsFixedRankSweep(
+        TtCore[] cores,
+        Func<int[], double> evalsAt,
+        int[] nNodes,
+        double tolerance,
+        int maxIter,
+        bool verbose = false)
+    {
+        int d = cores.Length;
+        long totalPoints = 1;
+        for (int i = 0; i < d; i++) totalPoints *= nNodes[i];
+        int total = checked((int)totalPoints);
+
+        // Precompute b: target values in C-order index.
+        double[] b = new double[total];
+        int[] tmpIdx = new int[d];
+        for (int flat = 0; flat < total; flat++)
+        {
+            FlatToMulti(flat, nNodes, tmpIdx);
+            b[flat] = evalsAt(tmpIdx);
+        }
+
+        double[] prevDense = ReconstructDense(cores, nNodes);
+
+        for (int outer = 0; outer < maxIter; outer++)
+        {
+            string[] dirs = { "ltr", "rtl" };
+            foreach (string direction in dirs)
+            {
+                int start = (direction == "ltr") ? 0 : d - 1;
+                int end = (direction == "ltr") ? d : -1;
+                int step = (direction == "ltr") ? 1 : -1;
+
+                for (int k = start; k != end; k += step)
+                {
+                    // Canonicalize: cores[0..k-1] left-orth, cores[k+1..d-1] right-orth.
+                    if (k > 0) OrthLeftSweep(cores, k);
+                    if (k < d - 1) OrthRightSweep(cores, k);
+
+                    int rL = cores[k].RLeft, nK = cores[k].NNodes, rR = cores[k].RRight;
+                    int unknowns = rL * nK * rR;
+
+                    // Build A: (total, unknowns).
+                    // L_rows[flat, alpha] = product of cores [0..k-1] at idx
+                    // R_rows[flat, beta]  = product of cores [k+1..d-1] at idx
+                    double[] Lrows = new double[total * rL];
+                    double[] Rrows = new double[total * rR];
+                    int[] iks = new int[total];
+
+                    for (int flat = 0; flat < total; flat++)
+                    {
+                        FlatToMulti(flat, nNodes, tmpIdx);
+                        iks[flat] = tmpIdx[k];
+
+                        // L_rows row — left environment contraction
+                        double[] lvec = { 1.0 };
+                        int lrk = 1;
+                        for (int j = 0; j < k; j++)
+                        {
+                            var Cj = cores[j];
+                            int idxJ = tmpIdx[j];
+                            int rj1 = Cj.RRight;
+                            double[] newLvec = new double[rj1];
+                            for (int bIdx = 0; bIdx < rj1; bIdx++)
+                            {
+                                double s = 0;
+                                for (int aIdx = 0; aIdx < lrk; aIdx++)
+                                    s += lvec[aIdx] * Cj[aIdx, idxJ, bIdx];
+                                newLvec[bIdx] = s;
+                            }
+                            lvec = newLvec;
+                            lrk = rj1;
+                        }
+                        for (int aIdx = 0; aIdx < rL; aIdx++)
+                            Lrows[flat * rL + aIdx] = lvec[aIdx];
+
+                        // R_rows row — right environment contraction (right-to-left)
+                        double[] rvec = { 1.0 };
+                        int rrk = 1;
+                        for (int j = d - 1; j > k; j--)
+                        {
+                            var Cj = cores[j];
+                            int idxJ = tmpIdx[j];
+                            int rjPrev = Cj.RLeft;
+                            double[] newRvec = new double[rjPrev];
+                            for (int aIdx = 0; aIdx < rjPrev; aIdx++)
+                            {
+                                double s = 0;
+                                for (int bIdx = 0; bIdx < rrk; bIdx++)
+                                    s += Cj[aIdx, idxJ, bIdx] * rvec[bIdx];
+                                newRvec[aIdx] = s;
+                            }
+                            rvec = newRvec;
+                            rrk = rjPrev;
+                        }
+                        for (int bIdx = 0; bIdx < rR; bIdx++)
+                            Rrows[flat * rR + bIdx] = rvec[bIdx];
+                    }
+
+                    // Build A as a MathNet dense matrix.
+                    var A = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.Create(total, unknowns, 0.0);
+                    for (int flat = 0; flat < total; flat++)
+                    {
+                        int colBase = iks[flat] * rR;
+                        for (int alpha = 0; alpha < rL; alpha++)
+                        {
+                            double La = Lrows[flat * rL + alpha];
+                            int rowOffset = alpha * nK * rR + colBase;
+                            for (int beta = 0; beta < rR; beta++)
+                                A.At(flat, rowOffset + beta, La * Rrows[flat * rR + beta]);
+                        }
+                    }
+
+                    // Solve LS: A @ vec(C_k) = b. MathNet QR().Solve handles tall systems.
+                    var bVec = MathNet.Numerics.LinearAlgebra.Double.DenseVector.OfArray(b);
+                    var solved = A.QR().Solve(bVec);
+
+                    // Pack back into core[k]
+                    var newCore = new TtCore(rL, nK, rR);
+                    for (int alpha = 0; alpha < rL; alpha++)
+                        for (int j = 0; j < nK; j++)
+                            for (int beta = 0; beta < rR; beta++)
+                                newCore[alpha, j, beta] = solved[alpha * nK * rR + j * rR + beta];
+                    cores[k] = newCore;
+                }
+            }
+
+            // Check convergence by comparing reconstructed tensor change.
+            double[] newDense = ReconstructDense(cores, nNodes);
+            double num = 0, den = 0;
+            for (int i = 0; i < total; i++)
+            {
+                double diff = newDense[i] - prevDense[i];
+                num += diff * diff;
+                den += prevDense[i] * prevDense[i];
+            }
+            double relChange = Math.Sqrt(num) / Math.Sqrt(Math.Max(den, 1e-60));
+            if (verbose) Console.WriteLine($"  ALS iter {outer + 1}: rel_change = {relChange:e3}");
+            if (relChange < tolerance) break;
+            prevDense = newDense;
+        }
+    }
+
+    /// <summary>
+    /// Rank-adaptive ALS driver. Starts at rank 1 and grows the TT rank by +1 per
+    /// outer iteration until the grid residual falls below tol or rank reaches
+    /// maxRank. Mirror of Python's <c>_tt_als</c> (tensor_train.py:877).
+    /// Returns (cores, nEvals, hitRankCap).
+    /// </summary>
+    internal static (TtCore[] Cores, int NEvals, bool HitRankCap) AlsAdaptiveRank(
+        Func<double[], double> function,
+        double[][] grids,
+        int maxRank,
+        double tol,
+        int? randomState,
+        bool verbose = false)
+    {
+        int d = grids.Length;
+        int[] nNodes = new int[d];
+        for (int i = 0; i < d; i++) nNodes[i] = grids[i].Length;
+
+        var rng = randomState.HasValue ? new Random(randomState.Value) : new Random();
+        var cache = new Dictionary<long, double>();
+        long[] strides = new long[d];
+        strides[d - 1] = 1;
+        for (int i = d - 2; i >= 0; i--) strides[i] = strides[i + 1] * nNodes[i + 1];
+
+        long Key(int[] idx)
+        {
+            long key = 0;
+            for (int i = 0; i < d; i++) key += idx[i] * strides[i];
+            return key;
+        }
+
+        Func<int[], double> evalsAt = idx =>
+        {
+            long key = Key(idx);
+            if (!cache.TryGetValue(key, out double v))
+            {
+                var pt = new double[d];
+                for (int i = 0; i < d; i++) pt[i] = grids[i][idx[i]];
+                v = function(pt);
+                cache[key] = v;
+            }
+            return v;
+        };
+
+        // Materialize target tensor once.
+        long total = 1;
+        for (int i = 0; i < d; i++) total = checked(total * nNodes[i]);
+        int totalInt = checked((int)total);
+        double[] target = new double[totalInt];
+        int[] tmp = new int[d];
+        for (int flat = 0; flat < totalInt; flat++)
+        {
+            FlatToMulti(flat, nNodes, tmp);
+            target[flat] = evalsAt(tmp);
+        }
+
+        TtCore[] MakeCores(int rank)
+        {
+            var cores = new TtCore[d];
+            for (int k = 0; k < d; k++)
+            {
+                int rL = (k == 0) ? 1 : rank;
+                int rR = (k == d - 1) ? 1 : rank;
+                var c = new TtCore(rL, nNodes[k], rR);
+                for (int i = 0; i < c.Size; i++) c.Data[i] = rng.NextDouble() * 2 - 1;
+                cores[k] = c;
+            }
+            return cores;
+        }
+
+        int curRank = 1;
+        var coresOut = MakeCores(curRank);
+        bool hitCap = false;
+
+        while (true)
+        {
+            AlsFixedRankSweep(coresOut, evalsAt, nNodes,
+                tolerance: tol * 0.1, maxIter: 5, verbose: verbose);
+            double err = GridResidual(coresOut, target, nNodes);
+            if (verbose)
+                Console.WriteLine($"[ALS] rank {curRank}: grid_residual = {err:e3} (target {tol:e1})");
+            if (err < tol) break;
+            if (curRank >= maxRank)
+            {
+                hitCap = true;
+                break;
+            }
+            curRank += 1;
+            coresOut = MakeCores(curRank);
+        }
+        return (coresOut, cache.Count, hitCap);
+    }
 }
