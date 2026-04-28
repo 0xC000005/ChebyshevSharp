@@ -46,6 +46,7 @@ public class CloneTests
 
         ChebyshevSpline copy = src.Clone();
         Assert.Null(copy.Function);
+        Assert.Equal("clone", copy.GetConstructorType());
         double[] pt = { 0.3, 0.5 };
         int[] noDerivative = { 0, 0 };
         Assert.Equal(src.Eval(pt, noDerivative), copy.Eval(pt, noDerivative), precision: 12);
@@ -65,6 +66,7 @@ public class CloneTests
 
         ChebyshevSlider copy = src.Clone();
         Assert.Null(copy.Function);
+        Assert.Equal("clone", copy.GetConstructorType());
         double[] pt = { 0.3, 0.5, 0.2 };
         int[] noDerivative = { 0, 0, 0 };
         Assert.Equal(src.Eval(pt, noDerivative), copy.Eval(pt, noDerivative), precision: 12);
@@ -81,6 +83,7 @@ public class CloneTests
         src.Build(verbose: false, seed: 42);
 
         ChebyshevTT copy = src.Clone();
+        Assert.Equal("clone", copy.GetConstructorType());
         double[] pt = { 0.3, 0.5, 0.2 };
         Assert.Equal(src.Eval(pt), copy.Eval(pt), precision: 12);
     }

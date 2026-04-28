@@ -50,6 +50,9 @@ public class ChebyshevTT
     /// </summary>
     public string? Method { get; private set; }
 
+    // Overrides GetConstructorType() when set explicitly (e.g. "clone"). null means fall back to Method.
+    private string? _constructorType;
+
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions => _numDimensions;
 
@@ -1282,8 +1285,8 @@ public class ChebyshevTT
     /// <summary>True if <see cref="Build"/>/<see cref="Load"/> completed.</summary>
     public bool IsConstructionFinished() => _built;
 
-    /// <summary>Returns one of: "cross", "svd", "als" (build method used), or "function" if not yet built.</summary>
-    public string GetConstructorType() => Method ?? "function";
+    /// <summary>Returns one of: "clone" (if cloned), "cross"/"svd"/"als" (build method used), or "function" if not yet built.</summary>
+    public string GetConstructorType() => _constructorType ?? Method ?? "function";
 
     /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
     public int[] GetUsedNs() => (int[])_nNodes.Clone();
@@ -1416,6 +1419,7 @@ public class ChebyshevTT
             totalBuildEvals: _totalBuildEvals,
             maxDerivativeOrder: _maxDerivativeOrder);
         copy.Method = Method;
+        copy._constructorType = "clone";
         copy.BuildWarning = BuildWarning;
         copy.LoadWarning = LoadWarning;
         copy._descriptor = _descriptor;
