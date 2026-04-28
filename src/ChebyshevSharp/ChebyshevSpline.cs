@@ -1910,6 +1910,49 @@ public class ChebyshevSpline
     internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this spline. The source <see cref="Function"/>
+    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// the function. All precomputed pieces and state are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevSpline"/> with <see cref="Function"/> set to null.</returns>
+    public ChebyshevSpline Clone()
+    {
+        var copy = new ChebyshevSpline();
+        copy.NumDimensions = NumDimensions;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
+        copy.Knots = Internal.CloneHelpers.DeepCopy(Knots)!;
+        copy.Intervals = Internal.CloneHelpers.DeepCopyIntervals(Intervals)!;
+        copy.Shape = Internal.CloneHelpers.DeepCopy(Shape)!;
+        copy.MaxDerivativeOrder = MaxDerivativeOrder;
+        copy.MaxN = MaxN;
+        copy.ErrorThreshold = ErrorThreshold;
+        copy.OriginalNNodes = Internal.CloneHelpers.DeepCopy(OriginalNNodes)!;
+        copy.NestedNNodes = Internal.CloneHelpers.DeepCopy(NestedNNodes);
+        copy.Built = Built;
+        copy.BuildTime = BuildTime;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._constructorType = "clone";
+        copy._evaluationPointsCache = null;
+        if (Pieces != null)
+        {
+            copy.Pieces = new ChebyshevApproximation?[Pieces.Length];
+            for (int i = 0; i < Pieces.Length; i++)
+                copy.Pieces[i] = Pieces[i]?.Clone();
+        }
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization state
     // ------------------------------------------------------------------
 

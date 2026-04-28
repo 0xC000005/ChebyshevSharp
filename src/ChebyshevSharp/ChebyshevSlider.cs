@@ -1013,6 +1013,47 @@ public class ChebyshevSlider
     internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this slider. The source <see cref="Function"/>
+    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// the function. All precomputed slides and state are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevSlider"/> with <see cref="Function"/> set to null.</returns>
+    public ChebyshevSlider Clone()
+    {
+        var copy = new ChebyshevSlider();
+        copy.NumDimensions = NumDimensions;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
+        copy.Partition = Internal.CloneHelpers.DeepCopy(Partition)!;
+        copy.PivotPoint = Internal.CloneHelpers.DeepCopy(PivotPoint)!;
+        copy.PivotValue = PivotValue;
+        copy.MaxDerivativeOrder = MaxDerivativeOrder;
+        copy.Built = Built;
+        copy.BuildTime = BuildTime;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._isConstructionFinished = _isConstructionFinished;
+        copy._constructorType = "clone";
+        copy._evaluationPointsCache = null;
+        copy.DimToSlide = new System.Collections.Generic.Dictionary<int, int>(DimToSlide);
+        if (Slides != null)
+        {
+            copy.Slides = new ChebyshevApproximation[Slides.Length];
+            for (int i = 0; i < Slides.Length; i++)
+                copy.Slides[i] = Slides[i].Clone();
+        }
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization state classes
     // ------------------------------------------------------------------
 

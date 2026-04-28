@@ -1384,6 +1384,51 @@ public class ChebyshevTT
     internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this tensor train. The source function callable is
+    /// NOT duplicated — clones cannot be rebuilt without re-supplying the function.
+    /// All TT cores and state are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevTT"/>.</returns>
+    public ChebyshevTT Clone()
+    {
+        TensorTrainKernel.TtCore[]? clonedCores = null;
+        if (_coeffCores != null)
+        {
+            clonedCores = new TensorTrainKernel.TtCore[_coeffCores.Length];
+            for (int i = 0; i < _coeffCores.Length; i++)
+                clonedCores[i] = _coeffCores[i].Copy();
+        }
+
+        var copy = new ChebyshevTT(
+            numDimensions: _numDimensions,
+            domain: Internal.CloneHelpers.DeepCopy(_domain)!,
+            nNodes: Internal.CloneHelpers.DeepCopy(_nNodes)!,
+            maxRank: _maxRank,
+            tolerance: _tolerance,
+            maxSweeps: _maxSweeps,
+            coeffCores: clonedCores ?? System.Array.Empty<TensorTrainKernel.TtCore>(),
+            ttRanks: _ttRanks != null ? (int[])_ttRanks.Clone() : System.Array.Empty<int>(),
+            buildTime: _buildTime,
+            totalBuildEvals: _totalBuildEvals,
+            maxDerivativeOrder: _maxDerivativeOrder);
+        copy.Method = Method;
+        copy.BuildWarning = BuildWarning;
+        copy.LoadWarning = LoadWarning;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._evaluationPointsCache = null;
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization DTO
     // ------------------------------------------------------------------
 

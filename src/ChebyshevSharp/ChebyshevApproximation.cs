@@ -1484,6 +1484,48 @@ public class ChebyshevApproximation
     internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this approximation. The source <see cref="Function"/>
+    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// the function. All precomputed state, descriptor, derivative-id registry,
+    /// and special points are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevApproximation"/> with <see cref="Function"/> set to null.</returns>
+    public ChebyshevApproximation Clone()
+    {
+        var copy = new ChebyshevApproximation();
+        copy.NumDimensions = NumDimensions;
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
+        copy.NodeArrays = Internal.CloneHelpers.DeepCopy(NodeArrays)!;
+        copy.TensorValues = Internal.CloneHelpers.DeepCopy(TensorValues);
+        copy.Weights = Internal.CloneHelpers.DeepCopy(Weights);
+        copy.DiffMatrices = Internal.CloneHelpers.DeepCopy(DiffMatrices);
+        copy.DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(DiffMatricesTFlat);
+        copy.MaxDerivativeOrder = MaxDerivativeOrder;
+        copy.MaxN = MaxN;
+        copy.ErrorThreshold = ErrorThreshold;
+        copy.BuildWarning = BuildWarning;
+        copy.OriginalNNodes = Internal.CloneHelpers.DeepCopy(OriginalNNodes)!;
+        copy.NEvaluations = NEvaluations;
+        copy.BuildTime = BuildTime;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._specialPoints = Internal.CloneHelpers.DeepCopy(_specialPoints);
+        copy._isConstructionFinished = _isConstructionFinished;
+        copy._constructorType = "clone";
+        copy._evaluationPointsCache = null;
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization state
     // ------------------------------------------------------------------
 
