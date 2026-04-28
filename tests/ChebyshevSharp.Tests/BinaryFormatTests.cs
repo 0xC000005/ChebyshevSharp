@@ -176,3 +176,170 @@ public class ApproxBodyTests
         Assert.Contains("domain", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+public class ApproxRoundTripTests
+{
+    private static string TempPcb() => Path.Combine(
+        Path.GetTempPath(),
+        $"cheb_test_{Guid.NewGuid():N}.pcb");
+
+    [Fact]
+    public void Test_round_trip_3d_sin_evaluates_within_tolerance()
+    {
+        var cheb = new ChebyshevApproximation(
+            (p, _) => Math.Sin(p[0]) + Math.Cos(p[1]) + p[2] * p[2],
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 });
+        cheb.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            cheb.Save(path, format: "binary");
+            var loaded = ChebyshevApproximation.Load(path);
+
+            Assert.Equal(cheb.NumDimensions, loaded.NumDimensions);
+            double[] testPt = { 0.3, -0.2, 0.5 };
+            double expected = cheb.Eval(testPt, new[] { 0, 0, 0 });
+            double actual = loaded.Eval(testPt, new[] { 0, 0, 0 });
+            Assert.Equal(expected, actual, precision: 12);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_round_trip_n_eq_1_dim()
+    {
+        // Edge case: a dimension with n=1 (constant in that dim).
+        var cheb = new ChebyshevApproximation(
+            (p, _) => p[0] * p[0],
+            2,
+            new[] { new[] { -1.0, 1.0 }, new[] { 0.0, 1.0 } },
+            new[] { 5, 1 });
+        cheb.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            cheb.Save(path, format: "binary");
+            var loaded = ChebyshevApproximation.Load(path);
+            Assert.Equal(new[] { 5, 1 }, loaded.NNodes);
+            double expected = cheb.Eval(new[] { 0.4, 0.5 }, new[] { 0, 0 });
+            double actual = loaded.Eval(new[] { 0.4, 0.5 }, new[] { 0, 0 });
+            Assert.Equal(expected, actual, precision: 12);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_round_trip_5d_evaluates_within_tolerance()
+    {
+        var cheb = new ChebyshevApproximation(
+            (p, _) => p[0] + 2 * p[1] - p[2] + p[3] * p[3] + Math.Sin(p[4]),
+            5,
+            new[]
+            {
+                new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 },
+                new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }
+            },
+            new[] { 4, 4, 4, 4, 6 });
+        cheb.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            cheb.Save(path, format: "binary");
+            var loaded = ChebyshevApproximation.Load(path);
+            double[] pt = { 0.1, -0.2, 0.3, -0.4, 0.5 };
+            double expected = cheb.Eval(pt, new[] { 0, 0, 0, 0, 0 });
+            double actual = loaded.Eval(pt, new[] { 0, 0, 0, 0, 0 });
+            Assert.Equal(expected, actual, precision: 10);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+}
+
+public class SaveLoadApiTests
+{
+    private static string TempFile(string ext) => Path.Combine(
+        Path.GetTempPath(), $"cheb_test_{Guid.NewGuid():N}{ext}");
+
+    private static ChebyshevApproximation Built1D()
+    {
+        var cheb = new ChebyshevApproximation(
+            (p, _) => p[0] * p[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        cheb.Build(verbose: false);
+        return cheb;
+    }
+
+    [Fact]
+    public void Test_save_format_binary_writes_magic_header()
+    {
+        var cheb = Built1D();
+        string path = TempFile(".pcb");
+        try
+        {
+            cheb.Save(path, format: "binary");
+            byte[] head = new byte[4];
+            using (var fs = File.OpenRead(path)) fs.Read(head, 0, 4);
+            Assert.Equal(new byte[] { 0x50, 0x43, 0x42, 0x00 }, head);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_save_format_json_unchanged_default()
+    {
+        var cheb = Built1D();
+        string path = TempFile(".json");
+        try
+        {
+            cheb.Save(path); // no format arg → JSON
+            string text = File.ReadAllText(path);
+            Assert.StartsWith("{", text);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_load_auto_detects_format_via_magic()
+    {
+        var cheb = Built1D();
+        string binPath = TempFile(".pcb");
+        string jsonPath = TempFile(".json");
+        try
+        {
+            cheb.Save(binPath, format: "binary");
+            cheb.Save(jsonPath, format: "json");
+
+            var fromBin = ChebyshevApproximation.Load(binPath);
+            var fromJson = ChebyshevApproximation.Load(jsonPath);
+
+            double pt = 0.3;
+            double a = fromBin.Eval(new[] { pt }, new[] { 0 });
+            double b = fromJson.Eval(new[] { pt }, new[] { 0 });
+            Assert.Equal(a, b, precision: 12);
+        }
+        finally
+        {
+            if (File.Exists(binPath)) File.Delete(binPath);
+            if (File.Exists(jsonPath)) File.Delete(jsonPath);
+        }
+    }
+
+    [Fact]
+    public void Test_save_unknown_format_throws()
+    {
+        var cheb = Built1D();
+        string path = TempFile(".bin");
+        try
+        {
+            var ex = Assert.Throws<ArgumentException>(() =>
+                cheb.Save(path, format: "msgpack"));
+            Assert.Contains("format", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+}
