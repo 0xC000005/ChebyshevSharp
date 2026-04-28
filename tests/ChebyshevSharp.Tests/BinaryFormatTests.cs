@@ -81,3 +81,98 @@ public class HeaderTests
         Assert.Throws<EndOfStreamException>(() => PcbFormat.ReadHeader(r));
     }
 }
+
+public class ApproxBodyTests
+{
+    private static (double[][] domain, int[] nNodes, double[] tensor) BuildXPlusY()
+    {
+        // f(x,y) = x + y on [-1,1]^2 with n=[3,3], the binary-format.md worked example.
+        // Type I Chebyshev nodes for n=3 in ascending order: -sqrt(3)/2, 0, sqrt(3)/2.
+        double s = Math.Sqrt(3.0) / 2.0;
+        double[] nodes = { -s, 0.0, s };
+        double[] tensor = new double[9];
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                tensor[i * 3 + j] = nodes[i] + nodes[j]; // C-order
+        return (
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 3, 3 },
+            tensor);
+    }
+
+    [Fact]
+    public void Test_write_approx_body_byte_count_matches_spec()
+    {
+        // Per binary-format.md: header(12) + d(4) + lo(16) + hi(16) + n(8) + t(72) = 128 bytes
+        var (domain, nNodes, tensor) = BuildXPlusY();
+        using var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms))
+        {
+            PcbFormat.WriteHeader(w, PcbFormat.ClassTagApproximation);
+            PcbFormat.WriteApproximationBody(w, domain, nNodes, tensor);
+        }
+        Assert.Equal(128, ms.ToArray().Length);
+    }
+
+    [Fact]
+    public void Test_round_trip_approx_body_2d()
+    {
+        var (domain, nNodes, tensor) = BuildXPlusY();
+        using var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            PcbFormat.WriteHeader(w, PcbFormat.ClassTagApproximation);
+            PcbFormat.WriteApproximationBody(w, domain, nNodes, tensor);
+        }
+        ms.Position = 0;
+        using (var r = new BinaryReader(ms))
+        {
+            PcbFormat.ReadHeader(r);
+            var (rdDomain, rdNNodes, rdTensor) = PcbFormat.ReadApproximationBody(r);
+            Assert.Equal(domain.Length, rdDomain.Length);
+            for (int d = 0; d < domain.Length; d++)
+            {
+                Assert.Equal(domain[d][0], rdDomain[d][0]);
+                Assert.Equal(domain[d][1], rdDomain[d][1]);
+            }
+            Assert.Equal(nNodes, rdNNodes);
+            Assert.Equal(tensor, rdTensor);
+        }
+    }
+
+    [Fact]
+    public void Test_read_approx_body_rejects_zero_dimensions()
+    {
+        using var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            PcbFormat.WriteHeader(w, PcbFormat.ClassTagApproximation);
+            w.Write((uint)0); // d = 0 — invalid
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("num_dimensions", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_read_approx_body_rejects_inverted_domain()
+    {
+        using var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            PcbFormat.WriteHeader(w, PcbFormat.ClassTagApproximation);
+            w.Write((uint)1);    // d=1
+            w.Write(2.0);        // lo
+            w.Write(1.0);        // hi (lo > hi — invalid)
+            w.Write((uint)3);    // n_nodes[0]
+            w.Write(0.0); w.Write(0.0); w.Write(0.0); // tensor (3 doubles)
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("domain", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+}

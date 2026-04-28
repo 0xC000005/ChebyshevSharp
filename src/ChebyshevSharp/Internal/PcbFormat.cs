@@ -87,4 +87,83 @@ internal static class PcbFormat
         return head[0] == Magic[0] && head[1] == Magic[1] &&
                head[2] == Magic[2] && head[3] == Magic[3];
     }
+
+    /// <summary>
+    /// Writes the body of a class_tag=1 (Approximation) record.
+    /// Mirrors Python <c>_binary.write_approx</c> lines 208-236.
+    ///
+    /// Layout (all little-endian):
+    ///   uint32  d           — number of dimensions
+    ///   f64[d]  lo          — domain lower bounds
+    ///   f64[d]  hi          — domain upper bounds
+    ///   uint32[d] n_nodes   — node count per dimension
+    ///   f64[prod(n)] tensor — tensor values in C-order (row-major)
+    /// </summary>
+    public static void WriteApproximationBody(
+        BinaryWriter w, double[][] domain, int[] nNodes, double[] tensorValues)
+    {
+        int d = domain.Length;
+        if (d != nNodes.Length)
+            throw new ArgumentException(
+                $"domain.Length ({d}) != nNodes.Length ({nNodes.Length})");
+
+        w.Write((uint)d);
+        for (int i = 0; i < d; i++) w.Write(domain[i][0]);
+        for (int i = 0; i < d; i++) w.Write(domain[i][1]);
+        for (int i = 0; i < d; i++) w.Write((uint)nNodes[i]);
+
+        int total = 1;
+        for (int i = 0; i < d; i++) total *= nNodes[i];
+        if (tensorValues.Length != total)
+            throw new ArgumentException(
+                $"tensorValues.Length={tensorValues.Length} does not match prod(nNodes)={total}");
+
+        for (int i = 0; i < total; i++) w.Write(tensorValues[i]);
+    }
+
+    /// <summary>
+    /// Reads the body of a class_tag=1 (Approximation) record.
+    /// Mirrors Python <c>_binary.read_approx</c> lines 239-283.
+    /// Must be called after <see cref="ReadHeader"/> has consumed the 12-byte header.
+    /// </summary>
+    /// <returns>
+    /// A tuple of (domain, nNodes, tensorValues) where domain[i] = {lo, hi}.
+    /// </returns>
+    public static (double[][] domain, int[] nNodes, double[] tensorValues) ReadApproximationBody(
+        BinaryReader r)
+    {
+        uint d32 = r.ReadUInt32();
+        if (d32 < 1)
+            throw new InvalidDataException($"num_dimensions must be >= 1, got {d32}");
+        int d = checked((int)d32);
+
+        double[] lo = new double[d];
+        for (int i = 0; i < d; i++) lo[i] = r.ReadDouble();
+        double[] hi = new double[d];
+        for (int i = 0; i < d; i++) hi[i] = r.ReadDouble();
+
+        var domain = new double[d][];
+        for (int i = 0; i < d; i++)
+        {
+            if (lo[i] >= hi[i])
+                throw new InvalidDataException(
+                    $"domain[{i}]: lo ({lo[i]}) must be < hi ({hi[i]})");
+            domain[i] = new[] { lo[i], hi[i] };
+        }
+
+        int[] nNodes = new int[d];
+        int total = 1;
+        for (int i = 0; i < d; i++)
+        {
+            uint n32 = r.ReadUInt32();
+            if (n32 < 1)
+                throw new InvalidDataException($"n_nodes[{i}] must be >= 1, got {n32}");
+            nNodes[i] = checked((int)n32);
+            total = checked(total * nNodes[i]);
+        }
+
+        double[] tensor = new double[total];
+        for (int i = 0; i < total; i++) tensor[i] = r.ReadDouble();
+        return (domain, nNodes, tensor);
+    }
 }
