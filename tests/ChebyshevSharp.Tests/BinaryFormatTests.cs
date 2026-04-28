@@ -260,6 +260,64 @@ public class ApproxRoundTripTests
     }
 }
 
+public class ApproxCrossFeatureBinaryTests
+{
+    private static string TempPcb() => Path.Combine(
+        Path.GetTempPath(), $"cheb_test_{Guid.NewGuid():N}.pcb");
+
+    [Fact]
+    public void Test_round_trip_after_algebra_plus()
+    {
+        var f = new ChebyshevApproximation((p, _) => p[0] + p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 });
+        var g = new ChebyshevApproximation((p, _) => p[0] * p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 });
+        f.Build(verbose: false);
+        g.Build(verbose: false);
+        var sum = f + g;
+
+        string path = TempPcb();
+        try
+        {
+            sum.Save(path, format: "binary");
+            var loaded = ChebyshevApproximation.Load(path);
+            double[] pt = { 0.3, 0.4 };
+            double expected = sum.Eval(pt, new[] { 0, 0 });
+            double actual = loaded.Eval(pt, new[] { 0, 0 });
+            Assert.Equal(expected, actual, precision: 12);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_round_trip_after_slice_and_extrude()
+    {
+        var cheb = new ChebyshevApproximation(
+            (p, _) => Math.Sin(p[0]) + p[1] * p[1] + p[2],
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { 0.0, 2.0 } },
+            new[] { 6, 6, 6 });
+        cheb.Build(verbose: false);
+
+        // Slice dim=2 at value=1.0, then extrude back along the original axis.
+        var sliced = cheb.Slice((2, 1.0));
+        var extruded = sliced.Extrude((2, new[] { 0.0, 2.0 }, 4));
+
+        string path = TempPcb();
+        try
+        {
+            extruded.Save(path, format: "binary");
+            var loaded = ChebyshevApproximation.Load(path);
+            Assert.Equal(extruded.NumDimensions, loaded.NumDimensions);
+            double[] pt = { 0.2, 0.3, 1.5 };
+            double expected = extruded.Eval(pt, new[] { 0, 0, 0 });
+            double actual = loaded.Eval(pt, new[] { 0, 0, 0 });
+            Assert.Equal(expected, actual, precision: 10);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+}
+
 public class SaveLoadApiTests
 {
     private static string TempFile(string ext) => Path.Combine(
