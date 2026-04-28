@@ -22,4 +22,10 @@
     <ProjectReference Include="..\..\src\ChebyshevSharp\ChebyshevSharp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\TtV050Sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

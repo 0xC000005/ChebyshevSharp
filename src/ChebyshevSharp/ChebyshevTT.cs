@@ -1103,7 +1103,7 @@ public class ChebyshevTT
 
         var state = new TTSerializationState
         {
-            Version = GetLibraryVersion(),
+            Version = "0.6.0",
             Method = Method,
             NumDimensions = _numDimensions,
             Domain = _domain,
