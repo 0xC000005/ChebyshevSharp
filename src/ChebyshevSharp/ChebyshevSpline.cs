@@ -748,6 +748,18 @@ public class ChebyshevSpline
     }
 
     /// <summary>
+    /// Read the major version byte of a .pcb binary file without deserializing the body.
+    /// Useful for forward-compat tooling.
+    /// </summary>
+    /// <param name="path">Path to a .pcb file.</param>
+    /// <returns>The major format version (currently 1).</returns>
+    /// <exception cref="FileNotFoundException">Thrown if the path does not exist.</exception>
+    /// <exception cref="InvalidDataException">Thrown if the file is not a .pcb file
+    /// (no magic header) or is shorter than 12 bytes.</exception>
+    public static int PeekFormatVersion(string path)
+        => Internal.PcbFormat.PeekFormatVersion(path);
+
+    /// <summary>
     /// Load a previously saved spline from a file.
     /// Auto-detects binary (.pcb magic) vs JSON format.
     /// </summary>

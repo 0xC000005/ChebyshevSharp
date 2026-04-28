@@ -402,6 +402,53 @@ public class SaveLoadApiTests
     }
 }
 
+public class PeekFormatVersionTests
+{
+    private static string TempFile(string ext) => Path.Combine(
+        Path.GetTempPath(), $"cheb_test_{Guid.NewGuid():N}{ext}");
+
+    [Fact]
+    public void Test_peek_returns_1_for_valid_binary_file()
+    {
+        var cheb = new ChebyshevApproximation((p, _) => p[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 3 });
+        cheb.Build(verbose: false);
+        string path = TempFile(".pcb");
+        try
+        {
+            cheb.Save(path, format: "binary");
+            int version = ChebyshevApproximation.PeekFormatVersion(path);
+            Assert.Equal(1, version);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_peek_throws_for_json_file()
+    {
+        var cheb = new ChebyshevApproximation((p, _) => p[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 3 });
+        cheb.Build(verbose: false);
+        string path = TempFile(".json");
+        try
+        {
+            cheb.Save(path, format: "json");
+            var ex = Assert.Throws<InvalidDataException>(
+                () => ChebyshevApproximation.PeekFormatVersion(path));
+            Assert.Contains("magic", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_peek_throws_for_missing_file()
+    {
+        string path = TempFile(".pcb"); // not created
+        Assert.Throws<FileNotFoundException>(
+            () => ChebyshevApproximation.PeekFormatVersion(path));
+    }
+}
+
 public class SplineBinaryTests
 {
     private static string TempPcb() => Path.Combine(

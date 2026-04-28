@@ -74,6 +74,32 @@ internal static class PcbFormat
     }
 
     /// <summary>
+    /// Read the major version byte from a .pcb file without deserializing the body.
+    /// Mirrors Python <c>peek_format_version</c> (PyChebyshev v0.16).
+    /// </summary>
+    /// <param name="path">Path to a .pcb file.</param>
+    /// <returns>The major format version byte (currently 1).</returns>
+    /// <exception cref="FileNotFoundException">Thrown if the path does not exist.</exception>
+    /// <exception cref="InvalidDataException">Thrown if the file is not a .pcb file
+    /// (magic mismatch) or is shorter than the 12-byte header.</exception>
+    public static int PeekFormatVersion(string path)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException($"file not found: {path}", path);
+        using var fs = File.OpenRead(path);
+        Span<byte> head = stackalloc byte[HeaderSize];
+        int read = fs.Read(head);
+        if (read < HeaderSize)
+            throw new InvalidDataException(
+                $"file '{path}' is shorter than the {HeaderSize}-byte .pcb header");
+        if (head[0] != Magic[0] || head[1] != Magic[1] ||
+            head[2] != Magic[2] || head[3] != Magic[3])
+            throw new InvalidDataException(
+                $"file '{path}' is not a .pcb file (magic mismatch)");
+        return head[4]; // major version byte
+    }
+
+    /// <summary>
     /// Returns true if the file exists and starts with the .pcb magic.
     /// Returns false for nonexistent files (caller's File.OpenRead will throw).
     /// </summary>
