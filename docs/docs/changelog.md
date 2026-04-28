@@ -11,6 +11,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-04-28
+
+### PyChebyshev parity: v0.18.0 (binary format fill-in)
+
+Phase 3 of the v0.20.1 phased port. Adds a portable little-endian binary
+serialization format (`.pcb`) so cross-language consumers (C, Rust, Julia) can
+read ChebyshevSharp interpolants without the .NET runtime. Bit-for-bit
+byte-compatible with PyChebyshev v0.14's format.
+
+#### Added
+
+- `ChebyshevApproximation.Save(string path, string format = "json")` and
+  `ChebyshevSpline.Save(string path, string format = "json")` — `format` accepts
+  `"json"` (existing default) or `"binary"` (the portable `.pcb` format).
+- `ChebyshevApproximation.Load(string path)` and `ChebyshevSpline.Load(string path)`
+  now auto-detect JSON vs binary by sniffing the first 4 bytes for the
+  `b"PCB\x00"` magic header.
+- `static int ChebyshevApproximation.PeekFormatVersion(string path)` and
+  `static int ChebyshevSpline.PeekFormatVersion(string path)` — read the major
+  version byte without parsing the body.
+- New `Internal/PcbFormat.cs` holding all binary read/write logic with explicit
+  little-endian assertions.
+
+#### Changed
+
+- `ChebyshevSpline.Save(path, format="binary")` throws `NotSupportedException`
+  for splines built with nested per-piece `nNodes` (the `int[][]` form from
+  Phase 1's special-points work). Use `format="json"` for those.
+- `ChebyshevSlider` and `ChebyshevTT` remain JSON-only in v0.7.0.
+
+#### Test count: 794 → 797 (+3 fixture-based tests)
+
+See `docs/docs/binary-format.md` for the full format documentation and the
+cross-language round-trip guide.
+
 ## [0.6.0] - 2026-04-28
 
 ### PyChebyshev parity: v0.18.0

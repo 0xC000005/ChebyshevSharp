@@ -37,6 +37,8 @@
 # Deployment
 - name: Serialization & Construction
   href: serialization.md
+- name: Portable Binary Format (.pcb)
+  href: binary-format.md
 - name: Performance
   href: performance.md
 - name: Changelog

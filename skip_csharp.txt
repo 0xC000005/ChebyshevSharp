@@ -40,11 +40,18 @@ SpecialPointsTests.cs: ~16 tests (port of test_special_points.py)
 Total: 50 new tests (613 -> 663 total)
 
 =========================================================
-Phase 2 (ChebyshevSharp v0.6.0 release - parity v0.18.0): TT Feature Parity
+# Phase 2 (ChebyshevSharp v0.6.0 release - parity v0.18.0): TT Feature Parity — DONE
+# TtCanonicalizationTests.cs: 15 tests ✓
+# TtAlsTests.cs: 26 tests ✓
+# TtFactoriesTests.cs: 11 tests ✓
+# TtExtrudeSliceTests.cs: 21 tests ✓
+# TtAlgebraTests.cs: 25 tests ✓
+# Total: 98 new tests (666 -> 757 total)
 =========================================================
-TtCanonicalizationTests.cs: ~15 tests (port of TestOrthogonalization + TestInnerProduct)
-TtAlsTests.cs: ~26 tests (port of TestALSInternals + TestALS + TestCompletion + JsonMigration)
-TtFactoriesTests.cs: ~11 tests (port of TestTTNodes + TestTTFromValues)
-TtExtrudeSliceTests.cs: ~21 tests (port of TestTTToDense + TestTTExtrude + TestTTSlice)
-TtAlgebraTests.cs: ~25 tests (port of TestTTAddition + TestTTScalarMul + cross-feature)
-Total: ~98 new tests (666 -> ~757 total)
+
+=========================================================
+# Phase 3 (ChebyshevSharp v0.7.0 release - parity v0.18.0): Binary .pcb Format — DONE
+# BinaryFormatTests.cs: 29 tests ✓ (Tasks 1-7: header, body, round-trips, corruption, peek, spline)
+# PcbFixtureTests: 3 tests ✓ (Task 8: committed fixture files)
+# Total: 32 new tests (765 -> 797 total)
+=========================================================

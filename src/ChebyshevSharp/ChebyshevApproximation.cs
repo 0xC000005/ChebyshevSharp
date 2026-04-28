@@ -599,15 +599,34 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Save the built interpolant to a file using JSON serialization.
+    /// Save the built interpolant to a file.
     /// </summary>
     /// <param name="path">Destination file path.</param>
-    public void Save(string path)
+    /// <param name="format">"json" (default) or "binary". Binary is the
+    /// portable .pcb format readable by C/Rust/Julia consumers.</param>
+    public void Save(string path, string format = "json")
     {
         if (TensorValues == null)
             throw new InvalidOperationException(
                 "Cannot save an unbuilt interpolant. Call Build() first.");
 
+        switch (format)
+        {
+            case "json":
+                SaveJson(path);
+                break;
+            case "binary":
+                SaveBinary(path);
+                break;
+            default:
+                throw new ArgumentException(
+                    $"Unknown format '{format}'. Expected 'json' or 'binary'.",
+                    nameof(format));
+        }
+    }
+
+    private void SaveJson(string path)
+    {
         var state = new SerializationState
         {
             NumDimensions = NumDimensions,
@@ -615,7 +634,7 @@ public class ChebyshevApproximation
             NNodes = NNodes,
             MaxDerivativeOrder = MaxDerivativeOrder,
             NodeArrays = NodeArrays,
-            TensorValues = TensorValues,
+            TensorValues = TensorValues!,
             Weights = Weights!,
             DiffMatrices = DiffMatrices!.Select(Flatten2D).ToArray(),
             BuildTime = BuildTime,
@@ -631,12 +650,55 @@ public class ChebyshevApproximation
         File.WriteAllText(path, json);
     }
 
+    private void SaveBinary(string path)
+    {
+        using var fs = File.Create(path);
+        using var w = new BinaryWriter(fs);
+        Internal.PcbFormat.WriteHeader(w, Internal.PcbFormat.ClassTagApproximation);
+        Internal.PcbFormat.WriteApproximationBody(w, Domain, NNodes, TensorValues!);
+    }
+
     /// <summary>
-    /// Load a previously saved interpolant from a file.
+    /// Read the major version byte of a .pcb binary file without deserializing the body.
+    /// Useful for forward-compat tooling.
+    /// </summary>
+    /// <param name="path">Path to a .pcb file.</param>
+    /// <returns>The major format version (currently 1).</returns>
+    /// <exception cref="FileNotFoundException">Thrown if the path does not exist.</exception>
+    /// <exception cref="InvalidDataException">Thrown if the file is not a .pcb file
+    /// (no magic header) or is shorter than 12 bytes.</exception>
+    public static int PeekFormatVersion(string path)
+        => Internal.PcbFormat.PeekFormatVersion(path);
+
+    /// <summary>
+    /// Load a previously saved interpolant. Auto-detects JSON vs binary .pcb
+    /// by sniffing the first 4 bytes for the b"PCB\0" magic.
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored interpolant.</returns>
     public static ChebyshevApproximation Load(string path)
+    {
+        if (Internal.PcbFormat.IsBinary(path))
+            return LoadBinary(path);
+        return LoadJson(path);
+    }
+
+    private static ChebyshevApproximation LoadBinary(string path)
+    {
+        using var fs = File.OpenRead(path);
+        using var r = new BinaryReader(fs);
+        var header = Internal.PcbFormat.ReadHeader(r);
+        if (header.ClassTag != Internal.PcbFormat.ClassTagApproximation)
+            throw new InvalidDataException(
+                $"binary file class_tag={header.ClassTag} is not ChebyshevApproximation " +
+                $"(tag {Internal.PcbFormat.ClassTagApproximation}); " +
+                $"call ChebyshevSpline.Load instead if class_tag={Internal.PcbFormat.ClassTagSpline}");
+
+        var (domain, nNodes, tensor) = Internal.PcbFormat.ReadApproximationBody(r);
+        return FromValues(tensor, domain.Length, domain, nNodes);
+    }
+
+    private static ChebyshevApproximation LoadJson(string path)
     {
         string json = File.ReadAllText(path);
         var state = JsonSerializer.Deserialize<SerializationState>(json)

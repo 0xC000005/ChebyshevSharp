@@ -28,4 +28,11 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\tests\fixtures\*.pcb">
+      <Link>fixtures\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
