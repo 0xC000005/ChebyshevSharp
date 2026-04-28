@@ -11,6 +11,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-04-28 — Ergonomics polish (PyChebyshev v0.15+v0.16 fill-in)
+
+> **PyChebyshev parity stays at v0.18.0.** Phase 4 of the v0.20.1 phased port —
+> backfills the v0.15+v0.16 ergonomics layer that was skipped during the initial
+> port. Same pattern as Phase 3's binary `.pcb` format fill-in.
+
+### Added — descriptor, additional data, registry, introspection
+
+- `SetDescriptor(string)` / `GetDescriptor()` on all four classes — free-form
+  text labels that survive Save/Load.
+- `additionalData` constructor kwarg (`object?`) on all four classes. Threads
+  user-supplied context through every `f(point, data)` call during
+  `ChebyshevApproximation`/`ChebyshevSpline`/`ChebyshevSlider` build. Stored
+  for introspection on `ChebyshevTT` (its function signature has no data arg).
+- `GetDerivativeId(int[] orders)` registry on all four classes — returns a
+  stable session-local int per registered orders tuple. New
+  `Eval(double[] point, int derivativeId)` overload looks up the orders.
+- `IsConstructionFinished()`, `GetConstructorType()`, `GetUsedNs()` on all
+  four classes — runtime introspection of build state.
+
+### Added — clone, accessors
+
+- Typed `Clone()` per class (`ChebyshevApproximation Clone()`,
+  `ChebyshevSpline Clone()`, etc.). Returns deep copy with `Function = null`
+  (matches Save/Load convention).
+- `GetMaxDerivativeOrder()` on all four classes.
+- `GetErrorThreshold()`, `GetSpecialPoints()` on Approximation + Spline.
+- `GetEvaluationPoints()`, `GetNumEvaluationPoints()` on all four classes.
+
+### Added — deferred construction, typed records
+
+- `deferBuild` constructor kwarg (`bool`) + `SetOriginalFunctionValues(double[] values)`
+  instance mutator on Approximation + Spline. Construct shell now, populate
+  values later. Bit-identical to the `FromValues()` factory.
+- `ChebyshevTT` constructor: new `maxDerivativeOrder = 2` keyword-only kwarg.
+- New public records `Domain`, `Ns`, `SpecialPoints` with implicit conversions
+  to/from raw arrays. Optional ergonomic wrappers.
+
+### JSON migration
+
+- `Load()` for all four classes tolerates missing v0.8.0 fields in pre-v0.8.0
+  JSON files. Defaults: `Descriptor = null`, `MaxDerivativeOrder = 2`,
+  `SpecialPoints = null`, empty derivative-id registry.
+- 4 committed fixture files in `tests/fixtures/json-pre-v080/` prove the
+  migration path.
+- `additionalData` is **not** serialized.
+- Derivative-id registry now persists through Save/Load on all four classes.
+
+### Test count: 812 → 884 (+72)
+
+Phase 4 fan-out across 8 new test files plus appended cross-class tests. See
+[PR](https://github.com/0xC000005/ChebyshevSharp) for the full diff and the
+[design spec](https://github.com/0xC000005/ChebyshevSharp/blob/main/docs/superpowers/specs/2026-04-28-phase4-ergonomics-design.md).
+
+Phase 5 (integrate everywhere — Slider/TT integration on calculus,
+PyChebyshev parity bump to v0.17.0) is next.
+
 ## [0.7.0] - 2026-04-28
 
 ### PyChebyshev parity: v0.18.0 (binary format fill-in)

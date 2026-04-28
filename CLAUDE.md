@@ -13,12 +13,14 @@ Always consult the Python source when implementing or verifying behavior.
 
 ## Status
 
-**Feature-complete against PyChebyshev v0.18.0** (Phases 1+2+3 of the 6-phase v0.20.1 port complete; see
+**Feature-complete against PyChebyshev v0.18.0** (Phases 1+2+3+4 of the 6-phase v0.20.1 port complete; see
 `docs/superpowers/specs/2026-04-27-pychebyshev-v0.20.1-port-design.md`).
 All four public classes (`ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`,
-`ChebyshevTT`) mirror the Python API surface. v0.7.0 adds portable `.pcb` binary
-serialization (Phase 3 fill-in; PyChebyshev parity tag unchanged at v0.18.0).
-`dotnet test` runs **797/797** passing.
+`ChebyshevTT`) mirror the Python API surface. v0.8.0 adds the v0.15+v0.16 ergonomics
+layer (descriptor, additionalData, derivative-id registry, introspection getters,
+typed Clone, DeferBuild + SetOriginalFunctionValues, Domain/Ns/SpecialPoints records;
+PyChebyshev parity tag unchanged at v0.18.0).
+`dotnet test` runs **884/884** passing.
 
 See `skip_csharp.txt` for the per-phase Python-parity vs. C#-specific test breakdown.
 

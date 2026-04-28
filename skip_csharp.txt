@@ -1,6 +1,10 @@
 # ChebyshevSharp Feature Parity Tracker
 # Remove lines as tests are ported and passing.
 # Target: 457 tests (matching PyChebyshev v0.10.1)
+#
+# Phase 4 (v0.8.0) complete: descriptor, additionalData, derivative-id registry,
+# clone, DeferBuild, typed records (Domain/Ns/SpecialPoints), introspection
+# getters, JSON migration, pre-v0.8.0 fixture round-trips. 884/884 passing.
 
 # Phase 1: ChebyshevApproximation — DONE (233 tests passing)
 # BarycentricTests: 51 tests ✓ (42 Python + 9 C#-specific)
@@ -54,4 +58,15 @@ Total: 50 new tests (613 -> 663 total)
 # BinaryFormatTests.cs: 29 tests ✓ (Tasks 1-7: header, body, round-trips, corruption, peek, spline)
 # PcbFixtureTests: 3 tests ✓ (Task 8: committed fixture files)
 # Total: 32 new tests (765 -> 797 total)
+=========================================================
+
+=========================================================
+# Phase 4 (ChebyshevSharp v0.8.0 release - parity v0.18.0): Ergonomics layer — DONE [Phase 4: implemented in v0.8.0]
+# ErgonomicsApproximationTests.cs: new tests ✓ (descriptor, additionalData, deferBuild, clone, registry, introspection)
+# ErgonomicsSplineTests.cs: new tests ✓
+# ErgonomicsSliderTests.cs: new tests ✓
+# ErgonomicsTensorTrainTests.cs: new tests ✓
+# TypedRecordsTests.cs: new tests ✓ (Domain, Ns, SpecialPoints records)
+# JsonMigrationTests.cs: new tests ✓ (pre-v0.8.0 fixture round-trips)
+# Total: 87 new tests (797 -> 884 total)
 =========================================================
