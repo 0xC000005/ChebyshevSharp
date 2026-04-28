@@ -166,3 +166,116 @@ public class OrthLeftRightTests
         Assert.Throws<InvalidOperationException>(() => tt.OrthLeft(position: 1));
     }
 }
+
+public class InnerProductTests
+{
+    [Fact]
+    public void Test_inner_product_matches_explicit_contraction_2d()
+    {
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var nNodes = new[] { 8, 8 };
+        var ttA = new ChebyshevTT(p => Math.Sin(p[0]) + 0.5 * p[1], 2, domain, nNodes,
+            tolerance: 1e-8, maxRank: 8);
+        var ttB = new ChebyshevTT(p => Math.Cos(p[0]) * p[1], 2, domain, nNodes,
+            tolerance: 1e-8, maxRank: 8);
+        ttA.Build(verbose: false, seed: 1);
+        ttB.Build(verbose: false, seed: 2);
+
+        double ip = ttA.InnerProduct(ttB);
+
+        // Reference: contract full coefficient tensors via dense reconstruction.
+        double[] FullCoeffTensor(ChebyshevTT tt)
+        {
+            int n0 = tt.NNodes[0], n1 = tt.NNodes[1];
+            var (rL0, _, rR0, d0) = tt.GetCoreShape(0);
+            var (rL1, _, rR1, d1) = tt.GetCoreShape(1);
+            // Core 0 has rL=1; Core 1 has rR=1.
+            var dense = new double[n0 * n1];
+            for (int i = 0; i < n0; i++)
+                for (int j = 0; j < n1; j++)
+                {
+                    double s = 0;
+                    for (int a = 0; a < rR0; a++)
+                        s += d0[0 * n0 * rR0 + i * rR0 + a] * d1[a * n1 * rR1 + j * rR1 + 0];
+                    dense[i * n1 + j] = s;
+                }
+            return dense;
+        }
+
+        double[] tA = FullCoeffTensor(ttA);
+        double[] tB = FullCoeffTensor(ttB);
+        double reference = 0;
+        for (int i = 0; i < tA.Length; i++) reference += tA[i] * tB[i];
+        TestFixtures.AssertClose(reference, ip, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_self_inner_product_is_squared_norm()
+    {
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var tt = new ChebyshevTT(p => Math.Cos(p[0]) + p[1] * p[1], 2, domain,
+            new[] { 10, 10 }, tolerance: 1e-8, maxRank: 8);
+        tt.Build(verbose: false, seed: 0);
+        double ip = tt.InnerProduct(tt);
+        Assert.True(ip > 0, $"self-inner-product must be positive, got {ip}");
+    }
+
+    [Fact]
+    public void Test_inner_product_raises_on_null_other()
+    {
+        var tt = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 5 });
+        tt.Build(verbose: false);
+        Assert.Throws<ArgumentNullException>(() => tt.InnerProduct(null!));
+    }
+
+    [Fact]
+    public void Test_inner_product_raises_on_domain_mismatch()
+    {
+        var ttA = new ChebyshevTT(p => p[0], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        var ttB = new ChebyshevTT(p => p[0], 2,
+            new[] { new[] { -2.0, 2.0 }, new[] { -2.0, 2.0 } }, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() => ttA.InnerProduct(ttB));
+        Assert.Contains("domain", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_inner_product_raises_on_n_nodes_mismatch()
+    {
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var ttA = new ChebyshevTT(p => p[0], 2, domain, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        var ttB = new ChebyshevTT(p => p[0], 2, domain, new[] { 7, 7 },
+            tolerance: 1e-4, maxRank: 3);
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() => ttA.InnerProduct(ttB));
+        Assert.Contains("nNodes", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_inner_product_raises_on_unbuilt_self()
+    {
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var ttA = new ChebyshevTT(p => p[0], 2, domain, new[] { 5, 5 });
+        var ttB = new ChebyshevTT(p => p[0], 2, domain, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        ttB.Build(verbose: false);
+        Assert.Throws<InvalidOperationException>(() => ttA.InnerProduct(ttB));
+    }
+
+    [Fact]
+    public void Test_inner_product_raises_on_unbuilt_other()
+    {
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var ttA = new ChebyshevTT(p => p[0], 2, domain, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        var ttB = new ChebyshevTT(p => p[0], 2, domain, new[] { 5, 5 });
+        ttA.Build(verbose: false);
+        Assert.Throws<InvalidOperationException>(() => ttA.InnerProduct(ttB));
+    }
+}

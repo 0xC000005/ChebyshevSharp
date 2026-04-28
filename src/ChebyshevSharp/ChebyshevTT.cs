@@ -594,6 +594,37 @@ public class ChebyshevTT
     }
 
     /// <summary>
+    /// Frobenius inner product of the Chebyshev coefficient tensors of two TTs.
+    /// Both TTs must share the same <see cref="NumDimensions"/>, <see cref="Domain"/>,
+    /// and <see cref="NNodes"/>.
+    /// </summary>
+    /// <param name="other">The other TT.</param>
+    /// <returns>Σ_{i_1,…,i_d} C_self[i] * C_other[i].</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="other"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">If either TT has not been built.</exception>
+    /// <exception cref="ArgumentException">If domain or nNodes do not match.</exception>
+    public double InnerProduct(ChebyshevTT other)
+    {
+        if (other is null)
+            throw new ArgumentNullException(nameof(other));
+        CheckBuilt();
+        other.CheckBuilt();
+        if (other._numDimensions != _numDimensions)
+            throw new ArgumentException(
+                $"InnerProduct requires matching numDimensions; got {_numDimensions} vs {other._numDimensions}");
+        for (int d = 0; d < _numDimensions; d++)
+        {
+            if (other._nNodes[d] != _nNodes[d])
+                throw new ArgumentException(
+                    $"InnerProduct requires matching nNodes; got [{string.Join(", ", _nNodes)}] vs [{string.Join(", ", other._nNodes)}]");
+            if (other._domain[d][0] != _domain[d][0] || other._domain[d][1] != _domain[d][1])
+                throw new ArgumentException(
+                    $"InnerProduct requires matching domain at dim {d}; got [{_domain[d][0]}, {_domain[d][1]}] vs [{other._domain[d][0]}, {other._domain[d][1]}]");
+        }
+        return TensorTrainAlgebra.InnerProductCores(_coeffCores!, other._coeffCores!);
+    }
+
+    /// <summary>
     /// Internal accessor for tests: return (rLeft, nNodes, rRight, flat data) of
     /// core <paramref name="k"/>. Exposes the live data buffer (not a copy).
     /// </summary>
