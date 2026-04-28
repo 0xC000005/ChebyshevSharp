@@ -449,6 +449,86 @@ public class PeekFormatVersionTests
     }
 }
 
+public class CorruptionRejectionTests
+{
+    private static string TempPcb() => Path.Combine(
+        Path.GetTempPath(), $"cheb_test_{Guid.NewGuid():N}.pcb");
+
+    [Fact]
+    public void Test_load_rejects_unknown_class_tag()
+    {
+        // Write a header with class_tag=99 (unknown), no body.
+        string path = TempPcb();
+        try
+        {
+            using (var fs = File.Create(path))
+            using (var w = new BinaryWriter(fs))
+            {
+                w.Write(new byte[] { 0x50, 0x43, 0x42, 0x00 }); // magic
+                w.Write((byte)1); w.Write((byte)0);              // major/minor
+                w.Write((ushort)99);                              // unknown class_tag
+                w.Write((uint)0);                                 // reserved
+            }
+            // Approximation.Load should reject (mismatched class_tag).
+            var ex = Assert.Throws<InvalidDataException>(
+                () => ChebyshevApproximation.Load(path));
+            Assert.Contains("class_tag", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_load_rejects_truncated_body()
+    {
+        // Save a valid binary, then truncate the file to drop the last few bytes.
+        var cheb = new ChebyshevApproximation((p, _) => p[0] + p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 4, 4 });
+        cheb.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            cheb.Save(path, format: "binary");
+            long size = new FileInfo(path).Length;
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Write))
+                fs.SetLength(size - 8); // drop last 8 bytes (1 f64)
+            // Should fail on EOF reading tensor_values.
+            Assert.Throws<EndOfStreamException>(() => ChebyshevApproximation.Load(path));
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_load_rejects_unsorted_knots()
+    {
+        // Hand-craft a class_tag=2 file with non-ascending knots in dim 0.
+        string path = TempPcb();
+        try
+        {
+            using (var fs = File.Create(path))
+            using (var w = new BinaryWriter(fs))
+            {
+                w.Write(new byte[] { 0x50, 0x43, 0x42, 0x00 }); // magic
+                w.Write((byte)1); w.Write((byte)0);              // version
+                w.Write((ushort)PcbFormat.ClassTagSpline);       // class_tag=2
+                w.Write((uint)0);                                 // reserved
+                w.Write((uint)1);                                 // d=1
+                w.Write(-1.0); w.Write(1.0);                      // domain
+                w.Write((uint)3);                                 // n_nodes[0]=3
+                w.Write((uint)2);                                 // num_knots[0]=2
+                w.Write(0.5); w.Write(-0.5);                      // knots: NOT ascending
+                w.Write((uint)3);                                 // num_pieces=3
+                for (int p = 0; p < 3; p++)
+                    for (int j = 0; j < 3; j++) w.Write(0.0);
+            }
+            var ex = Assert.Throws<InvalidDataException>(
+                () => ChebyshevSpline.Load(path));
+            Assert.Contains("ascending", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+}
+
 public class SplineBinaryTests
 {
     private static string TempPcb() => Path.Combine(
