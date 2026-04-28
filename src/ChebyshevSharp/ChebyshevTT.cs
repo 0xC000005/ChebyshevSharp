@@ -918,6 +918,69 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Scalar algebra (Phase 2 — PyChebyshev v0.18.c)
+    // ------------------------------------------------------------------
+
+    /// <summary>Scalar multiplication: <c>tt * scalar</c>.</summary>
+    public static ChebyshevTT operator *(ChebyshevTT tt, double scalar)
+    {
+        if (tt is null) throw new ArgumentNullException(nameof(tt));
+        tt.CheckBuilt();
+        var newCores = TensorTrainAlgebra.ScalarMulCores(tt._coeffCores!, scalar);
+        var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])tt._nNodes.Clone();
+        return tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>Scalar multiplication: <c>scalar * tt</c>.</summary>
+    public static ChebyshevTT operator *(double scalar, ChebyshevTT tt) => tt * scalar;
+
+    /// <summary>Scalar division: <c>tt / scalar</c>.</summary>
+    /// <exception cref="DivideByZeroException">If <paramref name="scalar"/> is zero.</exception>
+    public static ChebyshevTT operator /(ChebyshevTT tt, double scalar)
+    {
+        if (scalar == 0.0)
+            throw new DivideByZeroException("Cannot divide ChebyshevTT by zero.");
+        return tt * (1.0 / scalar);
+    }
+
+    /// <summary>Unary negation: <c>-tt</c>.</summary>
+    public static ChebyshevTT operator -(ChebyshevTT tt)
+    {
+        if (tt is null) throw new ArgumentNullException(nameof(tt));
+        tt.CheckBuilt();
+        var newCores = TensorTrainAlgebra.NegateCores(tt._coeffCores!);
+        var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])tt._nNodes.Clone();
+        return tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>Scale this TT in place by <paramref name="scalar"/>.</summary>
+    public void ScalarMulInPlace(double scalar)
+    {
+        CheckBuilt();
+        TensorTrainAlgebra.ScalarMulCoresInPlace(_coeffCores!, scalar);
+        _cachedErrorEstimate = null;
+    }
+
+    /// <summary>Divide this TT in place by <paramref name="scalar"/>.</summary>
+    /// <exception cref="DivideByZeroException">If <paramref name="scalar"/> is zero.</exception>
+    public void ScalarDivInPlace(double scalar)
+    {
+        if (scalar == 0.0)
+            throw new DivideByZeroException("Cannot divide ChebyshevTT by zero.");
+        ScalarMulInPlace(1.0 / scalar);
+    }
+
+    /// <summary>Negate this TT in place.</summary>
+    public void NegateInPlace()
+    {
+        CheckBuilt();
+        TensorTrainAlgebra.NegateCoresInPlace(_coeffCores!);
+        _cachedErrorEstimate = null;
+    }
+
+    // ------------------------------------------------------------------
     // Chebyshev polynomial evaluation
     // ------------------------------------------------------------------
 

@@ -57,4 +57,36 @@ internal static class TensorTrainAlgebra
         // M is (1, 1) at the end since rA_d = rB_d = 1.
         return M[0];
     }
+
+    /// <summary>
+    /// Return a deep-copy of <paramref name="cores"/> with core 0's data scaled by
+    /// <paramref name="scalar"/>. The represented function is multiplied by <paramref name="scalar"/>.
+    /// </summary>
+    internal static TensorTrainKernel.TtCore[] ScalarMulCores(
+        TensorTrainKernel.TtCore[] cores, double scalar)
+    {
+        int d = cores.Length;
+        var result = new TensorTrainKernel.TtCore[d];
+        // Deep-copy all cores; scale core 0.
+        for (int k = 0; k < d; k++) result[k] = cores[k].Copy();
+        for (int i = 0; i < result[0].Data.Length; i++)
+            result[0].Data[i] *= scalar;
+        return result;
+    }
+
+    /// <summary>In-place variant of <see cref="ScalarMulCores"/>.</summary>
+    internal static void ScalarMulCoresInPlace(
+        TensorTrainKernel.TtCore[] cores, double scalar)
+    {
+        for (int i = 0; i < cores[0].Data.Length; i++)
+            cores[0].Data[i] *= scalar;
+    }
+
+    /// <summary>Return a deep-copy of <paramref name="cores"/> negated.</summary>
+    internal static TensorTrainKernel.TtCore[] NegateCores(TensorTrainKernel.TtCore[] cores)
+        => ScalarMulCores(cores, -1.0);
+
+    /// <summary>In-place negation.</summary>
+    internal static void NegateCoresInPlace(TensorTrainKernel.TtCore[] cores)
+        => ScalarMulCoresInPlace(cores, -1.0);
 }
