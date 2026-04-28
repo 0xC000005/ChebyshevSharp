@@ -981,6 +981,94 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Binary algebra (Phase 2 — PyChebyshev v0.18.d)
+    // ------------------------------------------------------------------
+
+    /// <summary>Default tolerance for TT-SVD rounding after addition/subtraction.</summary>
+    public const double DefaultRoundTolerance = 1e-12;
+
+    /// <summary>Validate two TTs share the same grid (numDim, domain, nNodes).</summary>
+    private static void CheckCompatible(ChebyshevTT a, ChebyshevTT b)
+    {
+        if (a is null) throw new ArgumentNullException(nameof(a));
+        if (b is null) throw new ArgumentNullException(nameof(b));
+        a.CheckBuilt();
+        b.CheckBuilt();
+        if (a._numDimensions != b._numDimensions)
+            throw new ArgumentException(
+                $"Dimension mismatch: {a._numDimensions} vs {b._numDimensions}");
+        for (int d = 0; d < a._numDimensions; d++)
+        {
+            if (a._nNodes[d] != b._nNodes[d])
+                throw new ArgumentException(
+                    $"nNodes mismatch at dim {d}: {a._nNodes[d]} vs {b._nNodes[d]}");
+            if (a._domain[d][0] != b._domain[d][0] || a._domain[d][1] != b._domain[d][1])
+                throw new ArgumentException(
+                    $"Domain mismatch at dim {d}: [{a._domain[d][0]}, {a._domain[d][1]}] vs [{b._domain[d][0]}, {b._domain[d][1]}]");
+        }
+    }
+
+    /// <summary>Binary addition: <c>a + b</c>. Result is rounded to the larger of the two TTs' maxRank.</summary>
+    public static ChebyshevTT operator +(ChebyshevTT a, ChebyshevTT b)
+    {
+        CheckCompatible(a, b);
+        var summed = TensorTrainAlgebra.AddCores(a._coeffCores!, b._coeffCores!);
+        int mr = Math.Max(a._maxRank, b._maxRank);
+        var rounded = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        var domainCopy = a._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])a._nNodes.Clone();
+        return a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>Binary subtraction: <c>a - b</c>.</summary>
+    public static ChebyshevTT operator -(ChebyshevTT a, ChebyshevTT b)
+    {
+        CheckCompatible(a, b);
+        var negB = TensorTrainAlgebra.NegateCores(b._coeffCores!);
+        var summed = TensorTrainAlgebra.AddCores(a._coeffCores!, negB);
+        int mr = Math.Max(a._maxRank, b._maxRank);
+        var rounded = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        var domainCopy = a._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])a._nNodes.Clone();
+        return a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>In-place addition: <c>this += other</c> followed by TT-SVD rounding.</summary>
+    public void AddInPlace(ChebyshevTT other)
+    {
+        CheckCompatible(this, other);
+        var summed = TensorTrainAlgebra.AddCores(_coeffCores!, other._coeffCores!);
+        int mr = Math.Max(_maxRank, other._maxRank);
+        _coeffCores = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    /// <summary>In-place subtraction: <c>this -= other</c> followed by TT-SVD rounding.</summary>
+    public void SubInPlace(ChebyshevTT other)
+    {
+        CheckCompatible(this, other);
+        var negOther = TensorTrainAlgebra.NegateCores(other._coeffCores!);
+        var summed = TensorTrainAlgebra.AddCores(_coeffCores!, negOther);
+        int mr = Math.Max(_maxRank, other._maxRank);
+        _coeffCores = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    /// <summary>Round TT to lower rank in place via TT-SVD recompression.</summary>
+    public void RoundInPlace(double tolerance)
+    {
+        CheckBuilt();
+        _coeffCores = TensorTrainAlgebra.RoundCores(_coeffCores!, _maxRank, tolerance);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    // ------------------------------------------------------------------
     // Chebyshev polynomial evaluation
     // ------------------------------------------------------------------
 

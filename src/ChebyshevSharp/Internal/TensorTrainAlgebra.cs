@@ -89,4 +89,182 @@ internal static class TensorTrainAlgebra
     /// <summary>In-place negation.</summary>
     internal static void NegateCoresInPlace(TensorTrainKernel.TtCore[] cores)
         => ScalarMulCoresInPlace(cores, -1.0);
+
+    /// <summary>
+    /// Block-diagonal stacking of TT cores → exact TT representation of the sum.
+    /// Mirror of Python's <c>_tt_add_cores</c> (_algebra.py:63).
+    /// </summary>
+    internal static TensorTrainKernel.TtCore[] AddCores(
+        TensorTrainKernel.TtCore[] coresA,
+        TensorTrainKernel.TtCore[] coresB)
+    {
+        int d = coresA.Length;
+        if (d != coresB.Length)
+            throw new ArgumentException("AddCores: cores must have same length");
+
+        // d == 1 special case: elementwise coefficient sum (only correct rep keeping rank-1 endpoints).
+        if (d == 1)
+        {
+            var a0 = coresA[0]; var b0 = coresB[0];
+            if (a0.RLeft != b0.RLeft || a0.NNodes != b0.NNodes || a0.RRight != b0.RRight)
+                throw new ArgumentException(
+                    $"AddCores: 1D core shape mismatch ({a0.RLeft},{a0.NNodes},{a0.RRight}) vs ({b0.RLeft},{b0.NNodes},{b0.RRight})");
+            var sum = new TensorTrainKernel.TtCore(a0.RLeft, a0.NNodes, a0.RRight);
+            for (int i = 0; i < a0.Data.Length; i++)
+                sum.Data[i] = a0.Data[i] + b0.Data[i];
+            return new[] { sum };
+        }
+
+        var result = new TensorTrainKernel.TtCore[d];
+        for (int k = 0; k < d; k++)
+        {
+            var a = coresA[k]; var b = coresB[k];
+            int n = a.NNodes;
+            if (b.NNodes != n)
+                throw new ArgumentException($"AddCores: core {k} nNodes mismatch: {n} vs {b.NNodes}");
+
+            if (k == 0)
+            {
+                // Concat along right rank: shape (1, n, ra_r + rb_r)
+                int rR = a.RRight + b.RRight;
+                var newCore = new TensorTrainKernel.TtCore(1, n, rR);
+                for (int j = 0; j < n; j++)
+                {
+                    for (int kk = 0; kk < a.RRight; kk++) newCore[0, j, kk] = a[0, j, kk];
+                    for (int kk = 0; kk < b.RRight; kk++) newCore[0, j, a.RRight + kk] = b[0, j, kk];
+                }
+                result[k] = newCore;
+            }
+            else if (k == d - 1)
+            {
+                // Concat along left rank: shape (ra_l + rb_l, n, 1)
+                int rL = a.RLeft + b.RLeft;
+                var newCore = new TensorTrainKernel.TtCore(rL, n, 1);
+                for (int j = 0; j < n; j++)
+                {
+                    for (int ii = 0; ii < a.RLeft; ii++) newCore[ii, j, 0] = a[ii, j, 0];
+                    for (int ii = 0; ii < b.RLeft; ii++) newCore[a.RLeft + ii, j, 0] = b[ii, j, 0];
+                }
+                result[k] = newCore;
+            }
+            else
+            {
+                // Block diagonal: shape (ra_l + rb_l, n, ra_r + rb_r)
+                int rL = a.RLeft + b.RLeft;
+                int rR = a.RRight + b.RRight;
+                var newCore = new TensorTrainKernel.TtCore(rL, n, rR);
+                for (int j = 0; j < n; j++)
+                {
+                    for (int ii = 0; ii < a.RLeft; ii++)
+                        for (int kk = 0; kk < a.RRight; kk++)
+                            newCore[ii, j, kk] = a[ii, j, kk];
+                    for (int ii = 0; ii < b.RLeft; ii++)
+                        for (int kk = 0; kk < b.RRight; kk++)
+                            newCore[a.RLeft + ii, j, a.RRight + kk] = b[ii, j, kk];
+                }
+                result[k] = newCore;
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Round TT to lower rank via TT-SVD recompression. Right-to-left QR sweep
+    /// (right-canonicalize cores d-1..1) followed by left-to-right SVD truncation
+    /// (cores 0..d-2). Truncation keeps min(maxRank, num_above_relative_tol)
+    /// singular values. Mirror of Python's <c>_tt_round_cores</c> (_algebra.py:118).
+    /// </summary>
+    internal static TensorTrainKernel.TtCore[] RoundCores(
+        TensorTrainKernel.TtCore[] cores, int maxRank, double tolerance = 1e-12)
+    {
+        int d = cores.Length;
+        var result = new TensorTrainKernel.TtCore[d];
+        for (int k = 0; k < d; k++) result[k] = cores[k].Copy();
+        if (d == 1) return result;
+
+        // Right-to-left QR sweep: right-canonicalize cores k = d-1, ..., 1.
+        for (int k = d - 1; k > 0; k--)
+        {
+            int rL = result[k].RLeft, n = result[k].NNodes, rR = result[k].RRight;
+            // Reshape (rL, n*rR), QR of transpose
+            var Mt = new double[n * rR, rL];
+            for (int i = 0; i < rL; i++)
+                for (int j = 0; j < n; j++)
+                    for (int p = 0; p < rR; p++)
+                        Mt[j * rR + p, i] = result[k][i, j, p];
+            var Mtm = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(Mt);
+            var qr = Mtm.QR(MathNet.Numerics.LinearAlgebra.Factorization.QRMethod.Thin);
+            int newRL = qr.Q.ColumnCount;
+            var newCk = new TensorTrainKernel.TtCore(newRL, n, rR);
+            for (int a = 0; a < newRL; a++)
+                for (int j = 0; j < n; j++)
+                    for (int p = 0; p < rR; p++)
+                        newCk[a, j, p] = qr.Q[j * rR + p, a];
+            // Push R^T into the previous core's right rank.
+            var prev = result[k - 1];
+            int rLp = prev.RLeft, nP = prev.NNodes;
+            var newPrev = new TensorTrainKernel.TtCore(rLp, nP, newRL);
+            for (int i = 0; i < rLp; i++)
+                for (int j = 0; j < nP; j++)
+                    for (int r = 0; r < newRL; r++)
+                    {
+                        double s = 0;
+                        for (int sIdx = 0; sIdx < rL; sIdx++)
+                            s += prev[i, j, sIdx] * qr.R[r, sIdx];
+                        newPrev[i, j, r] = s;
+                    }
+            result[k] = newCk;
+            result[k - 1] = newPrev;
+        }
+
+        // Left-to-right SVD truncation: cores k = 0, ..., d-2.
+        for (int k = 0; k < d - 1; k++)
+        {
+            int rL = result[k].RLeft, n = result[k].NNodes, rR = result[k].RRight;
+            var Mat = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.Create(rL * n, rR, 0.0);
+            for (int i = 0; i < rL; i++)
+                for (int j = 0; j < n; j++)
+                    for (int p = 0; p < rR; p++)
+                        Mat.At(i * n + j, p, result[k][i, j, p]);
+
+            var svd = Mat.Svd(computeVectors: true);
+            var U = svd.U; var S = svd.S; var Vt = svd.VT;
+            int sLen = S.Count;
+            int keep = Math.Min(maxRank, sLen);
+            double sMax = sLen > 0 ? S[0] : 0.0;
+            if (sMax > 0 && tolerance > 0)
+            {
+                int eff = 0;
+                for (int i = 0; i < sLen; i++) if (S[i] > sMax * tolerance) eff++;
+                keep = Math.Max(1, Math.Min(keep, eff));
+            }
+            else
+            {
+                keep = Math.Max(1, keep);
+            }
+
+            var newCk = new TensorTrainKernel.TtCore(rL, n, keep);
+            for (int i = 0; i < rL; i++)
+                for (int j = 0; j < n; j++)
+                    for (int r = 0; r < keep; r++)
+                        newCk[i, j, r] = U[i * n + j, r];
+            result[k] = newCk;
+
+            // Push S @ Vt into next core's left rank.
+            var nextC = result[k + 1];
+            int n2 = nextC.NNodes, rR2 = nextC.RRight;
+            var newNext = new TensorTrainKernel.TtCore(keep, n2, rR2);
+            for (int r = 0; r < keep; r++)
+                for (int j = 0; j < n2; j++)
+                    for (int p = 0; p < rR2; p++)
+                    {
+                        double sAcc = 0;
+                        for (int sIdx = 0; sIdx < rR; sIdx++)
+                            sAcc += S[r] * Vt[r, sIdx] * nextC[sIdx, j, p];
+                        newNext[r, j, p] = sAcc;
+                    }
+            result[k + 1] = newNext;
+        }
+        return result;
+    }
 }

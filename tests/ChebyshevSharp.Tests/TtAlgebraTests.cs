@@ -12,6 +12,171 @@ public class TtAlgebraTests
 {
 }
 
+public class BinaryAlgebraTests
+{
+    [Fact]
+    public void Test_add_two_tts_returns_tt()
+    {
+        var ttF = TestFixtures.TtAlgebraF;
+        var ttG = TestFixtures.TtAlgebraG;
+        var result = ttF + ttG;
+        Assert.IsType<ChebyshevTT>(result);
+    }
+
+    [Fact]
+    public void Test_add_eval_matches_sum_of_evals()
+    {
+        var ttF = TestFixtures.TtAlgebraF;
+        var ttG = TestFixtures.TtAlgebraG;
+        var result = ttF + ttG;
+        foreach (double[] p in new[] { new[] { 0.3, 0.4 }, new[] { -0.2, 0.5 }, new[] { 0.0, 0.0 } })
+            TestFixtures.AssertClose(ttF.Eval(p) + ttG.Eval(p), result.Eval(p), atol: 1e-6);
+    }
+
+    [Fact]
+    public void Test_subtract_returns_tt()
+    {
+        var ttA = TestFixtures.TtAlgebraF;
+        var ttB = TestFixtures.TtAlgebraF;
+        var result = ttA - ttB;
+        TestFixtures.AssertClose(0.0, result.Eval(new[] { 0.3, 0.4 }), atol: 1e-6);
+    }
+
+    [Fact]
+    public void Test_add_incompatible_domain_raises()
+    {
+        var ttF = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        var ttG = new ChebyshevTT(p => p[0], 1, new[] { new[] { 0.0, 2.0 } }, new[] { 4 });
+        ttF.Build(verbose: false);
+        ttG.Build(verbose: false);
+        Assert.Throws<ArgumentException>(() => { var _ = ttF + ttG; });
+    }
+
+    [Fact]
+    public void Test_add_incompatible_n_nodes_raises()
+    {
+        var ttF = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        var ttG = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+        ttF.Build(verbose: false);
+        ttG.Build(verbose: false);
+        Assert.Throws<ArgumentException>(() => { var _ = ttF + ttG; });
+    }
+
+    [Fact]
+    public void Test_add_function_is_null_on_result()
+    {
+        var ttA = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        var ttB = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        var result = ttA + ttB;
+        Assert.Throws<InvalidOperationException>((Action)(() => result.RunCompletion()));
+    }
+
+    [Fact]
+    public void Test_chained_adds_respect_max_rank()
+    {
+        ChebyshevTT MakeTt(double coef)
+        {
+            var tt = new ChebyshevTT(p => coef * (p[0] + p[1]), 2,
+                new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                new[] { 6, 6 }, maxRank: 4);
+            tt.Build(verbose: false);
+            return tt;
+        }
+        var result = MakeTt(1.0) + MakeTt(2.0) + MakeTt(3.0);
+        foreach (int r in result.TtRanks)
+            Assert.True(r <= 4, $"max_rank=4 violated; got rank {r}");
+    }
+
+    [Fact]
+    public void Test_linearity_eval()
+    {
+        var ttF = TestFixtures.TtAlgebraF;
+        var ttG = TestFixtures.TtAlgebraG;
+        // (a*f + b*g).eval(x) ≈ a*f(x) + b*g(x)
+        double a = 2.0, b = -1.5;
+        var combo = a * ttF + b * ttG;
+        foreach (double[] p in new[] { new[] { 0.1, 0.2 }, new[] { -0.3, 0.5 } })
+        {
+            double expected = a * ttF.Eval(p) + b * ttG.Eval(p);
+            TestFixtures.AssertClose(expected, combo.Eval(p), atol: 1e-6);
+        }
+    }
+}
+
+public class BinaryInPlaceTests
+{
+    [Fact]
+    public void Test_add_in_place_matches_functional()
+    {
+        var ttA = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+        var ttB = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        double[] xs = { -0.5, 0.0, 0.5 };
+        var functional = ttA + ttB;
+        ttA.AddInPlace(ttB);
+        foreach (double x in xs)
+            TestFixtures.AssertClose(functional.Eval(new[] { x }), ttA.Eval(new[] { x }), atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_sub_in_place_matches_functional()
+    {
+        var ttA = new ChebyshevTT(p => p[0] + 1.0, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+        var ttB = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        var functional = ttA - ttB;
+        ttA.SubInPlace(ttB);
+        TestFixtures.AssertClose(functional.Eval(new[] { 0.3 }), ttA.Eval(new[] { 0.3 }), atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_add_in_place_grid_mismatch_raises()
+    {
+        var ttA = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        var ttB = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        Assert.Throws<ArgumentException>(() => ttA.AddInPlace(ttB));
+    }
+}
+
+public class RoundingTests
+{
+    [Fact]
+    public void Test_round_in_place_shrinks_rank_without_losing_accuracy()
+    {
+        // Build a sum that has artificially high rank, then round.
+        var ttA = new ChebyshevTT(p => Math.Sin(p[0]) + Math.Sin(p[1]), 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 8, 8 }, maxRank: 8);
+        var ttB = new ChebyshevTT(p => Math.Sin(p[0]) + Math.Sin(p[1]), 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 8, 8 }, maxRank: 8);
+        ttA.Build(verbose: false);
+        ttB.Build(verbose: false);
+        // Block-diag sum has rank doubled.
+        var sum = ttA + ttB;
+        double evalBefore = sum.Eval(new[] { 0.3, -0.4 });
+        sum.RoundInPlace(1e-10);
+        double evalAfter = sum.Eval(new[] { 0.3, -0.4 });
+        TestFixtures.AssertClose(evalBefore, evalAfter, atol: 1e-8);
+    }
+
+    [Fact]
+    public void Test_round_in_place_idempotent()
+    {
+        var ttA = TestFixtures.TtAlgebraF;
+        var sum = ttA + ttA;
+        sum.RoundInPlace(1e-10);
+        var ranksBefore = sum.TtRanks;
+        sum.RoundInPlace(1e-10);
+        var ranksAfter = sum.TtRanks;
+        Assert.Equal(ranksBefore, ranksAfter);
+    }
+}
+
 public class ScalarAlgebraTests
 {
     [Fact]
