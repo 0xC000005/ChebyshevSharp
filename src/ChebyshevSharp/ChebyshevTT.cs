@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -697,6 +698,90 @@ public class ChebyshevTT
         _cachedErrorEstimate = null;
         for (int i = 0; i < _numDimensions; i++)
             _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    // ------------------------------------------------------------------
+    // Static factories (Phase 2 — PyChebyshev v0.18)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Compute the Chebyshev Type I node positions per dimension scaled to
+    /// the user's domain. Static factory matching <see cref="ChebyshevApproximation.Nodes"/>.
+    /// </summary>
+    /// <param name="numDimensions">Number of dimensions.</param>
+    /// <param name="domain">Bounds [lo, hi] per dimension.</param>
+    /// <param name="nNodes">Number of nodes per dimension.</param>
+    /// <returns>(NodesPerDim[d][j], Shape[d]) — node arrays in ascending order.</returns>
+    public static (double[][] NodesPerDim, int[] Shape) Nodes(
+        int numDimensions, double[][] domain, int[] nNodes)
+    {
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+
+        var nodesPerDim = new double[numDimensions][];
+        for (int d = 0; d < numDimensions; d++)
+            nodesPerDim[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+        return (nodesPerDim, (int[])nNodes.Clone());
+    }
+
+    /// <summary>
+    /// Build a TT directly from a precomputed dense tensor (skips function evaluation).
+    /// Uses TT-SVD for compression. The resulting TT has <c>Function = null</c>.
+    /// </summary>
+    /// <param name="tensorValues">Flat row-major dense tensor of length Π nNodes.</param>
+    /// <param name="numDimensions">Number of dimensions.</param>
+    /// <param name="domain">Bounds [lo, hi] per dimension.</param>
+    /// <param name="nNodes">Number of nodes per dimension.</param>
+    /// <param name="maxRank">Maximum TT rank (default 10).</param>
+    /// <param name="tolerance">SVD truncation tolerance (default 1e-6).</param>
+    /// <exception cref="ArgumentException">If tensorValues length doesn't match Π nNodes, or contains NaN/Infinity.</exception>
+    public static ChebyshevTT FromValues(
+        double[] tensorValues,
+        int numDimensions,
+        double[][] domain,
+        int[] nNodes,
+        int maxRank = 10,
+        double tolerance = 1e-6)
+    {
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        long expected = 1;
+        for (int i = 0; i < numDimensions; i++) expected = checked(expected * nNodes[i]);
+        if (tensorValues.LongLength != expected)
+            throw new ArgumentException(
+                $"tensorValues has shape mismatch: length {tensorValues.LongLength} but expected Π nNodes = {expected}");
+        for (int i = 0; i < tensorValues.Length; i++)
+            if (!double.IsFinite(tensorValues[i]))
+                throw new ArgumentException($"tensorValues[{i}] is NaN or Infinity (must be finite)");
+
+        var valueCores = TensorTrainExtrude.FromValuesTtSvd(tensorValues, nNodes, maxRank, tolerance);
+        var coeffCores = TensorTrainKernel.ValueToCoeffCores(valueCores);
+
+        var ttRanks = new int[numDimensions + 1];
+        ttRanks[0] = 1;
+        for (int i = 0; i < numDimensions; i++) ttRanks[i + 1] = coeffCores[i].RRight;
+
+        var tt = new ChebyshevTT(
+            numDimensions: numDimensions,
+            domain: domain.Select(d => (double[])d.Clone()).ToArray(),
+            nNodes: (int[])nNodes.Clone(),
+            maxRank: maxRank,
+            tolerance: tolerance,
+            maxSweeps: 0,
+            coeffCores: coeffCores,
+            ttRanks: ttRanks,
+            buildTime: 0.0,
+            totalBuildEvals: 0);
+        tt.Method = "svd";
+        return tt;
     }
 
     /// <summary>
