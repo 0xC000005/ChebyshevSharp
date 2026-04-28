@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### PyChebyshev parity: v0.12.0
 
-#### Added — Error-Driven Construction (Python v0.11.0)
+#### Added — Error-Driven Construction
 
 - `ChebyshevApproximation` and `ChebyshevSpline` constructors accept
   `errorThreshold` and `maxN` parameters. `nNodes` may be `int?[]` with
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `double[] ErrorEstimatePerDim()` public method (was internal in
   Python; exposed here for symmetry with the new auto-N infrastructure).
 
-#### Added — Special Points (Python v0.12.0)
+#### Added — Special Points
 
 - `ChebyshevSpline.WithSpecialPoints(...)` static factory: kink
   declaration with `specialPoints` (mirrors Python's `special_points` kwarg

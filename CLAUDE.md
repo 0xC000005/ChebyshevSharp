@@ -13,10 +13,10 @@ Always consult the Python source when implementing or verifying behavior.
 
 ## Status
 
-**Feature-complete against PyChebyshev v0.12.0** (Phase 5 of the v0.20.1 port complete; see
+**Feature-complete against PyChebyshev v0.12.0** (Phase 1 of the 6-phase v0.20.1 port complete; see
 `docs/superpowers/specs/2026-04-27-pychebyshev-v0.20.1-port-design.md`).
 All four public classes (`ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`,
-`ChebyshevTT`) mirror the Python API surface. `dotnet test` runs **663/663** passing.
+`ChebyshevTT`) mirror the Python API surface. `dotnet test` runs **666/666** passing.
 
 See `skip_csharp.txt` for the per-phase Python-parity vs. C#-specific test breakdown.
 
