@@ -401,3 +401,118 @@ public class SaveLoadApiTests
         finally { if (File.Exists(path)) File.Delete(path); }
     }
 }
+
+public class SplineBinaryTests
+{
+    private static string TempPcb() => Path.Combine(
+        Path.GetTempPath(), $"cheb_test_{Guid.NewGuid():N}.pcb");
+
+    [Fact]
+    public void Test_round_trip_1d_abs_with_kink()
+    {
+        // Spec's worked example: |x| on [-1,1], n=[3], knots=[[0.0]].
+        var spline = new ChebyshevSpline(
+            (p, _) => Math.Abs(p[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 3 },
+            knots: new[] { new[] { 0.0 } });
+        spline.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            spline.Save(path, format: "binary");
+            var loaded = ChebyshevSpline.Load(path);
+            foreach (double x in new[] { -0.7, -0.1, 0.1, 0.6 })
+            {
+                double expected = spline.Eval(new[] { x }, new[] { 0 });
+                double actual = loaded.Eval(new[] { x }, new[] { 0 });
+                Assert.Equal(expected, actual, precision: 12);
+            }
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_round_trip_2d_multi_knot()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => Math.Abs(p[0]) + p[1] * p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 4 },
+            knots: new[] { new[] { 0.0 }, new[] { -0.5, 0.5 } });
+        spline.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            spline.Save(path, format: "binary");
+            var loaded = ChebyshevSpline.Load(path);
+            double[] pt = { 0.3, 0.2 };
+            double expected = spline.Eval(pt, new[] { 0, 0 });
+            double actual = loaded.Eval(pt, new[] { 0, 0 });
+            Assert.Equal(expected, actual, precision: 10);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_save_binary_throws_for_nested_nNodes()
+    {
+        // Phase 1's nested-nNodes form via specialPoints + per-piece counts.
+        var spline = new ChebyshevSpline(
+            (p, _) => Math.Abs(p[0]), 1,
+            new[] { new[] { -1.0, 1.0 } },
+            nNodesNested: new[] { new[] { 3, 5 } }, // [[3, 5]] — nested form
+            knots: new[] { new[] { 0.0 } });
+        spline.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            var ex = Assert.Throws<NotSupportedException>(() =>
+                spline.Save(path, format: "binary"));
+            Assert.Contains("nested", ex.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("json", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_save_binary_unbuilt_throws()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => p[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 3 },
+            knots: new[] { Array.Empty<double>() });
+        // Skip Build() — saving must throw.
+        string path = TempPcb();
+        try
+        {
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                spline.Save(path, format: "binary"));
+            Assert.Contains("Build", ex.Message);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
+    public void Test_load_routes_to_spline_for_class_tag_2()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => Math.Abs(p[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 3 },
+            knots: new[] { new[] { 0.0 } });
+        spline.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            spline.Save(path, format: "binary");
+            // Loading via ChebyshevApproximation.Load should reject (wrong class_tag).
+            var ex = Assert.Throws<InvalidDataException>(() =>
+                ChebyshevApproximation.Load(path));
+            Assert.Contains("class_tag", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+}

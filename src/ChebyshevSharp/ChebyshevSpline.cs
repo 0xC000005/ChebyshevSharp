@@ -667,10 +667,37 @@ public class ChebyshevSpline
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Save the built spline to a file using JSON serialization.
+    /// Save the built spline to a file.
     /// </summary>
     /// <param name="path">Destination file path.</param>
-    public void Save(string path)
+    /// <param name="format">"json" (default) or "binary". Binary requires
+    /// flat (non-nested) nNodes — throws NotSupportedException otherwise.</param>
+    public void Save(string path, string format = "json")
+    {
+        if (!Built)
+            throw new InvalidOperationException(
+                "Cannot save an unbuilt spline. Call Build() first.");
+
+        switch (format)
+        {
+            case "json":
+                SaveJson(path);
+                break;
+            case "binary":
+                if (NestedNNodes != null)
+                    throw new NotSupportedException(
+                        "binary format requires flat n_nodes (shared across pieces); " +
+                        "use format='json' for nested-n_nodes splines");
+                SaveBinary(path);
+                break;
+            default:
+                throw new ArgumentException(
+                    $"Unknown format '{format}'. Expected 'json' or 'binary'.",
+                    nameof(format));
+        }
+    }
+
+    private void SaveJson(string path)
     {
         if (!Built)
             throw new InvalidOperationException(
@@ -715,12 +742,44 @@ public class ChebyshevSpline
         File.WriteAllText(path, json);
     }
 
+    private void SaveBinary(string path)
+    {
+        using var fs = File.Create(path);
+        using var w = new BinaryWriter(fs);
+        Internal.PcbFormat.WriteHeader(w, Internal.PcbFormat.ClassTagSpline);
+        var pieceTensors = Pieces.Select(p => p!.TensorValues!).ToArray();
+        Internal.PcbFormat.WriteSplineBody(w, Domain, NNodes, Knots, pieceTensors);
+    }
+
     /// <summary>
     /// Load a previously saved spline from a file.
+    /// Auto-detects binary (.pcb magic) vs JSON format.
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored spline.</returns>
     public static ChebyshevSpline Load(string path)
+    {
+        if (Internal.PcbFormat.IsBinary(path))
+            return LoadBinary(path);
+        return LoadJson(path);
+    }
+
+    private static ChebyshevSpline LoadBinary(string path)
+    {
+        using var fs = File.OpenRead(path);
+        using var r = new BinaryReader(fs);
+        var header = Internal.PcbFormat.ReadHeader(r);
+        if (header.ClassTag != Internal.PcbFormat.ClassTagSpline)
+            throw new InvalidDataException(
+                $"binary file class_tag={header.ClassTag} is not ChebyshevSpline " +
+                $"(tag {Internal.PcbFormat.ClassTagSpline}); " +
+                $"call ChebyshevApproximation.Load instead if class_tag={Internal.PcbFormat.ClassTagApproximation}");
+
+        var (domain, nNodes, knots, pieceTensors) = Internal.PcbFormat.ReadSplineBody(r);
+        return FromValues(pieceTensors, domain.Length, domain, nNodes, knots);
+    }
+
+    private static ChebyshevSpline LoadJson(string path)
     {
         string json = File.ReadAllText(path);
         var state = JsonSerializer.Deserialize<SplineSerializationState>(json)

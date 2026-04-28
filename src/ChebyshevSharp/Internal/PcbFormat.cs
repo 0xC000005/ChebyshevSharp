@@ -166,4 +166,135 @@ internal static class PcbFormat
         for (int i = 0; i < total; i++) tensor[i] = r.ReadDouble();
         return (domain, nNodes, tensor);
     }
+
+    /// <summary>
+    /// Writes the body of a class_tag=2 (Spline) record.
+    /// Mirrors Python <c>_binary.write_spline</c> lines 289-365.
+    ///
+    /// Layout (all little-endian):
+    ///   uint32    d               — number of dimensions
+    ///   f64[d]    lo              — domain lower bounds
+    ///   f64[d]    hi              — domain upper bounds
+    ///   uint32[d] n_nodes         — node count per dimension (shared across pieces)
+    ///   uint32[d] num_knots       — knot count per dimension
+    ///   f64[sum(num_knots)] knots — all knots concatenated in dim order
+    ///   uint32    num_pieces      — total number of pieces = prod(num_knots[i]+1)
+    ///   f64[prod(n_nodes)] * num_pieces — tensor values for each piece (C-order)
+    /// </summary>
+    public static void WriteSplineBody(
+        BinaryWriter w,
+        double[][] domain, int[] nNodes,
+        double[][] knotsPerDim,
+        double[][] pieceTensorValues)
+    {
+        int d = domain.Length;
+        if (d != nNodes.Length || d != knotsPerDim.Length)
+            throw new ArgumentException(
+                $"dimension mismatch: domain.Length={d}, nNodes.Length={nNodes.Length}, " +
+                $"knotsPerDim.Length={knotsPerDim.Length}");
+
+        w.Write((uint)d);
+        for (int i = 0; i < d; i++) w.Write(domain[i][0]);
+        for (int i = 0; i < d; i++) w.Write(domain[i][1]);
+        for (int i = 0; i < d; i++) w.Write((uint)nNodes[i]);
+        for (int i = 0; i < d; i++) w.Write((uint)knotsPerDim[i].Length);
+
+        for (int i = 0; i < d; i++)
+            for (int j = 0; j < knotsPerDim[i].Length; j++)
+                w.Write(knotsPerDim[i][j]);
+
+        int expectedPieces = 1;
+        for (int i = 0; i < d; i++) expectedPieces *= (knotsPerDim[i].Length + 1);
+        if (pieceTensorValues.Length != expectedPieces)
+            throw new ArgumentException(
+                $"pieceTensorValues.Length={pieceTensorValues.Length} does not match " +
+                $"prod(num_knots[i]+1)={expectedPieces}");
+
+        w.Write((uint)expectedPieces);
+        int perPieceFloats = 1;
+        for (int i = 0; i < d; i++) perPieceFloats *= nNodes[i];
+        foreach (var piece in pieceTensorValues)
+        {
+            if (piece.Length != perPieceFloats)
+                throw new ArgumentException(
+                    $"piece tensor length {piece.Length} != prod(nNodes)={perPieceFloats}");
+            for (int j = 0; j < piece.Length; j++) w.Write(piece[j]);
+        }
+    }
+
+    /// <summary>
+    /// Reads the body of a class_tag=2 (Spline) record.
+    /// Mirrors Python <c>_binary.read_spline</c> lines 368-421.
+    /// Must be called after <see cref="ReadHeader"/> has consumed the 12-byte header.
+    /// </summary>
+    /// <returns>
+    /// A tuple of (domain, nNodes, knotsPerDim, pieceTensors).
+    /// </returns>
+    public static (double[][] domain, int[] nNodes, double[][] knotsPerDim, double[][] pieceTensors)
+        ReadSplineBody(BinaryReader r)
+    {
+        uint d32 = r.ReadUInt32();
+        if (d32 < 1)
+            throw new InvalidDataException($"num_dimensions must be >= 1, got {d32}");
+        int d = checked((int)d32);
+
+        double[] lo = new double[d];
+        for (int i = 0; i < d; i++) lo[i] = r.ReadDouble();
+        double[] hi = new double[d];
+        for (int i = 0; i < d; i++) hi[i] = r.ReadDouble();
+        var domain = new double[d][];
+        for (int i = 0; i < d; i++)
+        {
+            if (lo[i] >= hi[i])
+                throw new InvalidDataException($"domain[{i}]: lo ({lo[i]}) must be < hi ({hi[i]})");
+            domain[i] = new[] { lo[i], hi[i] };
+        }
+
+        int[] nNodes = new int[d];
+        int perPieceFloats = 1;
+        for (int i = 0; i < d; i++)
+        {
+            uint n32 = r.ReadUInt32();
+            if (n32 < 1)
+                throw new InvalidDataException($"n_nodes[{i}] must be >= 1, got {n32}");
+            nNodes[i] = checked((int)n32);
+            perPieceFloats = checked(perPieceFloats * nNodes[i]);
+        }
+
+        int[] numKnots = new int[d];
+        int expectedPieces = 1;
+        for (int i = 0; i < d; i++)
+        {
+            uint k32 = r.ReadUInt32();
+            numKnots[i] = checked((int)k32);
+            expectedPieces = checked(expectedPieces * (numKnots[i] + 1));
+        }
+
+        var knots = new double[d][];
+        for (int i = 0; i < d; i++)
+        {
+            knots[i] = new double[numKnots[i]];
+            for (int j = 0; j < numKnots[i]; j++) knots[i][j] = r.ReadDouble();
+            for (int j = 1; j < numKnots[i]; j++)
+            {
+                if (knots[i][j - 1] >= knots[i][j])
+                    throw new InvalidDataException(
+                        $"knots in dim {i} not strictly ascending");
+            }
+        }
+
+        uint pieceCount = r.ReadUInt32();
+        if (pieceCount != expectedPieces)
+            throw new InvalidDataException(
+                $"num_pieces={pieceCount} does not match prod(num_knots+1)={expectedPieces}");
+
+        var pieces = new double[expectedPieces][];
+        for (int p = 0; p < expectedPieces; p++)
+        {
+            pieces[p] = new double[perPieceFloats];
+            for (int j = 0; j < perPieceFloats; j++) pieces[p][j] = r.ReadDouble();
+        }
+
+        return (domain, nNodes, knots, pieces);
+    }
 }
