@@ -1107,7 +1107,7 @@ public class ChebyshevTT
 
         var state = new TTSerializationState
         {
-            Version = "0.6.0",
+            Version = GetLibraryVersion(),
             Method = Method,
             NumDimensions = _numDimensions,
             Domain = _domain,
@@ -1201,7 +1201,9 @@ public class ChebyshevTT
     {
         var asm = typeof(ChebyshevTT).Assembly;
         var ver = asm.GetName().Version;
-        return ver != null ? ver.ToString() : "0.0.0";
+        // Use 3-part Major.Minor.Build form to match JSON serialization convention
+        // (csproj <Version> is 3-part; .NET pads AssemblyVersion to 4 parts internally).
+        return ver != null ? ver.ToString(3) : "0.0.0";
     }
 
     // ------------------------------------------------------------------

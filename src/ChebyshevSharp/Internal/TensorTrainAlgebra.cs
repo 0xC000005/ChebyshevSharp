@@ -94,6 +94,15 @@ internal static class TensorTrainAlgebra
     /// Block-diagonal stacking of TT cores → exact TT representation of the sum.
     /// Mirror of Python's <c>_tt_add_cores</c> (_algebra.py:63).
     /// </summary>
+    /// <remarks>
+    /// The d==1 path requires identical (RLeft, NNodes, RRight) on both inputs
+    /// because there is no rank to absorb a mismatch into — the lone core is the
+    /// whole representation. The multi-dim path block-diagonal-stacks regardless
+    /// of input ranks: per-core nNodes still must match (validated below), but
+    /// rank differences are absorbed into the new combined ranks (rA + rB) at
+    /// each interior bond. Output ranks may exceed maxRank; callers typically
+    /// follow with <see cref="RoundCores"/>.
+    /// </remarks>
     internal static TensorTrainKernel.TtCore[] AddCores(
         TensorTrainKernel.TtCore[] coresA,
         TensorTrainKernel.TtCore[] coresB)

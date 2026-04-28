@@ -229,7 +229,7 @@ public class CompletionTests
         var sw = System.Diagnostics.Stopwatch.StartNew();
         tt.RunCompletion(tolerance: 1e-20, maxIter: 1, verbose: false);
         sw.Stop();
-        Assert.True(sw.Elapsed.TotalSeconds < 30, "RunCompletion(maxIter=1) must not hang");
+        Assert.True(sw.Elapsed.TotalSeconds < 10, "RunCompletion(maxIter=1) must not hang");
     }
 
     [Fact]
