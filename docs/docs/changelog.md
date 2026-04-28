@@ -11,6 +11,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-28
+
+### PyChebyshev parity: v0.18.0
+
+#### Added — TT canonicalization + ALS
+
+- `ChebyshevTT.OrthLeft(int position)` and `OrthRight(int position)` —
+  in-place QR/LQ canonicalization of the TT chain.
+- `ChebyshevTT.InnerProduct(ChebyshevTT)` — Frobenius inner product of
+  two TTs' Chebyshev coefficient tensors.
+- `Build(method: "als")` — rank-adaptive alternating least-squares build
+  mode. Starts at rank 1 and grows by 1 per outer iteration until the
+  grid residual falls below `tolerance` or rank reaches `maxRank`.
+- `ChebyshevTT.RunCompletion(double tolerance, int maxIter)` — refine an
+  already-built TT in place via fixed-rank ALS sweeps.
+- New `Method` property mirroring Python's `tt.method` attribute.
+- New `BuildWarning` property — set when ALS hits `maxRank` before
+  tolerance is satisfied (replaces Python's `RuntimeWarning`).
+
+#### Added — TT factories, materialization, slicing, algebra
+
+- `ChebyshevTT.Nodes(numDim, domain, nNodes)` — static factory matching
+  `ChebyshevApproximation.Nodes`.
+- `ChebyshevTT.FromValues(tensorValues, ...)` — TT-SVD compress a
+  precomputed dense tensor into a TT (skips TT-Cross).
+- `ChebyshevTT.ToDense()` — materialize the TT chain into a flat row-major
+  dense tensor. Throws `OverflowException` on huge shapes.
+- `ChebyshevTT.Slice(int dim, double value)` — fix a dimension at a value,
+  returning a lower-dim TT.
+- `ChebyshevTT.Extrude(int dim, (double, double), int)` — insert a new
+  dimension where the function is constant.
+- Operators `+`, `-`, scalar `*` and `/`, unary `-`. Binary operators
+  round to `max(maxRank_a, maxRank_b)` at default tolerance `1e-12`.
+- In-place methods `AddInPlace`, `SubInPlace`, `ScalarMulInPlace`,
+  `ScalarDivInPlace`, `NegateInPlace`, `RoundInPlace(tolerance)`.
+
+#### Changed
+
+- TT JSON serialization format bumped to `"0.6.0"` to persist `Method`.
+  Loading 0.5.0 files is supported (Method backfills to null).
+- `Internal/TensorTrainKernel.cs` split into kernel + algebra + extrude
+  modules. Public API and behavior unchanged.
+
+#### Skipped
+
+- Multi-dim variadic forms of `Extrude`/`Slice` (Python accepts a list
+  of tuples). C# surface is single-dim per call; chain calls for
+  multi-dim. No information lost; cleaner overload set.
+
 ## [0.5.0] - 2026-04-27
 
 ### PyChebyshev parity: v0.12.0

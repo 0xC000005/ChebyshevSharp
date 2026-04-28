@@ -1,0 +1,1 @@
+{"Version":"0.5.0","NumDimensions":1,"Domain":[[-1,1]],"NNodes":[4],"MaxRank":10,"Tolerance":1e-06,"MaxSweeps":10,"TtRanks":[1,1],"BuildTime":0.001,"TotalBuildEvals":4,"Cores":[{"RLeft":1,"NNodes":4,"RRight":1,"Data":[0.0,0.0,0.0,0.0]}]}

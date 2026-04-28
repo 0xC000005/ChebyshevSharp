@@ -234,6 +234,18 @@ public static class TestFixtures
     public static double Bs5DFunc(double[] x) =>
         BlackScholes.BsCallPrice(S: x[0], K: x[1], T: x[2], r: x[4], sigma: x[3], q: 0.02);
 
+    private static readonly Lazy<ChebyshevTT> _ttAlsSin3D = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            p => Math.Sin(p[0]) + Math.Sin(p[1]) + Math.Sin(p[2]),
+            3, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10, 10 }, tolerance: 1e-3, maxRank: 5);
+        tt.Build(verbose: false, seed: 42, method: "als");
+        return tt;
+    });
+
+    public static ChebyshevTT TtAlsSin3D => _ttAlsSin3D.Value;
+
     private static readonly Lazy<ChebyshevTT> _ttSin3D = new(() =>
     {
         var tt = new ChebyshevTT(
@@ -272,6 +284,29 @@ public static class TestFixtures
     public static ChebyshevTT TtSin3D => _ttSin3D.Value;
     public static ChebyshevTT TtSin3DSvd => _ttSin3DSvd.Value;
     public static ChebyshevTT TtBs5D => _ttBs5D.Value;
+
+    private static readonly Lazy<ChebyshevTT> _ttAlgebraF = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            p => Math.Sin(p[0]) + 0.5 * p[1],
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 }, tolerance: 1e-6, maxRank: 6);
+        tt.Build(verbose: false, seed: 42);
+        return tt;
+    });
+
+    private static readonly Lazy<ChebyshevTT> _ttAlgebraG = new(() =>
+    {
+        var tt = new ChebyshevTT(
+            p => Math.Cos(p[0]) * p[1],
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 }, tolerance: 1e-6, maxRank: 6);
+        tt.Build(verbose: false, seed: 7);
+        return tt;
+    });
+
+    public static ChebyshevTT TtAlgebraF => _ttAlgebraF.Value;
+    public static ChebyshevTT TtAlgebraG => _ttAlgebraG.Value;
 
     // ---------------------------------------------------------------
     // Assertion helpers

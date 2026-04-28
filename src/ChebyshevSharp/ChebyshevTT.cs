@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -32,6 +33,16 @@ public class ChebyshevTT
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
+
+    /// <summary>Warning emitted by Build() if maxRank was reached before tolerance was satisfied during ALS. Null otherwise.</summary>
+    public string? BuildWarning { get; private set; }
+
+    /// <summary>
+    /// Build method that produced the current cores: <c>"cross"</c>, <c>"svd"</c>, or <c>"als"</c>.
+    /// <c>null</c> only before <see cref="Build"/> is called or after <see cref="Load"/> from a
+    /// pre-v0.6.0 JSON file that predates this property.
+    /// </summary>
+    public string? Method { get; private set; }
 
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions => _numDimensions;
@@ -148,13 +159,15 @@ public class ChebyshevTT
     /// Build TT approximation and convert to Chebyshev coefficient cores.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
-    /// <param name="seed">Random seed for TT-Cross initialization. Ignored for method="svd".</param>
-    /// <param name="method">"cross" (default) or "svd".</param>
-    /// <exception cref="ArgumentException">If method is not "cross" or "svd".</exception>
+    /// <param name="seed">Random seed for TT-Cross/ALS initialization. Ignored for method="svd".</param>
+    /// <param name="method">"cross" (default), "svd", or "als".</param>
+    /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als".</exception>
     public void Build(bool verbose = true, int? seed = null, string method = "cross")
     {
-        if (method != "cross" && method != "svd")
-            throw new ArgumentException($"method must be 'cross' or 'svd', got '{method}'");
+        if (method != "cross" && method != "svd" && method != "als")
+            throw new ArgumentException($"method must be 'cross', 'svd', or 'als', got '{method}'");
+        Method = method;
+        BuildWarning = null;
 
         var sw = Stopwatch.StartNew();
         _cachedErrorEstimate = null;
@@ -183,10 +196,21 @@ public class ChebyshevTT
             (valueCores, nEvals) = TensorTrainKernel.TtCross(
                 _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed);
         }
-        else
+        else if (method == "svd")
         {
             (valueCores, nEvals) = TensorTrainKernel.TtSvd(
                 _function!, grids, _maxRank, _tolerance, verbose);
+        }
+        else  // method == "als"
+        {
+            if (verbose) Console.WriteLine("  Running TT-ALS...");
+            bool hitCap;
+            (valueCores, nEvals, hitCap) = TensorTrainKernel.AlsAdaptiveRank(
+                _function!, grids, _maxRank, _tolerance, seed, verbose);
+            if (hitCap)
+                BuildWarning =
+                    $"maxRank={_maxRank} reached before ALS tolerance={_tolerance:e2} satisfied. " +
+                    "Increase maxRank or relax tolerance.";
         }
         _totalBuildEvals = nEvals;
 
@@ -549,6 +573,506 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Canonicalization (Phase 2 — PyChebyshev v0.13)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Left-orthogonalize cores [0..position-1] in place by absorbing each
+    /// core's R factor into the next core's left bond. The represented tensor
+    /// is unchanged.
+    /// </summary>
+    /// <param name="position">Pivot index, must be in [1, NumDimensions - 1].</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If position is outside [1, NumDimensions - 1].</exception>
+    public void OrthLeft(int position)
+    {
+        CheckBuilt();
+        if (position < 1 || position >= _numDimensions)
+            throw new ArgumentOutOfRangeException(nameof(position),
+                $"position must be in [1, {_numDimensions - 1}] for OrthLeft, got {position}");
+        TensorTrainKernel.OrthLeftSweep(_coeffCores!, position);
+        _cachedErrorEstimate = null;
+        // TT ranks may change (QR reduces rank to min(rL*n, rR)); refresh.
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores![i].RRight;
+    }
+
+    /// <summary>
+    /// Right-orthogonalize cores [position+1..NumDimensions-1] in place by
+    /// absorbing each core's L factor into the previous core's right bond.
+    /// The represented tensor is unchanged.
+    /// </summary>
+    /// <param name="position">Pivot index, must be in [0, NumDimensions - 2].</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If position is outside [0, NumDimensions - 2].</exception>
+    public void OrthRight(int position)
+    {
+        CheckBuilt();
+        if (position < 0 || position >= _numDimensions - 1)
+            throw new ArgumentOutOfRangeException(nameof(position),
+                $"position must be in [0, {_numDimensions - 2}] for OrthRight, got {position}");
+        TensorTrainKernel.OrthRightSweep(_coeffCores!, position);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores![i].RRight;
+    }
+
+    /// <summary>
+    /// Frobenius inner product of the Chebyshev coefficient tensors of two TTs.
+    /// Both TTs must share the same <see cref="NumDimensions"/>, <see cref="Domain"/>,
+    /// and <see cref="NNodes"/>.
+    /// </summary>
+    /// <param name="other">The other TT.</param>
+    /// <returns>Σ_{i_1,…,i_d} C_self[i] * C_other[i].</returns>
+    /// <exception cref="ArgumentNullException">If <paramref name="other"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">If either TT has not been built.</exception>
+    /// <exception cref="ArgumentException">If domain or nNodes do not match.</exception>
+    public double InnerProduct(ChebyshevTT other)
+    {
+        if (other is null)
+            throw new ArgumentNullException(nameof(other));
+        CheckBuilt();
+        other.CheckBuilt();
+        if (other._numDimensions != _numDimensions)
+            throw new ArgumentException(
+                $"InnerProduct requires matching numDimensions; got {_numDimensions} vs {other._numDimensions}");
+        for (int d = 0; d < _numDimensions; d++)
+        {
+            if (other._nNodes[d] != _nNodes[d])
+                throw new ArgumentException(
+                    $"InnerProduct requires matching nNodes; got [{string.Join(", ", _nNodes)}] vs [{string.Join(", ", other._nNodes)}]");
+            if (other._domain[d][0] != _domain[d][0] || other._domain[d][1] != _domain[d][1])
+                throw new ArgumentException(
+                    $"InnerProduct requires matching domain at dim {d}; got [{_domain[d][0]}, {_domain[d][1]}] vs [{other._domain[d][0]}, {other._domain[d][1]}]");
+        }
+        return TensorTrainAlgebra.InnerProductCores(_coeffCores!, other._coeffCores!);
+    }
+
+    /// <summary>
+    /// Refine the TT at its current rank via ALS sweeps. Works on any built TT
+    /// (from "cross", "svd", or "als"). Rank does not grow; only per-core
+    /// coefficients are refined.
+    /// </summary>
+    /// <param name="tolerance">Stop when inner-sweep relative change falls below this.</param>
+    /// <param name="maxIter">Maximum number of outer ALS sweeps.</param>
+    /// <param name="verbose">Print per-sweep residuals.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called or if <c>Function</c> is null (loaded TT).</exception>
+    public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
+    {
+        CheckBuilt();
+        if (_function == null)
+            throw new InvalidOperationException(
+                "RunCompletion requires Function to be callable; the TT was loaded from a source without the original function.");
+
+        // Convert coefficient cores back to value cores at Chebyshev Type I nodes.
+        var valueCores = new TensorTrainKernel.TtCore[_numDimensions];
+        for (int k = 0; k < _numDimensions; k++)
+            valueCores[k] = TensorTrainKernel.CoeffCoreToValueCore(_coeffCores![k]);
+
+        // Rebuild the grids that Build() used.
+        var grids = new double[_numDimensions][];
+        for (int k = 0; k < _numDimensions; k++)
+            grids[k] = BarycentricKernel.MakeNodesForDim(_domain[k][0], _domain[k][1], _nNodes[k]);
+
+        // Cache by mixed-radix flat index.
+        var cache = new Dictionary<long, double>();
+        long[] strides = new long[_numDimensions];
+        strides[_numDimensions - 1] = 1;
+        for (int i = _numDimensions - 2; i >= 0; i--) strides[i] = strides[i + 1] * _nNodes[i + 1];
+
+        Func<int[], double> evalsAt = idx =>
+        {
+            long key = 0;
+            for (int i = 0; i < _numDimensions; i++) key += idx[i] * strides[i];
+            if (!cache.TryGetValue(key, out double v))
+            {
+                var pt = new double[_numDimensions];
+                for (int i = 0; i < _numDimensions; i++) pt[i] = grids[i][idx[i]];
+                v = _function(pt);
+                cache[key] = v;
+            }
+            return v;
+        };
+
+        TensorTrainKernel.AlsFixedRankSweep(
+            valueCores, evalsAt, _nNodes, tolerance: tolerance, maxIter: maxIter, verbose: verbose);
+
+        // Convert back to coefficient cores.
+        _coeffCores = TensorTrainKernel.ValueToCoeffCores(valueCores);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    // ------------------------------------------------------------------
+    // Static factories (Phase 2 — PyChebyshev v0.18)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Compute the Chebyshev Type I node positions per dimension scaled to
+    /// the user's domain. Static factory matching <see cref="ChebyshevApproximation.Nodes"/>.
+    /// </summary>
+    /// <param name="numDimensions">Number of dimensions.</param>
+    /// <param name="domain">Bounds [lo, hi] per dimension.</param>
+    /// <param name="nNodes">Number of nodes per dimension.</param>
+    /// <returns>(NodesPerDim[d][j], Shape[d]) — node arrays in ascending order.</returns>
+    public static (double[][] NodesPerDim, int[] Shape) Nodes(
+        int numDimensions, double[][] domain, int[] nNodes)
+    {
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+
+        var nodesPerDim = new double[numDimensions][];
+        for (int d = 0; d < numDimensions; d++)
+            nodesPerDim[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+        return (nodesPerDim, (int[])nNodes.Clone());
+    }
+
+    /// <summary>
+    /// Build a TT directly from a precomputed dense tensor (skips function evaluation).
+    /// Uses TT-SVD for compression. The resulting TT has <c>Function = null</c>.
+    /// </summary>
+    /// <param name="tensorValues">Flat row-major dense tensor of length Π nNodes.</param>
+    /// <param name="numDimensions">Number of dimensions.</param>
+    /// <param name="domain">Bounds [lo, hi] per dimension.</param>
+    /// <param name="nNodes">Number of nodes per dimension.</param>
+    /// <param name="maxRank">Maximum TT rank (default 10).</param>
+    /// <param name="tolerance">SVD truncation tolerance (default 1e-6).</param>
+    /// <exception cref="ArgumentException">If tensorValues length doesn't match Π nNodes, or contains NaN/Infinity.</exception>
+    public static ChebyshevTT FromValues(
+        double[] tensorValues,
+        int numDimensions,
+        double[][] domain,
+        int[] nNodes,
+        int maxRank = 10,
+        double tolerance = 1e-6)
+    {
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        long expected = 1;
+        for (int i = 0; i < numDimensions; i++) expected = checked(expected * nNodes[i]);
+        if (tensorValues.LongLength != expected)
+            throw new ArgumentException(
+                $"tensorValues has shape mismatch: length {tensorValues.LongLength} but expected Π nNodes = {expected}");
+        for (int i = 0; i < tensorValues.Length; i++)
+            if (!double.IsFinite(tensorValues[i]))
+                throw new ArgumentException($"tensorValues[{i}] is NaN or Infinity (must be finite)");
+
+        var valueCores = TensorTrainExtrude.FromValuesTtSvd(tensorValues, nNodes, maxRank, tolerance);
+        var coeffCores = TensorTrainKernel.ValueToCoeffCores(valueCores);
+
+        var ttRanks = new int[numDimensions + 1];
+        ttRanks[0] = 1;
+        for (int i = 0; i < numDimensions; i++) ttRanks[i + 1] = coeffCores[i].RRight;
+
+        var tt = new ChebyshevTT(
+            numDimensions: numDimensions,
+            domain: domain.Select(d => (double[])d.Clone()).ToArray(),
+            nNodes: (int[])nNodes.Clone(),
+            maxRank: maxRank,
+            tolerance: tolerance,
+            maxSweeps: 0,
+            coeffCores: coeffCores,
+            ttRanks: ttRanks,
+            buildTime: 0.0,
+            totalBuildEvals: 0);
+        tt.Method = "svd";
+        return tt;
+    }
+
+    /// <summary>
+    /// Internal accessor for tests: return (rLeft, nNodes, rRight, flat data) of
+    /// core <paramref name="k"/>. Exposes the live data buffer (not a copy).
+    /// </summary>
+    internal (int RLeft, int NNodes, int RRight, double[] Data) GetCoreShape(int k)
+    {
+        CheckBuilt();
+        var c = _coeffCores![k];
+        return (c.RLeft, c.NNodes, c.RRight, c.Data);
+    }
+
+    // ------------------------------------------------------------------
+    // Materialization, extrusion, slicing (Phase 2 — PyChebyshev v0.18)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Materialize the TT chain into a full row-major dense tensor.
+    /// Length is Π NNodes; <c>dense[flat]</c> equals <c>Eval(point_at_grid_idx)</c>
+    /// where flat is the row-major index into the grid shape.
+    /// Use sparingly: storage is Π NNodes doubles.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="OverflowException">If Π NNodes * 8 exceeds <c>int.MaxValue</c>.</exception>
+    public double[] ToDense()
+    {
+        CheckBuilt();
+        long total = 1;
+        for (int i = 0; i < _numDimensions; i++)
+            total = checked(total * _nNodes[i]);
+        if (total * 8 > int.MaxValue)
+            throw new OverflowException(
+                $"ToDense would allocate {total} doubles ({total * 8} bytes), exceeding int.MaxValue. " +
+                "Use ToDense for low-dimensional inspection only.");
+        return TensorTrainExtrude.ToDenseEinsumChain(_coeffCores!, _nNodes);
+    }
+
+    /// <summary>
+    /// Insert a new dimension at index <paramref name="dim"/> where the function
+    /// is constant. The extruded TT evaluates identically to the original over
+    /// the existing dimensions, regardless of the new dimension's coordinate.
+    /// </summary>
+    /// <param name="dim">Insertion index, 0 &lt;= dim &lt;= NumDimensions.</param>
+    /// <param name="newDomain">Domain (lo, hi) for the new dimension.</param>
+    /// <param name="newN">Number of nodes for the new dimension.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If dim is outside [0, NumDimensions].</exception>
+    /// <exception cref="ArgumentException">If newDomain.Lo >= newDomain.Hi, or newN &lt; 2.</exception>
+    public ChebyshevTT Extrude(int dim, (double Lo, double Hi) newDomain, int newN)
+    {
+        CheckBuilt();
+        if (newDomain.Lo >= newDomain.Hi)
+            throw new ArgumentException(
+                $"newDomain bounds must satisfy lo < hi; got ({newDomain.Lo}, {newDomain.Hi})",
+                nameof(newDomain));
+        var newCores = TensorTrainExtrude.ExtrudeCores(_coeffCores!, dim, newN);
+        var newDomainArr = new double[_numDimensions + 1][];
+        for (int k = 0; k < dim; k++) newDomainArr[k] = (double[])_domain[k].Clone();
+        newDomainArr[dim] = new[] { newDomain.Lo, newDomain.Hi };
+        for (int k = dim; k < _numDimensions; k++) newDomainArr[k + 1] = (double[])_domain[k].Clone();
+
+        var newNNodes = new int[_numDimensions + 1];
+        for (int k = 0; k < dim; k++) newNNodes[k] = _nNodes[k];
+        newNNodes[dim] = newN;
+        for (int k = dim; k < _numDimensions; k++) newNNodes[k + 1] = _nNodes[k];
+
+        return BuildResultFromCores(newCores, newDomainArr, newNNodes);
+    }
+
+    /// <summary>
+    /// Fix dimension <paramref name="dim"/> at <paramref name="value"/>, returning
+    /// a TT over the remaining (NumDimensions - 1) dimensions.
+    /// </summary>
+    /// <param name="dim">Dimension to slice, 0 &lt;= dim &lt; NumDimensions.</param>
+    /// <param name="value">Value at which to fix the dimension; must lie within the domain.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If dim is out of range or value is outside the domain.</exception>
+    /// <exception cref="InvalidOperationException">If NumDimensions == 1 (would produce 0D result).</exception>
+    public ChebyshevTT Slice(int dim, double value)
+    {
+        CheckBuilt();
+        if (dim < 0 || dim >= _numDimensions)
+            throw new ArgumentOutOfRangeException(nameof(dim),
+                $"dim={dim} out of range [0, {_numDimensions - 1}]");
+        double lo = _domain[dim][0], hi = _domain[dim][1];
+        if (value < lo || value > hi)
+            throw new ArgumentOutOfRangeException(nameof(value),
+                $"Slice value {value} for dim {dim} is outside domain [{lo}, {hi}]");
+        if (_numDimensions == 1)
+            throw new InvalidOperationException("Cannot slice a 1D TT (would produce 0D result).");
+
+        double[] nodes = BarycentricKernel.MakeNodesForDim(lo, hi, _nNodes[dim]);
+        var newCores = TensorTrainExtrude.SliceCores(_coeffCores!, dim, value, nodes);
+
+        var newDomain = new double[_numDimensions - 1][];
+        var newNNodes = new int[_numDimensions - 1];
+        int writeIdx = 0;
+        for (int k = 0; k < _numDimensions; k++)
+        {
+            if (k == dim) continue;
+            newDomain[writeIdx] = (double[])_domain[k].Clone();
+            newNNodes[writeIdx] = _nNodes[k];
+            writeIdx++;
+        }
+
+        return BuildResultFromCores(newCores, newDomain, newNNodes);
+    }
+
+    /// <summary>
+    /// Internal helper: assemble a fresh ChebyshevTT from a set of coefficient cores.
+    /// Used by Extrude, Slice, and the algebra operators (Tasks 9 + 10).
+    /// </summary>
+    internal ChebyshevTT BuildResultFromCores(
+        TensorTrainKernel.TtCore[] cores, double[][] newDomain, int[] newNNodes)
+    {
+        int newD = newNNodes.Length;
+        var ttRanks = new int[newD + 1];
+        ttRanks[0] = 1;
+        for (int i = 0; i < newD; i++) ttRanks[i + 1] = cores[i].RRight;
+        var tt = new ChebyshevTT(
+            numDimensions: newD,
+            domain: newDomain,
+            nNodes: newNNodes,
+            maxRank: _maxRank,
+            tolerance: _tolerance,
+            maxSweeps: _maxSweeps,
+            coeffCores: cores,
+            ttRanks: ttRanks,
+            buildTime: 0.0,
+            totalBuildEvals: 0);
+        tt.Method = Method;
+        return tt;
+    }
+
+    // ------------------------------------------------------------------
+    // Scalar algebra (Phase 2 — PyChebyshev v0.18.c)
+    // ------------------------------------------------------------------
+
+    /// <summary>Scalar multiplication: <c>tt * scalar</c>.</summary>
+    public static ChebyshevTT operator *(ChebyshevTT tt, double scalar)
+    {
+        if (tt is null) throw new ArgumentNullException(nameof(tt));
+        tt.CheckBuilt();
+        var newCores = TensorTrainAlgebra.ScalarMulCores(tt._coeffCores!, scalar);
+        var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])tt._nNodes.Clone();
+        return tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>Scalar multiplication: <c>scalar * tt</c>.</summary>
+    public static ChebyshevTT operator *(double scalar, ChebyshevTT tt) => tt * scalar;
+
+    /// <summary>Scalar division: <c>tt / scalar</c>.</summary>
+    /// <exception cref="DivideByZeroException">If <paramref name="scalar"/> is zero.</exception>
+    public static ChebyshevTT operator /(ChebyshevTT tt, double scalar)
+    {
+        if (scalar == 0.0)
+            throw new DivideByZeroException("Cannot divide ChebyshevTT by zero.");
+        return tt * (1.0 / scalar);
+    }
+
+    /// <summary>Unary negation: <c>-tt</c>.</summary>
+    public static ChebyshevTT operator -(ChebyshevTT tt)
+    {
+        if (tt is null) throw new ArgumentNullException(nameof(tt));
+        tt.CheckBuilt();
+        var newCores = TensorTrainAlgebra.NegateCores(tt._coeffCores!);
+        var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])tt._nNodes.Clone();
+        return tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>Scale this TT in place by <paramref name="scalar"/>.</summary>
+    public void ScalarMulInPlace(double scalar)
+    {
+        CheckBuilt();
+        TensorTrainAlgebra.ScalarMulCoresInPlace(_coeffCores!, scalar);
+        _cachedErrorEstimate = null;
+    }
+
+    /// <summary>Divide this TT in place by <paramref name="scalar"/>.</summary>
+    /// <exception cref="DivideByZeroException">If <paramref name="scalar"/> is zero.</exception>
+    public void ScalarDivInPlace(double scalar)
+    {
+        if (scalar == 0.0)
+            throw new DivideByZeroException("Cannot divide ChebyshevTT by zero.");
+        ScalarMulInPlace(1.0 / scalar);
+    }
+
+    /// <summary>Negate this TT in place.</summary>
+    public void NegateInPlace()
+    {
+        CheckBuilt();
+        TensorTrainAlgebra.NegateCoresInPlace(_coeffCores!);
+        _cachedErrorEstimate = null;
+    }
+
+    // ------------------------------------------------------------------
+    // Binary algebra (Phase 2 — PyChebyshev v0.18.d)
+    // ------------------------------------------------------------------
+
+    /// <summary>Default tolerance for TT-SVD rounding after addition/subtraction.</summary>
+    public const double DefaultRoundTolerance = 1e-12;
+
+    /// <summary>Validate two TTs share the same grid (numDim, domain, nNodes).</summary>
+    private static void CheckCompatible(ChebyshevTT a, ChebyshevTT b)
+    {
+        if (a is null) throw new ArgumentNullException(nameof(a));
+        if (b is null) throw new ArgumentNullException(nameof(b));
+        a.CheckBuilt();
+        b.CheckBuilt();
+        if (a._numDimensions != b._numDimensions)
+            throw new ArgumentException(
+                $"Dimension mismatch: {a._numDimensions} vs {b._numDimensions}");
+        for (int d = 0; d < a._numDimensions; d++)
+        {
+            if (a._nNodes[d] != b._nNodes[d])
+                throw new ArgumentException(
+                    $"nNodes mismatch at dim {d}: {a._nNodes[d]} vs {b._nNodes[d]}");
+            if (a._domain[d][0] != b._domain[d][0] || a._domain[d][1] != b._domain[d][1])
+                throw new ArgumentException(
+                    $"Domain mismatch at dim {d}: [{a._domain[d][0]}, {a._domain[d][1]}] vs [{b._domain[d][0]}, {b._domain[d][1]}]");
+        }
+    }
+
+    /// <summary>Binary addition: <c>a + b</c>. Result is rounded to the larger of the two TTs' maxRank.</summary>
+    public static ChebyshevTT operator +(ChebyshevTT a, ChebyshevTT b)
+    {
+        CheckCompatible(a, b);
+        var summed = TensorTrainAlgebra.AddCores(a._coeffCores!, b._coeffCores!);
+        int mr = Math.Max(a._maxRank, b._maxRank);
+        var rounded = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        var domainCopy = a._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])a._nNodes.Clone();
+        return a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>Binary subtraction: <c>a - b</c>.</summary>
+    public static ChebyshevTT operator -(ChebyshevTT a, ChebyshevTT b)
+    {
+        CheckCompatible(a, b);
+        var negB = TensorTrainAlgebra.NegateCores(b._coeffCores!);
+        var summed = TensorTrainAlgebra.AddCores(a._coeffCores!, negB);
+        int mr = Math.Max(a._maxRank, b._maxRank);
+        var rounded = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        var domainCopy = a._domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodesCopy = (int[])a._nNodes.Clone();
+        return a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+    }
+
+    /// <summary>In-place addition: <c>this += other</c> followed by TT-SVD rounding.</summary>
+    public void AddInPlace(ChebyshevTT other)
+    {
+        CheckCompatible(this, other);
+        var summed = TensorTrainAlgebra.AddCores(_coeffCores!, other._coeffCores!);
+        int mr = Math.Max(_maxRank, other._maxRank);
+        _coeffCores = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    /// <summary>In-place subtraction: <c>this -= other</c> followed by TT-SVD rounding.</summary>
+    public void SubInPlace(ChebyshevTT other)
+    {
+        CheckCompatible(this, other);
+        var negOther = TensorTrainAlgebra.NegateCores(other._coeffCores!);
+        var summed = TensorTrainAlgebra.AddCores(_coeffCores!, negOther);
+        int mr = Math.Max(_maxRank, other._maxRank);
+        _coeffCores = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    /// <summary>Round TT to lower rank in place via TT-SVD recompression.</summary>
+    public void RoundInPlace(double tolerance)
+    {
+        CheckBuilt();
+        _coeffCores = TensorTrainAlgebra.RoundCores(_coeffCores!, _maxRank, tolerance);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    // ------------------------------------------------------------------
     // Chebyshev polynomial evaluation
     // ------------------------------------------------------------------
 
@@ -584,6 +1108,7 @@ public class ChebyshevTT
         var state = new TTSerializationState
         {
             Version = GetLibraryVersion(),
+            Method = Method,
             NumDimensions = _numDimensions,
             Domain = _domain,
             NNodes = _nNodes,
@@ -645,6 +1170,8 @@ public class ChebyshevTT
             state.BuildTime,
             state.TotalBuildEvals);
 
+        tt.Method = state.Method;
+
         string currentVersion = GetLibraryVersion();
         if (state.Version != null && state.Version != currentVersion)
         {
@@ -674,7 +1201,9 @@ public class ChebyshevTT
     {
         var asm = typeof(ChebyshevTT).Assembly;
         var ver = asm.GetName().Version;
-        return ver != null ? ver.ToString() : "0.0.0";
+        // Use 3-part Major.Minor.Build form to match JSON serialization convention
+        // (csproj <Version> is 3-part; .NET pads AssemblyVersion to 4 parts internally).
+        return ver != null ? ver.ToString(3) : "0.0.0";
     }
 
     // ------------------------------------------------------------------
@@ -733,6 +1262,7 @@ public class ChebyshevTT
     internal class TTSerializationState
     {
         public string? Version { get; set; }
+        public string? Method { get; set; }
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = null!;
         public int[] NNodes { get; set; } = null!;

@@ -13,10 +13,12 @@ Always consult the Python source when implementing or verifying behavior.
 
 ## Status
 
-**Feature-complete against PyChebyshev v0.12.0** (Phase 1 of the 6-phase v0.20.1 port complete; see
+**Feature-complete against PyChebyshev v0.18.0** (Phase 2 of the 6-phase v0.20.1 port complete; see
 `docs/superpowers/specs/2026-04-27-pychebyshev-v0.20.1-port-design.md`).
 All four public classes (`ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`,
-`ChebyshevTT`) mirror the Python API surface. `dotnet test` runs **666/666** passing.
+`ChebyshevTT`) mirror the Python API surface, including Phase 2 TT feature parity
+(canonicalization, ALS, factories, algebra, slicing/extrusion, materialization).
+`dotnet test` runs **757/757** passing.
 
 See `skip_csharp.txt` for the per-phase Python-parity vs. C#-specific test breakdown.
 
@@ -213,8 +215,14 @@ This is the foundation. Everything else depends on it.
 - Batch eval via einsum-like contractions
 - Finite-difference derivatives (NOT spectral)
 - All operations: eval, eval_batch, eval_multi, error_estimate, save/load
-- No algebra, extrude/slice, or calculus (not implemented in Python either)
-- **Port:** `test_tensor_train.py` (35 tests)
+- **Phase 2 additions (PyChebyshev v0.18.0 parity):**
+  - Canonicalization: `OrthLeft(position)` / `OrthRight(position)` push R factors through the chain.
+  - ALS build mode (`Build(method="als")`) is rank-adaptive; refines via `RunCompletion`.
+  - Algebra: `+`, `-`, `*`, `/` operators + `AddInPlace`/`SubInPlace`/`ScalarMulInPlace`/`ScalarDivInPlace`/`NegateInPlace`/`RoundInPlace`.
+  - Slicing/extrusion: `Slice(dim, value)` and `Extrude(dim, (lo, hi), newN)` return new TTs.
+  - Materialization: `ToDense()` (guarded against allocation overflow).
+  - Factories: `Nodes(...)` and `FromValues(...)` static methods.
+- **Port:** `test_tensor_train.py` (35 tests) + Phase 2 TT tests (~98 new tests)
 
 ## Validation Strategy
 

@@ -38,3 +38,13 @@ Phase 5 (PyChebyshev v0.5.0 release - parity v0.12.0): Adaptive Constructor
 ErrorThresholdTests.cs: ~30 tests (port of test_error_threshold.py)
 SpecialPointsTests.cs: ~16 tests (port of test_special_points.py)
 Total: 50 new tests (613 -> 663 total)
+
+=========================================================
+Phase 2 (ChebyshevSharp v0.6.0 release - parity v0.18.0): TT Feature Parity
+=========================================================
+TtCanonicalizationTests.cs: ~15 tests (port of TestOrthogonalization + TestInnerProduct)
+TtAlsTests.cs: ~26 tests (port of TestALSInternals + TestALS + TestCompletion + JsonMigration)
+TtFactoriesTests.cs: ~11 tests (port of TestTTNodes + TestTTFromValues)
+TtExtrudeSliceTests.cs: ~21 tests (port of TestTTToDense + TestTTExtrude + TestTTSlice)
+TtAlgebraTests.cs: ~25 tests (port of TestTTAddition + TestTTScalarMul + cross-feature)
+Total: ~98 new tests (666 -> ~757 total)

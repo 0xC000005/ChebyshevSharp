@@ -203,17 +203,113 @@ If the file was saved with a different library version, a `LoadWarning` property
 | `TotalBuildEvals` | Number of function evaluations used during build |
 | `LoadWarning` | Version mismatch warning (null if none) |
 
-## Limitations
+## Build Modes
 
-`ChebyshevTT` does **not** support:
+`Build(method: ...)` accepts three algorithms:
 
-- **Analytical derivatives** -- uses finite differences (order 1 and 2 only)
-- **Arithmetic operators** ($+$, $-$, $\times$, $\div$)
-- **Extrusion and slicing**
-- **Integration, root-finding, or optimization**
-- **`Nodes()` and `FromValues()` factories**
+```csharp
+tt.Build(method: "cross");  // TT-Cross (default): O(d * n * r^2) function evals
+tt.Build(method: "svd");    // TT-SVD: full O(n^d) tensor; for validation
+tt.Build(method: "als");    // Alternating LS: rank-adaptive, full-grid evals
+```
 
-These operations require the full tensor grid or differentiation matrices, which the TT format does not store. Use `ChebyshevApproximation` or `ChebyshevSpline` when these features are needed.
+ALS starts at rank 1 and grows the TT rank by +1 per outer iteration until the
+grid residual falls below `tolerance` or the rank reaches `maxRank`. If the
+cap is hit before tolerance is satisfied, `BuildWarning` is set.
+
+```csharp
+tt.Build(method: "als", seed: 42);
+if (tt.BuildWarning != null)
+    Console.Error.WriteLine(tt.BuildWarning);
+```
+
+## Refining a Built TT — `RunCompletion`
+
+`RunCompletion(tolerance, maxIter)` runs fixed-rank ALS sweeps on an
+already-built TT. Rank is preserved; only per-core coefficients are refined.
+Requires `Function != null` (so it cannot be called on a TT loaded from disk).
+
+```csharp
+tt.Build(method: "cross", tolerance: 1e-3, maxRank: 5);
+tt.RunCompletion(tolerance: 1e-10, maxIter: 20);
+```
+
+## Canonicalization — `OrthLeft` / `OrthRight`
+
+Push R factors through the TT chain so cores up to `position` are
+left-orthogonal (`Q^T Q = I` after the `(rL*n, rR)` unfolding) or so cores
+beyond `position` are right-orthogonal. The represented tensor is unchanged.
+Useful as a primitive for downstream algorithms.
+
+```csharp
+tt.OrthLeft(position: 2);   // cores 0 and 1 become left-orthogonal
+tt.OrthRight(position: 0);  // cores 1, 2, ... become right-orthogonal
+```
+
+## Inner Product
+
+Frobenius inner product of two TTs' Chebyshev coefficient tensors:
+
+```csharp
+double ip = ttA.InnerProduct(ttB);  // sum_i C_a[i] * C_b[i]
+```
+
+Both TTs must share the same `NumDimensions`, `Domain`, and `NNodes`.
+
+## Static Factories — `Nodes` / `FromValues`
+
+```csharp
+var (nodesPerDim, shape) = ChebyshevTT.Nodes(2,
+    new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 8, 8 });
+
+// Build a TT from a precomputed dense tensor (skip TT-Cross):
+double[] dense = /* row-major Π nNodes values */;
+var tt = ChebyshevTT.FromValues(dense, 2,
+    new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 8, 8 },
+    maxRank: 10, tolerance: 1e-6);
+```
+
+## Materialization — `ToDense`
+
+```csharp
+double[] flat = tt.ToDense();   // row-major Π nNodes
+```
+
+Throws `OverflowException` if `Π nNodes * 8 > int.MaxValue`. Use for
+inspection / round-trip testing, not high-D production.
+
+## Slicing & Extrusion — `Slice` / `Extrude`
+
+```csharp
+var sliced = tt.Slice(dim: 0, value: 0.5);                // dim 0 fixed at 0.5
+var extruded = tt.Extrude(dim: 1, newDomain: (0, 1), newN: 5);  // add a constant dim
+```
+
+`Slice` uses barycentric interpolation along the sliced dim's value-space core
+and absorbs the resulting matrix into a neighbor. A fast path triggers when
+`value` coincides with a Chebyshev node within `1e-14`.
+
+## Algebra
+
+```csharp
+var sum  = ttA + ttB;          // block-diagonal stacking, then TT-SVD round
+var diff = ttA - ttB;
+var neg  = -ttA;               // unary
+var dbl  = 2.0 * ttA;          // scalar mul (commutative)
+var half = ttA / 2.0;          // throws DivideByZeroException on zero
+
+// In-place equivalents (mutate the receiver, return void):
+ttA.AddInPlace(ttB);
+ttA.SubInPlace(ttB);
+ttA.ScalarMulInPlace(2.0);
+ttA.ScalarDivInPlace(2.0);
+ttA.NegateInPlace();
+ttA.RoundInPlace(1e-10);       // explicit TT-SVD recompression
+```
+
+`+` and `-` round to the larger of the two operands' `MaxRank` with a default
+TT-SVD tolerance of `1e-12`. Use `RoundInPlace(tolerance)` when you need
+tighter or looser control.
 
 ## Choosing Parameters
 
