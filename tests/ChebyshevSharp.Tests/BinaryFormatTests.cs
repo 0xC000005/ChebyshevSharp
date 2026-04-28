@@ -643,3 +643,53 @@ public class SplineBinaryTests
         finally { if (File.Exists(path)) File.Delete(path); }
     }
 }
+
+public class PcbFixtureTests
+{
+    [Fact]
+    public void Test_fixture_approx_2d_simple_loads_and_evaluates()
+    {
+        string path = ChebyshevSharp.Tests.Helpers.PcbFixtures.Path("approx_2d_simple.pcb");
+        Assert.True(File.Exists(path), $"missing fixture: {path}");
+        var cheb = ChebyshevApproximation.Load(path);
+        Assert.Equal(2, cheb.NumDimensions);
+        Assert.Equal(new[] { 3, 3 }, cheb.NNodes);
+        // f(x,y) = x + y, so f(0.3, 0.4) = 0.7 (Chebyshev with n=3 hits this exactly).
+        double v = cheb.Eval(new[] { 0.3, 0.4 }, new[] { 0, 0 });
+        Assert.Equal(0.7, v, precision: 12);
+    }
+
+    [Fact]
+    public void Test_fixture_approx_5d_bs_loads_and_round_trips()
+    {
+        string path = ChebyshevSharp.Tests.Helpers.PcbFixtures.Path("approx_5d_bs.pcb");
+        Assert.True(File.Exists(path), $"missing fixture: {path}");
+        var cheb = ChebyshevApproximation.Load(path);
+        Assert.Equal(5, cheb.NumDimensions);
+        // Re-save and verify bytes match.
+        string roundtrip = System.IO.Path.Combine(
+            System.IO.Path.GetTempPath(), $"rt_{Guid.NewGuid():N}.pcb");
+        try
+        {
+            cheb.Save(roundtrip, format: "binary");
+            byte[] original = File.ReadAllBytes(path);
+            byte[] re = File.ReadAllBytes(roundtrip);
+            Assert.Equal(original, re);
+        }
+        finally { if (File.Exists(roundtrip)) File.Delete(roundtrip); }
+    }
+
+    [Fact]
+    public void Test_fixture_spline_1d_kink_loads_and_evaluates()
+    {
+        string path = ChebyshevSharp.Tests.Helpers.PcbFixtures.Path("spline_1d_kink.pcb");
+        Assert.True(File.Exists(path), $"missing fixture: {path}");
+        var spline = ChebyshevSpline.Load(path);
+        Assert.Equal(1, spline.NumDimensions);
+        // abs(x) on [-1,1] with knot at 0 — recovers to machine precision because
+        // each piece is a 3-node Chebyshev fit to a line segment.
+        Assert.Equal(0.5, spline.Eval(new[] { 0.5 }, new[] { 0 }), precision: 12);
+        Assert.Equal(0.7, spline.Eval(new[] { -0.7 }, new[] { 0 }), precision: 12);
+        Assert.Equal(0.0, spline.Eval(new[] { 0.0 }, new[] { 0 }), precision: 12);
+    }
+}
