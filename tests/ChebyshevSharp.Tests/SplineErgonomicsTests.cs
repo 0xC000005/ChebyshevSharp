@@ -145,4 +145,25 @@ public class SplineErgonomicsTests
         Assert.NotNull(sp);
         Assert.Equal(new[] { -0.5, 0.5 }, sp![0]);
     }
+
+    [Fact]
+    public void GetDerivativeId_returns_stable_int_per_orders_tuple()
+    {
+        var spline = BuildSimple();
+        int id1 = spline.GetDerivativeId(new[] { 1, 0 });
+        int id2 = spline.GetDerivativeId(new[] { 0, 1 });
+        Assert.Equal(0, id1);
+        Assert.Equal(1, id2);
+        Assert.Equal(0, spline.GetDerivativeId(new[] { 1, 0 }));
+    }
+
+    [Fact]
+    public void EvalByDerivativeId_matches_EvalByOrders()
+    {
+        var spline = BuildSimple();
+        int id = spline.GetDerivativeId(new[] { 1, 0 });
+        double byOrders = spline.Eval(new[] { 0.3, 0.5 }, new[] { 1, 0 });
+        double byId = spline.Eval(new[] { 0.3, 0.5 }, id);
+        Assert.Equal(byOrders, byId, precision: 12);
+    }
 }

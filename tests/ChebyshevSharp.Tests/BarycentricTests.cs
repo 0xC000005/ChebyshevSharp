@@ -551,11 +551,14 @@ public class TestCoverageGaps
     [Fact]
     public void Test_get_derivative_id()
     {
-        // get_derivative_id() should return the input as-is.
+        // get_derivative_id() should return a stable int id for the same orders.
         var cheb = TestFixtures.ChebSin3D;
-        int[] derivOrder = [1, 0, 0];
-        int[] result = cheb.GetDerivativeId(derivOrder);
-        Assert.Equal(derivOrder, result);
+        int id0 = cheb.GetDerivativeId(new[] { 1, 0, 0 });
+        int id1 = cheb.GetDerivativeId(new[] { 0, 1, 0 });
+        int id0Again = cheb.GetDerivativeId(new[] { 1, 0, 0 });
+        Assert.Equal(0, id0);
+        Assert.Equal(1, id1);
+        Assert.Equal(0, id0Again);
     }
 
     [Fact]

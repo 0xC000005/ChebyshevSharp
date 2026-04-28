@@ -34,6 +34,8 @@ public class ChebyshevTT
     private int _maxDerivativeOrder = 2;
     private object? _additionalData;
     private double[]? _evaluationPointsCache;
+    private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
+    private readonly List<int[]> _registeredDerivativeOrders = new();
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
@@ -1342,6 +1344,44 @@ public class ChebyshevTT
         _evaluationPointsCache = points;
         return points;
     }
+
+    /// <summary>
+    /// Register or look up a derivative-orders tuple. Returns a stable
+    /// session-local int id for the same orders. Used in conjunction with
+    /// the <c>Eval(point, derivativeId)</c> overload.
+    /// </summary>
+    /// <param name="orders">Derivative order per dimension.</param>
+    /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
+    public int GetDerivativeId(int[] orders)
+    {
+        var key = new Internal.TupleKey(orders);
+        if (_derivativeIdRegistry.TryGetValue(key, out int existing))
+            return existing;
+        int id = _registeredDerivativeOrders.Count;
+        _registeredDerivativeOrders.Add((int[])orders.Clone());
+        _derivativeIdRegistry[key] = id;
+        return id;
+    }
+
+    /// <summary>Evaluate at <paramref name="point"/> using a previously-registered derivative id.</summary>
+    /// <param name="point">Evaluation point.</param>
+    /// <param name="derivativeId">Id returned by <see cref="GetDerivativeId"/>.</param>
+    /// <returns>Interpolated value at the given derivative order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="derivativeId"/> has not been registered.</exception>
+    public double Eval(double[] point, int derivativeId)
+    {
+        if (derivativeId < 0 || derivativeId >= _registeredDerivativeOrders.Count)
+            throw new ArgumentOutOfRangeException(
+                nameof(derivativeId),
+                $"derivativeId {derivativeId} not registered. Call GetDerivativeId first.");
+        var orders = _registeredDerivativeOrders[derivativeId];
+        bool allZero = orders.All(o => o == 0);
+        if (allZero) return Eval(point);
+        return EvalMulti(point, new[] { orders })[0];
+    }
+
+    internal Dictionary<Internal.TupleKey, int> DerivativeIdRegistry => _derivativeIdRegistry;
+    internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
     // Serialization DTO

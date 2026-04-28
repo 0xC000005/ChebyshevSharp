@@ -109,4 +109,24 @@ public class SliderErgonomicsTests
         var slider = BuildSimple();
         Assert.Same(slider.GetEvaluationPoints(), slider.GetEvaluationPoints());
     }
+
+    [Fact]
+    public void GetDerivativeId_returns_stable_int_per_orders_tuple()
+    {
+        var slider = BuildSimple();
+        int id1 = slider.GetDerivativeId(new[] { 1, 0, 0 });
+        int id2 = slider.GetDerivativeId(new[] { 0, 1, 0 });
+        Assert.Equal(0, id1);
+        Assert.Equal(1, id2);
+    }
+
+    [Fact]
+    public void EvalByDerivativeId_matches_EvalByOrders()
+    {
+        var slider = BuildSimple();
+        int id = slider.GetDerivativeId(new[] { 1, 0, 0 });
+        double byOrders = slider.Eval(new[] { 0.3, 0.5, 0.2 }, new[] { 1, 0, 0 });
+        double byId = slider.Eval(new[] { 0.3, 0.5, 0.2 }, id);
+        Assert.Equal(byOrders, byId, precision: 12);
+    }
 }

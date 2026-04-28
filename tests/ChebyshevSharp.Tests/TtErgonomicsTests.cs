@@ -94,4 +94,24 @@ public class TtErgonomicsTests
         var tt = BuildSimple();
         Assert.Same(tt.GetEvaluationPoints(), tt.GetEvaluationPoints());
     }
+
+    [Fact]
+    public void GetDerivativeId_returns_stable_int_per_orders_tuple()
+    {
+        var tt = BuildSimple();
+        int id1 = tt.GetDerivativeId(new[] { 1, 0, 0 });
+        int id2 = tt.GetDerivativeId(new[] { 0, 1, 0 });
+        Assert.Equal(0, id1);
+        Assert.Equal(1, id2);
+    }
+
+    [Fact]
+    public void EvalByDerivativeId_matches_EvalMulti()
+    {
+        var tt = BuildSimple();
+        int id = tt.GetDerivativeId(new[] { 1, 0, 0 });
+        double byMulti = tt.EvalMulti(new[] { 0.3, 0.5, 0.2 }, new[] { new[] { 1, 0, 0 } })[0];
+        double byId = tt.Eval(new[] { 0.3, 0.5, 0.2 }, id);
+        Assert.Equal(byMulti, byId, precision: 8);  // FD derivatives, looser tolerance
+    }
 }

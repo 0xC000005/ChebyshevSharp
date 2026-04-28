@@ -155,4 +155,35 @@ public class ApproxErgonomicsTests
         var approx = BuildSimple();
         Assert.Null(approx.GetErrorThreshold());
     }
+
+    [Fact]
+    public void GetDerivativeId_returns_stable_int_per_orders_tuple()
+    {
+        var approx = BuildSimple();
+        int id1 = approx.GetDerivativeId(new[] { 1, 0 });
+        int id2 = approx.GetDerivativeId(new[] { 0, 1 });
+        int id1Again = approx.GetDerivativeId(new[] { 1, 0 });
+
+        Assert.Equal(0, id1);
+        Assert.Equal(1, id2);
+        Assert.Equal(0, id1Again);
+    }
+
+    [Fact]
+    public void EvalByDerivativeId_matches_EvalByOrders()
+    {
+        var approx = BuildSimple();
+        int id = approx.GetDerivativeId(new[] { 1, 0 });
+        double byOrders = approx.Eval(new[] { 0.3, 0.5 }, new[] { 1, 0 });
+        double byId = approx.Eval(new[] { 0.3, 0.5 }, id);
+        Assert.Equal(byOrders, byId, precision: 12);
+    }
+
+    [Fact]
+    public void EvalByUnknownDerivativeId_throws()
+    {
+        var approx = BuildSimple();
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            approx.Eval(new[] { 0.3, 0.5 }, derivativeId: 99));
+    }
 }
