@@ -404,6 +404,7 @@ public class TensorTrainCrossVsSvdTests
 // Additional coverage tests
 // ======================================================================
 
+[Collection("ConsoleCapture")]
 public class TensorTrainCoverageTests
 {
     [Fact]

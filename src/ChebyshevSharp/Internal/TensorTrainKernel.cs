@@ -1135,6 +1135,7 @@ internal static class TensorTrainKernel
             prodN = newProd;
         }
         // Final rank should be 1; output is flat length prodN.
+        Debug.Assert(cores[d - 1].RRight == 1, "Last core must have RRight == 1");
         return acc;
     }
 
@@ -1150,20 +1151,29 @@ internal static class TensorTrainKernel
         int[] nNodes,
         double tolerance,
         int maxIter,
-        bool verbose = false)
+        bool verbose = false,
+        double[]? precomputedB = null)
     {
         int d = cores.Length;
         long totalPoints = 1;
         for (int i = 0; i < d; i++) totalPoints *= nNodes[i];
         int total = checked((int)totalPoints);
 
-        // Precompute b: target values in C-order index.
-        double[] b = new double[total];
+        // Use precomputed b if provided; otherwise materialise target values.
+        double[] b;
         int[] tmpIdx = new int[d];
-        for (int flat = 0; flat < total; flat++)
+        if (precomputedB != null)
         {
-            FlatToMulti(flat, nNodes, tmpIdx);
-            b[flat] = evalsAt(tmpIdx);
+            b = precomputedB;
+        }
+        else
+        {
+            b = new double[total];
+            for (int flat = 0; flat < total; flat++)
+            {
+                FlatToMulti(flat, nNodes, tmpIdx);
+                b[flat] = evalsAt(tmpIdx);
+            }
         }
 
         double[] prevDense = ReconstructDense(cores, nNodes);
@@ -1292,6 +1302,11 @@ internal static class TensorTrainKernel
     /// outer iteration until the grid residual falls below tol or rank reaches
     /// maxRank. Mirror of Python's <c>_tt_als</c> (tensor_train.py:877).
     /// Returns (cores, nEvals, hitRankCap).
+    /// <para>
+    /// Note: warm-starting (reusing cores from the previous rank as an initial guess
+    /// for the next rank) is not implemented, matching Python's behaviour.
+    /// This is a known future optimization opportunity.
+    /// </para>
     /// </summary>
     internal static (TtCore[] Cores, int NEvals, bool HitRankCap) AlsAdaptiveRank(
         Func<double[], double> function,
@@ -1364,7 +1379,7 @@ internal static class TensorTrainKernel
         while (true)
         {
             AlsFixedRankSweep(coresOut, evalsAt, nNodes,
-                tolerance: tol * 0.1, maxIter: 5, verbose: verbose);
+                tolerance: tol * 0.1, maxIter: 5, verbose: verbose, precomputedB: target);
             double err = GridResidual(coresOut, target, nNodes);
             if (verbose)
                 Console.WriteLine($"[ALS] rank {curRank}: grid_residual = {err:e3} (target {tol:e1})");

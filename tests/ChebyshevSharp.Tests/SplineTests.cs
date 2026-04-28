@@ -976,6 +976,7 @@ public class TestSplineReprStrUnbuilt
 /// Tests for verbose build and display.
 /// Ported from ref/PyChebyshev/tests/test_spline.py :: TestVerboseAndDisplay.
 /// </summary>
+[Collection("ConsoleCapture")]
 public class TestSplineVerboseAndDisplay
 {
     [Fact]

@@ -768,6 +768,7 @@ public class TestSliderErrorEstimation
 /// Additional coverage tests.
 /// Ported from test_slider.py :: TestCoverageGaps (4 tests).
 /// </summary>
+[Collection("ConsoleCapture")]
 public class TestSliderCoverageGaps
 {
     [Fact]

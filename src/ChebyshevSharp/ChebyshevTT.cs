@@ -37,7 +37,11 @@ public class ChebyshevTT
     /// <summary>Warning emitted by Build() if maxRank was reached before tolerance was satisfied during ALS. Null otherwise.</summary>
     public string? BuildWarning { get; private set; }
 
-    /// <summary>Build method that produced the current cores: "cross", "svd", or "als". Null if not built.</summary>
+    /// <summary>
+    /// Build method that produced the current cores: <c>"cross"</c>, <c>"svd"</c>, or <c>"als"</c>.
+    /// <c>null</c> only before <see cref="Build"/> is called or after <see cref="Load"/> from a
+    /// pre-v0.6.0 JSON file that predates this property.
+    /// </summary>
     public string? Method { get; private set; }
 
     /// <summary>Number of input dimensions.</summary>

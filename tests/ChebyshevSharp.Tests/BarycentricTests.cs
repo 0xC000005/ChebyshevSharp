@@ -525,6 +525,7 @@ public class TestErrorEstimation
 // Additional coverage tests
 // ---------------------------------------------------------------------------
 
+[Collection("ConsoleCapture")]
 public class TestCoverageGaps
 {
     [Fact]
