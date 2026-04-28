@@ -34,6 +34,34 @@ internal static class PcbFormat
 
     public readonly record struct PcbHeader(int Major, int Minor, int ClassTag);
 
+    /// <summary>
+    /// Convert a uint32 read from a binary file to int, throwing
+    /// <see cref="InvalidDataException"/> (not <see cref="OverflowException"/>)
+    /// if the value exceeds int.MaxValue. Keeps the read-side error surface
+    /// uniformly InvalidDataException for malformed/hostile input.
+    /// </summary>
+    private static int ToCheckedInt(uint x, string fieldName)
+    {
+        if (x > int.MaxValue)
+            throw new InvalidDataException(
+                $"{fieldName}={x} exceeds int.MaxValue ({int.MaxValue})");
+        return (int)x;
+    }
+
+    /// <summary>
+    /// Multiply two ints, converting <see cref="OverflowException"/> to
+    /// <see cref="InvalidDataException"/> for spec-consistent error surface.
+    /// </summary>
+    private static int CheckedMul(int a, int b, string description)
+    {
+        try { return checked(a * b); }
+        catch (OverflowException)
+        {
+            throw new InvalidDataException(
+                $"{description} overflows int (a={a}, b={b})");
+        }
+    }
+
     public static void WriteHeader(BinaryWriter w, int classTag)
     {
         w.Write(Magic);
@@ -161,7 +189,7 @@ internal static class PcbFormat
         uint d32 = r.ReadUInt32();
         if (d32 < 1)
             throw new InvalidDataException($"num_dimensions must be >= 1, got {d32}");
-        int d = checked((int)d32);
+        int d = ToCheckedInt(d32, "num_dimensions");
 
         double[] lo = new double[d];
         for (int i = 0; i < d; i++) lo[i] = r.ReadDouble();
@@ -184,8 +212,8 @@ internal static class PcbFormat
             uint n32 = r.ReadUInt32();
             if (n32 < 1)
                 throw new InvalidDataException($"n_nodes[{i}] must be >= 1, got {n32}");
-            nNodes[i] = checked((int)n32);
-            total = checked(total * nNodes[i]);
+            nNodes[i] = ToCheckedInt(n32, $"n_nodes[{i}]");
+            total = CheckedMul(total, nNodes[i], "prod(n_nodes)");
         }
 
         double[] tensor = new double[total];
@@ -262,7 +290,7 @@ internal static class PcbFormat
         uint d32 = r.ReadUInt32();
         if (d32 < 1)
             throw new InvalidDataException($"num_dimensions must be >= 1, got {d32}");
-        int d = checked((int)d32);
+        int d = ToCheckedInt(d32, "num_dimensions");
 
         double[] lo = new double[d];
         for (int i = 0; i < d; i++) lo[i] = r.ReadDouble();
@@ -283,8 +311,8 @@ internal static class PcbFormat
             uint n32 = r.ReadUInt32();
             if (n32 < 1)
                 throw new InvalidDataException($"n_nodes[{i}] must be >= 1, got {n32}");
-            nNodes[i] = checked((int)n32);
-            perPieceFloats = checked(perPieceFloats * nNodes[i]);
+            nNodes[i] = ToCheckedInt(n32, $"n_nodes[{i}]");
+            perPieceFloats = CheckedMul(perPieceFloats, nNodes[i], "prod(n_nodes)");
         }
 
         int[] numKnots = new int[d];
@@ -292,8 +320,8 @@ internal static class PcbFormat
         for (int i = 0; i < d; i++)
         {
             uint k32 = r.ReadUInt32();
-            numKnots[i] = checked((int)k32);
-            expectedPieces = checked(expectedPieces * (numKnots[i] + 1));
+            numKnots[i] = ToCheckedInt(k32, $"num_knots[{i}]");
+            expectedPieces = CheckedMul(expectedPieces, numKnots[i] + 1, "expected pieces");
         }
 
         var knots = new double[d][];

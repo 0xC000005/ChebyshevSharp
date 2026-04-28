@@ -341,7 +341,7 @@ public class SaveLoadApiTests
         {
             cheb.Save(path, format: "binary");
             byte[] head = new byte[4];
-            using (var fs = File.OpenRead(path)) fs.Read(head, 0, 4);
+            using (var fs = File.OpenRead(path)) fs.ReadExactly(head, 0, 4);
             Assert.Equal(new byte[] { 0x50, 0x43, 0x42, 0x00 }, head);
         }
         finally { if (File.Exists(path)) File.Delete(path); }
@@ -691,5 +691,286 @@ public class PcbFixtureTests
         Assert.Equal(0.5, spline.Eval(new[] { 0.5 }, new[] { 0 }), precision: 12);
         Assert.Equal(0.7, spline.Eval(new[] { -0.7 }, new[] { 0 }), precision: 12);
         Assert.Equal(0.0, spline.Eval(new[] { 0.0 }, new[] { 0 }), precision: 12);
+    }
+}
+
+// Phase 3 review-followup: cover defensive throws in PcbFormat that the public-API
+// tests don't exercise (write-side argument validation + read-side malformed-input
+// rejection + uint32→int32 overflow rejection).
+public class PcbFormatDefensiveTests
+{
+    private static MemoryStream NewStreamWithApproxHeader()
+    {
+        var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+            PcbFormat.WriteHeader(w, PcbFormat.ClassTagApproximation);
+        return ms;
+    }
+
+    private static MemoryStream NewStreamWithSplineHeader()
+    {
+        var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+            PcbFormat.WriteHeader(w, PcbFormat.ClassTagSpline);
+        return ms;
+    }
+
+    // --- Header / Peek defensive paths ---
+
+    [Fact]
+    public void Test_read_header_rejects_nonzero_reserved_bytes()
+    {
+        // Hand-craft header with reserved=1 (must be 0).
+        byte[] bad = {
+            0x50, 0x43, 0x42, 0x00,            // magic
+            0x01, 0x00,                         // major=1, minor=0
+            0x01, 0x00,                         // class_tag=1
+            0x01, 0x00, 0x00, 0x00              // reserved nonzero
+        };
+        using var ms = new MemoryStream(bad);
+        using var r = new BinaryReader(ms);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadHeader(r));
+        Assert.Contains("reserved", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_peek_rejects_truncated_file_shorter_than_header()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"pcb_truncated_{Guid.NewGuid():N}.pcb");
+        try
+        {
+            // Write only 6 bytes — less than the 12-byte header.
+            File.WriteAllBytes(path, new byte[] { 0x50, 0x43, 0x42, 0x00, 0x01, 0x00 });
+            var ex = Assert.Throws<InvalidDataException>(
+                () => PcbFormat.PeekFormatVersion(path));
+            Assert.Contains("shorter", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    // --- WriteApproximationBody argument validation ---
+
+    [Fact]
+    public void Test_write_approx_body_rejects_dim_mismatch()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            PcbFormat.WriteApproximationBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 }, new[] { 0.0, 1.0 } }, // 2 dims
+                nNodes: new[] { 3 },                                       // 1 entry — mismatch
+                tensorValues: new double[3]));
+        Assert.Contains("nNodes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_write_approx_body_rejects_tensor_length_mismatch()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            PcbFormat.WriteApproximationBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 } },
+                nNodes: new[] { 3 },
+                tensorValues: new double[5]));            // expected 3, got 5
+        Assert.Contains("tensorValues", ex.Message);
+    }
+
+    // --- ReadApproximationBody malformed-input rejection ---
+
+    [Fact]
+    public void Test_read_approx_body_rejects_zero_n_nodes()
+    {
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);            // d=1
+            w.Write(-1.0); w.Write(1.0); // valid domain
+            w.Write((uint)0);            // n_nodes[0]=0 — invalid
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("n_nodes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_approx_body_rejects_d_exceeding_int_max()
+    {
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write(uint.MaxValue);       // d > int.MaxValue — must throw InvalidDataException
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("num_dimensions", ex.Message);
+        Assert.Contains("int.MaxValue", ex.Message);
+    }
+
+    // --- WriteSplineBody argument validation ---
+
+    [Fact]
+    public void Test_write_spline_body_rejects_dim_mismatch()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            PcbFormat.WriteSplineBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 }, new[] { 0.0, 1.0 } }, // 2 dims
+                nNodes: new[] { 3, 3 },
+                knotsPerDim: new[] { new[] { 0.5 } },                      // 1 entry — mismatch
+                pieceTensorValues: new double[1][]));
+        Assert.Contains("dimension mismatch", ex.Message);
+    }
+
+    [Fact]
+    public void Test_write_spline_body_rejects_piece_count_mismatch()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            PcbFormat.WriteSplineBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 } },
+                nNodes: new[] { 3 },
+                knotsPerDim: new[] { new[] { 0.5 } },     // 1 knot → 2 pieces expected
+                pieceTensorValues: new double[3][]));     // 3 pieces — mismatch
+        Assert.Contains("pieceTensorValues", ex.Message);
+    }
+
+    [Fact]
+    public void Test_write_spline_body_rejects_piece_tensor_length_mismatch()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<ArgumentException>(() =>
+            PcbFormat.WriteSplineBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 } },
+                nNodes: new[] { 3 },                       // expects 3 floats per piece
+                knotsPerDim: new[] { new[] { 0.5 } },      // 1 knot → 2 pieces
+                pieceTensorValues: new[] {
+                    new double[3],                          // ok
+                    new double[5]                           // wrong length
+                }));
+        Assert.Contains("piece tensor length", ex.Message);
+    }
+
+    // --- ReadSplineBody malformed-input rejection ---
+
+    [Fact]
+    public void Test_read_spline_body_rejects_zero_dimensions()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+            w.Write((uint)0);             // d=0 — invalid
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("num_dimensions", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_inverted_domain()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);             // d=1
+            w.Write(2.0); w.Write(1.0);   // lo=2 > hi=1 — invalid
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("domain", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_zero_n_nodes()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);              // d=1
+            w.Write(-1.0); w.Write(1.0);   // valid domain
+            w.Write((uint)0);              // n_nodes[0]=0 — invalid
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("n_nodes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_num_pieces_mismatch()
+    {
+        // Hand-craft a spline body where pieceCount declared in the file does NOT
+        // match prod(num_knots[i]+1).
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);              // d=1
+            w.Write(-1.0); w.Write(1.0);   // domain
+            w.Write((uint)3);              // n_nodes[0]=3
+            w.Write((uint)1);              // num_knots[0]=1 → expects 2 pieces
+            w.Write(0.0);                  // knots[0][0]
+            w.Write((uint)5);              // num_pieces=5 — mismatch (expected 2)
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("num_pieces", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_approx_body_rejects_tensor_product_overflow()
+    {
+        // n_nodes = [65536, 65536] — each fits int.MaxValue, but their product
+        // 4_294_967_296 overflows int. CheckedMul must convert OverflowException
+        // to InvalidDataException for spec-consistent error surface.
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)2);              // d=2
+            w.Write(-1.0); w.Write(-1.0);  // lo
+            w.Write(1.0); w.Write(1.0);    // hi
+            w.Write((uint)65536);          // n_nodes[0]
+            w.Write((uint)65536);          // n_nodes[1] — prod overflows int
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("overflows", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_num_knots_exceeding_int_max()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);              // d=1
+            w.Write(-1.0); w.Write(1.0);   // domain
+            w.Write((uint)3);              // n_nodes[0]=3
+            w.Write(uint.MaxValue);        // num_knots[0] > int.MaxValue — must throw InvalidDataException
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("num_knots", ex.Message);
+        Assert.Contains("int.MaxValue", ex.Message);
     }
 }
