@@ -278,4 +278,19 @@ public class InnerProductTests
         ttA.Build(verbose: false);
         Assert.Throws<InvalidOperationException>(() => ttA.InnerProduct(ttB));
     }
+
+    [Fact]
+    public void Test_inner_product_raises_on_num_dim_mismatch()
+    {
+        var tt2D = new ChebyshevTT(p => p[0], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        var tt3D = new ChebyshevTT(p => p[0], 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 5, 5, 5 }, tolerance: 1e-4, maxRank: 3);
+        tt2D.Build(verbose: false);
+        tt3D.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentException>(() => tt2D.InnerProduct(tt3D));
+        Assert.Contains("numDimensions", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }

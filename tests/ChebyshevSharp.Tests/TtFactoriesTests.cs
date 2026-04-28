@@ -141,3 +141,44 @@ public class FromValuesTests
         Assert.Equal("svd", tt.Method);
     }
 }
+
+public class TtFactoryValidationTests
+{
+    [Fact]
+    public void Test_nodes_validates_domain_length()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(2, new[] { new[] { -1.0, 1.0 } }, new[] { 5, 5 }));
+        Assert.Contains("domain", ex.Message);
+    }
+
+    [Fact]
+    public void Test_nodes_validates_nNodes_length()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(2,
+                new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                new[] { 5 }));
+        Assert.Contains("nNodes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_from_values_validates_domain_length()
+    {
+        var values = new double[25];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.FromValues(values, 2, new[] { new[] { -1.0, 1.0 } }, new[] { 5, 5 }));
+        Assert.Contains("domain", ex.Message);
+    }
+
+    [Fact]
+    public void Test_from_values_validates_nNodes_length()
+    {
+        var values = new double[5];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.FromValues(values, 2,
+                new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                new[] { 5 }));
+        Assert.Contains("nNodes", ex.Message);
+    }
+}

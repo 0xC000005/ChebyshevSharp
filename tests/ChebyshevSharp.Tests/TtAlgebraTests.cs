@@ -290,3 +290,50 @@ public class ScalarInPlaceTests
         TestFixtures.AssertClose(-before, tt.Eval(new[] { 0.3 }), atol: 1e-10);
     }
 }
+
+public class TtAlgebraCoverageTests
+{
+    [Fact]
+    public void Test_3d_addition_linearity_covers_block_diag_middle_core()
+    {
+        // 3D sum exercises AddCores' interior-core block-diagonal branch (k != 0 && k != d-1).
+        // Verifies both the algorithm AND that the represented function adds linearly.
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var nNodes = new[] { 8, 8, 8 };
+        var ttA = new ChebyshevTT(p => Math.Sin(p[0]) + 0.5 * p[1], 3, domain, nNodes,
+            tolerance: 1e-8, maxRank: 6);
+        var ttB = new ChebyshevTT(p => Math.Cos(p[2]) * p[0], 3, domain, nNodes,
+            tolerance: 1e-8, maxRank: 6);
+        ttA.Build(verbose: false, seed: 11);
+        ttB.Build(verbose: false, seed: 13);
+
+        var sum = ttA + ttB;
+        var pts = new[]
+        {
+            new[] { 0.1, -0.2, 0.3 },
+            new[] { 0.5, 0.5, -0.5 },
+            new[] { -0.7, 0.4, 0.9 },
+        };
+        foreach (var p in pts)
+        {
+            double expected = ttA.Eval(p) + ttB.Eval(p);
+            double actual = sum.Eval(p);
+            Assert.True(Math.Abs(expected - actual) < 1e-9,
+                $"3D + linearity broke at point [{string.Join(", ", p)}]: {expected} vs {actual}");
+        }
+    }
+
+    [Fact]
+    public void Test_binary_op_raises_on_num_dim_mismatch()
+    {
+        var tt2D = new ChebyshevTT(p => p[0] + p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 },
+            tolerance: 1e-4, maxRank: 3);
+        var tt3D = new ChebyshevTT(p => p[0], 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 5, 5, 5 }, tolerance: 1e-4, maxRank: 3);
+        tt2D.Build(verbose: false, seed: 1);
+        tt3D.Build(verbose: false, seed: 2);
+        Assert.Throws<ArgumentException>(() => tt2D + tt3D);
+    }
+}

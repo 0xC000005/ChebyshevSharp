@@ -240,4 +240,16 @@ public class SliceTests
         double[] dense = sliced.ToDense();
         Assert.Equal(5, dense.Length);
     }
+
+    [Fact]
+    public void Test_slice_1d_tt_throws()
+    {
+        // Slicing a 1D TT would produce a 0D result — explicitly disallowed.
+        var tt = new ChebyshevTT(p => p[0] * p[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 5 },
+            tolerance: 1e-4, maxRank: 3);
+        tt.Build(verbose: false);
+        var ex = Assert.Throws<InvalidOperationException>(() => tt.Slice(0, 0.5));
+        Assert.Contains("1D", ex.Message);
+    }
 }
