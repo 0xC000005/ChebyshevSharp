@@ -47,7 +47,22 @@ public class ChebyshevApproximation
     /// <summary>Number of function evaluations during Build().</summary>
     public int NEvaluations { get; internal set; }
 
+    /// <summary>Target supremum-norm error for auto-N construction. Null in fixed-N mode.</summary>
+    public double? ErrorThreshold { get; internal set; }
+
+    /// <summary>Maximum nodes per dimension for the auto-N doubling loop. Default 64.</summary>
+    public int MaxN { get; internal set; } = 64;
+
+    /// <summary>Warning emitted by Build() if maxN was reached before errorThreshold was satisfied. Null otherwise.</summary>
+    public string? BuildWarning { get; internal set; }
+
+    /// <summary>The user's original nNodes argument with null sentinels intact, used to dispatch a re-run of the doubling loop on a second Build() call.</summary>
+    internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
+
     private double? _cachedErrorEstimate;
+
+    /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
+    internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
 
     /// <summary>
     /// Create a new ChebyshevApproximation.
@@ -82,7 +97,74 @@ public class ChebyshevApproximation
     internal ChebyshevApproximation() { }
 
     /// <summary>
-    /// Evaluate the function at all node combinations and pre-compute weights.
+    /// Create a new ChebyshevApproximation with optional error-driven auto-N construction.
+    /// </summary>
+    /// <param name="function">Function to approximate: f(point, data) -&gt; double.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
+    /// <param name="nNodes">Number of Chebyshev nodes per dimension; null entries signal auto-N for that dim. Pass null to make every dim auto-N (requires errorThreshold).</param>
+    /// <param name="errorThreshold">Target supremum-norm error. Required if any nNodes entry is null.</param>
+    /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    public ChebyshevApproximation(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int?[]? nNodes = null,
+        double? errorThreshold = null,
+        int maxN = 64,
+        int maxDerivativeOrder = 2)
+    {
+        if (maxN < 3)
+            throw new ArgumentException(
+                $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}. " +
+                "For a grid smaller than 3 per dimension, pass nNodes explicitly.");
+
+        // Normalize nNodes: null array means "all dims auto-N"
+        int?[] resolved;
+        if (nNodes == null)
+        {
+            if (errorThreshold == null)
+                throw new ArgumentException(
+                    "Must provide either nNodes (explicit) or errorThreshold (auto-N). Got neither.");
+            resolved = new int?[numDimensions];
+        }
+        else
+        {
+            resolved = (int?[])nNodes.Clone();
+            if (resolved.Any(n => n == null) && errorThreshold == null)
+                throw new ArgumentException(
+                    "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
+        }
+
+        Function = function;
+        NumDimensions = numDimensions;
+        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        ErrorThreshold = errorThreshold;
+        MaxN = maxN;
+        MaxDerivativeOrder = maxDerivativeOrder;
+        OriginalNNodes = (int?[])resolved.Clone();
+
+        // If all entries are non-null, populate NNodes + nodes immediately (matches existing fixed-N behavior).
+        if (resolved.All(n => n != null))
+        {
+            NNodes = resolved.Select(n => n!.Value).ToArray();
+            NodeArrays = new double[numDimensions][];
+            for (int d = 0; d < numDimensions; d++)
+                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], NNodes[d]);
+        }
+        else
+        {
+            // Auto-N path: NNodes left empty until Build() resolves.
+            NNodes = Array.Empty<int>();
+            NodeArrays = Array.Empty<double[]>();
+        }
+    }
+
+    /// <summary>
+    /// Build the Chebyshev approximation. Dispatches to the doubling loop if any
+    /// dimension was constructed with a null entry in nNodes (auto-N), otherwise
+    /// builds on the resolved fixed grid.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
     public void Build(bool verbose = true)
@@ -92,6 +174,21 @@ public class ChebyshevApproximation
                 "Cannot build: no function assigned. " +
                 "This object was created via FromValues() or Load().");
 
+        if (OriginalNNodes.Length > 0 && OriginalNNodes.Any(n => n == null))
+        {
+            AdaptiveBuild.RunDoublingLoop(this, verbose);
+            return;
+        }
+
+        BuildFixedGrid(verbose);
+    }
+
+    /// <summary>
+    /// Build on the already-resolved (all-int) grid. The original Build() body,
+    /// extracted so the doubling loop can call it once per iteration.
+    /// </summary>
+    internal void BuildFixedGrid(bool verbose = true)
+    {
         int total = 1;
         for (int d = 0; d < NumDimensions; d++)
             total *= NNodes[d];
@@ -120,7 +217,7 @@ public class ChebyshevApproximation
             for (int d = 0; d < NumDimensions; d++)
                 point[d] = NodeArrays[d][indices[d]];
 
-            TensorValues[flat] = Function(point, null);
+            TensorValues[flat] = Function!(point, null);
         }
         NEvaluations = total;
 
@@ -416,23 +513,20 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Estimate the supremum-norm interpolation error using Chebyshev coefficient decay.
+    /// Compute per-dimension max last-coefficient magnitudes.
+    /// Returns one entry per dimension; ErrorEstimate() returns the sum.
+    /// Used by the auto-N doubling loop to pick the worst-contributing dim.
     /// </summary>
-    /// <returns>Estimated maximum interpolation error.</returns>
-    public double ErrorEstimate()
+    /// <returns>Per-dimension last-coefficient magnitudes, one entry per dim.</returns>
+    public double[] ErrorEstimatePerDim()
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
-        if (_cachedErrorEstimate.HasValue)
-            return _cachedErrorEstimate.Value;
-
-        double totalError = 0.0;
+        var perDim = new double[NumDimensions];
         for (int d = 0; d < NumDimensions; d++)
         {
             double maxErrThisDim = 0.0;
-
-            // Iterate over all indices except dimension d
             int[] otherShape = NNodes.Where((_, i) => i != d).ToArray();
             int otherTotal = 1;
             for (int i = 0; i < otherShape.Length; i++)
@@ -440,18 +534,55 @@ public class ChebyshevApproximation
 
             for (int otherFlat = 0; otherFlat < otherTotal; otherFlat++)
             {
-                // Extract 1D slice along dimension d
                 double[] values1d = Extract1DSlice(TensorValues, NNodes, d, otherFlat, otherShape);
                 double[] coeffs = BarycentricKernel.ChebyshevCoefficients1D(values1d);
-                double lastCoeff = Math.Abs(coeffs[coeffs.Length - 1]);
+                double lastCoeff = Math.Abs(coeffs[^1]);
                 if (lastCoeff > maxErrThisDim)
                     maxErrThisDim = lastCoeff;
             }
-            totalError += maxErrThisDim;
+            perDim[d] = maxErrThisDim;
         }
+        return perDim;
+    }
 
-        _cachedErrorEstimate = totalError;
-        return totalError;
+    /// <summary>
+    /// Estimate the supremum-norm interpolation error using Chebyshev coefficient decay.
+    /// Sums per-dimension max last-coefficient magnitudes.
+    /// </summary>
+    /// <returns>Estimated maximum interpolation error.</returns>
+    public double ErrorEstimate()
+    {
+        if (_cachedErrorEstimate.HasValue)
+            return _cachedErrorEstimate.Value;
+        double total = ErrorEstimatePerDim().Sum();
+        _cachedErrorEstimate = total;
+        return total;
+    }
+
+    /// <summary>Return the error threshold passed to the constructor, or null in fixed-N mode.</summary>
+    public double? GetErrorThreshold() => ErrorThreshold;
+
+    /// <summary>
+    /// 1-D capacity estimator: the smallest N at which a 1-D Chebyshev build
+    /// over <paramref name="domain"/> hits <paramref name="errorThreshold"/>.
+    /// Useful as a sizing pass before committing to a multi-dimensional build.
+    /// </summary>
+    /// <param name="function">Function to approximate; signature f(point[1], data) -&gt; double.</param>
+    /// <param name="domain">(lo, hi) bounds for the single dimension.</param>
+    /// <param name="errorThreshold">Target supremum-norm error.</param>
+    /// <param name="maxN">Cap on the returned N. Default 64. If the doubling loop cannot achieve <paramref name="errorThreshold"/> within this cap, returns <paramref name="maxN"/> with BuildWarning set on the temporary internal interpolant.</param>
+    /// <returns>Resolved N on the single dimension.</returns>
+    public static int GetOptimalN1(
+        Func<double[], object?, double> function,
+        (double lo, double hi) domain,
+        double errorThreshold,
+        int maxN = 64)
+    {
+        var cheb = new ChebyshevApproximation(
+            function, 1, new[] { new[] { domain.lo, domain.hi } },
+            nNodes: null, errorThreshold: errorThreshold, maxN: maxN);
+        cheb.Build(verbose: false);
+        return cheb.NNodes[0];
     }
 
     /// <summary>
@@ -489,7 +620,10 @@ public class ChebyshevApproximation
             DiffMatrices = DiffMatrices!.Select(Flatten2D).ToArray(),
             BuildTime = BuildTime,
             NEvaluations = NEvaluations,
-            Version = "0.1.0"
+            OriginalNNodes = OriginalNNodes,
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            Version = "0.5.0"
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -532,6 +666,14 @@ public class ChebyshevApproximation
         }
 
         obj.PrecomputeTransposedDiffMatrices();
+
+        // v0.5.0 migration: OriginalNNodes / ErrorThreshold / MaxN may be absent in older files.
+        if (state.OriginalNNodes != null)
+            obj.OriginalNNodes = state.OriginalNNodes;
+        else
+            obj.OriginalNNodes = obj.NNodes.Select(n => (int?)n).ToArray();
+        obj.ErrorThreshold = state.ErrorThreshold;
+        obj.MaxN = state.MaxN ?? 64;
 
         return obj;
     }
@@ -1158,6 +1300,9 @@ public class ChebyshevApproximation
         public double[][] DiffMatrices { get; set; } = Array.Empty<double[]>();
         public double BuildTime { get; set; }
         public int NEvaluations { get; set; }
+        public int?[]? OriginalNNodes { get; set; }
+        public double? ErrorThreshold { get; set; }
+        public int? MaxN { get; set; }
         public string Version { get; set; } = "";
     }
 }

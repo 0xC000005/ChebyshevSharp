@@ -52,6 +52,18 @@ public class ChebyshevSpline
     /// <summary>Wall-clock time (seconds) for the most recent Build() call.</summary>
     public double BuildTime { get; internal set; }
 
+    /// <summary>Target supremum-norm error for per-piece auto-N construction. Null in fixed-N mode.</summary>
+    public double? ErrorThreshold { get; internal set; }
+
+    /// <summary>Maximum nodes per dimension per piece for the auto-N doubling loop. Default 64.</summary>
+    public int MaxN { get; internal set; } = 64;
+
+    /// <summary>The user's original nNodes argument with null sentinels intact.</summary>
+    internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
+
+    /// <summary>Per-piece, per-dim node counts (when constructed with nested nNodesNested form). Null otherwise.</summary>
+    internal int[][]? NestedNNodes { get; set; }
+
     private double? _cachedErrorEstimate;
 
     /// <summary>
@@ -96,6 +108,136 @@ public class ChebyshevSpline
         BuildTime = 0.0;
         _cachedErrorEstimate = null;
     }
+
+    /// <summary>
+    /// Create a piecewise Chebyshev spline with optional error-driven auto-N construction.
+    /// </summary>
+    /// <param name="function">Function to approximate.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds per dimension.</param>
+    /// <param name="nNodes">Number of nodes per dimension; null entries signal auto-N. Pass null to make every dim auto-N (requires errorThreshold).</param>
+    /// <param name="knots">Interior knots per dimension. Null defaults to empty arrays (single piece per dim).</param>
+    /// <param name="errorThreshold">Target supremum-norm error per piece. Required if any nNodes entry is null.</param>
+    /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    public ChebyshevSpline(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int?[]? nNodes = null,
+        double[][]? knots = null,
+        double? errorThreshold = null,
+        int maxN = 64,
+        int maxDerivativeOrder = 2)
+    {
+        if (maxN < 3)
+            throw new ArgumentException(
+                $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}.");
+
+        knots ??= Enumerable.Range(0, numDimensions).Select(_ => Array.Empty<double>()).ToArray();
+
+        // Normalize nNodes
+        int?[] resolvedOriginal;
+        if (nNodes == null)
+        {
+            if (errorThreshold == null)
+                throw new ArgumentException(
+                    "Must provide either nNodes (explicit) or errorThreshold (auto-N). Got neither.");
+            resolvedOriginal = new int?[numDimensions];
+        }
+        else
+        {
+            resolvedOriginal = (int?[])nNodes.Clone();
+            if (resolvedOriginal.Any(n => n == null) && errorThreshold == null)
+                throw new ArgumentException(
+                    "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
+        }
+
+        Function = function;
+        NumDimensions = numDimensions;
+        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        ErrorThreshold = errorThreshold;
+        MaxN = maxN;
+        MaxDerivativeOrder = maxDerivativeOrder;
+        OriginalNNodes = (int?[])resolvedOriginal.Clone();
+
+        // Public NNodes is meaningful only after Build resolves the auto-N values.
+        // For now, fill with 0 as placeholders (will be populated per-piece after Build).
+        NNodes = resolvedOriginal.Select(n => n ?? 0).ToArray();
+
+        ValidateKnots(numDimensions, domain, knots);
+        Knots = knots.Select(k => (double[])k.Clone()).ToArray();
+
+        Intervals = ComputeIntervals(numDimensions, domain, knots);
+        Shape = Intervals.Select(iv => iv.Length).ToArray();
+
+        int totalPieces = 1;
+        foreach (int s in Shape) totalPieces *= s;
+        Pieces = new ChebyshevApproximation?[totalPieces];
+
+        Built = false;
+        BuildTime = 0.0;
+        _cachedErrorEstimate = null;
+    }
+
+    /// <summary>
+    /// Create a piecewise Chebyshev spline with per-sub-interval node counts.
+    /// </summary>
+    /// <param name="function">Function to approximate.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds per dimension.</param>
+    /// <param name="nNodesNested">Nested array: nNodesNested[d][i] is the node count for piece i along dim d. Length per dim must equal knots[d].Length + 1.</param>
+    /// <param name="knots">Interior knots per dimension. Required (no default) when using nested form.</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    public ChebyshevSpline(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int[][] nNodesNested,
+        double[][] knots,
+        int maxDerivativeOrder = 2)
+    {
+        if (nNodesNested.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodesNested must have {numDimensions} entries (one list per dim), got {nNodesNested.Length}");
+        for (int d = 0; d < numDimensions; d++)
+        {
+            int expected = knots[d].Length + 1;
+            if (nNodesNested[d].Length != expected)
+                throw new ArgumentException(
+                    $"nNodesNested[{d}] must have {expected} entries (one per piece), got {nNodesNested[d].Length}");
+        }
+
+        Function = function;
+        NumDimensions = numDimensions;
+        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        MaxDerivativeOrder = maxDerivativeOrder;
+        MaxN = 64;
+        ErrorThreshold = null;
+        OriginalNNodes = Array.Empty<int?>();
+        NestedNNodes = nNodesNested.Select(row => (int[])row.Clone()).ToArray();
+
+        ValidateKnots(numDimensions, domain, knots);
+        Knots = knots.Select(k => (double[])k.Clone()).ToArray();
+
+        Intervals = ComputeIntervals(numDimensions, domain, knots);
+        Shape = Intervals.Select(iv => iv.Length).ToArray();
+
+        // Public NNodes surfaces piece 0's counts as a representative summary;
+        // full per-piece data lives in NestedNNodes.
+        NNodes = nNodesNested.Select(row => row[0]).ToArray();
+
+        int totalPieces = 1;
+        foreach (int s in Shape) totalPieces *= s;
+        Pieces = new ChebyshevApproximation?[totalPieces];
+
+        Built = false;
+        BuildTime = 0.0;
+        _cachedErrorEstimate = null;
+    }
+
+    /// <summary>Return the error threshold passed to the constructor, or null in fixed-N mode.</summary>
+    public double? GetErrorThreshold() => ErrorThreshold;
 
     // Internal parameterless constructor for factories
     internal ChebyshevSpline() { }
@@ -198,9 +340,36 @@ public class ChebyshevSpline
                 subDomain[d] = new[] { iv.lo, iv.hi };
             }
 
-            var piece = new ChebyshevApproximation(
-                Function, NumDimensions, subDomain, NNodes,
-                maxDerivativeOrder: MaxDerivativeOrder);
+            ChebyshevApproximation piece;
+            if (NestedNNodes != null)
+            {
+                // Per-piece nested node counts: look up nNodes from the piece's multi-index
+                int[] pieceN = new int[NumDimensions];
+                for (int d = 0; d < NumDimensions; d++)
+                    pieceN[d] = NestedNNodes[d][multiIdx[d]];
+                piece = new ChebyshevApproximation(
+                    Function!, NumDimensions, subDomain, pieceN,
+                    maxDerivativeOrder: MaxDerivativeOrder);
+            }
+            else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
+            {
+                // Auto-N or threshold-driven: construct via the int?[] overload.
+                // Clone so each piece's ctor cannot mutate this Spline's stored array.
+                int?[] pieceNNodes = (int?[])OriginalNNodes.Clone();
+                piece = new ChebyshevApproximation(
+                    Function!, NumDimensions, subDomain,
+                    nNodes: pieceNNodes,
+                    errorThreshold: ErrorThreshold,
+                    maxN: MaxN,
+                    maxDerivativeOrder: MaxDerivativeOrder);
+            }
+            else
+            {
+                // Fixed-N: existing path
+                piece = new ChebyshevApproximation(
+                    Function!, NumDimensions, subDomain, NNodes,
+                    maxDerivativeOrder: MaxDerivativeOrder);
+            }
             piece.Build(verbose: false);
             Pieces[flatIdx] = piece;
 
@@ -416,6 +585,84 @@ public class ChebyshevSpline
     }
 
     // ------------------------------------------------------------------
+    // Static factory: WithSpecialPoints
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Create a <see cref="ChebyshevSpline"/> with kinks declared via <paramref name="specialPoints"/>
+    /// (a more user-friendly name than <c>knots</c> when the function has known non-smooth points).
+    /// Functionally equivalent to passing the same values as knots to a regular constructor.
+    /// </summary>
+    /// <remarks>
+    /// Python's <c>ChebyshevApproximation(special_points=...)</c> returns a
+    /// <c>ChebyshevSpline</c> at construction time.  C# constructors cannot return a
+    /// different type; this static factory is the C#-idiomatic equivalent.
+    /// Exactly one of <paramref name="nNodesNested"/>, <paramref name="nNodes"/>, or
+    /// <paramref name="errorThreshold"/> must be supplied.
+    /// </remarks>
+    /// <param name="function">Function to approximate.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds per dimension.</param>
+    /// <param name="specialPoints">Per-dim list of kink locations. Equivalent to knots;
+    /// outer length must equal <paramref name="numDimensions"/>.</param>
+    /// <param name="nNodesNested">Per-sub-interval node counts (per dim, per piece).
+    /// Mutually exclusive with <paramref name="errorThreshold"/>.</param>
+    /// <param name="nNodes">Flat per-dim node counts (shared across pieces).
+    /// Mutually exclusive with <paramref name="nNodesNested"/> and <paramref name="errorThreshold"/>.</param>
+    /// <param name="errorThreshold">Target error per piece.
+    /// Mutually exclusive with <paramref name="nNodes"/>/<paramref name="nNodesNested"/>.</param>
+    /// <param name="maxN">Cap on doubling-loop nodes per dimension (default 64).</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <returns>An unbuilt <see cref="ChebyshevSpline"/> ready for <c>Build()</c>.</returns>
+    public static ChebyshevSpline WithSpecialPoints(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        double[][] specialPoints,
+        int[][]? nNodesNested = null,
+        int[]? nNodes = null,
+        double? errorThreshold = null,
+        int maxN = 64,
+        int maxDerivativeOrder = 2)
+    {
+        if (specialPoints.Length != numDimensions)
+            throw new ArgumentException(
+                $"specialPoints must have {numDimensions} entries, got {specialPoints.Length}");
+
+        // Validate using existing knots validator (sorted, strictly inside, no dupes).
+        ValidateKnots(numDimensions, domain, specialPoints);
+
+        int suppliedFormCount =
+            (nNodesNested != null ? 1 : 0) +
+            (nNodes != null ? 1 : 0) +
+            (errorThreshold != null ? 1 : 0);
+
+        if (suppliedFormCount == 0)
+            throw new ArgumentException(
+                "WithSpecialPoints requires exactly one of: nNodesNested, nNodes, or errorThreshold.");
+        if (suppliedFormCount > 1)
+            throw new ArgumentException(
+                "WithSpecialPoints accepts only one of nNodesNested, nNodes, or errorThreshold (not multiple).");
+
+        if (nNodesNested != null)
+            return new ChebyshevSpline(function, numDimensions, domain,
+                nNodesNested, specialPoints, maxDerivativeOrder);
+
+        if (nNodes != null)
+        {
+            // Delegate to the flat int[] ctor (no errorThreshold, no maxN on that overload).
+            int[] flatNodes = nNodes;
+            return new ChebyshevSpline(function, numDimensions, domain,
+                flatNodes, specialPoints, maxDerivativeOrder);
+        }
+
+        // errorThreshold path: every dim auto-N.
+        return new ChebyshevSpline(function, numDimensions, domain,
+            nNodes: (int?[]?)null, knots: specialPoints,
+            errorThreshold: errorThreshold, maxN: maxN, maxDerivativeOrder: maxDerivativeOrder);
+    }
+
+    // ------------------------------------------------------------------
     // Serialization
     // ------------------------------------------------------------------
 
@@ -456,7 +703,11 @@ public class ChebyshevSpline
                 };
                 return ps;
             }).ToArray(),
-            Version = "0.1.0",
+            OriginalNNodes = OriginalNNodes.Length > 0 ? OriginalNNodes : null,
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = NestedNNodes,
+            Version = "0.5.0",
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -509,6 +760,9 @@ public class ChebyshevSpline
         // Reconstruct intervals from knots
         var intervals = ComputeIntervals(state.NumDimensions, state.Domain, state.Knots);
 
+        // v0.5.0 migration: OriginalNNodes / ErrorThreshold / MaxN / NestedNNodes may be absent in older files.
+        int?[] originalNNodes = state.OriginalNNodes ?? Array.Empty<int?>();
+
         return new ChebyshevSpline
         {
             Function = null,
@@ -522,6 +776,10 @@ public class ChebyshevSpline
             Pieces = pieces.Cast<ChebyshevApproximation?>().ToArray(),
             Built = true,
             BuildTime = state.BuildTime,
+            OriginalNNodes = originalNNodes,
+            ErrorThreshold = state.ErrorThreshold,
+            MaxN = state.MaxN ?? 64,
+            NestedNNodes = state.NestedNNodes,
             _cachedErrorEstimate = null,
         };
     }
@@ -1454,6 +1712,10 @@ public class ChebyshevSpline
         public int[] Shape { get; set; } = Array.Empty<int>();
         public double BuildTime { get; set; }
         public PieceState[] PieceStates { get; set; } = Array.Empty<PieceState>();
+        public int?[]? OriginalNNodes { get; set; }
+        public double? ErrorThreshold { get; set; }
+        public int? MaxN { get; set; }
+        public int[][]? NestedNNodes { get; set; }
         public string Version { get; set; } = "0.1.0";
     }
 

@@ -11,6 +11,15 @@ with the Python reference implementation.
 **Reference implementation**: `ref/PyChebyshev/` (git submodule pointing to the Python library).
 Always consult the Python source when implementing or verifying behavior.
 
+## Status
+
+**Feature-complete against PyChebyshev v0.12.0** (Phase 5 of the v0.20.1 port complete; see
+`docs/superpowers/specs/2026-04-27-pychebyshev-v0.20.1-port-design.md`).
+All four public classes (`ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`,
+`ChebyshevTT`) mirror the Python API surface. `dotnet test` runs **663/663** passing.
+
+See `skip_csharp.txt` for the per-phase Python-parity vs. C#-specific test breakdown.
+
 ## Commands
 
 ```bash

@@ -11,6 +11,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-27
+
+### PyChebyshev parity: v0.12.0
+
+#### Added — Error-Driven Construction (Python v0.11.0)
+
+- `ChebyshevApproximation` and `ChebyshevSpline` constructors accept
+  `errorThreshold` and `maxN` parameters. `nNodes` may be `int?[]` with
+  `null` per dim signalling auto-N for that dimension.
+- New `static int ChebyshevApproximation.GetOptimalN1(...)` 1-D capacity
+  estimator.
+- New `double? GetErrorThreshold()` accessor on Approximation and Spline.
+- New `string? BuildWarning` property — set when `maxN` is reached before
+  `errorThreshold` is satisfied (replaces Python's `RuntimeWarning`).
+- New internal `Internal/AdaptiveBuild.cs` runs the doubling loop.
+- New `double[] ErrorEstimatePerDim()` public method (was internal in
+  Python; exposed here for symmetry with the new auto-N infrastructure).
+
+#### Added — Special Points (Python v0.12.0)
+
+- `ChebyshevSpline.WithSpecialPoints(...)` static factory: kink
+  declaration with `specialPoints` (mirrors Python's `special_points` kwarg
+  via a C#-idiomatic factory, since constructors cannot return a different
+  type).
+- `ChebyshevSpline` accepts a nested `int[][]` form for `nNodes`,
+  per-sub-interval. `nNodesNested[d][i]` is the node count for piece `i`
+  along dimension `d`.
+
+#### Changed
+
+- `Build()` is now a public dispatcher; the original behavior moved to a
+  private `BuildFixedGrid()`. No behavior change for fixed-N callers.
+- `ErrorEstimate()` is now backed by `ErrorEstimatePerDim().Sum()`. Cache
+  semantics unchanged.
+- JSON `Save`/`Load` format version bumped to "0.5.0". `Load` backfills
+  `OriginalNNodes`, `ErrorThreshold`, `MaxN` for older files (default
+  values: `OriginalNNodes` ← `NNodes`, `ErrorThreshold` ← null, `MaxN`
+  ← 64).
+
+#### Skipped
+
+- Python's `ChebyshevApproximation(special_points=...)` constructor
+  dispatch to `ChebyshevSpline` is not mirrored. C# constructors cannot
+  return a different type. Use `ChebyshevSpline.WithSpecialPoints(...)`.
+
 ## [0.4.0] - 2026-02-27
 
 ### Added

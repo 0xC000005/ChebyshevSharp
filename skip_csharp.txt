@@ -31,3 +31,10 @@
 #
 # ALL PHASES COMPLETE — Feature parity with PyChebyshev v0.10.1 achieved.
 # Total: 613 tests (457 Python-parity + 156 C#-specific)
+
+=========================================================
+Phase 5 (PyChebyshev v0.5.0 release - parity v0.12.0): Adaptive Constructor
+=========================================================
+ErrorThresholdTests.cs: ~30 tests (port of test_error_threshold.py)
+SpecialPointsTests.cs: ~16 tests (port of test_special_points.py)
+Total: 50 new tests (613 -> 663 total)

@@ -491,3 +491,7 @@ __pycache__/
 pyproject.toml
 uv.lock
 main.py
+
+# git worktrees
+.worktrees/
+
