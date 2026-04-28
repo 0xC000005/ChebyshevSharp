@@ -644,6 +644,62 @@ public class ChebyshevTT
     }
 
     /// <summary>
+    /// Refine the TT at its current rank via ALS sweeps. Works on any built TT
+    /// (from "cross", "svd", or "als"). Rank does not grow; only per-core
+    /// coefficients are refined.
+    /// </summary>
+    /// <param name="tolerance">Stop when inner-sweep relative change falls below this.</param>
+    /// <param name="maxIter">Maximum number of outer ALS sweeps.</param>
+    /// <param name="verbose">Print per-sweep residuals.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called or if <c>Function</c> is null (loaded TT).</exception>
+    public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
+    {
+        CheckBuilt();
+        if (_function == null)
+            throw new InvalidOperationException(
+                "RunCompletion requires Function to be callable; the TT was loaded from a source without the original function.");
+
+        // Convert coefficient cores back to value cores at Chebyshev Type I nodes.
+        var valueCores = new TensorTrainKernel.TtCore[_numDimensions];
+        for (int k = 0; k < _numDimensions; k++)
+            valueCores[k] = TensorTrainKernel.CoeffCoreToValueCore(_coeffCores![k]);
+
+        // Rebuild the grids that Build() used.
+        var grids = new double[_numDimensions][];
+        for (int k = 0; k < _numDimensions; k++)
+            grids[k] = BarycentricKernel.MakeNodesForDim(_domain[k][0], _domain[k][1], _nNodes[k]);
+
+        // Cache by mixed-radix flat index.
+        var cache = new Dictionary<long, double>();
+        long[] strides = new long[_numDimensions];
+        strides[_numDimensions - 1] = 1;
+        for (int i = _numDimensions - 2; i >= 0; i--) strides[i] = strides[i + 1] * _nNodes[i + 1];
+
+        Func<int[], double> evalsAt = idx =>
+        {
+            long key = 0;
+            for (int i = 0; i < _numDimensions; i++) key += idx[i] * strides[i];
+            if (!cache.TryGetValue(key, out double v))
+            {
+                var pt = new double[_numDimensions];
+                for (int i = 0; i < _numDimensions; i++) pt[i] = grids[i][idx[i]];
+                v = _function(pt);
+                cache[key] = v;
+            }
+            return v;
+        };
+
+        TensorTrainKernel.AlsFixedRankSweep(
+            valueCores, evalsAt, _nNodes, tolerance: tolerance, maxIter: maxIter, verbose: verbose);
+
+        // Convert back to coefficient cores.
+        _coeffCores = TensorTrainKernel.ValueToCoeffCores(valueCores);
+        _cachedErrorEstimate = null;
+        for (int i = 0; i < _numDimensions; i++)
+            _ttRanks![i + 1] = _coeffCores[i].RRight;
+    }
+
+    /// <summary>
     /// Internal accessor for tests: return (rLeft, nNodes, rRight, flat data) of
     /// core <paramref name="k"/>. Exposes the live data buffer (not a copy).
     /// </summary>

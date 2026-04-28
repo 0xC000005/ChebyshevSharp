@@ -157,6 +157,128 @@ public class AlsTests
     }
 }
 
+public class CompletionTests
+{
+    [Fact]
+    public void Test_value_coeff_round_trip()
+    {
+        var rng = new Random(2);
+        foreach ((int rL, int n, int rR) in new[] { (1, 8, 3), (2, 11, 4), (3, 5, 1) })
+        {
+            var v = new ChebyshevSharp.Internal.TensorTrainKernel.TtCore(rL, n, rR);
+            for (int i = 0; i < v.Size; i++) v.Data[i] = rng.NextDouble() * 2 - 1;
+            var c = ChebyshevSharp.Internal.TensorTrainKernel.ValueToCoeffCores(new[] { v })[0];
+            var vBack = ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(c);
+            for (int idx = 0; idx < v.Size; idx++)
+                Assert.True(Math.Abs(v.Data[idx] - vBack.Data[idx]) < 1e-10,
+                    $"round-trip failed at index {idx}: {v.Data[idx]} vs {vBack.Data[idx]}");
+        }
+    }
+
+    [Fact]
+    public void Test_completion_refines_cross_build()
+    {
+        Func<double[], double> f = p => Math.Exp(p[0] * p[1] * p[2]);
+        var tt = new ChebyshevTT(f, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10, 10 }, tolerance: 1e-3, maxRank: 3);
+        tt.Build(verbose: false, seed: 0, method: "cross");
+        double errBefore = tt.ErrorEstimate();
+        tt.RunCompletion(tolerance: 1e-12, maxIter: 20, verbose: false);
+        double errAfter = tt.ErrorEstimate();
+        Assert.True(errAfter <= errBefore * 1.1 + 1e-14,
+            $"completion should not worsen error; {errBefore} -> {errAfter}");
+    }
+
+    [Fact]
+    public void Test_completion_refines_svd_build()
+    {
+        Func<double[], double> f = p => Math.Exp(p[0] * p[1]);
+        var tt = new ChebyshevTT(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 }, tolerance: 1e-3, maxRank: 5);
+        tt.Build(verbose: false, method: "svd");
+        double errBefore = tt.ErrorEstimate();
+        tt.RunCompletion(tolerance: 1e-12, maxIter: 10, verbose: false);
+        double errAfter = tt.ErrorEstimate();
+        Assert.True(errAfter <= errBefore + 1e-9);
+    }
+
+    [Fact]
+    public void Test_completion_refines_als_build()
+    {
+        Func<double[], double> f = p => Math.Exp(p[0] * p[1]);
+        var tt = new ChebyshevTT(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 }, tolerance: 1e-3, maxRank: 2);
+        tt.Build(verbose: false, seed: 0, method: "als");
+        double errBefore = tt.ErrorEstimate();
+        tt.RunCompletion(tolerance: 1e-12, maxIter: 10, verbose: false);
+        double errAfter = tt.ErrorEstimate();
+        Assert.True(errAfter <= errBefore * 1.1 + 1e-14);
+    }
+
+    [Fact]
+    public void Test_completion_max_iter_respected()
+    {
+        Func<double[], double> f = p => Math.Tanh(10 * p[0]) * p[1];
+        var tt = new ChebyshevTT(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 }, tolerance: 1e-3, maxRank: 3);
+        tt.Build(verbose: false, method: "cross");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        tt.RunCompletion(tolerance: 1e-20, maxIter: 1, verbose: false);
+        sw.Stop();
+        Assert.True(sw.Elapsed.TotalSeconds < 30, "RunCompletion(maxIter=1) must not hang");
+    }
+
+    [Fact]
+    public void Test_completion_raises_on_unbuilt()
+    {
+        var tt = new ChebyshevTT(p => p[0], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 5, 5 });
+        Assert.Throws<InvalidOperationException>(() => tt.RunCompletion());
+    }
+
+    [Fact]
+    public void Test_completion_raises_when_function_missing()
+    {
+        var tt = new ChebyshevTT(p => p[0], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 5, 5 }, tolerance: 1e-2, maxRank: 3);
+        tt.Build(verbose: false, method: "cross");
+        // Save and load: loaded TT has Function == null
+        string path = Path.GetTempFileName();
+        try
+        {
+            tt.Save(path);
+            var loaded = ChebyshevTT.Load(path);
+            var ex = Assert.Throws<InvalidOperationException>(() => loaded.RunCompletion());
+            Assert.Contains("function", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_completion_eval_stays_close_to_target()
+    {
+        Func<double[], double> f = p => Math.Cos(p[0] + p[1]);
+        var tt = new ChebyshevTT(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 }, tolerance: 1e-4, maxRank: 5);
+        tt.Build(verbose: false, seed: 0, method: "cross");
+        tt.RunCompletion(tolerance: 1e-10, maxIter: 10, verbose: false);
+        double[][] pts = new[] { new[] { 0.1, 0.2 }, new[] { -0.5, 0.7 } };
+        foreach (var p in pts)
+            Assert.True(Math.Abs(tt.Eval(p) - f(p)) < 1e-3,
+                $"completion divergence at [{string.Join(", ", p)}]: got {tt.Eval(p)}, want {f(p)}");
+    }
+}
+
 public class AlsInternalsTests
 {
     [Fact]

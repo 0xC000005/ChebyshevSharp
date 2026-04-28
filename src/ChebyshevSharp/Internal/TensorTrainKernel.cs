@@ -900,6 +900,49 @@ internal static class TensorTrainKernel
     }
 
     // ------------------------------------------------------------------
+    // Coefficient ↔ Value core conversion (Phase 2 — for run_completion)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Inverse of <c>ValueToCoeffCores</c> for a single core: given a Chebyshev
+    /// coefficient core, reconstruct values at the Chebyshev Type I nodes
+    /// along axis 1 (in ascending node order).
+    /// </summary>
+    /// <remarks>
+    /// Forward (<see cref="ValueToCoeffCores"/>):
+    /// <c>coeff[k] = (2/n) * Σ_j reversed[j] * cos(π·k·(2j+1)/(2n))</c>;
+    /// then <c>coeff[0] /= 2</c>.
+    /// Inverse: <c>reversed[j] = coeff[0] + Σ_{k≥1} coeff[k] * cos(π·k·(2j+1)/(2n))</c>;
+    /// then <c>value[i] = reversed[n-1-i]</c>.
+    /// This mirrors the scipy idct(c*n, type=2) with the two scaling factors undone.
+    /// </remarks>
+    internal static TtCore CoeffCoreToValueCore(TtCore coeff)
+    {
+        int rL = coeff.RLeft, n = coeff.NNodes, rR = coeff.RRight;
+        var value = new TtCore(rL, n, rR);
+
+        for (int i = 0; i < rL; i++)
+        {
+            for (int kr = 0; kr < rR; kr++)
+            {
+                // c0 = 2 * coeff[0] so that when we halve at the end we get coeff[0].
+                double c0 = 2.0 * coeff[i, 0, kr];
+                for (int m = 0; m < n; m++)
+                {
+                    double s = c0;
+                    double phase = (m + 0.5) * Math.PI / n;
+                    for (int j = 1; j < n; j++)
+                        s += 2.0 * coeff[i, j, kr] * Math.Cos(j * phase);
+                    s /= 2.0;
+                    // Reverse: reversed[m] → value[n-1-m]
+                    value[i, n - 1 - m, kr] = s;
+                }
+            }
+        }
+        return value;
+    }
+
+    // ------------------------------------------------------------------
     // Orthogonalization primitives (Phase 2 — PyChebyshev v0.13)
     // ------------------------------------------------------------------
 
