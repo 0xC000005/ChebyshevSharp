@@ -65,6 +65,9 @@ public class ChebyshevApproximation
     private bool _isConstructionFinished;
     private object? _additionalData;
     private double[]? _evaluationPointsCache;
+#pragma warning disable CS0649  // Used by future Clone() and JSON round-trip
+    private double[][]? _specialPoints;
+#pragma warning restore CS0649
 
     /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
     internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
@@ -1441,6 +1444,12 @@ public class ChebyshevApproximation
         _evaluationPointsCache = points;
         return points;
     }
+
+    /// <summary>
+    /// Get special points (e.g., knots or singularities) used in construction.
+    /// </summary>
+    /// <returns>Special points per dimension, or null if not applicable.</returns>
+    public double[][]? GetSpecialPoints() => _specialPoints;
 
     // ------------------------------------------------------------------
     // Serialization state

@@ -135,4 +135,24 @@ public class ApproxErgonomicsTests
         double[] second = approx.GetEvaluationPoints();
         Assert.Same(first, second);
     }
+
+    [Fact]
+    public void GetErrorThreshold_returns_ctor_value_when_set()
+    {
+        var approx = new ChebyshevApproximation(
+            (p, _) => Math.Sin(p[0]),
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { null },
+            errorThreshold: 1e-6);
+        approx.Build(verbose: false);
+        Assert.Equal(1e-6, approx.GetErrorThreshold());
+    }
+
+    [Fact]
+    public void GetErrorThreshold_returns_null_when_not_set()
+    {
+        var approx = BuildSimple();
+        Assert.Null(approx.GetErrorThreshold());
+    }
 }

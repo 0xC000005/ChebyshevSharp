@@ -1859,6 +1859,19 @@ public class ChebyshevSpline
         return points;
     }
 
+    /// <summary>
+    /// Get the knots (special points) used for spline construction.
+    /// </summary>
+    /// <returns>Interior knots per dimension, or null if no interior knots were used.</returns>
+    public double[][]? GetSpecialPoints()
+    {
+        if (Knots == null) return null;
+        bool anyInterior = false;
+        foreach (var k in Knots)
+            if (k.Length > 0) { anyInterior = true; break; }
+        return anyInterior ? Knots.Select(k => (double[])k.Clone()).ToArray() : null;
+    }
+
     // ------------------------------------------------------------------
     // Serialization state
     // ------------------------------------------------------------------

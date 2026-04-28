@@ -115,4 +115,34 @@ public class SplineErgonomicsTests
         var spline = BuildSimple();
         Assert.Same(spline.GetEvaluationPoints(), spline.GetEvaluationPoints());
     }
+
+    [Fact]
+    public void GetErrorThreshold_returns_ctor_value_when_set()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => Math.Abs(p[0]),
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { null },
+            knots: new[] { new[] { 0.0 } },
+            errorThreshold: 1e-6);
+        spline.Build(verbose: false);
+        Assert.Equal(1e-6, spline.GetErrorThreshold());
+    }
+
+    [Fact]
+    public void GetSpecialPoints_returns_knots_used_for_construction()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => p[0],
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5 },
+            knots: new[] { new[] { -0.5, 0.5 } });
+        spline.Build(verbose: false);
+
+        double[][]? sp = spline.GetSpecialPoints();
+        Assert.NotNull(sp);
+        Assert.Equal(new[] { -0.5, 0.5 }, sp![0]);
+    }
 }
