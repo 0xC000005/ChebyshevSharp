@@ -400,6 +400,7 @@ public class ChebyshevSlider
             PivotValue = PivotValue,
             BuildTime = BuildTime,
             Slides = slideStates,
+            Descriptor = _descriptor,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -467,6 +468,9 @@ public class ChebyshevSlider
             Built = true,
             BuildTime = state.BuildTime,
         };
+        // v0.8.0 migration: Descriptor may be absent in older files.
+        slider._descriptor = state.Descriptor;
+        // ConstructorType is intentionally NOT restored from state — Load always sets "load".
         slider._constructorType = "load";
         slider._isConstructionFinished = true;
         return slider;
@@ -1069,6 +1073,9 @@ public class ChebyshevSlider
         public double PivotValue { get; set; }
         public double BuildTime { get; set; }
         public SlideState[] Slides { get; set; } = Array.Empty<SlideState>();
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
     }
 
     internal class SlideState

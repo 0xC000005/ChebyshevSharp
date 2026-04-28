@@ -600,7 +600,7 @@ public class TestSplineSerialization
             sp.Save(path);
             string json = File.ReadAllText(path);
             Assert.Contains("\"Version\"", json);
-            Assert.Contains("0.5.0", json);
+            Assert.Contains("0.8.0", json);
         }
         finally
         {

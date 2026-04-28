@@ -678,7 +678,12 @@ public class ChebyshevApproximation
             OriginalNNodes = OriginalNNodes,
             ErrorThreshold = ErrorThreshold,
             MaxN = MaxN,
-            Version = "0.5.0"
+            Version = "0.8.0",
+            Descriptor = _descriptor,
+            SpecialPoints = _specialPoints,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.Select(o => (int[])o.Clone()).ToArray()
+                : null,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -775,6 +780,21 @@ public class ChebyshevApproximation
         obj.ErrorThreshold = state.ErrorThreshold;
         obj.MaxN = state.MaxN ?? 64;
 
+        // v0.8.0 migration: Descriptor, SpecialPoints, RegisteredDerivativeOrders may be absent in older files.
+        obj._descriptor = state.Descriptor;
+        obj._specialPoints = state.SpecialPoints;
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = obj._registeredDerivativeOrders.Count;
+                obj._registeredDerivativeOrders.Add((int[])orders.Clone());
+                obj._derivativeIdRegistry[key] = id;
+            }
+        }
+
+        // ConstructorType is intentionally NOT restored from state — Load always sets "load".
         obj._constructorType = "load";
         obj._isConstructionFinished = true;
 
@@ -1609,6 +1629,11 @@ public class ChebyshevApproximation
         public double? ErrorThreshold { get; set; }
         public int? MaxN { get; set; }
         public string Version { get; set; } = "";
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
+        public double[][]? SpecialPoints { get; set; }
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 }
 

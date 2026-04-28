@@ -754,7 +754,8 @@ public class ChebyshevSpline
             ErrorThreshold = ErrorThreshold,
             MaxN = MaxN,
             NestedNNodes = NestedNNodes,
-            Version = "0.5.0",
+            Version = "0.8.0",
+            Descriptor = _descriptor,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -875,6 +876,9 @@ public class ChebyshevSpline
             NestedNNodes = state.NestedNNodes,
             _cachedErrorEstimate = null,
         };
+        // v0.8.0 migration: Descriptor may be absent in older files.
+        spline._descriptor = state.Descriptor;
+        // ConstructorType is intentionally NOT restored from state — Load always sets "load".
         spline._constructorType = "load";
         return spline;
     }
@@ -2050,6 +2054,9 @@ public class ChebyshevSpline
         public int? MaxN { get; set; }
         public int[][]? NestedNNodes { get; set; }
         public string Version { get; set; } = "0.1.0";
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
     }
 
     internal class PieceState

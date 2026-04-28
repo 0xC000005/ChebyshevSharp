@@ -1136,6 +1136,8 @@ public class ChebyshevTT
             BuildTime = _buildTime,
             TotalBuildEvals = _totalBuildEvals,
             Cores = new CoreData[_numDimensions],
+            Descriptor = _descriptor,
+            MaxDerivativeOrder = _maxDerivativeOrder,
         };
 
         for (int i = 0; i < _numDimensions; i++)
@@ -1185,9 +1187,14 @@ public class ChebyshevTT
             cores,
             state.TtRanks,
             state.BuildTime,
-            state.TotalBuildEvals);
+            state.TotalBuildEvals,
+            // v0.8.0 migration: MaxDerivativeOrder absent in pre-v0.8.0 JSON => null => default 2
+            maxDerivativeOrder: state.MaxDerivativeOrder ?? 2);
 
         tt.Method = state.Method;
+
+        // v0.8.0 migration: Descriptor may be absent in older files.
+        tt._descriptor = state.Descriptor;
 
         string currentVersion = GetLibraryVersion();
         if (state.Version != null && state.Version != currentVersion)
@@ -1450,6 +1457,11 @@ public class ChebyshevTT
         public double BuildTime { get; set; }
         public int TotalBuildEvals { get; set; }
         public CoreData[] Cores { get; set; } = null!;
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
+        // Nullable so pre-v0.8.0 files (which lack this field) default to null => 2
+        public int? MaxDerivativeOrder { get; set; }
     }
 
     internal class CoreData
