@@ -82,6 +82,7 @@ public class ChebyshevSpline
     /// <param name="knots">Interior knots for each dimension. Empty array for no knots.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -89,7 +90,8 @@ public class ChebyshevSpline
         int[] nNodes,
         double[][] knots,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         Function = function;
         NumDimensions = numDimensions;
@@ -130,6 +132,7 @@ public class ChebyshevSpline
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -139,7 +142,8 @@ public class ChebyshevSpline
         double? errorThreshold = null,
         int maxN = 64,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -202,6 +206,7 @@ public class ChebyshevSpline
     /// <param name="knots">Interior knots per dimension. Required (no default) when using nested form.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -209,7 +214,8 @@ public class ChebyshevSpline
         int[][] nNodesNested,
         double[][] knots,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         if (nNodesNested.Length != numDimensions)
             throw new ArgumentException(
@@ -1872,6 +1878,78 @@ public class ChebyshevSpline
         foreach (var k in Knots)
             if (k.Length > 0) { anyInterior = true; break; }
         return anyInterior ? Knots.Select(k => (double[])k.Clone()).ToArray() : null;
+    }
+
+    /// <summary>
+    /// Populate this spline's tensor values from a precomputed flat array.
+    /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
+    /// the <c>FromValues</c> factory.
+    /// Values are concatenated in flat piece-index C-order: piece 0 values first, then piece 1, etc.
+    /// </summary>
+    /// <param name="values">Flat array concatenating all pieces' values in piece-flat-index order.</param>
+    /// <exception cref="ArgumentException">Thrown when values length does not match the expected total across all pieces.</exception>
+    public void SetOriginalFunctionValues(double[] values)
+    {
+        int totalPieces = 1;
+        foreach (int s in Shape) totalPieces *= s;
+
+        var pieceSizes = new int[totalPieces];
+        int totalExpected = 0;
+        for (int p = 0; p < totalPieces; p++)
+        {
+            int n = 1;
+            var (_, pieceNNodes) = ComputePieceDomainAndN(p);
+            foreach (int nn in pieceNNodes) n *= nn;
+            pieceSizes[p] = n;
+            totalExpected += n;
+        }
+
+        if (values.Length != totalExpected)
+            throw new ArgumentException(
+                $"values has {values.Length} entries, expected {totalExpected} across all pieces");
+
+        Pieces = new ChebyshevApproximation?[totalPieces];
+        int offset = 0;
+        for (int p = 0; p < totalPieces; p++)
+        {
+            int sz = pieceSizes[p];
+            var pieceValues = new double[sz];
+            Array.Copy(values, offset, pieceValues, 0, sz);
+            offset += sz;
+            var (pieceDomain, pieceNNodes) = ComputePieceDomainAndN(p);
+            Pieces[p] = ChebyshevApproximation.FromValues(
+                pieceValues,
+                NumDimensions,
+                pieceDomain,
+                pieceNNodes,
+                MaxDerivativeOrder);
+        }
+
+        Built = true;
+        _evaluationPointsCache = null;
+        _constructorType = "from_values";
+    }
+
+    private (double[][] pieceDomain, int[] pieceNNodes) ComputePieceDomainAndN(int flatPieceIdx)
+    {
+        // Decompose flat piece index into per-dim piece coords (C-order / row-major).
+        var pieceCoords = new int[NumDimensions];
+        int rem = flatPieceIdx;
+        for (int d = NumDimensions - 1; d >= 0; d--)
+        {
+            pieceCoords[d] = rem % Shape[d];
+            rem /= Shape[d];
+        }
+
+        var pieceDomain = new double[NumDimensions][];
+        var pieceNNodes = new int[NumDimensions];
+        for (int d = 0; d < NumDimensions; d++)
+        {
+            var iv = Intervals[d][pieceCoords[d]];
+            pieceDomain[d] = new[] { iv.lo, iv.hi };
+            pieceNNodes[d] = NestedNNodes != null ? NestedNNodes[d][pieceCoords[d]] : NNodes[d];
+        }
+        return (pieceDomain, pieceNNodes);
     }
 
     /// <summary>

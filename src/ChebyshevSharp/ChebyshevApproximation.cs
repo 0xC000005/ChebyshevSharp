@@ -83,13 +83,15 @@ public class ChebyshevApproximation
     /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager node materialization. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[] nNodes,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         Function = function;
         NumDimensions = numDimensions;
@@ -98,11 +100,18 @@ public class ChebyshevApproximation
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
 
-        // Generate Chebyshev nodes for each dimension
-        NodeArrays = new double[numDimensions][];
-        for (int d = 0; d < numDimensions; d++)
+        if (!deferBuild)
         {
-            NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+            // Generate Chebyshev nodes for each dimension
+            NodeArrays = new double[numDimensions][];
+            for (int d = 0; d < numDimensions; d++)
+            {
+                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+            }
+        }
+        else
+        {
+            NodeArrays = Array.Empty<double[]>();
         }
     }
 
@@ -333,6 +342,20 @@ public class ChebyshevApproximation
         }
 
         return current[0]; // Should not reach here normally
+    }
+
+    /// <summary>
+    /// Evaluate the function value (no derivatives) at the given point.
+    /// Convenience overload equivalent to <c>Eval(point, new int[NumDimensions])</c>.
+    /// </summary>
+    /// <param name="point">Query point, one coordinate per dimension.</param>
+    /// <returns>Interpolated value at the query point.</returns>
+    public double Eval(double[] point)
+    {
+        if (TensorValues == null)
+            throw new InvalidOperationException(
+                "Cannot evaluate an unbuilt interpolant. Call Build() or SetOriginalFunctionValues() first.");
+        return Eval(point, new int[NumDimensions]);
     }
 
     /// <summary>
@@ -1447,6 +1470,47 @@ public class ChebyshevApproximation
     /// </summary>
     /// <returns>Special points per dimension, or null if not applicable.</returns>
     public double[][]? GetSpecialPoints() => _specialPoints;
+
+    /// <summary>
+    /// Populate this interpolant's tensor values from a precomputed flat array.
+    /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
+    /// the <see cref="FromValues"/> factory.
+    /// </summary>
+    /// <param name="values">Flat C-order tensor of length nNodes[0]*nNodes[1]*...</param>
+    /// <exception cref="ArgumentException">Thrown when values length does not match the expected product of nNodes.</exception>
+    public void SetOriginalFunctionValues(double[] values)
+    {
+        int expected = 1;
+        for (int d = 0; d < NumDimensions; d++) expected *= NNodes[d];
+        if (values.Length != expected)
+            throw new ArgumentException(
+                $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", NNodes)}]");
+
+        // Materialize NodeArrays now if deferred (NodeArrays is empty when deferBuild was true).
+        if (NodeArrays.Length == 0)
+        {
+            NodeArrays = new double[NumDimensions][];
+            for (int d = 0; d < NumDimensions; d++)
+                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(Domain[d][0], Domain[d][1], NNodes[d]);
+        }
+
+        // Mirror FromValues precomputation (bit-identical).
+        TensorValues = (double[])values.Clone();
+
+        Weights = new double[NumDimensions][];
+        for (int d = 0; d < NumDimensions; d++)
+            Weights[d] = BarycentricKernel.ComputeBarycentricWeights(NodeArrays[d]);
+
+        DiffMatrices = new double[NumDimensions][,];
+        for (int d = 0; d < NumDimensions; d++)
+            DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(NodeArrays[d], Weights[d]);
+
+        PrecomputeTransposedDiffMatrices();
+
+        _evaluationPointsCache = null;
+        _isConstructionFinished = true;
+        _constructorType = "from_values";
+    }
 
     /// <summary>
     /// Register or look up a derivative-orders tuple. Returns a stable
