@@ -65,6 +65,8 @@ public class ChebyshevSpline
     internal int[][]? NestedNNodes { get; set; }
 
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private string _constructorType = "function";
 
     /// <summary>
     /// Create a new ChebyshevSpline.
@@ -784,7 +786,9 @@ public class ChebyshevSpline
                 $"call ChebyshevApproximation.Load instead if class_tag={Internal.PcbFormat.ClassTagApproximation}");
 
         var (domain, nNodes, knots, pieceTensors) = Internal.PcbFormat.ReadSplineBody(r);
-        return FromValues(pieceTensors, domain.Length, domain, nNodes, knots);
+        var spline = FromValues(pieceTensors, domain.Length, domain, nNodes, knots);
+        spline._constructorType = "load";
+        return spline;
     }
 
     private static ChebyshevSpline LoadJson(string path)
@@ -830,7 +834,7 @@ public class ChebyshevSpline
         // v0.5.0 migration: OriginalNNodes / ErrorThreshold / MaxN / NestedNNodes may be absent in older files.
         int?[] originalNNodes = state.OriginalNNodes ?? Array.Empty<int?>();
 
-        return new ChebyshevSpline
+        var spline = new ChebyshevSpline
         {
             Function = null,
             NumDimensions = state.NumDimensions,
@@ -849,6 +853,8 @@ public class ChebyshevSpline
             NestedNNodes = state.NestedNNodes,
             _cachedErrorEstimate = null,
         };
+        spline._constructorType = "load";
+        return spline;
     }
 
     // ------------------------------------------------------------------
@@ -978,7 +984,7 @@ public class ChebyshevSpline
             flatIdx++;
         }
 
-        return new ChebyshevSpline
+        var spline = new ChebyshevSpline
         {
             Function = null,
             NumDimensions = numDimensions,
@@ -993,6 +999,8 @@ public class ChebyshevSpline
             BuildTime = 0.0,
             _cachedErrorEstimate = null,
         };
+        spline._constructorType = "from_values";
+        return spline;
     }
 
     // ------------------------------------------------------------------
@@ -1766,6 +1774,32 @@ public class ChebyshevSpline
 
     // ------------------------------------------------------------------
     // Serialization types
+    // ------------------------------------------------------------------
+
+    // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this spline.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="FromValues"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => Built;
+
+    /// <summary>Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load).</summary>
+    public string GetConstructorType() => _constructorType;
+
+    /// <summary>Per-dimension Chebyshev node counts actually used per piece.</summary>
+    public int[] GetUsedNs() => (int[])NNodes.Clone();
+
+    /// <summary>Maximum derivative order this spline supports.</summary>
+    public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    // ------------------------------------------------------------------
+    // Serialization state
     // ------------------------------------------------------------------
 
     internal class SplineSerializationState

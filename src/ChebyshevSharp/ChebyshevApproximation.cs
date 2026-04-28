@@ -60,6 +60,9 @@ public class ChebyshevApproximation
     internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
 
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private string _constructorType = "function";
+    private bool _isConstructionFinished;
 
     /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
     internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
@@ -242,6 +245,8 @@ public class ChebyshevApproximation
             int totalWeights = Weights.Sum(w => w.Length);
             Console.WriteLine($"  Built in {BuildTime:F3}s ({totalWeights} weights, {totalWeights * 8} bytes)");
         }
+
+        _isConstructionFinished = true;
     }
 
     /// <summary>
@@ -695,7 +700,9 @@ public class ChebyshevApproximation
                 $"call ChebyshevSpline.Load instead if class_tag={Internal.PcbFormat.ClassTagSpline}");
 
         var (domain, nNodes, tensor) = Internal.PcbFormat.ReadApproximationBody(r);
-        return FromValues(tensor, domain.Length, domain, nNodes);
+        var obj = FromValues(tensor, domain.Length, domain, nNodes);
+        obj._constructorType = "load";
+        return obj;
     }
 
     private static ChebyshevApproximation LoadJson(string path)
@@ -736,6 +743,9 @@ public class ChebyshevApproximation
             obj.OriginalNNodes = obj.NNodes.Select(n => (int?)n).ToArray();
         obj.ErrorThreshold = state.ErrorThreshold;
         obj.MaxN = state.MaxN ?? 64;
+
+        obj._constructorType = "load";
+        obj._isConstructionFinished = true;
 
         return obj;
     }
@@ -859,6 +869,9 @@ public class ChebyshevApproximation
             obj.DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(obj.NodeArrays[d], obj.Weights[d]);
 
         obj.PrecomputeTransposedDiffMatrices();
+
+        obj._constructorType = "from_values";
+        obj._isConstructionFinished = true;
 
         return obj;
     }
@@ -1345,6 +1358,28 @@ public class ChebyshevApproximation
                 matrix[i, j] = flat[i * cols + j];
         return matrix;
     }
+
+    // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this interpolant.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="FromValues"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => _isConstructionFinished;
+
+    /// <summary>Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load), "clone" (Clone).</summary>
+    public string GetConstructorType() => _constructorType;
+
+    /// <summary>Per-dimension Chebyshev node counts actually used. After auto-N construction, these are the resolved values.</summary>
+    public int[] GetUsedNs() => (int[])NNodes.Clone();
+
+    /// <summary>Maximum derivative order this approximation supports.</summary>
+    public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
 
     // ------------------------------------------------------------------
     // Serialization state

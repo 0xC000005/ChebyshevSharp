@@ -58,6 +58,9 @@ public class ChebyshevSlider
     public double BuildTime { get; internal set; }
 
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private string _constructorType = "function";
+    private bool _isConstructionFinished;
 
     /// <summary>
     /// Create a new ChebyshevSlider.
@@ -207,6 +210,7 @@ public class ChebyshevSlider
             Console.WriteLine($"Build complete in {BuildTime:F3}s");
 
         Built = true;
+        _isConstructionFinished = true;
     }
 
     // ------------------------------------------------------------------
@@ -440,7 +444,7 @@ public class ChebyshevSlider
             slides[i] = slide;
         }
 
-        return new ChebyshevSlider
+        var slider = new ChebyshevSlider
         {
             Function = null,
             NumDimensions = state.NumDimensions,
@@ -455,6 +459,9 @@ public class ChebyshevSlider
             Built = true,
             BuildTime = state.BuildTime,
         };
+        slider._constructorType = "load";
+        slider._isConstructionFinished = true;
+        return slider;
     }
 
     // ------------------------------------------------------------------
@@ -884,6 +891,28 @@ public class ChebyshevSlider
 
         return string.Join("\n", lines);
     }
+
+    // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this slider.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => _isConstructionFinished;
+
+    /// <summary>Returns one of: "function" (Build), "load" (Load).</summary>
+    public string GetConstructorType() => _constructorType;
+
+    /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
+    public int[] GetUsedNs() => (int[])NNodes.Clone();
+
+    /// <summary>Maximum derivative order this slider supports.</summary>
+    public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
 
     // ------------------------------------------------------------------
     // Serialization state classes

@@ -30,6 +30,8 @@ public class ChebyshevTT
     private double _buildTime;
     private int _totalBuildEvals;
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private int _maxDerivativeOrder = 2;
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
@@ -99,6 +101,7 @@ public class ChebyshevTT
     /// <param name="maxRank">Maximum TT rank. Default is 10.</param>
     /// <param name="tolerance">Convergence tolerance for TT-Cross. Default is 1e-6.</param>
     /// <param name="maxSweeps">Maximum number of TT-Cross sweeps. Default is 10.</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support. Default is 2.</param>
     public ChebyshevTT(
         Func<double[], double> function,
         int numDimensions,
@@ -106,7 +109,8 @@ public class ChebyshevTT
         int[] nNodes,
         int maxRank = 10,
         double tolerance = 1e-6,
-        int maxSweeps = 10)
+        int maxSweeps = 10,
+        int maxDerivativeOrder = 2)
     {
         if (domain.Length != numDimensions)
             throw new ArgumentException(
@@ -122,6 +126,7 @@ public class ChebyshevTT
         _maxRank = maxRank;
         _tolerance = tolerance;
         _maxSweeps = maxSweeps;
+        _maxDerivativeOrder = maxDerivativeOrder;
     }
 
     // Private constructor for deserialization
@@ -135,7 +140,8 @@ public class ChebyshevTT
         TensorTrainKernel.TtCore[] coeffCores,
         int[] ttRanks,
         double buildTime,
-        int totalBuildEvals)
+        int totalBuildEvals,
+        int maxDerivativeOrder = 2)
     {
         _function = null;
         _numDimensions = numDimensions;
@@ -148,6 +154,7 @@ public class ChebyshevTT
         _ttRanks = ttRanks;
         _buildTime = buildTime;
         _totalBuildEvals = totalBuildEvals;
+        _maxDerivativeOrder = maxDerivativeOrder;
         _built = true;
     }
 
@@ -1254,6 +1261,28 @@ public class ChebyshevTT
 
         return sb.ToString();
     }
+
+    // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this tensor train.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => _built;
+
+    /// <summary>Returns one of: "cross", "svd", "als" (build method used), or "function" if not yet built.</summary>
+    public string GetConstructorType() => Method ?? "function";
+
+    /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
+    public int[] GetUsedNs() => (int[])_nNodes.Clone();
+
+    /// <summary>Maximum derivative order this tensor train supports.</summary>
+    public int GetMaxDerivativeOrder() => _maxDerivativeOrder;
 
     // ------------------------------------------------------------------
     // Serialization DTO
