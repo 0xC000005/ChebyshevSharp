@@ -339,6 +339,140 @@ public class ChebyshevSlider
         return sum;
     }
 
+    // ------------------------------------------------------------------
+    // Integration (Phase 5 — PyChebyshev v0.17)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Integrate the slider approximation over one or more dimensions.
+    /// Uses the closed-form decomposition of the sliding sum:
+    ///   f(x) ≈ pv + Σ_i [s_i(x_{G_i}) - pv]
+    /// Each slide's integral is computed via <see cref="ChebyshevApproximation.Integrate"/>.
+    /// </summary>
+    /// <param name="dims">Dimensions to integrate out. Null = all (full integration → scalar).</param>
+    /// <param name="bounds">Sub-interval bounds per dim (positional with sorted dims). Null = full domain.</param>
+    /// <returns>A boxed <c>double</c> when every dim is integrated; otherwise a new <see cref="ChebyshevSlider"/> over surviving dims.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range or duplicated indices, or <paramref name="bounds"/> are invalid.</exception>
+    public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
+    {
+        if (!Built)
+            throw new InvalidOperationException("Call Build() before Integrate().");
+
+        // Normalize dims: null = all, sort + deduplicate, validate range.
+        int[] sortedDims;
+        if (dims == null)
+            sortedDims = Enumerable.Range(0, NumDimensions).ToArray();
+        else
+            sortedDims = dims.Distinct().OrderBy(d => d).ToArray();
+
+        foreach (int d in sortedDims)
+        {
+            if (d < 0 || d >= NumDimensions)
+                throw new ArgumentException(
+                    $"dim {d} out-of-range [0, {NumDimensions - 1}]");
+        }
+
+        var perDimBounds = Internal.Calculus.NormalizeBounds(sortedDims, bounds, Domain);
+        var dimToIdx = new Dictionary<int, int>();
+        for (int i = 0; i < sortedDims.Length; i++)
+            dimToIdx[sortedDims[i]] = i;
+
+        // Per-dim integration widths.
+        var widths = new Dictionary<int, double>();
+        var boundsForDim = new Dictionary<int, (double lo, double hi)?>();
+        foreach (int d in sortedDims)
+        {
+            var bd = perDimBounds[dimToIdx[d]];
+            double a = Domain[d][0], b = Domain[d][1];
+            if (bd == null)
+            {
+                widths[d] = b - a;
+                boundsForDim[d] = null;
+            }
+            else
+            {
+                widths[d] = bd.Value.hi - bd.Value.lo;
+                boundsForDim[d] = bd;
+            }
+        }
+
+        double volT = 1.0;
+        foreach (int d in sortedDims) volT *= widths[d];
+
+        // Per-slide classification.
+        var slideKinds = new (string kind, int[] kept)[Partition.Length];
+        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        {
+            slideKinds[slideIdx] = Internal.Calculus.SliderPartitionIntersect(
+                Partition[slideIdx], sortedDims);
+        }
+
+        // pv_new accumulator: starts as pv * vol_T (the first term of the sum).
+        double pvNew = PivotValue * volT;
+
+        // For each "full" slide: integrate over its full group with the
+        // appropriate sub-interval bounds, then add contribution to pv_new.
+        // Contribution = vol(T \ G_i) * (I_i - pv * vol(G_i ∩ T))
+        // For "full" slides, vol(G_i ∩ T) is the product of widths over G_i.
+        var slideFullIntegrals = new Dictionary<int, double>();
+        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        {
+            var (kind, _) = slideKinds[slideIdx];
+            if (kind != "full") continue;
+
+            var slide = Slides[slideIdx];
+            var group = Partition[slideIdx];
+
+            // Local-dim list (always all dims of the slide) with corresponding bounds.
+            int[] localDims = Enumerable.Range(0, group.Length).ToArray();
+            var localBoundsList = new List<(double lo, double hi)>(group.Length);
+            bool allFullDomain = true;
+            for (int gi = 0; gi < group.Length; gi++)
+            {
+                var bd = boundsForDim[group[gi]];
+                if (bd == null)
+                {
+                    // Use full slide-domain for this local dim
+                    localBoundsList.Add((slide.Domain[gi][0], slide.Domain[gi][1]));
+                }
+                else
+                {
+                    localBoundsList.Add(bd.Value);
+                    allFullDomain = false;
+                }
+            }
+
+            double Ii;
+            if (allFullDomain)
+                Ii = (double)slide.Integrate(dims: localDims);
+            else
+                Ii = (double)slide.Integrate(dims: localDims, bounds: localBoundsList.ToArray());
+
+            slideFullIntegrals[slideIdx] = Ii;
+
+            // vol(T \ G_i) — widths over dims in T but NOT in G_i.
+            double volOutside = 1.0;
+            var groupSet = new HashSet<int>(group);
+            foreach (int d in sortedDims)
+                if (!groupSet.Contains(d)) volOutside *= widths[d];
+
+            // vol(G_i ∩ T) for "full" slides equals product of widths over G_i.
+            double volGroup = 1.0;
+            foreach (int d in group) volGroup *= widths[d];
+
+            pvNew += volOutside * (Ii - PivotValue * volGroup);
+        }
+
+        // Full integration: every group classified "full", return scalar.
+        if (sortedDims.Length == NumDimensions)
+            return pvNew;
+
+        // Partial integration is implemented in Task 3.
+        throw new NotImplementedException(
+            "ChebyshevSlider.Integrate partial integration is implemented in Phase 5 Task 3.");
+    }
+
     /// <summary>Total number of function evaluations used during build.</summary>
     public int TotalBuildEvals
     {
