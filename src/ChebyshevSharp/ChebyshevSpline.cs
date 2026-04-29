@@ -71,6 +71,8 @@ public class ChebyshevSpline
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
+    private int? _nWorkers;
+    private IProgress<int>? _progress;
 
     /// <summary>
     /// Create a new ChebyshevSpline.
@@ -83,6 +85,9 @@ public class ChebyshevSpline
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all pieces.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -91,7 +96,9 @@ public class ChebyshevSpline
         double[][] knots,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         Function = function;
         NumDimensions = numDimensions;
@@ -99,6 +106,8 @@ public class ChebyshevSpline
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
 
         // Validate and store knots
         ValidateKnots(numDimensions, domain, knots);
@@ -133,6 +142,9 @@ public class ChebyshevSpline
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all pieces.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -143,7 +155,9 @@ public class ChebyshevSpline
         int maxN = 64,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -175,6 +189,8 @@ public class ChebyshevSpline
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
         OriginalNNodes = (int?[])resolvedOriginal.Clone();
 
         // Public NNodes is meaningful only after Build resolves the auto-N values.
@@ -207,6 +223,9 @@ public class ChebyshevSpline
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all pieces.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -215,7 +234,9 @@ public class ChebyshevSpline
         double[][] knots,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         if (nNodesNested.Length != numDimensions)
             throw new ArgumentException(
@@ -233,6 +254,8 @@ public class ChebyshevSpline
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
         MaxN = 64;
         ErrorThreshold = null;
         OriginalNNodes = Array.Empty<int?>();
@@ -351,6 +374,7 @@ public class ChebyshevSpline
                 $"({totalPieces} pieces, {totalPieces * perPieceEvals:N0} total evaluations)...");
 
         int flatIdx = 0;
+        int progressOffset = 0;
         foreach (var multiIdx in NdIndex(Shape))
         {
             // Compute sub-domain for this piece
@@ -360,6 +384,11 @@ public class ChebyshevSpline
                 var iv = Intervals[d][multiIdx[d]];
                 subDomain[d] = new[] { iv.lo, iv.hi };
             }
+
+            // Build per-piece progress shim that offsets reported values by cumulative evals so far.
+            int capturedOffset = progressOffset;
+            IProgress<int>? pieceProgress = _progress is null ? null
+                : new Internal.OffsetProgress(_progress, capturedOffset);
 
             ChebyshevApproximation piece;
             if (NestedNNodes != null)
@@ -371,7 +400,9 @@ public class ChebyshevSpline
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, pieceN,
                     maxDerivativeOrder: MaxDerivativeOrder,
-                    additionalData: _additionalData);
+                    additionalData: _additionalData,
+                    nWorkers: _nWorkers, progress: pieceProgress);
+                progressOffset += pieceN.Aggregate(1, (acc, n) => acc * n);
             }
             else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
@@ -384,7 +415,9 @@ public class ChebyshevSpline
                     errorThreshold: ErrorThreshold,
                     maxN: MaxN,
                     maxDerivativeOrder: MaxDerivativeOrder,
-                    additionalData: _additionalData);
+                    additionalData: _additionalData,
+                    nWorkers: _nWorkers, progress: pieceProgress);
+                // Offset update happens after Build (actual N resolved then)
             }
             else
             {
@@ -392,9 +425,14 @@ public class ChebyshevSpline
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, NNodes,
                     maxDerivativeOrder: MaxDerivativeOrder,
-                    additionalData: _additionalData);
+                    additionalData: _additionalData,
+                    nWorkers: _nWorkers, progress: pieceProgress);
+                progressOffset += NNodes.Aggregate(1, (acc, n) => acc * n);
             }
             piece.Build(verbose: false);
+            // For auto-N path, update offset after Build (N is now known)
+            if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
+                progressOffset += piece.NNodes.Aggregate(1, (acc, n) => acc * n);
             Pieces[flatIdx] = piece;
 
             if (verbose)
@@ -1898,6 +1936,55 @@ public class ChebyshevSpline
     }
 
     /// <summary>
+    /// Compute Sobol sensitivity indices aggregated across spline pieces.
+    /// Per-piece coefficients are computed under the Chebyshev measure on each piece's
+    /// local domain; per-piece contributions are weighted by domain volume × variance,
+    /// then normalized by global variance. For a single-piece spline, this reduces to
+    /// the <see cref="ChebyshevApproximation.SobolIndices"/> case.
+    /// </summary>
+    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, global Variance.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    public SobolResult SobolIndices()
+    {
+        if (Pieces == null || Pieces.Length == 0 || Pieces.Any(p => p == null || p.TensorValues == null))
+            throw new InvalidOperationException(
+                "SobolIndices requires a built ChebyshevSpline. Call Build() first.");
+
+        int nDim = NumDimensions;
+        var globalFirstOrder = new double[nDim];
+        var globalTotalOrder = new double[nDim];
+        double globalVariance = 0.0;
+
+        foreach (var piece in Pieces)
+        {
+            if (piece == null) continue;
+            double vol = 1.0;
+            for (int d = 0; d < nDim; d++)
+            {
+                double lo = piece.Domain[d][0], hi = piece.Domain[d][1];
+                vol *= (hi - lo);
+            }
+            var coeffs = Internal.Sensitivity.ChebyshevCoefficientsND(piece.TensorValues!, piece.NNodes);
+            var pieceResult = Internal.Sensitivity.ComputeSobolFromCoeffs(coeffs, piece.NNodes);
+            globalVariance += vol * pieceResult.Variance;
+            for (int d = 0; d < nDim; d++)
+            {
+                globalFirstOrder[d] += vol * pieceResult.FirstOrder[d] * pieceResult.Variance;
+                globalTotalOrder[d] += vol * pieceResult.TotalOrder[d] * pieceResult.Variance;
+            }
+        }
+
+        if (globalVariance == 0)
+            return new SobolResult(new double[nDim], new double[nDim], 0);
+        for (int d = 0; d < nDim; d++)
+        {
+            globalFirstOrder[d] /= globalVariance;
+            globalTotalOrder[d] /= globalVariance;
+        }
+        return new SobolResult(globalFirstOrder, globalTotalOrder, globalVariance);
+    }
+
+    /// <summary>
     /// Populate this spline's tensor values from a precomputed flat array.
     /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
     /// the <c>FromValues</c> factory.
@@ -2045,6 +2132,179 @@ public class ChebyshevSpline
         foreach (var orders in _registeredDerivativeOrders)
             copy._registeredDerivativeOrders.Add((int[])orders.Clone());
         return copy;
+    }
+
+    // ------------------------------------------------------------------
+    // AutoKnots — curvature-spike knot detection (Phase 6 Task 8)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Auto-place knots at function kinks via a curvature-spike scan, then build the
+    /// resulting <see cref="ChebyshevSpline"/>. Mirrors PyChebyshev <c>spline.py:2111</c>.
+    /// </summary>
+    /// <param name="function">f(point, additionalData) → double; must return finite at every scan point.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
+    /// <param name="numNodes">Per-piece node counts; same shape as the regular ctor.</param>
+    /// <param name="maxOrderDerivative">Max derivative order. Default 2.</param>
+    /// <param name="additionalData">Optional user data threaded through f calls.</param>
+    /// <param name="descriptor">Optional free-form descriptor.</param>
+    /// <param name="thresholdFactor">Spike threshold = thresholdFactor × mean(|d²f|). Default 5.0.</param>
+    /// <param name="maxKnotsPerDim">Cap on knots per dimension. Default 5. Zero means no auto-knots.</param>
+    /// <param name="nScanPoints">Number of scan points per dim. Default 200; must be at least 3.</param>
+    /// <param name="nWorkers">See <see cref="ChebyshevSpline"/> ctor.</param>
+    /// <param name="progress">See <see cref="ChebyshevSpline"/> ctor.</param>
+    /// <param name="verbose">If true, print scan progress.</param>
+    /// <returns>A built ChebyshevSpline with the discovered knots.</returns>
+    /// <remarks>
+    /// When <paramref name="nWorkers"/> is non-null, <paramref name="function"/> may be
+    /// invoked concurrently from multiple threads. Functions that capture mutable state
+    /// must use locks or external synchronization, or pass <c>nWorkers: null</c>.
+    /// </remarks>
+    public static ChebyshevSpline AutoKnots(
+        Func<double[], object?, double> function,
+        int numDimensions,
+        double[][] domain,
+        int[] numNodes,
+        int maxOrderDerivative = 2,
+        object? additionalData = null,
+        string? descriptor = null,
+        double thresholdFactor = 5.0,
+        int maxKnotsPerDim = 5,
+        int nScanPoints = 200,
+        int? nWorkers = null,
+        IProgress<int>? progress = null,
+        bool verbose = false)
+    {
+        if (thresholdFactor <= 0)
+            throw new ArgumentException("thresholdFactor must be > 0", nameof(thresholdFactor));
+        if (maxKnotsPerDim < 0)
+            throw new ArgumentException("maxKnotsPerDim must be >= 0", nameof(maxKnotsPerDim));
+        if (nScanPoints < 3)
+            throw new ArgumentException("nScanPoints must be at least 3 to compute a 2nd-derivative finite difference", nameof(nScanPoints));
+
+        int? effectiveWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+
+        // Scan each dim for curvature spikes; build per-dim knot arrays.
+        var allKnots = new double[numDimensions][];
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (maxKnotsPerDim == 0)
+            {
+                allKnots[d] = Array.Empty<double>();
+                continue;
+            }
+            allKnots[d] = ScanForKnotsAlongDim(
+                function, d, numDimensions, domain, additionalData,
+                thresholdFactor, maxKnotsPerDim, nScanPoints,
+                effectiveWorkers, progress);
+        }
+
+        // Construct the resulting spline.
+        var sp = new ChebyshevSpline(function, numDimensions, domain, numNodes, allKnots,
+            maxDerivativeOrder: maxOrderDerivative,
+            additionalData: additionalData,
+            nWorkers: nWorkers,
+            progress: progress);
+        sp.SetDescriptor(descriptor ?? string.Empty);
+        sp.Build(verbose: verbose);
+        return sp;
+    }
+
+    /// <summary>
+    /// Scan one dimension for second-derivative spikes; cluster spikes; cap to
+    /// maxKnotsPerDim. Returns the knot positions in that dimension's domain.
+    /// </summary>
+    private static double[] ScanForKnotsAlongDim(
+        Func<double[], object?, double> function,
+        int dim,
+        int numDimensions,
+        double[][] domain,
+        object? additionalData,
+        double thresholdFactor,
+        int maxKnotsPerDim,
+        int nScanPoints,
+        int? effectiveWorkers,
+        IProgress<int>? progress)
+    {
+        double lo = domain[dim][0], hi = domain[dim][1];
+        // Build sample points: this dim varies, others fixed at midpoint.
+        var samplePoints = new double[nScanPoints][];
+        double dx = (hi - lo) / (nScanPoints - 1);
+        for (int i = 0; i < nScanPoints; i++)
+        {
+            var pt = new double[numDimensions];
+            for (int k = 0; k < numDimensions; k++)
+                pt[k] = (k == dim) ? (lo + i * dx) : 0.5 * (domain[k][0] + domain[k][1]);
+            samplePoints[i] = pt;
+        }
+
+        // Evaluate (parallelized if requested).
+        double[] ys = Internal.ParallelBuild.EvaluateInParallel(
+            function, samplePoints, additionalData, effectiveWorkers, progress);
+
+        // Reject non-finite values.
+        for (int i = 0; i < nScanPoints; i++)
+            if (!double.IsFinite(ys[i]))
+                throw new ArgumentException(
+                    $"AutoKnots requires a finite-valued function over the entire domain " +
+                    $"(non-finite at scan point {i} of dim {dim})");
+
+        // 2nd-derivative finite difference; pad boundaries with 0.
+        var d2 = new double[nScanPoints];
+        double h2 = dx * dx;
+        for (int i = 1; i < nScanPoints - 1; i++)
+            d2[i] = (ys[i + 1] - 2.0 * ys[i] + ys[i - 1]) / h2;
+
+        // Compute mean(|d2|) over interior.
+        double sumAbs = 0;
+        int interiorCount = 0;
+        for (int i = 1; i < nScanPoints - 1; i++)
+        {
+            sumAbs += Math.Abs(d2[i]);
+            interiorCount++;
+        }
+        double meanD2 = interiorCount > 0 ? sumAbs / interiorCount : 0.0;
+        if (meanD2 == 0) return Array.Empty<double>();
+        double threshold = thresholdFactor * meanD2;
+
+        // Identify spike indices.
+        var spikes = new List<int>();
+        for (int i = 1; i < nScanPoints - 1; i++)
+            if (Math.Abs(d2[i]) > threshold) spikes.Add(i);
+        if (spikes.Count == 0) return Array.Empty<double>();
+
+        // Cluster spikes within radius = max(1, nScanPoints / (maxKnotsPerDim * 4)).
+        int clusterRadius = Math.Max(1, nScanPoints / Math.Max(1, maxKnotsPerDim * 4));
+        var clusterPeaks = new List<int>();
+        int j = 0;
+        while (j < spikes.Count)
+        {
+            int peak = spikes[j];
+            double peakAbs = Math.Abs(d2[peak]);
+            int k = j + 1;
+            while (k < spikes.Count && spikes[k] - peak <= clusterRadius)
+            {
+                if (Math.Abs(d2[spikes[k]]) > peakAbs)
+                {
+                    peak = spikes[k];
+                    peakAbs = Math.Abs(d2[peak]);
+                }
+                k++;
+            }
+            clusterPeaks.Add(peak);
+            j = k;
+        }
+
+        // Sort by |d²| desc; cap at maxKnotsPerDim.
+        clusterPeaks.Sort((a, b) => Math.Abs(d2[b]).CompareTo(Math.Abs(d2[a])));
+        if (clusterPeaks.Count > maxKnotsPerDim)
+            clusterPeaks.RemoveRange(maxKnotsPerDim, clusterPeaks.Count - maxKnotsPerDim);
+
+        // Sort by position ascending and convert to domain coordinates.
+        clusterPeaks.Sort();
+        var knots = clusterPeaks.Select(idx => lo + idx * dx).ToArray();
+        return knots;
     }
 
     // ------------------------------------------------------------------

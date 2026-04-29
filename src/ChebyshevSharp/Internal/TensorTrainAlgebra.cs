@@ -276,4 +276,98 @@ internal static class TensorTrainAlgebra
         }
         return result;
     }
+
+    /// <summary>
+    /// Swap adjacent storage axes <paramref name="i"/> and <c>i+1</c>
+    /// of a TT in coefficient space via SVD truncation. Mirrors PyChebyshev
+    /// <c>_algebra.py:177</c>.
+    /// </summary>
+    /// <param name="cores">Coefficient cores. Not mutated; returns a fresh list.</param>
+    /// <param name="i">Position of the leftmost core in the swap pair (0 ≤ i &lt; cores.Length - 1).</param>
+    /// <param name="maxRank">Maximum rank for the SVD truncation between the swapped cores.</param>
+    /// <param name="tolerance">Relative singular-value cutoff (s_max × tolerance). Default 1e-12.</param>
+    /// <returns>New cores list with axes <c>i</c> and <c>i+1</c> swapped.</returns>
+    internal static TensorTrainKernel.TtCore[] TtSwapAdjacent(
+        TensorTrainKernel.TtCore[] cores, int i, int maxRank, double tolerance = 1e-12)
+    {
+        if (i < 0 || i >= cores.Length - 1)
+            throw new ArgumentOutOfRangeException(nameof(i),
+                $"i={i} out of range [0, {cores.Length - 1})");
+
+        var newCores = new TensorTrainKernel.TtCore[cores.Length];
+        for (int k = 0; k < cores.Length; k++) newCores[k] = cores[k].Copy();
+
+        var A = newCores[i];        // (rL, nA, rM)
+        var B = newCores[i + 1];    // (rM, nB, rR)
+        int rL = A.RLeft, nA = A.NNodes, rM = A.RRight;
+        int rM2 = B.RLeft, nB = B.NNodes, rR = B.RRight;
+        if (rM != rM2)
+            throw new ArgumentException($"core shape mismatch at {i}: A.RRight={rM}, B.RLeft={rM2}");
+
+        // Form joint M[rL, nA, nB, rR] = Σ_rM A · B
+        // M is stored row-major: M[l, a, b, r] at index ((l * nA + a) * nB + b) * rR + r
+        var M = new double[rL * nA * nB * rR];
+        for (int l = 0; l < rL; l++)
+            for (int a = 0; a < nA; a++)
+                for (int b = 0; b < nB; b++)
+                    for (int r = 0; r < rR; r++)
+                    {
+                        double acc = 0;
+                        for (int m = 0; m < rM; m++)
+                            acc += A[l, a, m] * B[m, b, r];
+                        M[((l * nA + a) * nB + b) * rR + r] = acc;
+                    }
+
+        // Transpose middle axes: Mt[l, b, a, r] = M[l, a, b, r]
+        var Mt = new double[rL * nB * nA * rR];
+        for (int l = 0; l < rL; l++)
+            for (int a = 0; a < nA; a++)
+                for (int b = 0; b < nB; b++)
+                    for (int r = 0; r < rR; r++)
+                        Mt[((l * nB + b) * nA + a) * rR + r] =
+                            M[((l * nA + a) * nB + b) * rR + r];
+
+        // Reshape to matrix: rows = (rL × nB), cols = (nA × rR)
+        int rows = rL * nB;
+        int cols = nA * rR;
+        var matData = new double[rows, cols];
+        for (int row = 0; row < rows; row++)
+            for (int col = 0; col < cols; col++)
+                matData[row, col] = Mt[row * cols + col];
+
+        var matrix = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(matData);
+        var svd = matrix.Svd(true);
+        var U = svd.U;
+        var S = svd.S;
+        var Vh = svd.VT;
+
+        double sMax = S.Count > 0 ? S[0] : 0.0;
+        int keep = Math.Min(maxRank, S.Count);
+        if (sMax > 0 && tolerance > 0)
+        {
+            double cutoff = sMax * tolerance;
+            int keepByTol = 0;
+            for (int k = 0; k < S.Count; k++) if (S[k] > cutoff) keepByTol++;
+            keep = Math.Max(1, Math.Min(keep, keepByTol));
+        }
+        else
+        {
+            keep = Math.Max(1, keep);
+        }
+
+        // Repack: A' = U * S, shape (rL, nB, keep); B' = Vh, shape (keep, nA, rR).
+        var aNewData = new double[rL * nB * keep];
+        for (int row = 0; row < rows; row++)
+            for (int k = 0; k < keep; k++)
+                aNewData[row * keep + k] = U[row, k] * S[k];
+
+        var bNewData = new double[keep * nA * rR];
+        for (int k = 0; k < keep; k++)
+            for (int col = 0; col < cols; col++)
+                bNewData[k * cols + col] = Vh[k, col];
+
+        newCores[i] = new TensorTrainKernel.TtCore(rL, nB, keep, aNewData);
+        newCores[i + 1] = new TensorTrainKernel.TtCore(keep, nA, rR, bNewData);
+        return newCores;
+    }
 }

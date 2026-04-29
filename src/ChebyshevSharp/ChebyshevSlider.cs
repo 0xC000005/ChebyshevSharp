@@ -65,6 +65,8 @@ public class ChebyshevSlider
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
+    private int? _nWorkers;
+    private IProgress<int>? _progress;
 
     /// <summary>
     /// Create a new ChebyshevSlider.
@@ -77,6 +79,9 @@ public class ChebyshevSlider
     /// <param name="pivotPoint">Reference point z around which slides are built.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all slides.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSlider(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -85,7 +90,9 @@ public class ChebyshevSlider
         int[][] partition,
         double[] pivotPoint,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         Function = function;
         NumDimensions = numDimensions;
@@ -93,6 +100,8 @@ public class ChebyshevSlider
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
         Partition = partition.Select(g => (int[])g.Clone()).ToArray();
         PivotPoint = (double[])pivotPoint.Clone();
 
@@ -168,6 +177,7 @@ public class ChebyshevSlider
         }
 
         Slides = new ChebyshevApproximation[Partition.Length];
+        int progressOffset = 0;
         for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
         {
             var group = Partition[slideIdx];
@@ -194,11 +204,18 @@ public class ChebyshevSlider
                 return func(fullPoint, data);
             };
 
+            // Per-slide progress shim: offsets reported values by cumulative evals so far.
+            int capturedOffset = progressOffset;
+            IProgress<int>? slideProgress = _progress is null ? null
+                : new Internal.OffsetProgress(_progress, capturedOffset);
+
             var slide = new ChebyshevApproximation(
                 slideFunc, slideDim, slideDomain, slideNNodes,
                 maxDerivativeOrder: MaxDerivativeOrder,
-                additionalData: _additionalData);
+                additionalData: _additionalData,
+                nWorkers: _nWorkers, progress: slideProgress);
             slide.Build(verbose: false);
+            progressOffset += slideNNodes.Aggregate(1, (acc, n) => acc * n);
             Slides[slideIdx] = slide;
 
             if (verbose)

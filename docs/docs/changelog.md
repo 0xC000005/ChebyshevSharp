@@ -11,6 +11,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-04-29 — PyChebyshev parity v0.20.1
+
+### Build performance (from PyChebyshev v0.19.0)
+
+- `nWorkers` ctor kwarg on all four classes (`int?`): `null` (default) = sequential; `-1` = `Environment.ProcessorCount`; positive int = pool size.
+- `IProgress<int>` ctor kwarg on all four classes: per-evaluation in Approx/Spline/Slider; per-sweep in TT.
+- Thread-safety contract: when `nWorkers` is non-null, the user-supplied function may be invoked concurrently from multiple threads. Functions that capture mutable state must use locks or external synchronization, or pass `nWorkers: null`.
+- TT accepts `nWorkers` for API symmetry but ignores it: TT-Cross is adaptive sampling, not pre-grid evaluation.
+
+### Adaptive refinement (from PyChebyshev v0.20.0 + v0.20.1)
+
+- `ChebyshevSpline.AutoKnots(...)` static factory: auto-place knots at function kinks via curvature-spike scan. Defaults: `thresholdFactor=5.0`, `maxKnotsPerDim=5`, `nScanPoints=200`.
+- `SobolIndices()` instance method on `ChebyshevApproximation` and `ChebyshevSpline`: variance decomposition from spectral Chebyshev coefficients. Returns new `SobolResult` record (`FirstOrder`, `TotalOrder`, `Variance`). No Monte Carlo, no extra evaluations.
+- `ChebyshevTT.WithAutoOrder(...)` static factory: heuristic dim ordering to minimize TT rank. Methods: `"greedy_swap"` (deterministic) and `"random"` (seeded).
+- `ChebyshevTT.Reorder(newOrder, maxRank?, tolerance?)` instance method: TT-swap-based realignment via adjacent-axis SVDs in coefficient space.
+- `ChebyshevTT.DimOrder` read-only property: storage permutation, identity by default.
+- All TT public methods now thread `_dimOrder` correctly: `Eval`, `EvalBatch`, `EvalMulti`, `Slice`, `Extrude`, `ToDense`, partial `Integrate`, unary algebra. Binary algebra (`+`, `-`) requires matching `_dimOrder` and throws `ArgumentException` with a hint at `Reorder` on mismatch.
+
+### JSON migration
+
+- `ChebyshevTT` save format bumped to `"jsonVersion": 2` with new `"dimOrder"` field.
+- v0.9.0 and earlier files load with identity `dimOrder` backfilled.
+
+### Skipped (Python-only ergonomic features)
+
+- `plot_convergence`, `plot_1d`, `plot_2d_surface`, `plot_2d_contour` (matplotlib helpers). Documented under "Python-only ergonomic features."
+
+### Internal
+
+- New `Internal/ParallelBuild.cs` — `NormalizeNWorkers`, `EvaluateInParallel`.
+- New `Internal/Sensitivity.cs` — `ChebyshevCoefficientsND`, `ComputeSobolFromCoeffs`.
+- `Internal/TensorTrainAlgebra.cs` extended with `TtSwapAdjacent` (coefficient-space adjacent-axis swap via SVD).
+
+### Submodule and parity
+
+- Submodule `ref/PyChebyshev` bumped from v0.18.0 to v0.20.1 (15 commits).
+- `<PyChebyshevParity>` advances 0.17.0 → 0.20.1 (Phase 5's deliberate non-monotonic drop is now corrected forward; Phase 6 ships everything between v0.18 and v0.20.1).
+- This is the **final phase** of the v0.20.1 port: ChebyshevSharp is feature-complete against PyChebyshev v0.20.1 modulo the deliberately skipped matplotlib plotting helpers.
+
+### Test count: 946 → 1018 (+72)
+
+Phase 6 fan-out: 17 tests in `BuildPerfTests.cs` (nWorkers normalization + parallel parity + progress reporting), 12 tests in `SobolIndicesTests.cs` (variance decomposition), 10 tests in `AutoKnotsTests.cs` (knot discovery), 18 tests in `TtAutoOrderTests.cs` (heuristic dim reordering + reorder + JSON migration), 11 tests in `TtDimOrderTests.cs` (full _dimOrder threading surface + binary algebra type checking + identity shortcut); 4 regression tests for hardened integration bounds + other edge cases.
+
+See [the Phase 6 implementation plan](https://github.com/0xC000005/ChebyshevSharp/blob/main/docs/superpowers/plans/2026-04-29-phase6-perf-and-adaptive.md) for the full diff.
+
 ## [0.9.0] - 2026-04-28
 
 ### Added — Integrate Everywhere

@@ -64,6 +64,8 @@ public class ChebyshevApproximation
     private string _constructorType = "function";
     private bool _isConstructionFinished;
     private object? _additionalData;
+    private int? _nWorkers;
+    private IProgress<int>? _progress;
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
@@ -84,6 +86,14 @@ public class ChebyshevApproximation
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager node materialization. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for Build(): null (sequential), -1 (all cores), or positive int. Mirrors PyChebyshev v0.19 <c>n_workers</c>.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count 1..N during Build().</param>
+    /// <remarks>
+    /// When <paramref name="nWorkers"/> is non-null, <paramref name="function"/> may be
+    /// invoked concurrently from multiple threads via <c>Parallel.For</c>. Functions that
+    /// capture mutable state must use locks or external synchronization, or pass
+    /// <c>nWorkers: null</c> (the default).
+    /// </remarks>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -91,7 +101,9 @@ public class ChebyshevApproximation
         int[] nNodes,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         Function = function;
         NumDimensions = numDimensions;
@@ -99,6 +111,8 @@ public class ChebyshevApproximation
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
 
         if (!deferBuild)
         {
@@ -129,6 +143,14 @@ public class ChebyshevApproximation
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="nWorkers">Number of parallel workers for Build(): null (sequential), -1 (all cores), or positive int. Mirrors PyChebyshev v0.19 <c>n_workers</c>.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count 1..N during Build().</param>
+    /// <remarks>
+    /// When <paramref name="nWorkers"/> is non-null, <paramref name="function"/> may be
+    /// invoked concurrently from multiple threads via <c>Parallel.For</c>. Functions that
+    /// capture mutable state must use locks or external synchronization, or pass
+    /// <c>nWorkers: null</c> (the default).
+    /// </remarks>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -137,7 +159,9 @@ public class ChebyshevApproximation
         double? errorThreshold = null,
         int maxN = 64,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -169,6 +193,8 @@ public class ChebyshevApproximation
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
         OriginalNNodes = (int?[])resolved.Clone();
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
 
         // If all entries are non-null, populate NNodes + nodes immediately (matches existing fixed-N behavior).
         if (resolved.All(n => n != null))
@@ -224,26 +250,25 @@ public class ChebyshevApproximation
         var sw = Stopwatch.StartNew();
         _cachedErrorEstimate = null;
 
-        // Step 1: Evaluate at all node combinations (C-order / ndindex)
-        TensorValues = new double[total];
-        double[] point = new double[NumDimensions];
+        // Step 1: Materialize the full points array (C-order / ndindex), then
+        // evaluate sequentially or in parallel via ParallelBuild.
+        var points = new double[total][];
         int[] indices = new int[NumDimensions];
-
         for (int flat = 0; flat < total; flat++)
         {
-            // Convert flat index to multi-index
             int rem = flat;
             for (int d = NumDimensions - 1; d >= 0; d--)
             {
                 indices[d] = rem % NNodes[d];
                 rem /= NNodes[d];
             }
-
+            var pt = new double[NumDimensions];
             for (int d = 0; d < NumDimensions; d++)
-                point[d] = NodeArrays[d][indices[d]];
-
-            TensorValues[flat] = Function!(point, _additionalData);
+                pt[d] = NodeArrays[d][indices[d]];
+            points[flat] = pt;
         }
+        TensorValues = Internal.ParallelBuild.EvaluateInParallel(
+            Function!, points, _additionalData, _nWorkers, _progress);
         NEvaluations = total;
 
         // Step 2: Pre-compute barycentric weights
@@ -1607,6 +1632,26 @@ public class ChebyshevApproximation
         foreach (var orders in _registeredDerivativeOrders)
             copy._registeredDerivativeOrders.Add((int[])orders.Clone());
         return copy;
+    }
+
+    // ------------------------------------------------------------------
+    // Sobol sensitivity indices
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Compute first- and total-order Sobol sensitivity indices directly from this
+    /// approximation's spectral Chebyshev coefficients. No Monte Carlo, no extra
+    /// function evaluations.
+    /// </summary>
+    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, and total Variance.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    public SobolResult SobolIndices()
+    {
+        if (TensorValues == null)
+            throw new InvalidOperationException(
+                "SobolIndices requires a built ChebyshevApproximation. Call Build() first.");
+        var coeffs = Internal.Sensitivity.ChebyshevCoefficientsND(TensorValues, NNodes);
+        return Internal.Sensitivity.ComputeSobolFromCoeffs(coeffs, NNodes);
     }
 
     // ------------------------------------------------------------------

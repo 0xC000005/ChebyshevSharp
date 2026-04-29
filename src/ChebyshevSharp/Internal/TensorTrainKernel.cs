@@ -267,7 +267,8 @@ internal static class TensorTrainKernel
         double tol,
         int maxSweeps,
         bool verbose,
-        int? seed)
+        int? seed,
+        IProgress<int>? sweepProgress = null)
     {
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
         int d = grids.Length;
@@ -547,6 +548,7 @@ internal static class TensorTrainKernel
             {
                 if (verbose) Console.WriteLine($"    Converged after {sweep + 1} sweeps (L->R)");
                 cores = bestCores!;
+                sweepProgress?.Report(sweep + 1);
                 break;
             }
 
@@ -554,6 +556,7 @@ internal static class TensorTrainKernel
             {
                 if (verbose) Console.WriteLine($"    No improvement in {staleChecks} checks (best = {bestError:E2}) — stopping");
                 cores = bestCores!;
+                sweepProgress?.Report(sweep + 1);
                 break;
             }
 
@@ -713,6 +716,7 @@ internal static class TensorTrainKernel
             {
                 if (verbose) Console.WriteLine($"    Converged after {sweep + 1} sweeps");
                 cores = bestCores!;
+                sweepProgress?.Report(sweep + 1);
                 break;
             }
 
@@ -721,12 +725,15 @@ internal static class TensorTrainKernel
                 if (verbose)
                     Console.WriteLine($"    No improvement in {staleChecks} checks (best = {bestError:E2}) — stopping");
                 cores = bestCores!;
+                sweepProgress?.Report(sweep + 1);
                 break;
             }
 
             // If max_sweeps exhausted on the last iteration, use best cores
             if (sweep == maxSweeps - 1 && bestCores != null)
                 cores = bestCores;
+
+            sweepProgress?.Report(sweep + 1);
         }
 
         return (cores, cache.Count);
