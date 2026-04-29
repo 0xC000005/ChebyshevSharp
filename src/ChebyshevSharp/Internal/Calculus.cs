@@ -327,4 +327,52 @@ internal static class Calculus
 
         return realEigs.ToArray();
     }
+
+    /// <summary>
+    /// Classify a slide group against an integration set.
+    /// Mirror of Python <c>_calculus.py:342</c> <c>_slider_partition_intersect</c>.
+    /// </summary>
+    /// <param name="groupDims">Dimensions covered by the slide group (any order).</param>
+    /// <param name="integrateDims">Dimensions being integrated over.</param>
+    /// <returns>
+    /// (kind, kept) where kind is one of "full" (every group dim is integrated),
+    /// "partial" (some group dims are integrated), or "none" (no group dims are
+    /// integrated). <c>kept</c> is the dimensions of the group NOT being
+    /// integrated; empty for "full"; equals <c>groupDims</c> for "none".
+    /// </returns>
+    internal static (string kind, int[] kept) SliderPartitionIntersect(
+        int[] groupDims, int[] integrateDims)
+    {
+        var groupSet = new HashSet<int>(groupDims);
+        var integrateSet = new HashSet<int>(integrateDims);
+        var overlap = new HashSet<int>(groupSet);
+        overlap.IntersectWith(integrateSet);
+        if (overlap.Count == 0) return ("none", (int[])groupDims.Clone());
+        if (overlap.SetEquals(groupSet)) return ("full", Array.Empty<int>());
+        return ("partial", groupDims.Where(d => !integrateSet.Contains(d)).ToArray());
+    }
+
+    /// <summary>
+    /// Contract a single TT core along its node axis with quadrature weights.
+    /// Mirror of Python <c>_calculus.py:372</c> <c>_integrate_tt_along_dim</c>.
+    /// </summary>
+    /// <param name="core">A TT core of shape (rLeft, n, rRight).</param>
+    /// <param name="weights">Quadrature weights of length <c>core.NNodes</c>, scaled to the dim's domain.</param>
+    /// <returns>An (rLeft, rRight) matrix M[r, s] = sum_j core[r, j, s] * weights[j].</returns>
+    internal static double[,] IntegrateTtAlongDim(
+        TensorTrainKernel.TtCore core, double[] weights)
+    {
+        if (weights.Length != core.NNodes)
+            throw new ArgumentException(
+                $"weights.Length ({weights.Length}) does not match core.NNodes ({core.NNodes})");
+        var result = new double[core.RLeft, core.RRight];
+        for (int r = 0; r < core.RLeft; r++)
+            for (int s = 0; s < core.RRight; s++)
+            {
+                double acc = 0.0;
+                for (int j = 0; j < core.NNodes; j++) acc += core[r, j, s] * weights[j];
+                result[r, s] = acc;
+            }
+        return result;
+    }
 }

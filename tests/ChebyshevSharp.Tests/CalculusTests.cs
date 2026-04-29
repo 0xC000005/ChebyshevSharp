@@ -1087,3 +1087,84 @@ public class TestSplineIntegrateCSharpEdgeCases
         TestFixtures.AssertClose(expected, splineResult, rtol: 1e-10, atol: 1e-10);
     }
 }
+
+// ======================================================================
+// TestSliderPartitionIntersect (Phase 5 — Calculus internal helper)
+// ======================================================================
+
+public class TestSliderPartitionIntersect
+{
+    [Fact]
+    public void Test_full_intersection_returns_full()
+    {
+        // group [0, 1], integrating dims [0, 1] -> "full"
+        var (kind, kept) = ChebyshevSharp.Internal.Calculus.SliderPartitionIntersect(
+            groupDims: new[] { 0, 1 }, integrateDims: new[] { 0, 1 });
+        Assert.Equal("full", kind);
+        Assert.Empty(kept);
+    }
+
+    [Fact]
+    public void Test_no_intersection_returns_none()
+    {
+        // group [2], integrating dims [0, 1] -> "none"
+        var (kind, kept) = ChebyshevSharp.Internal.Calculus.SliderPartitionIntersect(
+            groupDims: new[] { 2 }, integrateDims: new[] { 0, 1 });
+        Assert.Equal("none", kind);
+        Assert.Equal(new[] { 2 }, kept);
+    }
+
+    [Fact]
+    public void Test_partial_intersection_returns_partial()
+    {
+        // group [0, 1, 2], integrating dims [1] -> "partial", kept [0, 2]
+        var (kind, kept) = ChebyshevSharp.Internal.Calculus.SliderPartitionIntersect(
+            groupDims: new[] { 0, 1, 2 }, integrateDims: new[] { 1 });
+        Assert.Equal("partial", kind);
+        Assert.Equal(new[] { 0, 2 }, kept);
+    }
+
+    [Fact]
+    public void Test_empty_integrate_dims_returns_none()
+    {
+        var (kind, kept) = ChebyshevSharp.Internal.Calculus.SliderPartitionIntersect(
+            groupDims: new[] { 0, 1 }, integrateDims: Array.Empty<int>());
+        Assert.Equal("none", kind);
+        Assert.Equal(new[] { 0, 1 }, kept);
+    }
+}
+
+// ======================================================================
+// TestIntegrateTtAlongDim (Phase 5 — Calculus internal helper)
+// ======================================================================
+
+public class TestIntegrateTtAlongDim
+{
+    [Fact]
+    public void Test_contract_higher_rank_core_matches_manual_sum()
+    {
+        // (rLeft=2, n=3, rRight=2) hand-rolled core; weights [0.5, 0.25, 0.25]
+        var core = new ChebyshevSharp.Internal.TensorTrainKernel.TtCore(2, 3, 2);
+        // Fill with deterministic values: core[i, j, k] = 100*i + 10*j + k
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 3; j++)
+                for (int k = 0; k < 2; k++)
+                    core[i, j, k] = 100 * i + 10 * j + k;
+
+        var weights = new[] { 0.5, 0.25, 0.25 };
+        var result = ChebyshevSharp.Internal.Calculus.IntegrateTtAlongDim(core, weights);
+
+        Assert.Equal(2, result.GetLength(0));
+        Assert.Equal(2, result.GetLength(1));
+        // Manual: result[i, k] = sum_j core[i, j, k] * weights[j]
+        for (int i = 0; i < 2; i++)
+            for (int k = 0; k < 2; k++)
+            {
+                double expected = 0;
+                for (int j = 0; j < 3; j++)
+                    expected += (100 * i + 10 * j + k) * weights[j];
+                ChebyshevSharp.Tests.Helpers.TestFixtures.AssertClose(
+                    expected, result[i, k], rtol: 1e-14, atol: 1e-14);
+            }
+    }
+}
