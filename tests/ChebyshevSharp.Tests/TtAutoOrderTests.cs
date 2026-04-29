@@ -127,6 +127,11 @@ public class TestReorder
 
         var step2 = step1.Reorder(inv, maxRank: 16, tolerance: 1e-12);
         Assert.Equal(inv, step2.DimOrder);  // Python: dim_order = newOrder, NOT identity.
+
+        // Task 11: Eval threading re-enabled. Both TTs represent the same function
+        // in their respective dim orders, so Eval at the same user point should agree.
+        var pt = new[] { 0.3, -0.5, 0.7 };
+        TestFixtures.AssertClose(tt.Eval(pt), step2.Eval(pt), rtol: 1e-6, atol: 1e-6);
     }
 
     [Fact]

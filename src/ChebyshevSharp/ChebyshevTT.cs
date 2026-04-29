@@ -274,6 +274,14 @@ public class ChebyshevTT
             throw new InvalidOperationException("Call Build() before using this method.");
     }
 
+    /// <summary>Returns true if _dimOrder is the identity permutation [0, 1, ..., d-1].</summary>
+    private bool IsIdentityDimOrder()
+    {
+        for (int i = 0; i < _dimOrder.Length; i++)
+            if (_dimOrder[i] != i) return false;
+        return true;
+    }
+
     // ------------------------------------------------------------------
     // Eval
     // ------------------------------------------------------------------
@@ -288,7 +296,23 @@ public class ChebyshevTT
     public double Eval(double[] point)
     {
         CheckBuilt();
+        // Remap user coordinates to internal TT storage order when a non-identity
+        // dim_order was set by Reorder() or WithAutoOrder(). Identity order is a no-op.
+        if (!IsIdentityDimOrder())
+        {
+            var permPoint = new double[_numDimensions];
+            for (int k = 0; k < _numDimensions; k++) permPoint[k] = point[_dimOrder[k]];
+            point = permPoint;
+        }
+        return EvalCore(point);
+    }
 
+    /// <summary>
+    /// Core evaluation without dim_order remapping. Used by EvalMulti's FD machinery
+    /// (which operates in storage frame after EvalMulti does the top-level remap).
+    /// </summary>
+    private double EvalCore(double[] point)
+    {
         // result starts as 1x1 identity
         double[] result = { 1.0 };
         int resultRows = 1;
@@ -351,6 +375,17 @@ public class ChebyshevTT
     public double[] EvalBatch(double[,] points)
     {
         CheckBuilt();
+
+        // Remap columns from user's original dim order to internal storage order.
+        if (!IsIdentityDimOrder())
+        {
+            int n = points.GetLength(0);
+            var permPoints = new double[n, _numDimensions];
+            for (int i = 0; i < n; i++)
+                for (int k = 0; k < _numDimensions; k++)
+                    permPoints[i, k] = points[i, _dimOrder[k]];
+            points = permPoints;
+        }
 
         int N = points.GetLength(0);
         // result[n] is a flat vector of length resultCols (starts at 1)
@@ -429,16 +464,54 @@ public class ChebyshevTT
     {
         CheckBuilt();
 
-        double[] results = new double[derivativeOrders.Length];
+        // If a non-identity _dimOrder is set, permute both the input point and each
+        // derivativeOrder from user-frame into storage frame so the FD machinery
+        // (which references _domain/_nNodes in storage frame) operates correctly.
+        // Then temporarily neutralize _dimOrder so the inner Eval/FdDerivative calls
+        // do not re-permute the already-storage-frame points (mirrors Python eval_multi).
+        if (!IsIdentityDimOrder())
+        {
+            var permPoint = new double[_numDimensions];
+            for (int k = 0; k < _numDimensions; k++) permPoint[k] = point[_dimOrder[k]];
+
+            var permOrders = new int[derivativeOrders.Length][];
+            for (int i = 0; i < derivativeOrders.Length; i++)
+            {
+                permOrders[i] = new int[_numDimensions];
+                for (int k = 0; k < _numDimensions; k++)
+                    permOrders[i][k] = derivativeOrders[i][_dimOrder[k]];
+            }
+
+            var savedDimOrder = _dimOrder;
+            _dimOrder = Enumerable.Range(0, _numDimensions).ToArray();
+            try
+            {
+                double[] results = new double[permOrders.Length];
+                for (int i = 0; i < permOrders.Length; i++)
+                {
+                    bool allZero = true;
+                    for (int d = 0; d < permOrders[i].Length; d++)
+                        if (permOrders[i][d] != 0) { allZero = false; break; }
+                    results[i] = allZero ? Eval(permPoint) : FdDerivative(permPoint, permOrders[i]);
+                }
+                return results;
+            }
+            finally
+            {
+                _dimOrder = savedDimOrder;
+            }
+        }
+
+        double[] res = new double[derivativeOrders.Length];
         for (int i = 0; i < derivativeOrders.Length; i++)
         {
             bool allZero = true;
             for (int d = 0; d < derivativeOrders[i].Length; d++)
                 if (derivativeOrders[i][d] != 0) { allZero = false; break; }
 
-            results[i] = allZero ? Eval(point) : FdDerivative(point, derivativeOrders[i]);
+            res[i] = allZero ? Eval(point) : FdDerivative(point, derivativeOrders[i]);
         }
-        return results;
+        return res;
     }
 
     private double FdDerivative(double[] point, int[] derivOrder)
@@ -623,34 +696,62 @@ public class ChebyshevTT
         CheckBuilt();
 
         // Normalize dims: null = all, sort + deduplicate, validate range.
-        int[] sortedDims;
+        // dims are in USER (original-dim) frame; translate to storage positions.
+        int[] sortedUserDims;
         if (dims == null)
-            sortedDims = Enumerable.Range(0, _numDimensions).ToArray();
+            sortedUserDims = Enumerable.Range(0, _numDimensions).ToArray();
         else
-            sortedDims = dims.Distinct().OrderBy(d => d).ToArray();
+            sortedUserDims = dims.Distinct().OrderBy(d => d).ToArray();
 
-        foreach (int d in sortedDims)
+        foreach (int d in sortedUserDims)
         {
             if (d < 0 || d >= _numDimensions)
                 throw new ArgumentException(
                     $"dim {d} out-of-range [0, {_numDimensions - 1}]");
         }
 
-        var perDimBounds = Internal.Calculus.NormalizeBounds(sortedDims, bounds, _domain);
-        var dimToIdx = new Dictionary<int, int>();
-        for (int i = 0; i < sortedDims.Length; i++)
-            dimToIdx[sortedDims[i]] = i;
+        // Translate user dims to storage positions.
+        // Cores/_domain/_nNodes are all in storage frame after Reorder().
+        // Two distinct arrays are needed:
+        //   - storagePosForBounds: positional with `bounds` (preserves user-sorted order
+        //     so bounds[i] still pairs with the storage position derived from sortedUserDims[i]).
+        //   - sortedStoragePos: storage-position-ascending, used for chain-walk iteration.
+        // Mirrors Python tensor_train.py:1565-1568 which keeps these two arrays distinct.
+        int[] storagePosForBounds;
+        int[] sortedStoragePos;
+        if (IsIdentityDimOrder())
+        {
+            storagePosForBounds = sortedUserDims;
+            sortedStoragePos = sortedUserDims;
+        }
+        else
+        {
+            storagePosForBounds = sortedUserDims
+                .Select(ud => Array.IndexOf(_dimOrder, ud))
+                .ToArray();
+            sortedStoragePos = (int[])storagePosForBounds.Clone();
+            Array.Sort(sortedStoragePos);
+        }
 
-        // Compute scaled quadrature weights per integrated dim.
+        // Validate bounds against storage-frame domain.
+        // NormalizeBounds is positional with `bounds`, so we pass storagePosForBounds
+        // (NOT sortedStoragePos — re-sorting would break the bounds[i] ↔ dim[i] pairing
+        // when _dimOrder is non-identity).
+        var perDimBounds = Internal.Calculus.NormalizeBounds(storagePosForBounds, bounds, _domain);
+        var storagePosToIdx = new Dictionary<int, int>();
+        for (int i = 0; i < storagePosForBounds.Length; i++)
+            storagePosToIdx[storagePosForBounds[i]] = i;
+
+        // Compute scaled quadrature weights per integrated storage position.
         // Cores live in coefficient space — convert each integrated core to
         // value space before applying weights.
-        var weightsPerDim = new Dictionary<int, double[]>();
-        foreach (int d in sortedDims)
+        var weightsPerStorage = new Dictionary<int, double[]>();
+        foreach (int sp in sortedStoragePos)
         {
-            int n = _nNodes[d];
-            double a = _domain[d][0], b = _domain[d][1];
+            int n = _nNodes[sp];
+            double a = _domain[sp][0], b = _domain[sp][1];
             double scale = (b - a) / 2.0;
-            var bd = perDimBounds[dimToIdx[d]];
+            var bd = perDimBounds[storagePosToIdx[sp]];
             double[] w;
             if (bd == null)
             {
@@ -663,32 +764,32 @@ public class ChebyshevTT
                 w = Internal.Calculus.ComputeSubIntervalWeights(n, tLo, tHi);
             }
             for (int i = 0; i < w.Length; i++) w[i] *= scale;
-            weightsPerDim[d] = w;
+            weightsPerStorage[sp] = w;
         }
 
         // Per-integrated-dim contraction: coefficient core -> value core -> M_k.
         var contracted = new Dictionary<int, double[,]>();
-        foreach (int d in sortedDims)
+        foreach (int sp in sortedStoragePos)
         {
-            var valueCore = Internal.TensorTrainKernel.CoeffCoreToValueCore(_coeffCores![d]);
-            contracted[d] = Internal.Calculus.IntegrateTtAlongDim(valueCore, weightsPerDim[d]);
+            var valueCore = Internal.TensorTrainKernel.CoeffCoreToValueCore(_coeffCores![sp]);
+            contracted[sp] = Internal.Calculus.IntegrateTtAlongDim(valueCore, weightsPerStorage[sp]);
         }
 
-        if (sortedDims.Length == _numDimensions)
+        if (sortedStoragePos.Length == _numDimensions)
         {
             // Full integration: chain-multiply all M_k matrices left-to-right.
-            // contracted[sortedDims[0]] is shape (rL_0=1, rR_0); after all multiplications,
+            // contracted[sortedStoragePos[0]] is shape (rL_0=1, rR_0); after all multiplications,
             // result is (1, 1).
-            double[,] result = contracted[sortedDims[0]];
-            for (int i = 1; i < sortedDims.Length; i++)
-                result = MatMul(result, contracted[sortedDims[i]]);
+            double[,] result = contracted[sortedStoragePos[0]];
+            for (int i = 1; i < sortedStoragePos.Length; i++)
+                result = MatMul(result, contracted[sortedStoragePos[i]]);
             return result[0, 0];
         }
 
         // Partial integration: walk the TT chain, absorbing each contracted
         // matrix into a neighboring kept core's left rank dim (Python
         // tensor_train.py:1582-1608).
-        var integratedSet = new HashSet<int>(sortedDims);
+        var integratedSet = new HashSet<int>(sortedStoragePos);
         var newCores = new List<Internal.TensorTrainKernel.TtCore>();
         double[,]? pending = null;
 
@@ -701,7 +802,7 @@ public class ChebyshevTT
                 pending = M;
                 continue;
             }
-            // k is a kept dim — absorb any pending matrix into this core's left rank.
+            // k is a kept storage position — absorb any pending matrix into this core's left rank.
             var core = _coeffCores![k].Copy();
             if (pending != null)
             {
@@ -716,13 +817,25 @@ public class ChebyshevTT
             newCores[newCores.Count - 1] = AbsorbRight(newCores[newCores.Count - 1], pending);
 
         // Construct result TT.
-        int[] keptDims = Enumerable.Range(0, _numDimensions)
-            .Where(d => !integratedSet.Contains(d))
+        int[] keptStoragePositions = Enumerable.Range(0, _numDimensions)
+            .Where(k => !integratedSet.Contains(k))
             .ToArray();
-        var newDomain = keptDims.Select(d => (double[])_domain[d].Clone()).ToArray();
-        var newNNodes = keptDims.Select(d => _nNodes[d]).ToArray();
+        var newDomain = keptStoragePositions.Select(k => (double[])_domain[k].Clone()).ToArray();
+        var newNNodes = keptStoragePositions.Select(k => _nNodes[k]).ToArray();
 
-        return BuildIntegrateResult(newCores.ToArray(), newDomain, newNNodes);
+        // Build result _dimOrder: keptStoragePositions[i] was storage position k,
+        // which holds original dim _dimOrder[k]. Renumber surviving original dims to [0..m-1].
+        var integratedUserDimsSet = new HashSet<int>(sortedUserDims);
+        var survivingOrigDims = keptStoragePositions.Select(k => _dimOrder[k]).ToArray();
+        // Renumber: sort surviving original dims ascending, assign 0..m-1.
+        var sortedSurvivors = survivingOrigDims.Distinct().OrderBy(d => d).ToArray();
+        var dimIndex = new Dictionary<int, int>();
+        for (int i = 0; i < sortedSurvivors.Length; i++) dimIndex[sortedSurvivors[i]] = i;
+        var newDimOrder = survivingOrigDims.Select(d => dimIndex[d]).ToArray();
+
+        var partialResult = BuildIntegrateResult(newCores.ToArray(), newDomain, newNNodes);
+        partialResult._dimOrder = newDimOrder;
+        return partialResult;
     }
 
     /// <summary>
@@ -1068,7 +1181,35 @@ public class ChebyshevTT
             throw new OverflowException(
                 $"ToDense would allocate {total} doubles ({total * 8} bytes), exceeding int.MaxValue. " +
                 "Use ToDense for low-dimensional inspection only.");
-        return TensorTrainExtrude.ToDenseEinsumChain(_coeffCores!, _nNodes);
+
+        var dense = TensorTrainExtrude.ToDenseEinsumChain(_coeffCores!, _nNodes);
+        if (IsIdentityDimOrder()) return dense;
+
+        // dense has axes in storage order (_nNodes[k] gives size of storage axis k).
+        // Transpose into original-dim order: output[flat over orig dims] = dense[flat over storage dims]
+        // where storageIdx[k] = origIdx[_dimOrder[k]] (storage pos k holds orig dim _dimOrder[k]).
+        int n = _numDimensions;
+        // Build origNNodes: size of each original-dim axis.
+        var origNNodes = new int[n];
+        for (int k = 0; k < n; k++) origNNodes[_dimOrder[k]] = _nNodes[k];
+
+        var result = new double[total];
+        var origIdx = new int[n];
+        var storageIdx = new int[n];
+        for (long flat = 0; flat < total; flat++)
+        {
+            long rem = flat;
+            for (int k = n - 1; k >= 0; k--)
+            {
+                origIdx[k] = (int)(rem % origNNodes[k]);
+                rem /= origNNodes[k];
+            }
+            for (int k = 0; k < n; k++) storageIdx[k] = origIdx[_dimOrder[k]];
+            long storageFlat = 0;
+            for (int k = 0; k < n; k++) storageFlat = storageFlat * _nNodes[k] + storageIdx[k];
+            result[flat] = dense[storageFlat];
+        }
+        return result;
     }
 
     /// <summary>
@@ -1089,18 +1230,48 @@ public class ChebyshevTT
             throw new ArgumentException(
                 $"newDomain bounds must satisfy lo < hi; got ({newDomain.Lo}, {newDomain.Hi})",
                 nameof(newDomain));
-        var newCores = TensorTrainExtrude.ExtrudeCores(_coeffCores!, dim, newN);
-        var newDomainArr = new double[_numDimensions + 1][];
-        for (int k = 0; k < dim; k++) newDomainArr[k] = (double[])_domain[k].Clone();
-        newDomainArr[dim] = new[] { newDomain.Lo, newDomain.Hi };
-        for (int k = dim; k < _numDimensions; k++) newDomainArr[k + 1] = (double[])_domain[k].Clone();
 
-        var newNNodes = new int[_numDimensions + 1];
-        for (int k = 0; k < dim; k++) newNNodes[k] = _nNodes[k];
-        newNNodes[dim] = newN;
-        for (int k = dim; k < _numDimensions; k++) newNNodes[k + 1] = _nNodes[k];
+        TensorTrainKernel.TtCore[] newCores;
+        double[][] newDomainArr;
+        int[] newNNodes;
+        int[] newDimOrder;
 
-        return BuildResultFromCores(newCores, newDomainArr, newNNodes);
+        if (IsIdentityDimOrder())
+        {
+            // Identity path: insert at storage position dim (preserves v0.18 canonical behavior).
+            newCores = TensorTrainExtrude.ExtrudeCores(_coeffCores!, dim, newN);
+            newDomainArr = new double[_numDimensions + 1][];
+            for (int k = 0; k < dim; k++) newDomainArr[k] = (double[])_domain[k].Clone();
+            newDomainArr[dim] = new[] { newDomain.Lo, newDomain.Hi };
+            for (int k = dim; k < _numDimensions; k++) newDomainArr[k + 1] = (double[])_domain[k].Clone();
+            newNNodes = new int[_numDimensions + 1];
+            for (int k = 0; k < dim; k++) newNNodes[k] = _nNodes[k];
+            newNNodes[dim] = newN;
+            for (int k = dim; k < _numDimensions; k++) newNNodes[k + 1] = _nNodes[k];
+            newDimOrder = Enumerable.Range(0, _numDimensions + 1).ToArray();
+        }
+        else
+        {
+            // Non-identity path: append the new core at storage end; encode
+            // user's dim via _dimOrder (mirrors Python tensor_train.py:1793-1804).
+            int storagePos = _numDimensions; // append at end
+            newCores = TensorTrainExtrude.ExtrudeCores(_coeffCores!, storagePos, newN);
+            newDomainArr = new double[_numDimensions + 1][];
+            for (int k = 0; k < _numDimensions; k++) newDomainArr[k] = (double[])_domain[k].Clone();
+            newDomainArr[storagePos] = new[] { newDomain.Lo, newDomain.Hi };
+            newNNodes = new int[_numDimensions + 1];
+            for (int k = 0; k < _numDimensions; k++) newNNodes[k] = _nNodes[k];
+            newNNodes[storagePos] = newN;
+            // Update _dimOrder: increment existing entries >= dim by 1, then append dim.
+            newDimOrder = new int[_numDimensions + 1];
+            for (int k = 0; k < _numDimensions; k++)
+                newDimOrder[k] = _dimOrder[k] < dim ? _dimOrder[k] : _dimOrder[k] + 1;
+            newDimOrder[_numDimensions] = dim;
+        }
+
+        var extruded = BuildResultFromCores(newCores, newDomainArr, newNNodes);
+        extruded._dimOrder = newDimOrder;
+        return extruded;
     }
 
     /// <summary>
@@ -1118,28 +1289,58 @@ public class ChebyshevTT
         if (dim < 0 || dim >= _numDimensions)
             throw new ArgumentOutOfRangeException(nameof(dim),
                 $"dim={dim} out of range [0, {_numDimensions - 1}]");
-        double lo = _domain[dim][0], hi = _domain[dim][1];
+
+        // dim is in user (original) frame; translate to storage position.
+        // Cores/_domain/_nNodes are all in storage frame after Reorder().
+        int storagePos = !IsIdentityDimOrder() ? Array.IndexOf(_dimOrder, dim) : dim;
+
+        double lo = _domain[storagePos][0], hi = _domain[storagePos][1];
         if (value < lo || value > hi)
             throw new ArgumentOutOfRangeException(nameof(value),
                 $"Slice value {value} for dim {dim} is outside domain [{lo}, {hi}]");
+
         if (_numDimensions == 1)
             throw new InvalidOperationException("Cannot slice a 1D TT (would produce 0D result).");
 
-        double[] nodes = BarycentricKernel.MakeNodesForDim(lo, hi, _nNodes[dim]);
-        var newCores = TensorTrainExtrude.SliceCores(_coeffCores!, dim, value, nodes);
+        double[] nodes = BarycentricKernel.MakeNodesForDim(lo, hi, _nNodes[storagePos]);
+        var newCores = TensorTrainExtrude.SliceCores(_coeffCores!, storagePos, value, nodes);
 
         var newDomain = new double[_numDimensions - 1][];
         var newNNodes = new int[_numDimensions - 1];
         int writeIdx = 0;
         for (int k = 0; k < _numDimensions; k++)
         {
-            if (k == dim) continue;
+            if (k == storagePos) continue;
             newDomain[writeIdx] = (double[])_domain[k].Clone();
             newNNodes[writeIdx] = _nNodes[k];
             writeIdx++;
         }
 
-        return BuildResultFromCores(newCores, newDomain, newNNodes);
+        // Build result _dimOrder: drop storagePos from _dimOrder, then renumber so
+        // surviving original-dim indices form a permutation of [0, n-2].
+        // dropped original-dim index: _dimOrder[storagePos]
+        int droppedOrigDim = _dimOrder[storagePos];
+        var survivingOrigDims = new int[_numDimensions - 1];
+        int si = 0;
+        for (int k = 0; k < _numDimensions; k++)
+            if (k != storagePos) survivingOrigDims[si++] = _dimOrder[k];
+
+        // Renumber: for each surviving original-dim, its new index = count of
+        // original-dims < it that are NOT the dropped one.
+        int counter = 0;
+        var newDimIndex = new int[_numDimensions];
+        for (int origDim = 0; origDim < _numDimensions; origDim++)
+        {
+            if (origDim == droppedOrigDim) continue;
+            newDimIndex[origDim] = counter++;
+        }
+        var newDimOrder = new int[_numDimensions - 1];
+        for (int k = 0; k < newDimOrder.Length; k++)
+            newDimOrder[k] = newDimIndex[survivingOrigDims[k]];
+
+        var sliced = BuildResultFromCores(newCores, newDomain, newNNodes);
+        sliced._dimOrder = newDimOrder;
+        return sliced;
     }
 
     /// <summary>
@@ -1180,7 +1381,9 @@ public class ChebyshevTT
         var newCores = TensorTrainAlgebra.ScalarMulCores(tt._coeffCores!, scalar);
         var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
         var nNodesCopy = (int[])tt._nNodes.Clone();
-        return tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+        var result = tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+        result._dimOrder = (int[])tt._dimOrder.Clone();
+        return result;
     }
 
     /// <summary>Scalar multiplication: <c>scalar * tt</c>.</summary>
@@ -1203,7 +1406,9 @@ public class ChebyshevTT
         var newCores = TensorTrainAlgebra.NegateCores(tt._coeffCores!);
         var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
         var nNodesCopy = (int[])tt._nNodes.Clone();
-        return tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+        var result = tt.BuildResultFromCores(newCores, domainCopy, nNodesCopy);
+        result._dimOrder = (int[])tt._dimOrder.Clone();
+        return result;
     }
 
     /// <summary>Scale this TT in place by <paramref name="scalar"/>.</summary>
@@ -1238,7 +1443,7 @@ public class ChebyshevTT
     /// <summary>Default tolerance for TT-SVD rounding after addition/subtraction.</summary>
     public const double DefaultRoundTolerance = 1e-12;
 
-    /// <summary>Validate two TTs share the same grid (numDim, domain, nNodes).</summary>
+    /// <summary>Validate two TTs share the same grid (numDim, domain, nNodes) and dim_order.</summary>
     private static void CheckCompatible(ChebyshevTT a, ChebyshevTT b)
     {
         if (a is null) throw new ArgumentNullException(nameof(a));
@@ -1257,6 +1462,12 @@ public class ChebyshevTT
                 throw new ArgumentException(
                     $"Domain mismatch at dim {d}: [{a._domain[d][0]}, {a._domain[d][1]}] vs [{b._domain[d][0]}, {b._domain[d][1]}]");
         }
+        // _dimOrder mismatch: refuse with a hint at Reorder (mirrors Python v0.20.1).
+        for (int k = 0; k < a._numDimensions; k++)
+            if (a._dimOrder[k] != b._dimOrder[k])
+                throw new ArgumentException(
+                    $"dim_order mismatch at storage position {k}: {a._dimOrder[k]} vs {b._dimOrder[k]}. " +
+                    "Call Reorder() on one operand to align before adding/subtracting.");
     }
 
     /// <summary>Binary addition: <c>a + b</c>. Result is rounded to the larger of the two TTs' maxRank.</summary>
@@ -1268,7 +1479,9 @@ public class ChebyshevTT
         var rounded = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
         var domainCopy = a._domain.Select(d => (double[])d.Clone()).ToArray();
         var nNodesCopy = (int[])a._nNodes.Clone();
-        return a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+        var result = a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+        result._dimOrder = (int[])a._dimOrder.Clone();
+        return result;
     }
 
     /// <summary>Binary subtraction: <c>a - b</c>.</summary>
@@ -1281,7 +1494,9 @@ public class ChebyshevTT
         var rounded = TensorTrainAlgebra.RoundCores(summed, mr, DefaultRoundTolerance);
         var domainCopy = a._domain.Select(d => (double[])d.Clone()).ToArray();
         var nNodesCopy = (int[])a._nNodes.Clone();
-        return a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+        var result = a.BuildResultFromCores(rounded, domainCopy, nNodesCopy);
+        result._dimOrder = (int[])a._dimOrder.Clone();
+        return result;
     }
 
     /// <summary>In-place addition: <c>this += other</c> followed by TT-SVD rounding.</summary>
