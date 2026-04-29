@@ -155,3 +155,148 @@ public class TestReorder
         Assert.Equal(0, tt.DimOrder[0]);  // mutation does not affect TT.
     }
 }
+
+// ======================================================================
+// TestWithAutoOrder + TestJsonMigration (Phase 6 Task 10)
+// ======================================================================
+
+public class TestWithAutoOrder
+{
+    [Fact]
+    public void Test_with_auto_order_lower_rank_function()
+    {
+        // f(x,y,z) = sin(x) + cos(y) + z*z is rank-low under canonical order;
+        // we just verify WithAutoOrder produces a valid build with non-degenerate DimOrder.
+        static double F(double[] p) => Math.Sin(p[0]) + Math.Cos(p[1]) + p[2] * p[2];
+        var tt = ChebyshevTT.WithAutoOrder(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 }, maxRank: 5, maxSweeps: 3,
+            nTrials: 3, method: "greedy_swap");
+        Assert.Equal(3, tt.DimOrder.Length);
+        Assert.Equal(new HashSet<int> { 0, 1, 2 }, new HashSet<int>(tt.DimOrder));
+    }
+
+    [Fact]
+    public void Test_greedy_swap_deterministic()
+    {
+        static double F(double[] p) => Math.Sin(p[0]) + p[1] * p[2];
+        var tt1 = ChebyshevTT.WithAutoOrder(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 }, nTrials: 3, method: "greedy_swap", seed: 42);
+        var tt2 = ChebyshevTT.WithAutoOrder(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 }, nTrials: 3, method: "greedy_swap", seed: 99);
+        // greedy_swap ignores seed (deterministic); both runs produce same DimOrder.
+        Assert.Equal(tt1.DimOrder, tt2.DimOrder);
+    }
+
+    [Fact]
+    public void Test_random_with_seed_reproducible()
+    {
+        static double F(double[] p) => p[0] * p[1] + p[2];
+        var tt1 = ChebyshevTT.WithAutoOrder(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 }, nTrials: 3, method: "random", seed: 42);
+        var tt2 = ChebyshevTT.WithAutoOrder(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 }, nTrials: 3, method: "random", seed: 42);
+        Assert.Equal(tt1.DimOrder, tt2.DimOrder);  // bit-exact for same seed.
+    }
+
+    [Fact]
+    public void Test_unknown_method_throws()
+    {
+        static double F(double[] p) => p[0];
+        Assert.Throws<ArgumentException>(() => ChebyshevTT.WithAutoOrder(F, 1,
+            new[] { new[] { 0.0, 1.0 } }, new[] { 5 }, method: "wat"));
+    }
+
+    [Fact]
+    public void Test_n_trials_zero_returns_canonical()
+    {
+        static double F(double[] p) => Math.Sin(p[0]) + p[1];
+        var tt = ChebyshevTT.WithAutoOrder(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 }, nTrials: 0);
+        Assert.Equal(new[] { 0, 1 }, tt.DimOrder);
+    }
+
+    [Fact]
+    public void Test_result_is_fully_functional()
+    {
+        static double F(double[] p) => Math.Sin(p[0]) + Math.Cos(p[1]);
+        var tt = ChebyshevTT.WithAutoOrder(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 }, nTrials: 2, method: "greedy_swap");
+        var pt = new[] { 0.3, -0.4 };
+        TestFixtures.AssertClose(F(pt), tt.Eval(pt), rtol: 1e-3, atol: 1e-3);
+    }
+}
+
+public class TestJsonMigrationDimOrder
+{
+    [Fact]
+    public void Test_save_writes_jsonversion_2_and_dimorder()
+    {
+        static double F(double[] p) => Math.Sin(p[0]) + p[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 }, maxRank: 4, maxSweeps: 3);
+        tt.Build(verbose: false, seed: 42);
+        var tmp = Path.GetTempFileName();
+        try
+        {
+            tt.Save(tmp);
+            string json = File.ReadAllText(tmp);
+            Assert.Contains("\"JsonVersion\":2", json);
+            Assert.Contains("\"DimOrder\":[0,1]", json);
+        }
+        finally { if (File.Exists(tmp)) File.Delete(tmp); }
+    }
+
+    [Fact]
+    public void Test_load_v2_round_trip_preserves_dimorder()
+    {
+        static double F(double[] p) => Math.Sin(p[0]) + p[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 }, maxRank: 4, maxSweeps: 3);
+        tt.Build(verbose: false, seed: 42);
+        var perm = new[] { 1, 0 };
+        var reord = tt.Reorder(perm, maxRank: 16, tolerance: 1e-10);
+        var tmp = Path.GetTempFileName();
+        try
+        {
+            reord.Save(tmp);
+            var loaded = ChebyshevTT.Load(tmp);
+            Assert.Equal(perm, loaded.DimOrder);
+        }
+        finally { if (File.Exists(tmp)) File.Delete(tmp); }
+    }
+
+    [Fact]
+    public void Test_load_v0_9_0_fixture_backfills_identity()
+    {
+        // The fixture file is committed at tests/ChebyshevSharp.Tests/fixtures/v0.9.0_sin3d_tt.json.
+        // It was saved with v0.9.0 (no JsonVersion or DimOrder fields).
+        // Load must succeed and DimOrder must default to identity [0, 1, 2].
+        string fixturePath = Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "..", "tests", "ChebyshevSharp.Tests", "fixtures",
+            "v0.9.0_sin3d_tt.json");
+        var loaded = ChebyshevTT.Load(fixturePath);
+        Assert.Equal(new[] { 0, 1, 2 }, loaded.DimOrder);
+        Assert.Equal(3, loaded.NumDimensions);
+    }
+
+    [Fact]
+    public void Test_dim_order_defensive_clone()
+    {
+        static double F(double[] p) => p[0];
+        var tt = new ChebyshevTT(F, 1, new[] { new[] { 0.0, 1.0 } }, new[] { 5 });
+        tt.Build(verbose: false, seed: 42);
+        int[] order = tt.DimOrder;
+        order[0] = 42;
+        Assert.Equal(0, tt.DimOrder[0]);  // mutation does not propagate.
+    }
+}

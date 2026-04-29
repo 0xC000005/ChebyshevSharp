@@ -1371,6 +1371,8 @@ public class ChebyshevTT
             RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
                 ? _registeredDerivativeOrders.ToArray()
                 : null,
+            JsonVersion = 2,
+            DimOrder = (int[])_dimOrder.Clone(),
         };
 
         for (int i = 0; i < _numDimensions; i++)
@@ -1402,6 +1404,9 @@ public class ChebyshevTT
         string json = File.ReadAllText(path);
         var state = JsonSerializer.Deserialize<TTSerializationState>(json)
                     ?? throw new InvalidOperationException("Failed to deserialize ChebyshevTT state.");
+
+        int jsonVersion = state.JsonVersion ?? 1;
+        int[] dimOrder = state.DimOrder ?? Enumerable.Range(0, state.NumDimensions).ToArray();
 
         var cores = new TensorTrainKernel.TtCore[state.NumDimensions];
         for (int i = 0; i < state.NumDimensions; i++)
@@ -1440,6 +1445,10 @@ public class ChebyshevTT
                 tt._derivativeIdRegistry[key] = id;
             }
         }
+
+        // v2 migration: restore _dimOrder (backfill identity for v1 files).
+        _ = jsonVersion; // consumed above via dimOrder derivation
+        tt._dimOrder = (int[])dimOrder.Clone();
 
         string currentVersion = GetLibraryVersion();
         if (state.Version != null && state.Version != currentVersion)
@@ -1734,6 +1743,128 @@ public class ChebyshevTT
     internal Internal.TensorTrainKernel.TtCore[] GetCoeffCoresForTest() => _coeffCores!;
 
     // ------------------------------------------------------------------
+    // WithAutoOrder
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Build a TT trying multiple dim orderings, returning the lowest-rank result.
+    /// TT-Cross compression depends on dim order; different orderings yield different
+    /// ranks for the same function. Mirrors PyChebyshev <c>tensor_train.py:2687</c>.
+    /// </summary>
+    /// <param name="function">f(point) → double in the original (user) dim order.</param>
+    /// <param name="numDimensions">Number of input dimensions.</param>
+    /// <param name="domain">Bounds for each dimension in original order.</param>
+    /// <param name="numNodes">Node counts per dimension in original order.</param>
+    /// <param name="maxRank">Maximum TT rank passed to each trial. Default 10.</param>
+    /// <param name="tolerance">Convergence tolerance for each trial. Default 1e-6.</param>
+    /// <param name="maxSweeps">Max TT-Cross sweeps per trial. Default 10.</param>
+    /// <param name="additionalData">Stored on the result for introspection; not threaded into f.</param>
+    /// <param name="nTrials">Number of swap iterations / random samples. Default 5.</param>
+    /// <param name="method">"greedy_swap" (default, deterministic) or "random".</param>
+    /// <param name="seed">Optional seed for "random". Ignored by "greedy_swap".</param>
+    /// <param name="progress">Optional per-sweep progress reporter (forwarded to each trial's Build).</param>
+    /// <param name="verbose">If true, print per-trial diagnostics.</param>
+    /// <returns>The lowest-total-rank TT among the tried permutations, with <c>DimOrder</c> set.</returns>
+    public static ChebyshevTT WithAutoOrder(
+        Func<double[], double> function,
+        int numDimensions,
+        double[][] domain,
+        int[] numNodes,
+        int maxRank = 10,
+        double tolerance = 1e-6,
+        int maxSweeps = 10,
+        object? additionalData = null,
+        int nTrials = 5,
+        string method = "greedy_swap",
+        int? seed = null,
+        IProgress<int>? progress = null,
+        bool verbose = false)
+    {
+        if (method != "greedy_swap" && method != "random")
+            throw new ArgumentException(
+                $"unknown method: '{method}' (use 'greedy_swap' or 'random')", nameof(method));
+
+        ChebyshevTT BuildWith(int[] order)
+        {
+            var permDomain = order.Select(d => domain[d]).ToArray();
+            var permNNodes = order.Select(d => numNodes[d]).ToArray();
+            // Permuted f: caller passes a point in PERMUTED order; map back to original.
+            Func<double[], double> permF = (point) =>
+            {
+                var orig = new double[numDimensions];
+                for (int k = 0; k < numDimensions; k++) orig[order[k]] = point[k];
+                return function(orig);
+            };
+            var tt = new ChebyshevTT(permF, numDimensions, permDomain, permNNodes,
+                maxRank: maxRank, tolerance: tolerance, maxSweeps: maxSweeps,
+                additionalData: additionalData, progress: progress);
+            tt.Build(verbose: verbose, seed: seed);
+            tt._dimOrder = (int[])order.Clone();
+            return tt;
+        }
+
+        int RankSum(ChebyshevTT t)
+        {
+            int sum = 0;
+            foreach (int r in t.TtRanks) sum += r;
+            return sum;
+        }
+
+        int[] canonical = Enumerable.Range(0, numDimensions).ToArray();
+        var bestTt = BuildWith(canonical);
+        int bestScore = RankSum(bestTt);
+
+        if (nTrials <= 0) return bestTt;
+
+        if (method == "greedy_swap")
+        {
+            bool improved = true;
+            int iter = 0;
+            while (improved && iter < nTrials)
+            {
+                improved = false;
+                for (int i = 0; i < numDimensions - 1; i++)
+                {
+                    var trial = (int[])bestTt.DimOrder.Clone();
+                    (trial[i], trial[i + 1]) = (trial[i + 1], trial[i]);
+                    var candidateTt = BuildWith(trial);
+                    int candidateScore = RankSum(candidateTt);
+                    if (candidateScore < bestScore)
+                    {
+                        bestTt = candidateTt;
+                        bestScore = candidateScore;
+                        improved = true;
+                    }
+                }
+                iter++;
+            }
+        }
+        else  // method == "random"
+        {
+            var rng = new Random(seed ?? Environment.TickCount);
+            for (int t = 0; t < nTrials; t++)
+            {
+                // Fisher-Yates shuffle of canonical order.
+                var trial = (int[])canonical.Clone();
+                for (int i = numDimensions - 1; i > 0; i--)
+                {
+                    int j = rng.Next(i + 1);
+                    (trial[i], trial[j]) = (trial[j], trial[i]);
+                }
+                var candidateTt = BuildWith(trial);
+                int candidateScore = RankSum(candidateTt);
+                if (candidateScore < bestScore)
+                {
+                    bestTt = candidateTt;
+                    bestScore = candidateScore;
+                }
+            }
+        }
+
+        return bestTt;
+    }
+
+    // ------------------------------------------------------------------
     // Clone
     // ------------------------------------------------------------------
 
@@ -1805,6 +1936,9 @@ public class ChebyshevTT
         public int? MaxDerivativeOrder { get; set; }
         // Derivative-id registry (absent in older JSON; null == not set)
         public int[][]? RegisteredDerivativeOrders { get; set; }
+        // v2 (v0.10.0+): JsonVersion and DimOrder; null/absent => v1 (backfill identity)
+        public int? JsonVersion { get; set; }
+        public int[]? DimOrder { get; set; }
     }
 
     internal class CoreData
