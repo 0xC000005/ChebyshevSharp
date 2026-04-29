@@ -36,6 +36,8 @@ public class ChebyshevTT
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
+    private readonly int? _nWorkers;   // accepted for API symmetry; ignored (D10).
+    private readonly IProgress<int>? _progress;
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
@@ -110,6 +112,11 @@ public class ChebyshevTT
     /// <param name="maxSweeps">Maximum number of TT-Cross sweeps. Default is 10.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support. Default is 2.</param>
     /// <param name="additionalData">Optional user data object stored for introspection via <see cref="GetAdditionalData"/>. NOT threaded through build calls (TT function signature has no data arg).</param>
+    /// <param name="nWorkers">Accepted for API symmetry with the other classes but
+    /// ignored: TT-Cross is adaptive sampling, not pre-grid evaluation. Pass null.</param>
+    /// <param name="progress">Optional progress reporter; receives the cumulative
+    /// sweep count after each TT-Cross sweep.</param>
+    /// <remarks>Thread safety: TT-Cross is inherently sequential; <paramref name="nWorkers"/> is accepted but has no effect.</remarks>
     public ChebyshevTT(
         Func<double[], double> function,
         int numDimensions,
@@ -119,7 +126,9 @@ public class ChebyshevTT
         double tolerance = 1e-6,
         int maxSweeps = 10,
         int maxDerivativeOrder = 2,
-        object? additionalData = null)
+        object? additionalData = null,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         if (domain.Length != numDimensions)
             throw new ArgumentException(
@@ -137,6 +146,8 @@ public class ChebyshevTT
         _maxSweeps = maxSweeps;
         _maxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
     }
 
     // Private constructor for deserialization
@@ -211,7 +222,7 @@ public class ChebyshevTT
         {
             if (verbose) Console.WriteLine("  Running TT-Cross...");
             (valueCores, nEvals) = TensorTrainKernel.TtCross(
-                _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed);
+                _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
         }
         else if (method == "svd")
         {

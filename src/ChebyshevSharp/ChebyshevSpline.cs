@@ -71,6 +71,8 @@ public class ChebyshevSpline
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
+    private int? _nWorkers;
+    private IProgress<int>? _progress;
 
     /// <summary>
     /// Create a new ChebyshevSpline.
@@ -83,6 +85,9 @@ public class ChebyshevSpline
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all pieces.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -91,7 +96,9 @@ public class ChebyshevSpline
         double[][] knots,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         Function = function;
         NumDimensions = numDimensions;
@@ -99,6 +106,8 @@ public class ChebyshevSpline
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
 
         // Validate and store knots
         ValidateKnots(numDimensions, domain, knots);
@@ -133,6 +142,9 @@ public class ChebyshevSpline
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all pieces.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -143,7 +155,9 @@ public class ChebyshevSpline
         int maxN = 64,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -175,6 +189,8 @@ public class ChebyshevSpline
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
         OriginalNNodes = (int?[])resolvedOriginal.Clone();
 
         // Public NNodes is meaningful only after Build resolves the auto-N values.
@@ -207,6 +223,9 @@ public class ChebyshevSpline
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
+    /// <param name="nWorkers">Number of parallel workers for function evaluation. null = sequential; -1 = <see cref="Environment.ProcessorCount"/>; positive = exact count.</param>
+    /// <param name="progress">Optional progress reporter; receives cumulative evaluation count across all pieces.</param>
+    /// <remarks>Thread safety: the user-supplied function must be thread-safe when <paramref name="nWorkers"/> is non-null.</remarks>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -215,7 +234,9 @@ public class ChebyshevSpline
         double[][] knots,
         int maxDerivativeOrder = 2,
         object? additionalData = null,
-        bool deferBuild = false)
+        bool deferBuild = false,
+        int? nWorkers = null,
+        IProgress<int>? progress = null)
     {
         if (nNodesNested.Length != numDimensions)
             throw new ArgumentException(
@@ -233,6 +254,8 @@ public class ChebyshevSpline
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
+        _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
+        _progress = progress;
         MaxN = 64;
         ErrorThreshold = null;
         OriginalNNodes = Array.Empty<int?>();
@@ -351,6 +374,7 @@ public class ChebyshevSpline
                 $"({totalPieces} pieces, {totalPieces * perPieceEvals:N0} total evaluations)...");
 
         int flatIdx = 0;
+        int progressOffset = 0;
         foreach (var multiIdx in NdIndex(Shape))
         {
             // Compute sub-domain for this piece
@@ -360,6 +384,11 @@ public class ChebyshevSpline
                 var iv = Intervals[d][multiIdx[d]];
                 subDomain[d] = new[] { iv.lo, iv.hi };
             }
+
+            // Build per-piece progress shim that offsets reported values by cumulative evals so far.
+            int capturedOffset = progressOffset;
+            IProgress<int>? pieceProgress = _progress is null ? null
+                : new Internal.OffsetProgress(_progress, capturedOffset);
 
             ChebyshevApproximation piece;
             if (NestedNNodes != null)
@@ -371,7 +400,9 @@ public class ChebyshevSpline
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, pieceN,
                     maxDerivativeOrder: MaxDerivativeOrder,
-                    additionalData: _additionalData);
+                    additionalData: _additionalData,
+                    nWorkers: _nWorkers, progress: pieceProgress);
+                progressOffset += pieceN.Aggregate(1, (acc, n) => acc * n);
             }
             else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
@@ -384,7 +415,9 @@ public class ChebyshevSpline
                     errorThreshold: ErrorThreshold,
                     maxN: MaxN,
                     maxDerivativeOrder: MaxDerivativeOrder,
-                    additionalData: _additionalData);
+                    additionalData: _additionalData,
+                    nWorkers: _nWorkers, progress: pieceProgress);
+                // Offset update happens after Build (actual N resolved then)
             }
             else
             {
@@ -392,9 +425,14 @@ public class ChebyshevSpline
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, NNodes,
                     maxDerivativeOrder: MaxDerivativeOrder,
-                    additionalData: _additionalData);
+                    additionalData: _additionalData,
+                    nWorkers: _nWorkers, progress: pieceProgress);
+                progressOffset += NNodes.Aggregate(1, (acc, n) => acc * n);
             }
             piece.Build(verbose: false);
+            // For auto-N path, update offset after Build (N is now known)
+            if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
+                progressOffset += piece.NNodes.Aggregate(1, (acc, n) => acc * n);
             Pieces[flatIdx] = piece;
 
             if (verbose)

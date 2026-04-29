@@ -1,6 +1,24 @@
 namespace ChebyshevSharp.Internal;
 
 /// <summary>
+/// Wraps an <see cref="IProgress{T}"/> and adds a fixed offset to every reported value.
+/// Used by Spline and Slider to accumulate progress across multiple pieces/slides.
+/// </summary>
+internal sealed class OffsetProgress : IProgress<int>
+{
+    private readonly IProgress<int> _inner;
+    private readonly int _offset;
+
+    internal OffsetProgress(IProgress<int> inner, int offset)
+    {
+        _inner = inner;
+        _offset = offset;
+    }
+
+    public void Report(int value) => _inner.Report(_offset + value);
+}
+
+/// <summary>
 /// Build-time helpers for parallel function evaluation and progress reporting.
 /// Phase 6: <c>nWorkers</c> ctor kwarg + <see cref="System.IProgress{T}"/> wiring.
 /// Mirrors PyChebyshev <c>_parallel.py</c> (v0.19.0).
