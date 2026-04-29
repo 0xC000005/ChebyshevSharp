@@ -65,6 +65,12 @@ public class ChebyshevSpline
     internal int[][]? NestedNNodes { get; set; }
 
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private string _constructorType = "function";
+    private object? _additionalData;
+    private double[]? _evaluationPointsCache;
+    private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
+    private readonly List<int[]> _registeredDerivativeOrders = new();
 
     /// <summary>
     /// Create a new ChebyshevSpline.
@@ -75,19 +81,24 @@ public class ChebyshevSpline
     /// <param name="nNodes">Number of Chebyshev nodes per dimension per piece.</param>
     /// <param name="knots">Interior knots for each dimension. Empty array for no knots.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[] nNodes,
         double[][] knots,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
 
         // Validate and store knots
         ValidateKnots(numDimensions, domain, knots);
@@ -120,6 +131,8 @@ public class ChebyshevSpline
     /// <param name="errorThreshold">Target supremum-norm error per piece. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -128,7 +141,9 @@ public class ChebyshevSpline
         double[][]? knots = null,
         double? errorThreshold = null,
         int maxN = 64,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -159,6 +174,7 @@ public class ChebyshevSpline
         ErrorThreshold = errorThreshold;
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         OriginalNNodes = (int?[])resolvedOriginal.Clone();
 
         // Public NNodes is meaningful only after Build resolves the auto-N values.
@@ -189,13 +205,17 @@ public class ChebyshevSpline
     /// <param name="nNodesNested">Nested array: nNodesNested[d][i] is the node count for piece i along dim d. Length per dim must equal knots[d].Length + 1.</param>
     /// <param name="knots">Interior knots per dimension. Required (no default) when using nested form.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager build. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevSpline(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[][] nNodesNested,
         double[][] knots,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         if (nNodesNested.Length != numDimensions)
             throw new ArgumentException(
@@ -212,6 +232,7 @@ public class ChebyshevSpline
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         MaxN = 64;
         ErrorThreshold = null;
         OriginalNNodes = Array.Empty<int?>();
@@ -349,7 +370,8 @@ public class ChebyshevSpline
                     pieceN[d] = NestedNNodes[d][multiIdx[d]];
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, pieceN,
-                    maxDerivativeOrder: MaxDerivativeOrder);
+                    maxDerivativeOrder: MaxDerivativeOrder,
+                    additionalData: _additionalData);
             }
             else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
@@ -361,14 +383,16 @@ public class ChebyshevSpline
                     nNodes: pieceNNodes,
                     errorThreshold: ErrorThreshold,
                     maxN: MaxN,
-                    maxDerivativeOrder: MaxDerivativeOrder);
+                    maxDerivativeOrder: MaxDerivativeOrder,
+                    additionalData: _additionalData);
             }
             else
             {
                 // Fixed-N: existing path
                 piece = new ChebyshevApproximation(
                     Function!, NumDimensions, subDomain, NNodes,
-                    maxDerivativeOrder: MaxDerivativeOrder);
+                    maxDerivativeOrder: MaxDerivativeOrder,
+                    additionalData: _additionalData);
             }
             piece.Build(verbose: false);
             Pieces[flatIdx] = piece;
@@ -730,7 +754,11 @@ public class ChebyshevSpline
             ErrorThreshold = ErrorThreshold,
             MaxN = MaxN,
             NestedNNodes = NestedNNodes,
-            Version = "0.5.0",
+            Version = "0.8.0",
+            Descriptor = _descriptor,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.Select(o => (int[])o.Clone()).ToArray()
+                : null,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -784,7 +812,9 @@ public class ChebyshevSpline
                 $"call ChebyshevApproximation.Load instead if class_tag={Internal.PcbFormat.ClassTagApproximation}");
 
         var (domain, nNodes, knots, pieceTensors) = Internal.PcbFormat.ReadSplineBody(r);
-        return FromValues(pieceTensors, domain.Length, domain, nNodes, knots);
+        var spline = FromValues(pieceTensors, domain.Length, domain, nNodes, knots);
+        spline._constructorType = "load";
+        return spline;
     }
 
     private static ChebyshevSpline LoadJson(string path)
@@ -805,7 +835,7 @@ public class ChebyshevSpline
                 NumDimensions = ps.NumDimensions,
                 Domain = ps.Domain,
                 NNodes = ps.NNodes,
-                MaxDerivativeOrder = ps.MaxDerivativeOrder,
+                MaxDerivativeOrder = ps.MaxDerivativeOrder ?? 2,
                 NodeArrays = ps.NodeArrays,
                 TensorValues = ps.TensorValues,
                 Weights = ps.Weights,
@@ -830,13 +860,13 @@ public class ChebyshevSpline
         // v0.5.0 migration: OriginalNNodes / ErrorThreshold / MaxN / NestedNNodes may be absent in older files.
         int?[] originalNNodes = state.OriginalNNodes ?? Array.Empty<int?>();
 
-        return new ChebyshevSpline
+        var spline = new ChebyshevSpline
         {
             Function = null,
             NumDimensions = state.NumDimensions,
             Domain = state.Domain,
             NNodes = state.NNodes,
-            MaxDerivativeOrder = state.MaxDerivativeOrder,
+            MaxDerivativeOrder = state.MaxDerivativeOrder ?? 2,
             Knots = state.Knots,
             Intervals = intervals,
             Shape = state.Shape,
@@ -849,6 +879,21 @@ public class ChebyshevSpline
             NestedNNodes = state.NestedNNodes,
             _cachedErrorEstimate = null,
         };
+        // v0.8.0 migration: Descriptor may be absent in older files.
+        spline._descriptor = state.Descriptor;
+        // ConstructorType is intentionally NOT restored from state — Load always sets "load".
+        spline._constructorType = "load";
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = spline._registeredDerivativeOrders.Count;
+                spline._registeredDerivativeOrders.Add((int[])orders.Clone());
+                spline._derivativeIdRegistry[key] = id;
+            }
+        }
+        return spline;
     }
 
     // ------------------------------------------------------------------
@@ -978,7 +1023,7 @@ public class ChebyshevSpline
             flatIdx++;
         }
 
-        return new ChebyshevSpline
+        var spline = new ChebyshevSpline
         {
             Function = null,
             NumDimensions = numDimensions,
@@ -993,6 +1038,8 @@ public class ChebyshevSpline
             BuildTime = 0.0,
             _cachedErrorEstimate = null,
         };
+        spline._constructorType = "from_values";
+        return spline;
     }
 
     // ------------------------------------------------------------------
@@ -1768,13 +1815,249 @@ public class ChebyshevSpline
     // Serialization types
     // ------------------------------------------------------------------
 
+    // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this spline.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="FromValues"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => Built;
+
+    /// <summary>Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load).</summary>
+    public string GetConstructorType() => _constructorType;
+
+    /// <summary>Per-dimension Chebyshev node counts actually used per piece.</summary>
+    public int[] GetUsedNs() => (int[])NNodes.Clone();
+
+    /// <summary>Maximum derivative order this spline supports.</summary>
+    public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Same value is threaded through every <c>f(point, data)</c>
+    /// call during <see cref="Build"/>.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points across all spline pieces.
+    /// </summary>
+    /// <returns>The sum of GetNumEvaluationPoints() from each piece.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        int total = 0;
+        if (Pieces == null) return 0;
+        foreach (var piece in Pieces)
+        {
+            if (piece != null) total += piece.GetNumEvaluationPoints();
+        }
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of all spline piece evaluation points, concatenated sequentially.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of concatenated piece node coordinates, flattened in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int total = GetNumEvaluationPoints();
+        var points = new double[total * NumDimensions];
+        int offset = 0;
+
+        foreach (var piece in Pieces!)
+        {
+            if (piece == null) continue;
+            var piecePts = piece.GetEvaluationPoints();
+            Array.Copy(piecePts, 0, points, offset, piecePts.Length);
+            offset += piecePts.Length;
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
+
+    /// <summary>
+    /// Get the knots (special points) used for spline construction.
+    /// </summary>
+    /// <returns>Interior knots per dimension, or null if no interior knots were used.</returns>
+    public double[][]? GetSpecialPoints()
+    {
+        if (Knots == null) return null;
+        bool anyInterior = false;
+        foreach (var k in Knots)
+            if (k.Length > 0) { anyInterior = true; break; }
+        return anyInterior ? Knots.Select(k => (double[])k.Clone()).ToArray() : null;
+    }
+
+    /// <summary>
+    /// Populate this spline's tensor values from a precomputed flat array.
+    /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
+    /// the <c>FromValues</c> factory.
+    /// Values are concatenated in flat piece-index C-order: piece 0 values first, then piece 1, etc.
+    /// </summary>
+    /// <param name="values">Flat array concatenating all pieces' values in piece-flat-index order.</param>
+    /// <exception cref="ArgumentException">Thrown when values length does not match the expected total across all pieces.</exception>
+    public void SetOriginalFunctionValues(double[] values)
+    {
+        int totalPieces = 1;
+        foreach (int s in Shape) totalPieces *= s;
+
+        var pieceSizes = new int[totalPieces];
+        int totalExpected = 0;
+        for (int p = 0; p < totalPieces; p++)
+        {
+            int n = 1;
+            var (_, pieceNNodes) = ComputePieceDomainAndN(p);
+            foreach (int nn in pieceNNodes) n *= nn;
+            pieceSizes[p] = n;
+            totalExpected += n;
+        }
+
+        if (values.Length != totalExpected)
+            throw new ArgumentException(
+                $"values has {values.Length} entries, expected {totalExpected} across all pieces");
+
+        Pieces = new ChebyshevApproximation?[totalPieces];
+        int offset = 0;
+        for (int p = 0; p < totalPieces; p++)
+        {
+            int sz = pieceSizes[p];
+            var pieceValues = new double[sz];
+            Array.Copy(values, offset, pieceValues, 0, sz);
+            offset += sz;
+            var (pieceDomain, pieceNNodes) = ComputePieceDomainAndN(p);
+            Pieces[p] = ChebyshevApproximation.FromValues(
+                pieceValues,
+                NumDimensions,
+                pieceDomain,
+                pieceNNodes,
+                MaxDerivativeOrder);
+        }
+
+        Built = true;
+        _evaluationPointsCache = null;
+        _constructorType = "from_values";
+    }
+
+    private (double[][] pieceDomain, int[] pieceNNodes) ComputePieceDomainAndN(int flatPieceIdx)
+    {
+        // Decompose flat piece index into per-dim piece coords (C-order / row-major).
+        var pieceCoords = new int[NumDimensions];
+        int rem = flatPieceIdx;
+        for (int d = NumDimensions - 1; d >= 0; d--)
+        {
+            pieceCoords[d] = rem % Shape[d];
+            rem /= Shape[d];
+        }
+
+        var pieceDomain = new double[NumDimensions][];
+        var pieceNNodes = new int[NumDimensions];
+        for (int d = 0; d < NumDimensions; d++)
+        {
+            var iv = Intervals[d][pieceCoords[d]];
+            pieceDomain[d] = new[] { iv.lo, iv.hi };
+            pieceNNodes[d] = NestedNNodes != null ? NestedNNodes[d][pieceCoords[d]] : NNodes[d];
+        }
+        return (pieceDomain, pieceNNodes);
+    }
+
+    /// <summary>
+    /// Register or look up a derivative-orders tuple. Returns a stable
+    /// session-local int id for the same orders. Used in conjunction with
+    /// the <c>Eval(point, derivativeId)</c> overload.
+    /// </summary>
+    /// <param name="orders">Derivative order per dimension.</param>
+    /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
+    public int GetDerivativeId(int[] orders)
+    {
+        var key = new Internal.TupleKey(orders);
+        if (_derivativeIdRegistry.TryGetValue(key, out int existing))
+            return existing;
+        int id = _registeredDerivativeOrders.Count;
+        _registeredDerivativeOrders.Add((int[])orders.Clone());
+        _derivativeIdRegistry[key] = id;
+        return id;
+    }
+
+    /// <summary>Evaluate at <paramref name="point"/> using a previously-registered derivative id.</summary>
+    /// <param name="point">Evaluation point.</param>
+    /// <param name="derivativeId">Id returned by <see cref="GetDerivativeId"/>.</param>
+    /// <returns>Interpolated value at the given derivative order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="derivativeId"/> has not been registered.</exception>
+    public double Eval(double[] point, int derivativeId)
+    {
+        if (derivativeId < 0 || derivativeId >= _registeredDerivativeOrders.Count)
+            throw new ArgumentOutOfRangeException(
+                nameof(derivativeId),
+                $"derivativeId {derivativeId} not registered. Call GetDerivativeId first.");
+        return Eval(point, _registeredDerivativeOrders[derivativeId]);
+    }
+
+    internal Dictionary<Internal.TupleKey, int> DerivativeIdRegistry => _derivativeIdRegistry;
+    internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
+
+    // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this spline. The source <see cref="Function"/>
+    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// the function. All precomputed pieces and state are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevSpline"/> with <see cref="Function"/> set to null.</returns>
+    public ChebyshevSpline Clone()
+    {
+        var copy = new ChebyshevSpline();
+        copy.NumDimensions = NumDimensions;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
+        copy.Knots = Internal.CloneHelpers.DeepCopy(Knots)!;
+        copy.Intervals = Internal.CloneHelpers.DeepCopyIntervals(Intervals)!;
+        copy.Shape = Internal.CloneHelpers.DeepCopy(Shape)!;
+        copy.MaxDerivativeOrder = MaxDerivativeOrder;
+        copy.MaxN = MaxN;
+        copy.ErrorThreshold = ErrorThreshold;
+        copy.OriginalNNodes = Internal.CloneHelpers.DeepCopy(OriginalNNodes)!;
+        copy.NestedNNodes = Internal.CloneHelpers.DeepCopy(NestedNNodes);
+        copy.Built = Built;
+        copy.BuildTime = BuildTime;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._constructorType = "clone";
+        copy._evaluationPointsCache = null;
+        if (Pieces != null)
+        {
+            copy.Pieces = new ChebyshevApproximation?[Pieces.Length];
+            for (int i = 0; i < Pieces.Length; i++)
+                copy.Pieces[i] = Pieces[i]?.Clone();
+        }
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
+    // Serialization state
+    // ------------------------------------------------------------------
+
     internal class SplineSerializationState
     {
         public string Type { get; set; } = "ChebyshevSpline";
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = Array.Empty<double[]>();
         public int[] NNodes { get; set; } = Array.Empty<int>();
-        public int MaxDerivativeOrder { get; set; }
+        public int? MaxDerivativeOrder { get; set; }
         public double[][] Knots { get; set; } = Array.Empty<double[]>();
         public int[] Shape { get; set; } = Array.Empty<int>();
         public double BuildTime { get; set; }
@@ -1784,6 +2067,10 @@ public class ChebyshevSpline
         public int? MaxN { get; set; }
         public int[][]? NestedNNodes { get; set; }
         public string Version { get; set; } = "0.1.0";
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 
     internal class PieceState
@@ -1791,7 +2078,7 @@ public class ChebyshevSpline
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = Array.Empty<double[]>();
         public int[] NNodes { get; set; } = Array.Empty<int>();
-        public int MaxDerivativeOrder { get; set; }
+        public int? MaxDerivativeOrder { get; set; }
         public double[][] NodeArrays { get; set; } = Array.Empty<double[]>();
         public double[] TensorValues { get; set; } = Array.Empty<double>();
         public double[][] Weights { get; set; } = Array.Empty<double[]>();

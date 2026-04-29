@@ -60,6 +60,16 @@ public class ChebyshevApproximation
     internal int?[] OriginalNNodes { get; set; } = Array.Empty<int?>();
 
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private string _constructorType = "function";
+    private bool _isConstructionFinished;
+    private object? _additionalData;
+    private double[]? _evaluationPointsCache;
+    private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
+    private readonly List<int[]> _registeredDerivativeOrders = new();
+#pragma warning disable CS0649  // Used by future Clone() and JSON round-trip
+    private double[][]? _specialPoints;
+#pragma warning restore CS0649
 
     /// <summary>Internal hook for AdaptiveBuild to seed the error-estimate cache after each iteration.</summary>
     internal void SetCachedErrorEstimate(double value) => _cachedErrorEstimate = value;
@@ -72,24 +82,36 @@ public class ChebyshevApproximation
     /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
+    /// <param name="deferBuild">If true, skip eager node materialization. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
         double[][] domain,
         int[] nNodes,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null,
+        bool deferBuild = false)
     {
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
 
-        // Generate Chebyshev nodes for each dimension
-        NodeArrays = new double[numDimensions][];
-        for (int d = 0; d < numDimensions; d++)
+        if (!deferBuild)
         {
-            NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+            // Generate Chebyshev nodes for each dimension
+            NodeArrays = new double[numDimensions][];
+            for (int d = 0; d < numDimensions; d++)
+            {
+                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+            }
+        }
+        else
+        {
+            NodeArrays = Array.Empty<double[]>();
         }
     }
 
@@ -106,6 +128,7 @@ public class ChebyshevApproximation
     /// <param name="errorThreshold">Target supremum-norm error. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevApproximation(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -113,7 +136,8 @@ public class ChebyshevApproximation
         int?[]? nNodes = null,
         double? errorThreshold = null,
         int maxN = 64,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         if (maxN < 3)
             throw new ArgumentException(
@@ -143,6 +167,7 @@ public class ChebyshevApproximation
         ErrorThreshold = errorThreshold;
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         OriginalNNodes = (int?[])resolved.Clone();
 
         // If all entries are non-null, populate NNodes + nodes immediately (matches existing fixed-N behavior).
@@ -217,7 +242,7 @@ public class ChebyshevApproximation
             for (int d = 0; d < NumDimensions; d++)
                 point[d] = NodeArrays[d][indices[d]];
 
-            TensorValues[flat] = Function!(point, null);
+            TensorValues[flat] = Function!(point, _additionalData);
         }
         NEvaluations = total;
 
@@ -242,6 +267,8 @@ public class ChebyshevApproximation
             int totalWeights = Weights.Sum(w => w.Length);
             Console.WriteLine($"  Built in {BuildTime:F3}s ({totalWeights} weights, {totalWeights * 8} bytes)");
         }
+
+        _isConstructionFinished = true;
     }
 
     /// <summary>
@@ -315,6 +342,20 @@ public class ChebyshevApproximation
         }
 
         return current[0]; // Should not reach here normally
+    }
+
+    /// <summary>
+    /// Evaluate the function value (no derivatives) at the given point.
+    /// Convenience overload equivalent to <c>Eval(point, new int[NumDimensions])</c>.
+    /// </summary>
+    /// <param name="point">Query point, one coordinate per dimension.</param>
+    /// <returns>Interpolated value at the query point.</returns>
+    public double Eval(double[] point)
+    {
+        if (TensorValues == null)
+            throw new InvalidOperationException(
+                "Cannot evaluate an unbuilt interpolant. Call Build() or SetOriginalFunctionValues() first.");
+        return Eval(point, new int[NumDimensions]);
     }
 
     /// <summary>
@@ -503,11 +544,6 @@ public class ChebyshevApproximation
         return results;
     }
 
-    /// <summary>
-    /// Return derivative order as-is (for API compatibility).
-    /// </summary>
-    public int[] GetDerivativeId(int[] derivativeOrder) => derivativeOrder;
-
     // ------------------------------------------------------------------
     // Error estimation
     // ------------------------------------------------------------------
@@ -642,7 +678,12 @@ public class ChebyshevApproximation
             OriginalNNodes = OriginalNNodes,
             ErrorThreshold = ErrorThreshold,
             MaxN = MaxN,
-            Version = "0.5.0"
+            Version = "0.8.0",
+            Descriptor = _descriptor,
+            SpecialPoints = _specialPoints,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.Select(o => (int[])o.Clone()).ToArray()
+                : null,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -695,7 +736,9 @@ public class ChebyshevApproximation
                 $"call ChebyshevSpline.Load instead if class_tag={Internal.PcbFormat.ClassTagSpline}");
 
         var (domain, nNodes, tensor) = Internal.PcbFormat.ReadApproximationBody(r);
-        return FromValues(tensor, domain.Length, domain, nNodes);
+        var obj = FromValues(tensor, domain.Length, domain, nNodes);
+        obj._constructorType = "load";
+        return obj;
     }
 
     private static ChebyshevApproximation LoadJson(string path)
@@ -710,7 +753,7 @@ public class ChebyshevApproximation
             NumDimensions = state.NumDimensions,
             Domain = state.Domain,
             NNodes = state.NNodes,
-            MaxDerivativeOrder = state.MaxDerivativeOrder,
+            MaxDerivativeOrder = state.MaxDerivativeOrder ?? 2,
             NodeArrays = state.NodeArrays,
             TensorValues = state.TensorValues,
             Weights = state.Weights,
@@ -736,6 +779,24 @@ public class ChebyshevApproximation
             obj.OriginalNNodes = obj.NNodes.Select(n => (int?)n).ToArray();
         obj.ErrorThreshold = state.ErrorThreshold;
         obj.MaxN = state.MaxN ?? 64;
+
+        // v0.8.0 migration: Descriptor, SpecialPoints, RegisteredDerivativeOrders may be absent in older files.
+        obj._descriptor = state.Descriptor;
+        obj._specialPoints = state.SpecialPoints;
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = obj._registeredDerivativeOrders.Count;
+                obj._registeredDerivativeOrders.Add((int[])orders.Clone());
+                obj._derivativeIdRegistry[key] = id;
+            }
+        }
+
+        // ConstructorType is intentionally NOT restored from state — Load always sets "load".
+        obj._constructorType = "load";
+        obj._isConstructionFinished = true;
 
         return obj;
     }
@@ -859,6 +920,9 @@ public class ChebyshevApproximation
             obj.DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(obj.NodeArrays[d], obj.Weights[d]);
 
         obj.PrecomputeTransposedDiffMatrices();
+
+        obj._constructorType = "from_values";
+        obj._isConstructionFinished = true;
 
         return obj;
     }
@@ -1347,6 +1411,205 @@ public class ChebyshevApproximation
     }
 
     // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this interpolant.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="FromValues"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => _isConstructionFinished;
+
+    /// <summary>Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load), "clone" (Clone).</summary>
+    public string GetConstructorType() => _constructorType;
+
+    /// <summary>Per-dimension Chebyshev node counts actually used. After auto-N construction, these are the resolved values.</summary>
+    public int[] GetUsedNs() => (int[])NNodes.Clone();
+
+    /// <summary>Maximum derivative order this approximation supports.</summary>
+    public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Same value is threaded through every <c>f(point, data)</c>
+    /// call during <see cref="Build"/>.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>Internal accessor for AdaptiveBuild to read _additionalData.</summary>
+    internal object? AdditionalData => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points (product of nNodes across all dimensions).
+    /// </summary>
+    /// <returns>The total count of Chebyshev nodes in the tensor grid.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        int total = 1;
+        foreach (int n in NNodes) total *= n;
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of all Chebyshev node coordinates.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of shape [numPoints, ndim] flattened to 1D in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int num = GetNumEvaluationPoints();
+        int ndim = NumDimensions;
+        var points = new double[num * ndim];
+        var indices = new int[ndim];
+
+        for (int flat = 0; flat < num; flat++)
+        {
+            int rem = flat;
+            for (int d = ndim - 1; d >= 0; d--)
+            {
+                indices[d] = rem % NNodes[d];
+                rem /= NNodes[d];
+            }
+            for (int d = 0; d < ndim; d++)
+            {
+                points[flat * ndim + d] = NodeArrays[d][indices[d]];
+            }
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
+
+    /// <summary>
+    /// Get special points (e.g., knots or singularities) used in construction.
+    /// </summary>
+    /// <returns>Special points per dimension, or null if not applicable.</returns>
+    public double[][]? GetSpecialPoints() => _specialPoints;
+
+    /// <summary>
+    /// Populate this interpolant's tensor values from a precomputed flat array.
+    /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
+    /// the <see cref="FromValues"/> factory.
+    /// </summary>
+    /// <param name="values">Flat C-order tensor of length nNodes[0]*nNodes[1]*...</param>
+    /// <exception cref="ArgumentException">Thrown when values length does not match the expected product of nNodes.</exception>
+    public void SetOriginalFunctionValues(double[] values)
+    {
+        int expected = 1;
+        for (int d = 0; d < NumDimensions; d++) expected *= NNodes[d];
+        if (values.Length != expected)
+            throw new ArgumentException(
+                $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", NNodes)}]");
+
+        // Materialize NodeArrays now if deferred (NodeArrays is empty when deferBuild was true).
+        if (NodeArrays.Length == 0)
+        {
+            NodeArrays = new double[NumDimensions][];
+            for (int d = 0; d < NumDimensions; d++)
+                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(Domain[d][0], Domain[d][1], NNodes[d]);
+        }
+
+        // Mirror FromValues precomputation (bit-identical).
+        TensorValues = (double[])values.Clone();
+
+        Weights = new double[NumDimensions][];
+        for (int d = 0; d < NumDimensions; d++)
+            Weights[d] = BarycentricKernel.ComputeBarycentricWeights(NodeArrays[d]);
+
+        DiffMatrices = new double[NumDimensions][,];
+        for (int d = 0; d < NumDimensions; d++)
+            DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(NodeArrays[d], Weights[d]);
+
+        PrecomputeTransposedDiffMatrices();
+
+        _evaluationPointsCache = null;
+        _isConstructionFinished = true;
+        _constructorType = "from_values";
+    }
+
+    /// <summary>
+    /// Register or look up a derivative-orders tuple. Returns a stable
+    /// session-local int id for the same orders. Used in conjunction with
+    /// the <c>Eval(point, derivativeId)</c> overload.
+    /// </summary>
+    /// <param name="orders">Derivative order per dimension.</param>
+    /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
+    public int GetDerivativeId(int[] orders)
+    {
+        var key = new Internal.TupleKey(orders);
+        if (_derivativeIdRegistry.TryGetValue(key, out int existing))
+            return existing;
+        int id = _registeredDerivativeOrders.Count;
+        _registeredDerivativeOrders.Add((int[])orders.Clone());
+        _derivativeIdRegistry[key] = id;
+        return id;
+    }
+
+    /// <summary>Evaluate at <paramref name="point"/> using a previously-registered derivative id.</summary>
+    /// <param name="point">Evaluation point.</param>
+    /// <param name="derivativeId">Id returned by <see cref="GetDerivativeId"/>.</param>
+    /// <returns>Interpolated value at the given derivative order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="derivativeId"/> has not been registered.</exception>
+    public double Eval(double[] point, int derivativeId)
+    {
+        if (derivativeId < 0 || derivativeId >= _registeredDerivativeOrders.Count)
+            throw new ArgumentOutOfRangeException(
+                nameof(derivativeId),
+                $"derivativeId {derivativeId} not registered. Call GetDerivativeId first.");
+        return Eval(point, _registeredDerivativeOrders[derivativeId]);
+    }
+
+    internal Dictionary<Internal.TupleKey, int> DerivativeIdRegistry => _derivativeIdRegistry;
+    internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
+
+    // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this approximation. The source <see cref="Function"/>
+    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// the function. All precomputed state, descriptor, derivative-id registry,
+    /// and special points are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevApproximation"/> with <see cref="Function"/> set to null.</returns>
+    public ChebyshevApproximation Clone()
+    {
+        var copy = new ChebyshevApproximation();
+        copy.NumDimensions = NumDimensions;
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
+        copy.NodeArrays = Internal.CloneHelpers.DeepCopy(NodeArrays)!;
+        copy.TensorValues = Internal.CloneHelpers.DeepCopy(TensorValues);
+        copy.Weights = Internal.CloneHelpers.DeepCopy(Weights);
+        copy.DiffMatrices = Internal.CloneHelpers.DeepCopy(DiffMatrices);
+        copy.DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(DiffMatricesTFlat);
+        copy.MaxDerivativeOrder = MaxDerivativeOrder;
+        copy.MaxN = MaxN;
+        copy.ErrorThreshold = ErrorThreshold;
+        copy.BuildWarning = BuildWarning;
+        copy.OriginalNNodes = Internal.CloneHelpers.DeepCopy(OriginalNNodes)!;
+        copy.NEvaluations = NEvaluations;
+        copy.BuildTime = BuildTime;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._specialPoints = Internal.CloneHelpers.DeepCopy(_specialPoints);
+        copy._isConstructionFinished = _isConstructionFinished;
+        copy._constructorType = "clone";
+        copy._evaluationPointsCache = null;
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization state
     // ------------------------------------------------------------------
 
@@ -1355,7 +1618,7 @@ public class ChebyshevApproximation
         public int NumDimensions { get; set; }
         public double[][] Domain { get; set; } = Array.Empty<double[]>();
         public int[] NNodes { get; set; } = Array.Empty<int>();
-        public int MaxDerivativeOrder { get; set; }
+        public int? MaxDerivativeOrder { get; set; }
         public double[][] NodeArrays { get; set; } = Array.Empty<double[]>();
         public double[] TensorValues { get; set; } = Array.Empty<double>();
         public double[][] Weights { get; set; } = Array.Empty<double[]>();
@@ -1366,6 +1629,11 @@ public class ChebyshevApproximation
         public double? ErrorThreshold { get; set; }
         public int? MaxN { get; set; }
         public string Version { get; set; } = "";
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
+        public double[][]? SpecialPoints { get; set; }
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 }
 

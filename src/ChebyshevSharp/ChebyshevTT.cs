@@ -30,6 +30,12 @@ public class ChebyshevTT
     private double _buildTime;
     private int _totalBuildEvals;
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private int _maxDerivativeOrder = 2;
+    private object? _additionalData;
+    private double[]? _evaluationPointsCache;
+    private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
+    private readonly List<int[]> _registeredDerivativeOrders = new();
 
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
@@ -43,6 +49,9 @@ public class ChebyshevTT
     /// pre-v0.6.0 JSON file that predates this property.
     /// </summary>
     public string? Method { get; private set; }
+
+    // Overrides GetConstructorType() when set explicitly (e.g. "clone"). null means fall back to Method.
+    private string? _constructorType;
 
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions => _numDimensions;
@@ -99,6 +108,8 @@ public class ChebyshevTT
     /// <param name="maxRank">Maximum TT rank. Default is 10.</param>
     /// <param name="tolerance">Convergence tolerance for TT-Cross. Default is 1e-6.</param>
     /// <param name="maxSweeps">Maximum number of TT-Cross sweeps. Default is 10.</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support. Default is 2.</param>
+    /// <param name="additionalData">Optional user data object stored for introspection via <see cref="GetAdditionalData"/>. NOT threaded through build calls (TT function signature has no data arg).</param>
     public ChebyshevTT(
         Func<double[], double> function,
         int numDimensions,
@@ -106,7 +117,9 @@ public class ChebyshevTT
         int[] nNodes,
         int maxRank = 10,
         double tolerance = 1e-6,
-        int maxSweeps = 10)
+        int maxSweeps = 10,
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         if (domain.Length != numDimensions)
             throw new ArgumentException(
@@ -122,6 +135,8 @@ public class ChebyshevTT
         _maxRank = maxRank;
         _tolerance = tolerance;
         _maxSweeps = maxSweeps;
+        _maxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
     }
 
     // Private constructor for deserialization
@@ -135,7 +150,8 @@ public class ChebyshevTT
         TensorTrainKernel.TtCore[] coeffCores,
         int[] ttRanks,
         double buildTime,
-        int totalBuildEvals)
+        int totalBuildEvals,
+        int maxDerivativeOrder = 2)
     {
         _function = null;
         _numDimensions = numDimensions;
@@ -148,6 +164,7 @@ public class ChebyshevTT
         _ttRanks = ttRanks;
         _buildTime = buildTime;
         _totalBuildEvals = totalBuildEvals;
+        _maxDerivativeOrder = maxDerivativeOrder;
         _built = true;
     }
 
@@ -1119,6 +1136,11 @@ public class ChebyshevTT
             BuildTime = _buildTime,
             TotalBuildEvals = _totalBuildEvals,
             Cores = new CoreData[_numDimensions],
+            Descriptor = _descriptor,
+            MaxDerivativeOrder = _maxDerivativeOrder,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.ToArray()
+                : null,
         };
 
         for (int i = 0; i < _numDimensions; i++)
@@ -1168,9 +1190,26 @@ public class ChebyshevTT
             cores,
             state.TtRanks,
             state.BuildTime,
-            state.TotalBuildEvals);
+            state.TotalBuildEvals,
+            // v0.8.0 migration: MaxDerivativeOrder absent in pre-v0.8.0 JSON => null => default 2
+            maxDerivativeOrder: state.MaxDerivativeOrder ?? 2);
 
         tt.Method = state.Method;
+
+        // v0.8.0 migration: Descriptor may be absent in older files.
+        tt._descriptor = state.Descriptor;
+
+        // Restore derivative-id registry (absent in older JSON; skip if null).
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = tt._registeredDerivativeOrders.Count;
+                tt._registeredDerivativeOrders.Add((int[])orders.Clone());
+                tt._derivativeIdRegistry[key] = id;
+            }
+        }
 
         string currentVersion = GetLibraryVersion();
         if (state.Version != null && state.Version != currentVersion)
@@ -1256,6 +1295,166 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this tensor train.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => _built;
+
+    /// <summary>Returns one of: "clone" (if cloned), "cross"/"svd"/"als" (build method used), or "function" if not yet built.</summary>
+    public string GetConstructorType() => _constructorType ?? Method ?? "function";
+
+    /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
+    public int[] GetUsedNs() => (int[])_nNodes.Clone();
+
+    /// <summary>Maximum derivative order this tensor train supports.</summary>
+    public int GetMaxDerivativeOrder() => _maxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Stored for introspection only — TT's function signature
+    /// is <c>Func&lt;double[], double&gt;</c> (no data arg); wrap with a closure if you need data threading.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points in the full Chebyshev grid (product of nNodes).
+    /// </summary>
+    /// <returns>The total count of Chebyshev nodes across all dimensions.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        int total = 1;
+        foreach (int n in _nNodes) total *= n;
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of the full Chebyshev grid coordinates.
+    /// Generated on-demand using the domain and nNodes, independent of the sparse TT sampling.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of full-grid node coordinates, flattened in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int num = GetNumEvaluationPoints();
+        int ndim = _numDimensions;
+
+        var nodeArrays = new double[ndim][];
+        for (int d = 0; d < ndim; d++)
+            nodeArrays[d] = BarycentricKernel.MakeNodesForDim(_domain[d][0], _domain[d][1], _nNodes[d]);
+
+        var points = new double[num * ndim];
+        var indices = new int[ndim];
+
+        for (int flat = 0; flat < num; flat++)
+        {
+            int rem = flat;
+            for (int d = ndim - 1; d >= 0; d--)
+            {
+                indices[d] = rem % _nNodes[d];
+                rem /= _nNodes[d];
+            }
+            for (int d = 0; d < ndim; d++)
+                points[flat * ndim + d] = nodeArrays[d][indices[d]];
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
+
+    /// <summary>
+    /// Register or look up a derivative-orders tuple. Returns a stable
+    /// session-local int id for the same orders. Used in conjunction with
+    /// the <c>Eval(point, derivativeId)</c> overload.
+    /// </summary>
+    /// <param name="orders">Derivative order per dimension.</param>
+    /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
+    public int GetDerivativeId(int[] orders)
+    {
+        var key = new Internal.TupleKey(orders);
+        if (_derivativeIdRegistry.TryGetValue(key, out int existing))
+            return existing;
+        int id = _registeredDerivativeOrders.Count;
+        _registeredDerivativeOrders.Add((int[])orders.Clone());
+        _derivativeIdRegistry[key] = id;
+        return id;
+    }
+
+    /// <summary>Evaluate at <paramref name="point"/> using a previously-registered derivative id.</summary>
+    /// <param name="point">Evaluation point.</param>
+    /// <param name="derivativeId">Id returned by <see cref="GetDerivativeId"/>.</param>
+    /// <returns>Interpolated value at the given derivative order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="derivativeId"/> has not been registered.</exception>
+    public double Eval(double[] point, int derivativeId)
+    {
+        if (derivativeId < 0 || derivativeId >= _registeredDerivativeOrders.Count)
+            throw new ArgumentOutOfRangeException(
+                nameof(derivativeId),
+                $"derivativeId {derivativeId} not registered. Call GetDerivativeId first.");
+        var orders = _registeredDerivativeOrders[derivativeId];
+        bool allZero = orders.All(o => o == 0);
+        if (allZero) return Eval(point);
+        return EvalMulti(point, new[] { orders })[0];
+    }
+
+    internal Dictionary<Internal.TupleKey, int> DerivativeIdRegistry => _derivativeIdRegistry;
+    internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
+
+    // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this tensor train. The source function callable is
+    /// NOT duplicated — clones cannot be rebuilt without re-supplying the function.
+    /// All TT cores and state are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevTT"/>.</returns>
+    public ChebyshevTT Clone()
+    {
+        TensorTrainKernel.TtCore[]? clonedCores = null;
+        if (_coeffCores != null)
+        {
+            clonedCores = new TensorTrainKernel.TtCore[_coeffCores.Length];
+            for (int i = 0; i < _coeffCores.Length; i++)
+                clonedCores[i] = _coeffCores[i].Copy();
+        }
+
+        var copy = new ChebyshevTT(
+            numDimensions: _numDimensions,
+            domain: Internal.CloneHelpers.DeepCopy(_domain)!,
+            nNodes: Internal.CloneHelpers.DeepCopy(_nNodes)!,
+            maxRank: _maxRank,
+            tolerance: _tolerance,
+            maxSweeps: _maxSweeps,
+            coeffCores: clonedCores ?? System.Array.Empty<TensorTrainKernel.TtCore>(),
+            ttRanks: _ttRanks != null ? (int[])_ttRanks.Clone() : System.Array.Empty<int>(),
+            buildTime: _buildTime,
+            totalBuildEvals: _totalBuildEvals,
+            maxDerivativeOrder: _maxDerivativeOrder);
+        copy.Method = Method;
+        copy._constructorType = "clone";
+        copy.BuildWarning = BuildWarning;
+        copy.LoadWarning = LoadWarning;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._evaluationPointsCache = null;
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization DTO
     // ------------------------------------------------------------------
 
@@ -1273,6 +1472,13 @@ public class ChebyshevTT
         public double BuildTime { get; set; }
         public int TotalBuildEvals { get; set; }
         public CoreData[] Cores { get; set; } = null!;
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
+        // Nullable so pre-v0.8.0 files (which lack this field) default to null => 2
+        public int? MaxDerivativeOrder { get; set; }
+        // Derivative-id registry (absent in older JSON; null == not set)
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 
     internal class CoreData

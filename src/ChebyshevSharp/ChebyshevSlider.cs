@@ -58,6 +58,13 @@ public class ChebyshevSlider
     public double BuildTime { get; internal set; }
 
     private double? _cachedErrorEstimate;
+    private string? _descriptor;
+    private string _constructorType = "function";
+    private bool _isConstructionFinished;
+    private object? _additionalData;
+    private double[]? _evaluationPointsCache;
+    private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
+    private readonly List<int[]> _registeredDerivativeOrders = new();
 
     /// <summary>
     /// Create a new ChebyshevSlider.
@@ -69,6 +76,7 @@ public class ChebyshevSlider
     /// <param name="partition">Grouping of dimension indices into slides. Each dimension must appear exactly once.</param>
     /// <param name="pivotPoint">Reference point z around which slides are built.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
+    /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     public ChebyshevSlider(
         Func<double[], object?, double> function,
         int numDimensions,
@@ -76,13 +84,15 @@ public class ChebyshevSlider
         int[] nNodes,
         int[][] partition,
         double[] pivotPoint,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        object? additionalData = null)
     {
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
         NNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
+        _additionalData = additionalData;
         Partition = partition.Select(g => (int[])g.Clone()).ToArray();
         PivotPoint = (double[])pivotPoint.Clone();
 
@@ -143,7 +153,7 @@ public class ChebyshevSlider
         _cachedErrorEstimate = null;
 
         // Evaluate pivot value
-        PivotValue = Function(PivotPoint, null);
+        PivotValue = Function(PivotPoint, _additionalData);
 
         int totalEvals = TotalBuildEvals;
         int fullTensor = 1;
@@ -186,7 +196,8 @@ public class ChebyshevSlider
 
             var slide = new ChebyshevApproximation(
                 slideFunc, slideDim, slideDomain, slideNNodes,
-                maxDerivativeOrder: MaxDerivativeOrder);
+                maxDerivativeOrder: MaxDerivativeOrder,
+                additionalData: _additionalData);
             slide.Build(verbose: false);
             Slides[slideIdx] = slide;
 
@@ -207,6 +218,7 @@ public class ChebyshevSlider
             Console.WriteLine($"Build complete in {BuildTime:F3}s");
 
         Built = true;
+        _isConstructionFinished = true;
     }
 
     // ------------------------------------------------------------------
@@ -388,6 +400,10 @@ public class ChebyshevSlider
             PivotValue = PivotValue,
             BuildTime = BuildTime,
             Slides = slideStates,
+            Descriptor = _descriptor,
+            RegisteredDerivativeOrders = _registeredDerivativeOrders.Count > 0
+                ? _registeredDerivativeOrders.Select(o => (int[])o.Clone()).ToArray()
+                : null,
         };
 
         var options = new JsonSerializerOptions { WriteIndented = false };
@@ -440,7 +456,7 @@ public class ChebyshevSlider
             slides[i] = slide;
         }
 
-        return new ChebyshevSlider
+        var slider = new ChebyshevSlider
         {
             Function = null,
             NumDimensions = state.NumDimensions,
@@ -455,6 +471,22 @@ public class ChebyshevSlider
             Built = true,
             BuildTime = state.BuildTime,
         };
+        // v0.8.0 migration: Descriptor may be absent in older files.
+        slider._descriptor = state.Descriptor;
+        // ConstructorType is intentionally NOT restored from state — Load always sets "load".
+        slider._constructorType = "load";
+        slider._isConstructionFinished = true;
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            foreach (var orders in state.RegisteredDerivativeOrders)
+            {
+                var key = new Internal.TupleKey(orders);
+                int id = slider._registeredDerivativeOrders.Count;
+                slider._registeredDerivativeOrders.Add((int[])orders.Clone());
+                slider._derivativeIdRegistry[key] = id;
+            }
+        }
+        return slider;
     }
 
     // ------------------------------------------------------------------
@@ -886,6 +918,159 @@ public class ChebyshevSlider
     }
 
     // ------------------------------------------------------------------
+    // Phase 4 ergonomics — accessors
+    // ------------------------------------------------------------------
+
+    /// <summary>Set a free-form descriptor string for this slider.</summary>
+    public void SetDescriptor(string descriptor) => _descriptor = descriptor;
+
+    /// <summary>Get the descriptor previously set via <see cref="SetDescriptor"/>; null if unset.</summary>
+    public string? GetDescriptor() => _descriptor;
+
+    /// <summary>True if <see cref="Build"/>/<see cref="Load"/> completed.</summary>
+    public bool IsConstructionFinished() => _isConstructionFinished;
+
+    /// <summary>Returns one of: "function" (Build), "load" (Load).</summary>
+    public string GetConstructorType() => _constructorType;
+
+    /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
+    public int[] GetUsedNs() => (int[])NNodes.Clone();
+
+    /// <summary>Maximum derivative order this slider supports.</summary>
+    public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
+
+    /// <summary>
+    /// Returns the user-supplied <c>additionalData</c> object passed to the constructor,
+    /// or null if none was provided. Same value is threaded through every <c>f(point, data)</c>
+    /// call during <see cref="Build"/>.
+    /// </summary>
+    public object? GetAdditionalData() => _additionalData;
+
+    /// <summary>
+    /// Total number of evaluation points across all slides.
+    /// </summary>
+    /// <returns>The sum of GetNumEvaluationPoints() from each slide.</returns>
+    public int GetNumEvaluationPoints()
+    {
+        if (Slides == null) return 0;
+        int total = 0;
+        foreach (var slide in Slides) total += slide.GetNumEvaluationPoints();
+        return total;
+    }
+
+    /// <summary>
+    /// Flat row-major array of all slider evaluation points, expanded to full ndim using PivotPoint.
+    /// Each slide's local coordinates are mapped to full-ndim space via the Partition and PivotPoint.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// </summary>
+    /// <returns>Double array of full-ndim node coordinates, flattened in row-major order.</returns>
+    public double[] GetEvaluationPoints()
+    {
+        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+
+        int total = GetNumEvaluationPoints();
+        var points = new double[total * NumDimensions];
+        int offset = 0;
+
+        for (int slideIdx = 0; slideIdx < Slides!.Length; slideIdx++)
+        {
+            var slide = Slides[slideIdx];
+            var group = Partition[slideIdx];
+            var slidePts = slide.GetEvaluationPoints();
+            int slideNum = slide.GetNumEvaluationPoints();
+            int gdim = group.Length;
+
+            for (int p = 0; p < slideNum; p++)
+            {
+                for (int d = 0; d < NumDimensions; d++)
+                    points[offset + p * NumDimensions + d] = PivotPoint[d];
+                for (int gi = 0; gi < gdim; gi++)
+                    points[offset + p * NumDimensions + group[gi]] = slidePts[p * gdim + gi];
+            }
+            offset += slideNum * NumDimensions;
+        }
+
+        _evaluationPointsCache = points;
+        return points;
+    }
+
+    /// <summary>
+    /// Register or look up a derivative-orders tuple. Returns a stable
+    /// session-local int id for the same orders. Used in conjunction with
+    /// the <c>Eval(point, derivativeId)</c> overload.
+    /// </summary>
+    /// <param name="orders">Derivative order per dimension.</param>
+    /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
+    public int GetDerivativeId(int[] orders)
+    {
+        var key = new Internal.TupleKey(orders);
+        if (_derivativeIdRegistry.TryGetValue(key, out int existing))
+            return existing;
+        int id = _registeredDerivativeOrders.Count;
+        _registeredDerivativeOrders.Add((int[])orders.Clone());
+        _derivativeIdRegistry[key] = id;
+        return id;
+    }
+
+    /// <summary>Evaluate at <paramref name="point"/> using a previously-registered derivative id.</summary>
+    /// <param name="point">Evaluation point.</param>
+    /// <param name="derivativeId">Id returned by <see cref="GetDerivativeId"/>.</param>
+    /// <returns>Interpolated value at the given derivative order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="derivativeId"/> has not been registered.</exception>
+    public double Eval(double[] point, int derivativeId)
+    {
+        if (derivativeId < 0 || derivativeId >= _registeredDerivativeOrders.Count)
+            throw new ArgumentOutOfRangeException(
+                nameof(derivativeId),
+                $"derivativeId {derivativeId} not registered. Call GetDerivativeId first.");
+        return Eval(point, _registeredDerivativeOrders[derivativeId]);
+    }
+
+    internal Dictionary<Internal.TupleKey, int> DerivativeIdRegistry => _derivativeIdRegistry;
+    internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
+
+    // ------------------------------------------------------------------
+    // Clone
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a deep copy of this slider. The source <see cref="Function"/>
+    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// the function. All precomputed slides and state are deep-copied.
+    /// </summary>
+    /// <returns>A fully independent <see cref="ChebyshevSlider"/> with <see cref="Function"/> set to null.</returns>
+    public ChebyshevSlider Clone()
+    {
+        var copy = new ChebyshevSlider();
+        copy.NumDimensions = NumDimensions;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
+        copy.Partition = Internal.CloneHelpers.DeepCopy(Partition)!;
+        copy.PivotPoint = Internal.CloneHelpers.DeepCopy(PivotPoint)!;
+        copy.PivotValue = PivotValue;
+        copy.MaxDerivativeOrder = MaxDerivativeOrder;
+        copy.Built = Built;
+        copy.BuildTime = BuildTime;
+        copy._descriptor = _descriptor;
+        copy._additionalData = _additionalData;
+        copy._isConstructionFinished = _isConstructionFinished;
+        copy._constructorType = "clone";
+        copy._evaluationPointsCache = null;
+        copy.DimToSlide = new System.Collections.Generic.Dictionary<int, int>(DimToSlide);
+        if (Slides != null)
+        {
+            copy.Slides = new ChebyshevApproximation[Slides.Length];
+            for (int i = 0; i < Slides.Length; i++)
+                copy.Slides[i] = Slides[i].Clone();
+        }
+        foreach (var kv in _derivativeIdRegistry)
+            copy._derivativeIdRegistry[kv.Key] = kv.Value;
+        foreach (var orders in _registeredDerivativeOrders)
+            copy._registeredDerivativeOrders.Add((int[])orders.Clone());
+        return copy;
+    }
+
+    // ------------------------------------------------------------------
     // Serialization state classes
     // ------------------------------------------------------------------
 
@@ -901,6 +1086,10 @@ public class ChebyshevSlider
         public double PivotValue { get; set; }
         public double BuildTime { get; set; }
         public SlideState[] Slides { get; set; } = Array.Empty<SlideState>();
+        // v0.8.0 ergonomics fields (absent in pre-v0.8.0 JSON; null == not set)
+        public string? Descriptor { get; set; }
+        public string? ConstructorType { get; set; }
+        public int[][]? RegisteredDerivativeOrders { get; set; }
     }
 
     internal class SlideState

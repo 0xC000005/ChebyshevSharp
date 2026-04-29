@@ -39,6 +39,8 @@
   href: serialization.md
 - name: Portable Binary Format (.pcb)
   href: binary-format.md
+- name: Ergonomics
+  href: ergonomics.md
 - name: Performance
   href: performance.md
 - name: Changelog
