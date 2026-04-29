@@ -7,11 +7,11 @@
 
     <!-- NuGet package metadata -->
     <PackageId>ChebyshevSharp</PackageId>
-    <Version>0.8.0</Version>
-    <PyChebyshevParity>0.18.0</PyChebyshevParity>
-    <InformationalVersion>0.8.0+pychebyshev.0.18.0</InformationalVersion>
+    <Version>0.9.0</Version>
+    <PyChebyshevParity>0.17.0</PyChebyshevParity>
+    <InformationalVersion>0.9.0+pychebyshev.0.17.0</InformationalVersion>
     <Authors>Max</Authors>
-    <Description>ChebyshevSharp 0.8.0 — multi-dimensional Chebyshev tensor interpolation with analytical derivatives. Feature parity with PyChebyshev v0.18.0 + ergonomics layer (descriptor, additionalData, derivative-id registry, introspection, typed Clone, DeferBuild).</Description>
+    <Description>ChebyshevSharp 0.9.0 — multi-dimensional Chebyshev tensor interpolation with analytical derivatives. Feature parity with PyChebyshev v0.17.0 + all four interpolant classes support integration (Slider, TT added in v0.9.0).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/0xC000005/ChebyshevSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/0xC000005/ChebyshevSharp</RepositoryUrl>

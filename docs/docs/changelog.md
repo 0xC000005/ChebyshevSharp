@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-04-28
+
+### Added — Integrate Everywhere
+
+- `ChebyshevSlider.Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)` — full + partial integration via the closed-form sliding-decomposition. Returns a scalar (boxed in `object`) on full integration; a `ChebyshevSlider` over surviving dims on partial integration.
+- `ChebyshevTT.Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)` — full + partial integration via Fejér-1 quadrature contraction into each integrated core's node axis (after coefficient→value core conversion). Works for all three TT build methods (`cross`, `svd`, `als`).
+- New internal helpers in `Internal/Calculus.cs`: `SliderPartitionIntersect`, `IntegrateTtAlongDim`.
+
+After v0.9.0, all four ChebyshevSharp classes support integration — matching PyChebyshev v0.17.0 parity. Roots / Min / Max on Slider and TT remain deferred (Python defers to v0.21).
+
+### PyChebyshev parity tracking
+
+- `<PyChebyshevParity>` tag drops 0.18.0 → 0.17.0. This looks like a regression but is not — the parity tag is a non-monotonic indicator of "the most recent feature batch we ported." Phase 4 (v0.8.0) filled in v0.15+v0.16 features behind the v0.18.0 binary format that was already shipped, so the tag stayed at 0.18.0. Phase 5 (this release) ports v0.17.0 calculus completion features; the tag drops to 0.17.0 to indicate which batch was just delivered. Phase 6 will advance to v0.20.1.
+- The `<Version>` (release-engineering version) advances monotonically: 0.8.0 → 0.9.0.
+
+### Test count: 902 → 946 (+44)
+
+Phase 5 fan-out: 17 tests in `SliderIntegrateTests.cs` (full + partial + validation + ergonomics), 22 tests in `TtIntegrateTests.cs` (full + partial + validation + cross-class build-mode preservation), 5 helper tests appended to `CalculusTests.cs`.
+
+See [PR #20](https://github.com/0xC000005/ChebyshevSharp/pulls) for the full diff and the [design spec](https://github.com/0xC000005/ChebyshevSharp/blob/main/docs/superpowers/specs/2026-04-28-phase5-integrate-everywhere-design.md).
+
 ## [0.8.0] - 2026-04-28 — Ergonomics polish (PyChebyshev v0.15+v0.16 fill-in)
 
 > **PyChebyshev parity stays at v0.18.0.** Phase 4 of the v0.20.1 phased port —

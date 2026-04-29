@@ -339,6 +339,272 @@ public class ChebyshevSlider
         return sum;
     }
 
+    // ------------------------------------------------------------------
+    // Integration (Phase 5 — PyChebyshev v0.17)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Integrate the slider approximation over one or more dimensions.
+    /// Uses the closed-form decomposition of the sliding sum:
+    ///   f(x) ≈ pv + Σ_i [s_i(x_{G_i}) - pv]
+    /// Each slide's integral is computed via <see cref="ChebyshevApproximation.Integrate"/>.
+    /// </summary>
+    /// <param name="dims">Dimensions to integrate out. Null = all (full integration → scalar).</param>
+    /// <param name="bounds">Sub-interval bounds per dim (positional with sorted dims). Null = full domain.</param>
+    /// <returns>A boxed <c>double</c> when every dim is integrated; otherwise a new <see cref="ChebyshevSlider"/> over surviving dims.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range indices, or <paramref name="bounds"/> are invalid. Duplicate <paramref name="dims"/> entries are silently deduplicated (matches <see cref="ChebyshevApproximation.Integrate"/>).</exception>
+    public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
+    {
+        if (!Built)
+            throw new InvalidOperationException("Call Build() before Integrate().");
+
+        // Normalize dims: null = all, sort + deduplicate, validate range.
+        int[] sortedDims;
+        if (dims == null)
+            sortedDims = Enumerable.Range(0, NumDimensions).ToArray();
+        else
+            sortedDims = dims.Distinct().OrderBy(d => d).ToArray();
+
+        foreach (int d in sortedDims)
+        {
+            if (d < 0 || d >= NumDimensions)
+                throw new ArgumentException(
+                    $"dim {d} out-of-range [0, {NumDimensions - 1}]");
+        }
+
+        var perDimBounds = Internal.Calculus.NormalizeBounds(sortedDims, bounds, Domain);
+        var dimToIdx = new Dictionary<int, int>();
+        for (int i = 0; i < sortedDims.Length; i++)
+            dimToIdx[sortedDims[i]] = i;
+
+        // Per-dim integration widths.
+        var widths = new Dictionary<int, double>();
+        var boundsForDim = new Dictionary<int, (double lo, double hi)?>();
+        foreach (int d in sortedDims)
+        {
+            var bd = perDimBounds[dimToIdx[d]];
+            double a = Domain[d][0], b = Domain[d][1];
+            if (bd == null)
+            {
+                widths[d] = b - a;
+                boundsForDim[d] = null;
+            }
+            else
+            {
+                widths[d] = bd.Value.hi - bd.Value.lo;
+                boundsForDim[d] = bd;
+            }
+        }
+
+        double volT = 1.0;
+        foreach (int d in sortedDims) volT *= widths[d];
+
+        // Per-slide classification.
+        var slideKinds = new (string kind, int[] kept)[Partition.Length];
+        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        {
+            slideKinds[slideIdx] = Internal.Calculus.SliderPartitionIntersect(
+                Partition[slideIdx], sortedDims);
+        }
+
+        // pv_new accumulator: starts as pv * vol_T (the first term of the sum).
+        double pvNew = PivotValue * volT;
+
+        // For each "full" slide: integrate over its full group with the
+        // appropriate sub-interval bounds, then add contribution to pv_new.
+        // Contribution = vol(T \ G_i) * (I_i - pv * vol(G_i ∩ T))
+        // For "full" slides, vol(G_i ∩ T) is the product of widths over G_i.
+        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        {
+            var (kind, _) = slideKinds[slideIdx];
+            if (kind != "full") continue;
+
+            var slide = Slides[slideIdx];
+            var group = Partition[slideIdx];
+
+            // Local-dim list (always all dims of the slide) with corresponding bounds.
+            int[] localDims = Enumerable.Range(0, group.Length).ToArray();
+            var localBoundsList = new List<(double lo, double hi)>(group.Length);
+            bool allFullDomain = true;
+            for (int gi = 0; gi < group.Length; gi++)
+            {
+                var bd = boundsForDim[group[gi]];
+                if (bd == null)
+                {
+                    // Use full slide-domain for this local dim
+                    localBoundsList.Add((slide.Domain[gi][0], slide.Domain[gi][1]));
+                }
+                else
+                {
+                    localBoundsList.Add(bd.Value);
+                    allFullDomain = false;
+                }
+            }
+
+            double Ii;
+            if (allFullDomain)
+                Ii = (double)slide.Integrate(dims: localDims);
+            else
+                Ii = (double)slide.Integrate(dims: localDims, bounds: localBoundsList.ToArray());
+
+            // vol(T \ G_i) — widths over dims in T but NOT in G_i.
+            double volOutside = 1.0;
+            var groupSet = new HashSet<int>(group);
+            foreach (int d in sortedDims)
+                if (!groupSet.Contains(d)) volOutside *= widths[d];
+
+            // vol(G_i ∩ T) for "full" slides equals product of widths over G_i.
+            double volGroup = 1.0;
+            foreach (int d in group) volGroup *= widths[d];
+
+            pvNew += volOutside * (Ii - PivotValue * volGroup);
+        }
+
+        // Full integration: every group classified "full", return scalar.
+        if (sortedDims.Length == NumDimensions)
+            return pvNew;
+
+        // Partial integration: build new slider over surviving dims.
+        // Surviving global dim indices, sorted.
+        int[] survive = Enumerable.Range(0, NumDimensions)
+            .Where(d => !dimToIdx.ContainsKey(d))
+            .ToArray();
+        // global -> new index map
+        var oldToNew = new Dictionary<int, int>();
+        for (int newIdx = 0; newIdx < survive.Length; newIdx++)
+            oldToNew[survive[newIdx]] = newIdx;
+
+        var newPartition = new List<int[]>();
+        var newSlides = new List<ChebyshevApproximation>();
+
+        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        {
+            var (kind, kept) = slideKinds[slideIdx];
+            if (kind == "full") continue; // absorbed into pv_new
+
+            var group = Partition[slideIdx];
+            var slide = Slides[slideIdx];
+
+            ChebyshevApproximation newSlide;
+            int[] newGroup;
+
+            if (kind == "none")
+            {
+                // The slide passes through. Apply the partition-of-unity shift:
+                //   new_tensor = vol_T * tensor + (pv_new - pv * vol_T)
+                double shift = pvNew - PivotValue * volT;
+                var tv = slide.TensorValues!;
+                var newTensor = new double[tv.Length];
+                for (int j = 0; j < tv.Length; j++)
+                    newTensor[j] = volT * tv[j] + shift;
+                newSlide = ChebyshevApproximation.FromGrid(slide, newTensor);
+                newGroup = group.Select(d => oldToNew[d]).ToArray();
+            }
+            else
+            {
+                // "partial": integrate the group's intersection with T.
+                // Build local indices (within slide) for dims to integrate.
+                var localDimsList = new List<int>();
+                var localBoundsList = new List<(double lo, double hi)>();
+                bool sawAnyExplicitBounds = false;
+                for (int localI = 0; localI < group.Length; localI++)
+                {
+                    int gd = group[localI];
+                    if (dimToIdx.ContainsKey(gd))
+                    {
+                        localDimsList.Add(localI);
+                        var bd = boundsForDim[gd];
+                        if (bd == null)
+                        {
+                            // Local-dim full domain.
+                            localBoundsList.Add(
+                                (slide.Domain[localI][0], slide.Domain[localI][1]));
+                        }
+                        else
+                        {
+                            localBoundsList.Add(bd.Value);
+                            sawAnyExplicitBounds = true;
+                        }
+                    }
+                }
+
+                ChebyshevApproximation reduced;
+                if (!sawAnyExplicitBounds)
+                    reduced = (ChebyshevApproximation)slide.Integrate(
+                        dims: localDimsList.ToArray());
+                else
+                    reduced = (ChebyshevApproximation)slide.Integrate(
+                        dims: localDimsList.ToArray(),
+                        bounds: localBoundsList.ToArray());
+
+                // vol(T \ G_i) — widths over dims in T but NOT in this group.
+                double volOutside = 1.0;
+                var groupSet = new HashSet<int>(group);
+                foreach (int d in sortedDims)
+                    if (!groupSet.Contains(d)) volOutside *= widths[d];
+
+                // Apply unified rule:
+                //   new_tensor = vol_outside * reduced.tensor + (pv_new - pv * vol_T)
+                double shift = pvNew - PivotValue * volT;
+                var rtv = reduced.TensorValues!;
+                var newTensor = new double[rtv.Length];
+                for (int j = 0; j < rtv.Length; j++)
+                    newTensor[j] = volOutside * rtv[j] + shift;
+                newSlide = ChebyshevApproximation.FromGrid(reduced, newTensor);
+                newGroup = kept.Select(d => oldToNew[d]).ToArray();
+            }
+
+            newPartition.Add(newGroup);
+            newSlides.Add(newSlide);
+        }
+
+        // Reconstruct slider metadata for surviving dims.
+        // The decomposition is now:
+        //   g(y) = pv_new + Σ_j [tilde_s_j(y_{G'_j}) - pv_new]
+        // We constructed each tilde_s_j so that its tensor satisfies:
+        //   tilde_s_j(y) = scale * source(y) + (pv_new - pv * vol_T)
+        // for "none" (scale = vol_T) and "partial" (scale = vol_outside) slides.
+        // Subtracting pv_new from tilde_s_j gives scale * source(y) - pv * vol_T,
+        // the required contribution of the slide.
+        var newDomain = survive.Select(d => (double[])Domain[d].Clone()).ToArray();
+        var newNNodes = survive.Select(d => NNodes[d]).ToArray();
+        var newPivotPoint = survive.Select(d => PivotPoint[d]).ToArray();
+        var newPartitionArr = newPartition.ToArray();
+
+        var result = new ChebyshevSlider();
+        result.Function = null;
+        result.NumDimensions = survive.Length;
+        result.Domain = newDomain;
+        result.NNodes = newNNodes;
+        result.MaxDerivativeOrder = MaxDerivativeOrder;
+        result.Partition = newPartitionArr;
+        result.PivotPoint = newPivotPoint;
+        result.PivotValue = pvNew;
+        result.Slides = newSlides.ToArray();
+        result.DimToSlide = BuildDimToSlide(newPartitionArr);
+        result.Built = true;
+        result.BuildTime = 0.0;
+        // Inherit Phase 4 ergonomics fields per spec D7 (descriptor + additionalData
+        // pass through; derivative-id registry is intentionally NOT copied).
+        SliderInheritErgonomics(result);
+        return result;
+    }
+
+    /// <summary>
+    /// Copy descriptor, additionalData, _maxDerivativeOrder (already done via property),
+    /// and _constructorType from this Slider to <paramref name="target"/>.
+    /// The derivative-id registry is intentionally NOT copied — partial-integrate
+    /// results have a different dim space (Python <c>slider.py:1130-1131</c>, spec D7).
+    /// </summary>
+    private void SliderInheritErgonomics(ChebyshevSlider target)
+    {
+        target._descriptor = _descriptor;
+        target._additionalData = _additionalData;
+        target._isConstructionFinished = true;
+        target._constructorType = _constructorType;
+    }
+
     /// <summary>Total number of function evaluations used during build.</summary>
     public int TotalBuildEvals
     {

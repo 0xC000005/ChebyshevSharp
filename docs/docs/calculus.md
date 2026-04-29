@@ -94,15 +94,68 @@ For `ChebyshevSpline`, optimization searches each piece independently and return
 
 ## Class Support
 
-| Operation | `ChebyshevApproximation` | `ChebyshevSpline` | `ChebyshevSlider` |
-|-----------|:---:|:---:|:---:|
-| Integrate | Yes | Yes | No |
-| Roots | Yes | Yes | No |
-| Minimize / Maximize | Yes | Yes | No |
+| Operation | `ChebyshevApproximation` | `ChebyshevSpline` | `ChebyshevSlider` | `ChebyshevTT` |
+|-----------|:---:|:---:|:---:|:---:|
+| Integrate | Yes | Yes | Yes (v0.9.0) | Yes (v0.9.0) |
+| Roots | Yes | Yes | No | No |
+| Minimize / Maximize | Yes | Yes | No | No |
 
-`ChebyshevSlider` does not support calculus operations because the additive decomposition does not preserve the polynomial structure needed for exact integration or root-finding. Use `ChebyshevApproximation` or `ChebyshevSpline` for these operations.
+As of v0.9.0, all four classes support integration. Roots, Minimize, and Maximize remain limited to `ChebyshevApproximation` and `ChebyshevSpline` — matching PyChebyshev's v0.21 deferral for Slider and TT.
 
 ## References
 
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
 2. Good, I. J. (1961). "The Colleague Matrix, a Chebyshev Analogue of the Companion Matrix." *The Quarterly Journal of Mathematics* 12(1):61-68.
+
+## Slider Integration (v0.9.0)
+
+`ChebyshevSlider.Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)` integrates over one or more dimensions using the closed-form sliding-decomposition. Returns a scalar (boxed in `object`) when every dim is integrated; otherwise returns a new `ChebyshevSlider` over surviving dims.
+
+```csharp
+var slider = new ChebyshevSlider(
+    (x, _) => Math.Sin(x[0]) + Math.Cos(x[1]),
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 10, 10 },
+    partition: new[] { new[] { 0 }, new[] { 1 } },
+    pivotPoint: new[] { 0.0, 0.0 });
+slider.Build();
+
+// Full integration: ∫∫ (sin(x) + cos(y)) dx dy = 4 sin(1)
+double result = (double)slider.Integrate();
+
+// Partial integration: ∫_{-1}^{1} (sin(x) + cos(y)) dy → slider over dim 0 only
+var partial = (ChebyshevSlider)slider.Integrate(dims: new[] { 1 });
+```
+
+The integration is exact for the spectrally-resolved part of each slide. Per-slide
+classification: a slide whose group is fully covered by `dims` collapses into the
+new pivot value; a slide whose group is partially covered is reduced via
+`ChebyshevApproximation.Integrate`; a slide whose group is disjoint from `dims`
+passes through with a partition-of-unity shift.
+
+## TT Integration (v0.9.0)
+
+`ChebyshevTT.Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)` integrates over one or more dimensions using Fejér-1 quadrature contracted into each integrated core's node axis. Returns a scalar (boxed in `object`) when every dim is integrated; otherwise returns a new `ChebyshevTT` over surviving dims. Works for all three build methods (`cross`, `svd`, `als`).
+
+```csharp
+var tt = new ChebyshevTT(
+    x => Math.Sin(x[0]) * Math.Cos(x[1]),
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 12, 12 });
+tt.Build();
+
+// Full integration
+double total = (double)tt.Integrate();
+
+// Partial: integrate over dim 0, returns a 1D TT in y
+var marginal = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+
+// Sub-domain bounds
+double partial = (double)tt.Integrate(
+    dims: new[] { 0, 1 },
+    bounds: new[] { (-0.5, 0.5), (0.0, 1.0) });
+```
+
+Note that `Roots`, `Minimize`, and `Maximize` are not yet available on `ChebyshevSlider` or `ChebyshevTT` — they remain deferred to a future phase, matching PyChebyshev's v0.21 deferral.
