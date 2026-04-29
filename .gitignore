@@ -495,3 +495,7 @@ main.py
 # git worktrees
 .worktrees/
 
+# Claude Code local state (lock files, user-local settings)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
