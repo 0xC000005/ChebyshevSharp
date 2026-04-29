@@ -118,3 +118,138 @@ public class TestTtFullIntegrate
         return sign * y;
     }
 }
+
+// ======================================================================
+// TestTtPartialIntegrate (Phase 5)
+// ======================================================================
+
+public class TestTtPartialIntegrate
+{
+    [Fact]
+    public void Test_returns_tt_with_correct_shape()
+    {
+        static double F(double[] x) => x[0] + x[1] + x[2];
+        var tt = new ChebyshevTT(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 });
+        tt.Build(verbose: false, seed: 42);
+        var result = tt.Integrate(dims: new[] { 1 });
+        Assert.IsType<ChebyshevTT>(result);
+        var resultTt = (ChebyshevTT)result;
+        Assert.Equal(2, resultTt.NumDimensions);
+        Assert.Equal(new[] { 6, 6 }, resultTt.NNodes);
+    }
+
+    [Fact]
+    public void Test_endpoint_dim_left()
+    {
+        // Integrate over dim 0 (no left neighbor). f(x, y) = x * y.
+        // ∫_{-1}^{1} x dx = 0, so result(y) ≈ 0 for all y.
+        static double F(double[] x) => x[0] * x[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 6 });
+        tt.Build(verbose: false, seed: 42);
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        TestFixtures.AssertClose(0.0, result.Eval(new[] { 0.5 }), rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_endpoint_dim_right()
+    {
+        // Integrate over last dim (no right neighbor). f(x, y) = x * y.
+        // ∫_{-1}^{1} y dy = 0, so result(x) ≈ 0.
+        static double F(double[] x) => x[0] * x[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 4 });
+        tt.Build(verbose: false, seed: 42);
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 1 });
+        TestFixtures.AssertClose(0.0, result.Eval(new[] { 0.5 }), rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_partial_consistent_with_consecutive()
+    {
+        // integrate([0, 1]) on a 3D TT should equal integrate([1]).integrate([0]).
+        // Note: after integrate([1]) returns a 2D TT over (orig_dim_0, orig_dim_2),
+        // its "dim 0" is original dim 0 — so chained integrate([0]) is correct.
+        static double F(double[] x) => Math.Sin(x[0]) * Math.Cos(x[1]) * (1 + x[2] * x[2]);
+        var ttA = new ChebyshevTT(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10, 10 });
+        ttA.Build(verbose: false, seed: 42);
+        var ttB = new ChebyshevTT(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10, 10 });
+        ttB.Build(verbose: false, seed: 42);
+
+        var joint = (ChebyshevTT)ttA.Integrate(dims: new[] { 0, 1 });
+        var step1 = (ChebyshevTT)ttB.Integrate(dims: new[] { 1 });
+        var step2 = (ChebyshevTT)step1.Integrate(dims: new[] { 0 });
+
+        double xTest = 0.3;
+        TestFixtures.AssertClose(
+            joint.Eval(new[] { xTest }),
+            step2.Eval(new[] { xTest }),
+            rtol: 1e-8, atol: 1e-8);
+    }
+
+    [Fact]
+    public void Test_with_sub_interval_bounds()
+    {
+        // ∫_0^1 x dx = 0.5 over [-1, 1].
+        static double F(double[] x) => x[0];
+        var tt = new ChebyshevTT(F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        tt.Build(verbose: false, seed: 42);
+        var result = (double)tt.Integrate(
+            dims: new[] { 0 },
+            bounds: new[] { (0.0, 1.0) });
+        TestFixtures.AssertClose(0.5, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_descriptor_preserved_on_partial_result()
+    {
+        static double F(double[] x) => x[0] * x[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 4 });
+        tt.Build(verbose: false, seed: 42);
+        tt.SetDescriptor("source");
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        Assert.Equal("source", result.GetDescriptor());
+    }
+
+    [Fact]
+    public void Test_additional_data_preserved_on_partial_result()
+    {
+        var sentinel = new Dictionary<string, int> { ["k"] = 42 };
+        static double F(double[] x) => x[0] * x[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 4 },
+            additionalData: sentinel);
+        tt.Build(verbose: false, seed: 42);
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        Assert.Same(sentinel, result.GetAdditionalData());
+    }
+
+    [Fact]
+    public void Test_partial_eval_works_recursively()
+    {
+        // Result of partial integrate must be a fully-functional TT:
+        // Eval, EvalBatch, and recursive Integrate all work.
+        static double F(double[] x) => x[0] * x[1] + x[0];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 });
+        tt.Build(verbose: false, seed: 42);
+        // ∫_{-1}^{1} (x*y + x) dx = 0 + 0 = 0 → result(y) = 0 for all y.
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        TestFixtures.AssertClose(0.0, result.Eval(new[] { 0.5 }), rtol: 1e-10, atol: 1e-10);
+        // Recursive integrate over the surviving 1D TT yields ∫_{-1}^{1} 0 dy = 0.
+        double recursiveScalar = (double)result.Integrate();
+        TestFixtures.AssertClose(0.0, recursiveScalar, rtol: 1e-10, atol: 1e-10);
+    }
+}

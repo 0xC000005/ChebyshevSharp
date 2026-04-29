@@ -671,9 +671,115 @@ public class ChebyshevTT
             return result[0, 0];
         }
 
-        // Partial integration: implemented in Task 6.
-        throw new NotImplementedException(
-            "ChebyshevTT.Integrate partial integration is implemented in Phase 5 Task 6.");
+        // Partial integration: walk the TT chain, absorbing each contracted
+        // matrix into a neighboring kept core's left rank dim (Python
+        // tensor_train.py:1582-1608).
+        var integratedSet = new HashSet<int>(sortedDims);
+        var newCores = new List<Internal.TensorTrainKernel.TtCore>();
+        double[,]? pending = null;
+
+        for (int k = 0; k < _numDimensions; k++)
+        {
+            if (integratedSet.Contains(k))
+            {
+                var M = contracted[k];
+                if (pending != null) M = MatMul(pending, M);
+                pending = M;
+                continue;
+            }
+            // k is a kept dim — absorb any pending matrix into this core's left rank.
+            var core = _coeffCores![k].Copy();
+            if (pending != null)
+            {
+                core = AbsorbLeft(pending, core);
+                pending = null;
+            }
+            newCores.Add(core);
+        }
+
+        // Trailing pending: absorb into the last kept core's right rank.
+        if (pending != null && newCores.Count > 0)
+            newCores[newCores.Count - 1] = AbsorbRight(newCores[newCores.Count - 1], pending);
+
+        // Construct result TT.
+        int[] keptDims = Enumerable.Range(0, _numDimensions)
+            .Where(d => !integratedSet.Contains(d))
+            .ToArray();
+        var newDomain = keptDims.Select(d => (double[])_domain[d].Clone()).ToArray();
+        var newNNodes = keptDims.Select(d => _nNodes[d]).ToArray();
+
+        return BuildIntegrateResult(newCores.ToArray(), newDomain, newNNodes);
+    }
+
+    /// <summary>
+    /// Matrix-times-core contraction along the core's left rank dim:
+    /// <c>result[l, j, s] = Σ_r M[l, r] * core[r, j, s]</c>.
+    /// Used by partial Integrate to absorb a pending matrix into the next kept core.
+    /// </summary>
+    private static Internal.TensorTrainKernel.TtCore AbsorbLeft(
+        double[,] M, Internal.TensorTrainKernel.TtCore core)
+    {
+        int newRLeft = M.GetLength(0);
+        int absorbed = M.GetLength(1);
+        if (absorbed != core.RLeft)
+            throw new ArgumentException(
+                $"AbsorbLeft shape mismatch: M is ({newRLeft}, {absorbed}); core.RLeft={core.RLeft}");
+        int n = core.NNodes, rR = core.RRight;
+        var result = new Internal.TensorTrainKernel.TtCore(newRLeft, n, rR);
+        for (int l = 0; l < newRLeft; l++)
+            for (int j = 0; j < n; j++)
+                for (int s = 0; s < rR; s++)
+                {
+                    double acc = 0;
+                    for (int r = 0; r < absorbed; r++)
+                        acc += M[l, r] * core[r, j, s];
+                    result[l, j, s] = acc;
+                }
+        return result;
+    }
+
+    /// <summary>
+    /// Core-times-matrix contraction along the core's right rank dim:
+    /// <c>result[l, j, r] = Σ_s core[l, j, s] * M[s, r]</c>.
+    /// Used by partial Integrate to absorb a trailing pending matrix into the last kept core.
+    /// </summary>
+    private static Internal.TensorTrainKernel.TtCore AbsorbRight(
+        Internal.TensorTrainKernel.TtCore core, double[,] M)
+    {
+        int absorbed = M.GetLength(0);
+        int newRRight = M.GetLength(1);
+        if (absorbed != core.RRight)
+            throw new ArgumentException(
+                $"AbsorbRight shape mismatch: core.RRight={core.RRight}; M is ({absorbed}, {newRRight})");
+        int rL = core.RLeft, n = core.NNodes;
+        var result = new Internal.TensorTrainKernel.TtCore(rL, n, newRRight);
+        for (int l = 0; l < rL; l++)
+            for (int j = 0; j < n; j++)
+                for (int r = 0; r < newRRight; r++)
+                {
+                    double acc = 0;
+                    for (int s = 0; s < absorbed; s++)
+                        acc += core[l, j, s] * M[s, r];
+                    result[l, j, r] = acc;
+                }
+        return result;
+    }
+
+    /// <summary>
+    /// Construct a partial-integrate result TT, inheriting all Phase 4 ergonomics
+    /// fields (descriptor, additionalData, maxDerivativeOrder) and Method (D3, D6).
+    /// Mirrors <see cref="BuildResultFromCores"/> with extra inheritance.
+    /// </summary>
+    private ChebyshevTT BuildIntegrateResult(
+        Internal.TensorTrainKernel.TtCore[] cores, double[][] newDomain, int[] newNNodes)
+    {
+        // Use the existing BuildResultFromCores then patch in ergonomics fields.
+        var result = BuildResultFromCores(cores, newDomain, newNNodes);
+        // Phase 4 ergonomics passthrough (D6).
+        result._descriptor = _descriptor;
+        result._additionalData = _additionalData;
+        result._maxDerivativeOrder = _maxDerivativeOrder;
+        return result;
     }
 
     /// <summary>
