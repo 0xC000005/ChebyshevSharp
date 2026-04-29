@@ -33,6 +33,7 @@ public class ChebyshevTT
     private string? _descriptor;
     private int _maxDerivativeOrder = 2;
     private object? _additionalData;
+    private int[] _dimOrder = Array.Empty<int>();
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
@@ -148,6 +149,7 @@ public class ChebyshevTT
         _additionalData = additionalData;
         _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
         _progress = progress;
+        _dimOrder = Enumerable.Range(0, numDimensions).ToArray();
     }
 
     // Private constructor for deserialization
@@ -177,6 +179,7 @@ public class ChebyshevTT
         _totalBuildEvals = totalBuildEvals;
         _maxDerivativeOrder = maxDerivativeOrder;
         _built = true;
+        _dimOrder = Enumerable.Range(0, numDimensions).ToArray();  // overwritten by Load's v2 deserialization
     }
 
     // ------------------------------------------------------------------
@@ -1636,6 +1639,101 @@ public class ChebyshevTT
     internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
+    // DimOrder + Reorder (Phase 6 Task 9)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Storage permutation: <c>DimOrder[k]</c> is the original-dimension index stored
+    /// at TT position k. Identity by default; non-identity for TTs produced by
+    /// <see cref="Reorder"/>. Returns a defensive clone;
+    /// mutating the returned array does not affect this TT.
+    /// </summary>
+    public int[] DimOrder => (int[])_dimOrder.Clone();
+
+    /// <summary>
+    /// Realign storage to a target permutation via TT-swap (adjacent-axis SVDs in
+    /// coefficient space). Functional API; returns a new TT. Inherits all build
+    /// parameters (maxRank, tolerance, maxSweeps, descriptor, additionalData,
+    /// maxDerivativeOrder, Method) from this TT.
+    /// </summary>
+    /// <param name="newOrder">Target permutation; must be a permutation of [0, NumDimensions-1].</param>
+    /// <param name="maxRank">Optional override for swap-time SVD truncation. Default: this TT's maxRank.</param>
+    /// <param name="tolerance">Optional relative-tolerance cutoff. Default: this TT's tolerance.</param>
+    /// <returns>A new TT with <c>DimOrder == newOrder</c>.</returns>
+    /// <exception cref="ArgumentException">If <paramref name="newOrder"/> is not a valid permutation.</exception>
+    public ChebyshevTT Reorder(int[] newOrder, int? maxRank = null, double? tolerance = null)
+    {
+        CheckBuilt();
+        ValidatePermutation(newOrder, _numDimensions);
+        int rank = maxRank ?? _maxRank;
+        double tol = tolerance ?? _tolerance;
+
+        // Short-circuit: reorder to current dim_order is just a clone (matches Python tensor_train.py:2397).
+        if (newOrder.SequenceEqual(_dimOrder))
+            return Clone();
+
+        // Bubble-sort current_order DIRECTLY into newOrder (Python tensor_train.py:2403-2425).
+        // newOrder is the absolute target: result._dim_order == list(new_order).
+        var currentOrder = (int[])_dimOrder.Clone();
+        var cores = new Internal.TensorTrainKernel.TtCore[_coeffCores!.Length];
+        for (int k = 0; k < cores.Length; k++) cores[k] = _coeffCores[k].Copy();
+
+        // Track domain and nNodes in storage order; swap alongside currentOrder
+        // (Python lines 2421-2422 swap n_nodes/domain in lockstep with currentOrder).
+        var domain = _domain.Select(d => (double[])d.Clone()).ToArray();
+        var nNodes = (int[])_nNodes.Clone();
+
+        for (int k = 0; k < _numDimensions; k++)
+        {
+            int targetOrig = newOrder[k];
+            int j = Array.IndexOf(currentOrder, targetOrig);
+            while (j > k)
+            {
+                cores = Internal.TensorTrainAlgebra.TtSwapAdjacent(cores, j - 1, rank, tol);
+                (currentOrder[j - 1], currentOrder[j]) = (currentOrder[j], currentOrder[j - 1]);
+                (nNodes[j - 1], nNodes[j]) = (nNodes[j], nNodes[j - 1]);
+                (domain[j - 1], domain[j]) = (domain[j], domain[j - 1]);
+                j--;
+            }
+        }
+
+        // Sanity check (matches Python's `assert current_order == new_order` at line 2425).
+        if (!currentOrder.SequenceEqual(newOrder))
+            throw new InvalidOperationException(
+                "Reorder bubble-sort failed to converge to target permutation");
+
+        var result = BuildResultFromCores(cores, domain, nNodes);
+        result._dimOrder = (int[])newOrder.Clone();
+        result._descriptor = _descriptor;
+        result._additionalData = _additionalData;
+        return result;
+    }
+
+    private static void ValidatePermutation(int[] perm, int n)
+    {
+        if (perm == null) throw new ArgumentNullException(nameof(perm));
+        if (perm.Length != n)
+            throw new ArgumentException(
+                $"Permutation length {perm.Length} != numDimensions {n}", nameof(perm));
+        var seen = new bool[n];
+        foreach (int v in perm)
+        {
+            if (v < 0 || v >= n)
+                throw new ArgumentException(
+                    $"Permutation entry {v} out of range [0, {n - 1}]", nameof(perm));
+            if (seen[v])
+                throw new ArgumentException($"Duplicate entry {v} in permutation", nameof(perm));
+            seen[v] = true;
+        }
+    }
+
+    /// <summary>
+    /// Test-only accessor: returns the raw coefficient cores array.
+    /// Visible to the test project via InternalsVisibleTo.
+    /// </summary>
+    internal Internal.TensorTrainKernel.TtCore[] GetCoeffCoresForTest() => _coeffCores!;
+
+    // ------------------------------------------------------------------
     // Clone
     // ------------------------------------------------------------------
 
@@ -1673,6 +1771,7 @@ public class ChebyshevTT
         copy.LoadWarning = LoadWarning;
         copy._descriptor = _descriptor;
         copy._additionalData = _additionalData;
+        copy._dimOrder = (int[])_dimOrder.Clone();
         copy._evaluationPointsCache = null;
         foreach (var kv in _derivativeIdRegistry)
             copy._derivativeIdRegistry[kv.Key] = kv.Value;
