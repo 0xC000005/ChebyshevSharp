@@ -132,3 +132,77 @@ public class TestApproxSobolIndices
         Assert.Throws<InvalidOperationException>(() => ap.SobolIndices());
     }
 }
+
+// ======================================================================
+// TestSplineSobolIndices (Phase 6 Task 7)
+// ======================================================================
+
+public class TestSplineSobolIndices
+{
+    [Fact]
+    public void Test_single_piece_matches_approx()
+    {
+        // Single-piece spline (no interior knots) matches Approx exactly.
+        static double F(double[] p, object? _) => Math.Sin(p[0]) + Math.Cos(p[1]);
+        var domain = new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } };
+        var nNodes = new[] { 16, 16 };
+
+        var ap = new ChebyshevApproximation(F, 2, domain, nNodes);
+        ap.Build(verbose: false);
+        var apSob = ap.SobolIndices();
+
+        var sp = new ChebyshevSpline(F, 2, domain, nNodes,
+            new[] { Array.Empty<double>(), Array.Empty<double>() });
+        sp.Build(verbose: false);
+        var spSob = sp.SobolIndices();
+
+        TestFixtures.AssertClose(apSob.FirstOrder[0], spSob.FirstOrder[0], rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(apSob.FirstOrder[1], spSob.FirstOrder[1], rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(apSob.TotalOrder[0], spSob.TotalOrder[0], rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_piecewise_abs_x_1d()
+    {
+        // f(x) = |x| on [-1,1] with knot at 0; per-piece smooth, both pieces equal volume.
+        static double F(double[] p, object? _) => Math.Abs(p[0]);
+        var sp = new ChebyshevSpline(F, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 8 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        var s = sp.SobolIndices();
+        // 1D: FirstOrder[0] = TotalOrder[0] = 1 (or 0 if Variance is 0; |x| is non-constant so Variance > 0).
+        Assert.True(s.Variance > 0);
+        TestFixtures.AssertClose(1.0, s.FirstOrder[0], rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(1.0, s.TotalOrder[0], rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_piecewise_abs_x_plus_abs_y_2d()
+    {
+        // f(x,y) = |x| + |y| with knots at 0 in both dims. Additive → both first-orders sum to 1.
+        static double F(double[] p, object? _) => Math.Abs(p[0]) + Math.Abs(p[1]);
+        var sp = new ChebyshevSpline(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 },
+            new[] { new[] { 0.0 }, new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        var s = sp.SobolIndices();
+        TestFixtures.AssertClose(1.0, s.FirstOrder[0] + s.FirstOrder[1], rtol: 1e-6, atol: 1e-6);
+        // Both dims contribute roughly equally (symmetric function on symmetric domain).
+        TestFixtures.AssertClose(s.FirstOrder[0], s.FirstOrder[1], rtol: 1e-6, atol: 1e-6);
+    }
+
+    [Fact]
+    public void Test_unbuilt_throws()
+    {
+        static double F(double[] p, object? _) => p[0];
+        var sp = new ChebyshevSpline(F, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 5 },
+            new[] { Array.Empty<double>() });
+        // sp not built — should throw.
+        Assert.Throws<InvalidOperationException>(() => sp.SobolIndices());
+    }
+}

@@ -1936,6 +1936,55 @@ public class ChebyshevSpline
     }
 
     /// <summary>
+    /// Compute Sobol sensitivity indices aggregated across spline pieces.
+    /// Per-piece coefficients are computed under the Chebyshev measure on each piece's
+    /// local domain; per-piece contributions are weighted by domain volume × variance,
+    /// then normalized by global variance. For a single-piece spline, this reduces to
+    /// the <see cref="ChebyshevApproximation.SobolIndices"/> case.
+    /// </summary>
+    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, global Variance.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    public SobolResult SobolIndices()
+    {
+        if (Pieces == null || Pieces.Length == 0 || Pieces.Any(p => p == null || p.TensorValues == null))
+            throw new InvalidOperationException(
+                "SobolIndices requires a built ChebyshevSpline. Call Build() first.");
+
+        int nDim = NumDimensions;
+        var globalFirstOrder = new double[nDim];
+        var globalTotalOrder = new double[nDim];
+        double globalVariance = 0.0;
+
+        foreach (var piece in Pieces)
+        {
+            if (piece == null) continue;
+            double vol = 1.0;
+            for (int d = 0; d < nDim; d++)
+            {
+                double lo = piece.Domain[d][0], hi = piece.Domain[d][1];
+                vol *= (hi - lo);
+            }
+            var coeffs = Internal.Sensitivity.ChebyshevCoefficientsND(piece.TensorValues!, piece.NNodes);
+            var pieceResult = Internal.Sensitivity.ComputeSobolFromCoeffs(coeffs, piece.NNodes);
+            globalVariance += vol * pieceResult.Variance;
+            for (int d = 0; d < nDim; d++)
+            {
+                globalFirstOrder[d] += vol * pieceResult.FirstOrder[d] * pieceResult.Variance;
+                globalTotalOrder[d] += vol * pieceResult.TotalOrder[d] * pieceResult.Variance;
+            }
+        }
+
+        if (globalVariance == 0)
+            return new SobolResult(new double[nDim], new double[nDim], 0);
+        for (int d = 0; d < nDim; d++)
+        {
+            globalFirstOrder[d] /= globalVariance;
+            globalTotalOrder[d] /= globalVariance;
+        }
+        return new SobolResult(globalFirstOrder, globalTotalOrder, globalVariance);
+    }
+
+    /// <summary>
     /// Populate this spline's tensor values from a precomputed flat array.
     /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
     /// the <c>FromValues</c> factory.
