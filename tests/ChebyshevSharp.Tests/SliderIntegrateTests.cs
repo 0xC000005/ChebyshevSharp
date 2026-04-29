@@ -252,3 +252,100 @@ public class TestSliderPartialIntegrate
         TestFixtures.AssertClose(2.0, v, rtol: 1e-6, atol: 1e-6);
     }
 }
+
+// ======================================================================
+// TestSliderIntegrateValidation (Phase 5)
+// ======================================================================
+
+public class TestSliderIntegrateValidation
+{
+    private static ChebyshevSlider Make1D()
+    {
+        static double F(double[] x, object? _) => x[0];
+        var slider = new ChebyshevSlider(
+            F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 },
+            new[] { new[] { 0 } }, new[] { 0.0 });
+        slider.Build(verbose: false);
+        return slider;
+    }
+
+    [Fact]
+    public void Test_unbuilt_slider_raises()
+    {
+        static double F(double[] x, object? _) => x[0];
+        var slider = new ChebyshevSlider(
+            F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 },
+            new[] { new[] { 0 } }, new[] { 0.0 });
+        // Don't build.
+        Assert.Throws<InvalidOperationException>(() => slider.Integrate());
+    }
+
+    [Fact]
+    public void Test_dims_out_of_range_raises()
+    {
+        var slider = Make1D();
+        var ex = Assert.Throws<ArgumentException>(() => slider.Integrate(dims: new[] { 5 }));
+        Assert.Contains("out-of-range", ex.Message);
+    }
+
+    [Fact]
+    public void Test_negative_dim_raises()
+    {
+        var slider = Make1D();
+        Assert.Throws<ArgumentException>(() => slider.Integrate(dims: new[] { -1 }));
+    }
+
+    [Fact]
+    public void Test_bounds_outside_domain_raises()
+    {
+        var slider = Make1D();
+        Assert.Throws<ArgumentException>(() =>
+            slider.Integrate(
+                dims: new[] { 0 },
+                bounds: new[] { (-2.0, 2.0) }));
+    }
+}
+
+// ======================================================================
+// TestSliderIntegrateErgonomics (Phase 5)
+// ======================================================================
+
+public class TestSliderIntegrateErgonomics
+{
+    [Fact]
+    public void Test_descriptor_preserved_on_partial_result()
+    {
+        static double F(double[] x, object? _) => x[0] + x[1];
+        var slider = new ChebyshevSlider(
+            F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 4 },
+            new[] { new[] { 0 }, new[] { 1 } },
+            new[] { 0.0, 0.0 });
+        slider.Build(verbose: false);
+        slider.SetDescriptor("source");
+        var result = (ChebyshevSlider)slider.Integrate(dims: new[] { 0 });
+        Assert.Equal("source", result.GetDescriptor());
+    }
+
+    [Fact]
+    public void Test_additional_data_preserved_on_partial_result()
+    {
+        var sentinel = new Dictionary<string, int> { ["k"] = 42 };
+        double F(double[] x, object? data)
+        {
+            Assert.NotNull(data);
+            return x[0] + x[1];
+        }
+        var slider = new ChebyshevSlider(
+            F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 4 },
+            new[] { new[] { 0 }, new[] { 1 } },
+            new[] { 0.0, 0.0 },
+            additionalData: sentinel);
+        slider.Build(verbose: false);
+        var result = (ChebyshevSlider)slider.Integrate(dims: new[] { 0 });
+        Assert.Same(sentinel, result.GetAdditionalData());
+    }
+}
