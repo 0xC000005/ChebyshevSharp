@@ -590,6 +590,116 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Integration (Phase 5 — PyChebyshev v0.17)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Integrate the TT-approximated function over selected dimensions.
+    /// Per-dim Fejér-1 quadrature is applied to the value-space cores
+    /// (Chebyshev coefficient cores are converted to value cores via
+    /// <see cref="TensorTrainKernel.CoeffCoreToValueCore"/> before contraction).
+    /// </summary>
+    /// <param name="dims">Dimensions to integrate out. Null = all (full integration → scalar).</param>
+    /// <param name="bounds">Sub-interval bounds per dim (positional with sorted dims). Null = full domain.</param>
+    /// <returns>A boxed <c>double</c> when every dim is integrated; otherwise a new <see cref="ChebyshevTT"/> over surviving dims.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range or duplicated indices, or <paramref name="bounds"/> are invalid.</exception>
+    public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
+    {
+        CheckBuilt();
+
+        // Normalize dims: null = all, sort + deduplicate, validate range.
+        int[] sortedDims;
+        if (dims == null)
+            sortedDims = Enumerable.Range(0, _numDimensions).ToArray();
+        else
+            sortedDims = dims.Distinct().OrderBy(d => d).ToArray();
+
+        foreach (int d in sortedDims)
+        {
+            if (d < 0 || d >= _numDimensions)
+                throw new ArgumentException(
+                    $"dim {d} out-of-range [0, {_numDimensions - 1}]");
+        }
+
+        var perDimBounds = Internal.Calculus.NormalizeBounds(sortedDims, bounds, _domain);
+        var dimToIdx = new Dictionary<int, int>();
+        for (int i = 0; i < sortedDims.Length; i++)
+            dimToIdx[sortedDims[i]] = i;
+
+        // Compute scaled quadrature weights per integrated dim.
+        // Cores live in coefficient space — convert each integrated core to
+        // value space before applying weights.
+        var weightsPerDim = new Dictionary<int, double[]>();
+        foreach (int d in sortedDims)
+        {
+            int n = _nNodes[d];
+            double a = _domain[d][0], b = _domain[d][1];
+            double scale = (b - a) / 2.0;
+            var bd = perDimBounds[dimToIdx[d]];
+            double[] w;
+            if (bd == null)
+            {
+                w = Internal.Calculus.ComputeFejer1Weights(n);
+            }
+            else
+            {
+                double tLo = 2.0 * (bd.Value.lo - a) / (b - a) - 1.0;
+                double tHi = 2.0 * (bd.Value.hi - a) / (b - a) - 1.0;
+                w = Internal.Calculus.ComputeSubIntervalWeights(n, tLo, tHi);
+            }
+            for (int i = 0; i < w.Length; i++) w[i] *= scale;
+            weightsPerDim[d] = w;
+        }
+
+        // Per-integrated-dim contraction: coefficient core -> value core -> M_k.
+        var contracted = new Dictionary<int, double[,]>();
+        foreach (int d in sortedDims)
+        {
+            var valueCore = Internal.TensorTrainKernel.CoeffCoreToValueCore(_coeffCores![d]);
+            contracted[d] = Internal.Calculus.IntegrateTtAlongDim(valueCore, weightsPerDim[d]);
+        }
+
+        if (sortedDims.Length == _numDimensions)
+        {
+            // Full integration: chain-multiply all M_k matrices left-to-right.
+            // contracted[sortedDims[0]] is shape (rL_0=1, rR_0); after all multiplications,
+            // result is (1, 1).
+            double[,] result = contracted[sortedDims[0]];
+            for (int i = 1; i < sortedDims.Length; i++)
+                result = MatMul(result, contracted[sortedDims[i]]);
+            return result[0, 0];
+        }
+
+        // Partial integration: implemented in Task 6.
+        throw new NotImplementedException(
+            "ChebyshevTT.Integrate partial integration is implemented in Phase 5 Task 6.");
+    }
+
+    /// <summary>
+    /// Plain (m, k) x (k, n) -> (m, n) matrix multiply for the Integrate path.
+    /// </summary>
+    private static double[,] MatMul(double[,] a, double[,] b)
+    {
+        int m = a.GetLength(0);
+        int k = a.GetLength(1);
+        int kB = b.GetLength(0);
+        int n = b.GetLength(1);
+        if (k != kB)
+            throw new ArgumentException(
+                $"MatMul shape mismatch: ({m}, {k}) x ({kB}, {n})");
+        var result = new double[m, n];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+            {
+                double s = 0;
+                for (int l = 0; l < k; l++) s += a[i, l] * b[l, j];
+                result[i, j] = s;
+            }
+        return result;
+    }
+
+    // ------------------------------------------------------------------
     // Canonicalization (Phase 2 — PyChebyshev v0.13)
     // ------------------------------------------------------------------
 
