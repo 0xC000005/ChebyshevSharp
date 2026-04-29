@@ -1167,4 +1167,15 @@ public class TestIntegrateTtAlongDim
                     expected, result[i, k], rtol: 1e-14, atol: 1e-14);
             }
     }
+
+    [Fact]
+    public void Test_weights_length_mismatch_throws()
+    {
+        var core = new ChebyshevSharp.Internal.TensorTrainKernel.TtCore(2, 4, 2);
+        // Weights length 3 != core.NNodes (4) -> ArgumentException.
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevSharp.Internal.Calculus.IntegrateTtAlongDim(
+                core, new[] { 0.25, 0.25, 0.25 }));
+        Assert.Contains("does not match core.NNodes", ex.Message);
+    }
 }

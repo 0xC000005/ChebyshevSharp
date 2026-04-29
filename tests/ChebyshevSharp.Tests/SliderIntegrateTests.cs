@@ -82,6 +82,26 @@ public class TestSliderFullIntegrate
         var result = (double)slider.Integrate();
         TestFixtures.AssertClose(0.0, result, rtol: 1e-6, atol: 1e-6);
     }
+
+    [Fact]
+    public void Test_full_integrate_with_explicit_sub_interval_bounds()
+    {
+        // f(x, y) = x + y over [-1, 1]^2, integrate fully over [0, 1] x [-0.5, 0.5].
+        // ∫∫ (x + y) dx dy over [0,1] x [-0.5, 0.5]
+        //   = ∫_0^1 x dx · 1.0 + 1.0 · ∫_{-0.5}^{0.5} y dy = 0.5 · 1.0 + 1.0 · 0 = 0.5.
+        static double F(double[] x, object? _) => x[0] + x[1];
+        var slider = new ChebyshevSlider(
+            F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 } },
+            new[] { 0.0, 0.0 });
+        slider.Build(verbose: false);
+        var result = (double)slider.Integrate(
+            dims: new[] { 0, 1 },
+            bounds: new[] { (0.0, 1.0), (-0.5, 0.5) });
+        TestFixtures.AssertClose(0.5, result, rtol: 1e-10, atol: 1e-10);
+    }
 }
 
 // ======================================================================
@@ -250,6 +270,50 @@ public class TestSliderPartialIntegrate
         // At (x=0.3, z=0.7): expected = 2 * (0.3 + 0.7) = 2.0.
         double v = resultSlider.Eval(new[] { 0.3, 0.7 }, new[] { 0, 0 });
         TestFixtures.AssertClose(2.0, v, rtol: 1e-6, atol: 1e-6);
+    }
+
+    [Fact]
+    public void Test_partial_integrate_with_explicit_sub_interval_bounds()
+    {
+        // f(x, y) = x + y^2 over [-1, 1]^2. Partition [[0], [1]]. Integrate dim 1 over [0, 1].
+        // Slide 1 (group [1], "full"): ∫_0^1 y^2 dy = 1/3.
+        // ∫_0^1 (x + y^2) dy = x*1.0 + 1/3. At x=0.5: 0.5 + 1/3 ≈ 0.83333.
+        static double F(double[] x, object? _) => x[0] + x[1] * x[1];
+        var slider = new ChebyshevSlider(
+            F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 } },
+            new[] { 0.0, 0.0 });
+        slider.Build(verbose: false);
+        var result = (ChebyshevSlider)slider.Integrate(
+            dims: new[] { 1 },
+            bounds: new[] { (0.0, 1.0) });
+        Assert.Equal(1, result.NumDimensions);
+        double evalAtHalf = result.Eval(new[] { 0.5 }, new[] { 0 });
+        TestFixtures.AssertClose(0.5 + 1.0 / 3.0, evalAtHalf, rtol: 1e-6, atol: 1e-6);
+    }
+
+    [Fact]
+    public void Test_partial_with_multi_dim_group_explicit_bounds()
+    {
+        // f(x, y) = sin(x) * cos(y); partition=[[0, 1]] (one 2D slide).
+        // Integrate dim 0 over [-0.5, 0.5] -> "partial" classification with explicit bounds.
+        // ∫_{-0.5}^{0.5} sin(x) dx = 0 (odd function). Result(y) = 0 for all y.
+        static double F(double[] x, object? _) => Math.Sin(x[0]) * Math.Cos(x[1]);
+        var slider = new ChebyshevSlider(
+            F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 },
+            new[] { new[] { 0, 1 } },
+            new[] { 0.0, 0.0 });
+        slider.Build(verbose: false);
+        var result = (ChebyshevSlider)slider.Integrate(
+            dims: new[] { 0 },
+            bounds: new[] { (-0.5, 0.5) });
+        Assert.Equal(1, result.NumDimensions);
+        double evalAtHalf = result.Eval(new[] { 0.5 }, new[] { 0 });
+        TestFixtures.AssertClose(0.0, evalAtHalf, rtol: 1e-6, atol: 1e-6);
     }
 }
 
