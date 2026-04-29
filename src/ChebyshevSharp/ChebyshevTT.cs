@@ -2038,9 +2038,10 @@ public class ChebyshevTT
             while (improved && iter < nTrials)
             {
                 improved = false;
+                var currentDimOrder = (int[])bestTt.DimOrder.Clone();   // capture ONCE per outer iter
                 for (int i = 0; i < numDimensions - 1; i++)
                 {
-                    var trial = (int[])bestTt.DimOrder.Clone();
+                    var trial = (int[])currentDimOrder.Clone();          // same baseline every inner iter
                     (trial[i], trial[i + 1]) = (trial[i + 1], trial[i]);
                     var candidateTt = BuildWith(trial);
                     int candidateScore = RankSum(candidateTt);
@@ -2049,6 +2050,7 @@ public class ChebyshevTT
                         bestTt = candidateTt;
                         bestScore = candidateScore;
                         improved = true;
+                        break;                                            // restart outer loop on first improvement
                     }
                 }
                 iter++;
@@ -2056,7 +2058,7 @@ public class ChebyshevTT
         }
         else  // method == "random"
         {
-            var rng = new Random(seed ?? Environment.TickCount);
+            var rng = new Random(seed ?? 42);
             for (int t = 0; t < nTrials; t++)
             {
                 // Fisher-Yates shuffle of canonical order.
