@@ -125,7 +125,7 @@ public class TestSliderPartialIntegrate
         var resultSlider = (ChebyshevSlider)slider.Integrate(dims: new[] { 1 });
         // ∫_{-1}^{1} (sin(x) + y^2) dy = 2 sin(x) + 2/3.
         double evalAtZero = resultSlider.Eval(new[] { 0.0 }, new[] { 0 });
-        TestFixtures.AssertClose(2.0 / 3.0, evalAtZero, rtol: 1e-3, atol: 1e-3);
+        TestFixtures.AssertClose(2.0 / 3.0, evalAtZero, rtol: 1e-8, atol: 1e-8);
     }
 
     [Fact]
@@ -199,7 +199,7 @@ public class TestSliderPartialIntegrate
         var resultSlider = (ChebyshevSlider)slider.Integrate(dims: new[] { 1 });
         Assert.Equal(2, resultSlider.NumDimensions);
         double evalAtOrigin = resultSlider.Eval(new[] { 0.0, 0.0 }, new[] { 0, 0 });
-        TestFixtures.AssertClose(2.0 * Math.Sin(1.0), evalAtOrigin, rtol: 1e-3, atol: 1e-3);
+        TestFixtures.AssertClose(2.0 * Math.Sin(1.0), evalAtOrigin, rtol: 1e-6, atol: 1e-6);
     }
 
     [Fact]
@@ -245,7 +245,10 @@ public class TestSliderPartialIntegrate
         // Eval should not throw; partition validity preserved.
         Assert.True(resultSlider.Built);
         Assert.Equal(2, resultSlider.NumDimensions);
+        // f(x, y, z) = x + y + z, integrate dim 1 over [-1, 1]:
+        // g(x, z) = ∫_{-1}^{1} (x + y + z) dy = 2x + 0 + 2z = 2(x + z).
+        // At (x=0.3, z=0.7): expected = 2 * (0.3 + 0.7) = 2.0.
         double v = resultSlider.Eval(new[] { 0.3, 0.7 }, new[] { 0, 0 });
-        Assert.True(double.IsFinite(v));
+        TestFixtures.AssertClose(2.0, v, rtol: 1e-6, atol: 1e-6);
     }
 }
