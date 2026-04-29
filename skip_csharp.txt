@@ -70,3 +70,10 @@ Total: 50 new tests (613 -> 663 total)
 # JsonMigrationTests.cs: new tests ✓ (pre-v0.8.0 fixture round-trips)
 # Total: 87 new tests (797 -> 884 total)
 =========================================================
+
+# Phase 5 (v0.9.0) — Integrate everywhere (PyChebyshev v0.17.0 parity)
+# All 44 tests in test_calculus_completion.py ported as:
+#   - tests/SliderIntegrateTests.cs (17 tests covering full + partial + validation + ergonomics)
+#   - tests/TtIntegrateTests.cs (22 tests covering full + partial + validation + cross-class)
+#   - 5 helper tests appended to tests/CalculusTests.cs (SliderPartitionIntersect, IntegrateTtAlongDim)
+# No tests skipped.
