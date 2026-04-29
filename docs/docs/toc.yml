@@ -43,5 +43,9 @@
   href: ergonomics.md
 - name: Performance
   href: performance.md
+- name: Parallel Build & Progress
+  href: parallel-build.md
+- name: Adaptive Refinement
+  href: adaptive-refinement.md
 - name: Changelog
   href: changelog.md

@@ -77,3 +77,14 @@ Total: 50 new tests (613 -> 663 total)
 #   - tests/TtIntegrateTests.cs (22 tests covering full + partial + validation + cross-class)
 #   - 5 helper tests appended to tests/CalculusTests.cs (SliderPartitionIntersect, IntegrateTtAlongDim)
 # No tests skipped.
+
+# Phase 6 (v0.10.0) — Build perf + adaptive refinement (PyChebyshev v0.19+v0.20.0+v0.20.1 parity)
+# All ~68 PyChebyshev tests in the v0.19/v0.20.0/v0.20.1 windows ported as:
+#   - tests/BuildPerfTests.cs (17 tests)
+#   - tests/SobolIndicesTests.cs (12 tests)
+#   - tests/AutoKnotsTests.cs (10 tests)
+#   - tests/TtAutoOrderTests.cs (18 tests; combines TtSwapAdjacent + Reorder + WithAutoOrder + JSON migration)
+#   - tests/TtDimOrderTests.cs (11 tests for full _dimOrder threading surface)
+#   - regression test for Integrate bounds fix (1 test appended to CalculusTests.cs)
+# Skipped (Option C from master spec): plot_convergence, plot_1d, plot_2d_surface, plot_2d_contour (matplotlib helpers).
+# Total: 1018/1018 tests passing (946 + 72).

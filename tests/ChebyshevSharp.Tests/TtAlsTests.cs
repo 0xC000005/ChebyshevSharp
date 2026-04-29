@@ -331,7 +331,7 @@ public class TtJsonMigrationTests
         {
             tt.Save(path);
             string json = File.ReadAllText(path);
-            Assert.Contains("\"Version\":\"0.9.0\"", json.Replace(" ", ""));
+            Assert.Contains("\"Version\":\"0.10.0\"", json.Replace(" ", ""));
             Assert.Contains("\"Method\":\"cross\"", json.Replace(" ", ""));
             var loaded = ChebyshevTT.Load(path);
             TestFixtures.AssertClose(tt.Eval(new[] { 0.3 }), loaded.Eval(new[] { 0.3 }), atol: 1e-12);

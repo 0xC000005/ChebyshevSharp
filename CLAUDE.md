@@ -13,8 +13,8 @@ Always consult the Python source when implementing or verifying behavior.
 
 ## Status
 
-**Feature-complete against PyChebyshev v0.18.0** (Phases 1+2+3+4+5 of the 6-phase v0.20.1 port complete; see
-`docs/superpowers/specs/2026-04-27-pychebyshev-v0.20.1-port-design.md`).
+**Feature-complete against PyChebyshev v0.20.1** (all 6 phases of the v0.20.1 port complete; see
+`docs/superpowers/plans/2026-04-29-phase6-perf-and-adaptive.md`).
 All four public classes (`ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`,
 `ChebyshevTT`) mirror the Python API surface. v0.8.0 adds the v0.15+v0.16 ergonomics
 layer (descriptor, additionalData, derivative-id registry, introspection getters,
@@ -22,8 +22,14 @@ typed Clone, DeferBuild + SetOriginalFunctionValues, Domain/Ns/SpecialPoints rec
 PyChebyshev parity tag unchanged at v0.18.0); v0.9.0 (Phase 5) adds Slider/TT `Integrate`
 completing calculus parity across all four interpolant classes (PyChebyshev parity tag
 drops 0.18.0 → 0.17.0 — non-monotonic batch tracker indicating the most recent
-feature-batch ported).
-`dotnet test` runs **946/946** passing.
+feature-batch ported); v0.10.0 (Phase 6) ships build perf (nWorkers + IProgress<int>) and adaptive
+refinement (AutoKnots, SobolIndices, ChebyshevTT.WithAutoOrder/Reorder/DimOrder
+with full _dimOrder threading; new SobolResult record). PyChebyshev parity
+tag advances 0.17.0 → 0.20.1, matching the bundled v0.19+v0.20.0+v0.20.1
+upstream window. With Phase 6 complete, ChebyshevSharp is feature-complete
+against PyChebyshev v0.20.1 (modulo deliberately skipped matplotlib helpers,
+Option C). 6 of 6 phases complete — port complete.
+`dotnet test` runs **1018/1018** passing.
 
 See `skip_csharp.txt` for the per-phase Python-parity vs. C#-specific test breakdown.
 
