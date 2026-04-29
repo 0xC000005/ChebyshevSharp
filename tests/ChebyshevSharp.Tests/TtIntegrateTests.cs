@@ -253,3 +253,144 @@ public class TestTtPartialIntegrate
         TestFixtures.AssertClose(0.0, recursiveScalar, rtol: 1e-10, atol: 1e-10);
     }
 }
+
+// ======================================================================
+// TestTtIntegrateValidation (Phase 5)
+// ======================================================================
+
+public class TestTtIntegrateValidation
+{
+    private static ChebyshevTT Make2D()
+    {
+        static double F(double[] x) => x[0];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 4, 4 });
+        tt.Build(verbose: false, seed: 42);
+        return tt;
+    }
+
+    [Fact]
+    public void Test_unbuilt_tt_raises()
+    {
+        static double F(double[] x) => x[0];
+        var tt = new ChebyshevTT(F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        // Don't build.
+        Assert.Throws<InvalidOperationException>(() => tt.Integrate());
+    }
+
+    [Fact]
+    public void Test_dims_out_of_range_raises()
+    {
+        var tt = Make2D();
+        var ex = Assert.Throws<ArgumentException>(() => tt.Integrate(dims: new[] { 5 }));
+        Assert.Contains("out-of-range", ex.Message);
+    }
+
+    [Fact]
+    public void Test_bounds_outside_domain_raises()
+    {
+        static double F(double[] x) => x[0];
+        var tt = new ChebyshevTT(F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        tt.Build(verbose: false, seed: 42);
+        Assert.Throws<ArgumentException>(() =>
+            tt.Integrate(
+                dims: new[] { 0 },
+                bounds: new[] { (-2.0, 2.0) }));
+    }
+
+    [Fact]
+    public void Test_bounds_length_mismatch_raises()
+    {
+        var tt = Make2D();
+        Assert.Throws<ArgumentException>(() =>
+            tt.Integrate(
+                dims: new[] { 0 },
+                bounds: new[] { (0.0, 1.0), (0.0, 1.0) })); // 2 bounds, 1 dim
+    }
+}
+
+// ======================================================================
+// TestTtIntegrateCrossClass (Phase 5)
+// ======================================================================
+
+public class TestTtIntegrateCrossClass
+{
+    [Fact]
+    public void Test_build_mode_preserved_cross()
+    {
+        // Partial-integrate result should preserve build mode (D3).
+        static double F(double[] x) => x[0] * x[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 });
+        tt.Build(verbose: false, method: "cross", seed: 42);
+        Assert.Equal("cross", tt.GetConstructorType());
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        Assert.Equal("cross", result.GetConstructorType());
+    }
+
+    [Fact]
+    public void Test_build_mode_preserved_svd()
+    {
+        static double F(double[] x) => x[0] * x[1];
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 });
+        tt.Build(verbose: false, method: "svd");
+        Assert.Equal("svd", tt.GetConstructorType());
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        Assert.Equal("svd", result.GetConstructorType());
+    }
+
+    [Fact]
+    public void Test_build_mode_preserved_als()
+    {
+        static double F(double[] x) => x[0] * x[1] + Math.Sin(x[0]);
+        var tt = new ChebyshevTT(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 });
+        tt.Build(verbose: false, method: "als", seed: 42);
+        Assert.Equal("als", tt.GetConstructorType());
+        var result = (ChebyshevTT)tt.Integrate(dims: new[] { 0 });
+        Assert.Equal("als", result.GetConstructorType());
+    }
+
+    [Fact]
+    public void Test_unit_volume_across_all_four_classes()
+    {
+        // Constant 1 over [0, 2] x [0, 3] integrates to 6 on every class.
+        const double expected = 6.0;
+        var domain = new[] { new[] { 0.0, 2.0 }, new[] { 0.0, 3.0 } };
+
+        // ChebyshevApproximation
+        var cheb = new ChebyshevApproximation(
+            (x, _) => 1.0, 2, domain, new[] { 4, 4 });
+        cheb.Build(verbose: false);
+        TestFixtures.AssertClose(expected, (double)cheb.Integrate(),
+            rtol: 1e-10, atol: 1e-10);
+
+        // ChebyshevSpline (no knots — single piece behaves like Approximation)
+        var spline = new ChebyshevSpline(
+            (x, _) => 1.0, 2, domain, new[] { 4, 4 },
+            new[] { Array.Empty<double>(), Array.Empty<double>() });
+        spline.Build(verbose: false);
+        TestFixtures.AssertClose(expected, (double)spline.Integrate(),
+            rtol: 1e-10, atol: 1e-10);
+
+        // ChebyshevSlider
+        var slider = new ChebyshevSlider(
+            (x, _) => 1.0, 2, domain, new[] { 4, 4 },
+            new[] { new[] { 0 }, new[] { 1 } },
+            new[] { 1.0, 1.5 });
+        slider.Build(verbose: false);
+        TestFixtures.AssertClose(expected, (double)slider.Integrate(),
+            rtol: 1e-10, atol: 1e-10);
+
+        // ChebyshevTT
+        var tt = new ChebyshevTT(x => 1.0, 2, domain, new[] { 4, 4 });
+        tt.Build(verbose: false, seed: 42);
+        TestFixtures.AssertClose(expected, (double)tt.Integrate(),
+            rtol: 1e-10, atol: 1e-10);
+    }
+}
