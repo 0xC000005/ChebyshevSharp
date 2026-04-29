@@ -603,7 +603,7 @@ public class ChebyshevTT
     /// <param name="bounds">Sub-interval bounds per dim (positional with sorted dims). Null = full domain.</param>
     /// <returns>A boxed <c>double</c> when every dim is integrated; otherwise a new <see cref="ChebyshevTT"/> over surviving dims.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
-    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range or duplicated indices, or <paramref name="bounds"/> are invalid.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range indices, or <paramref name="bounds"/> are invalid. Duplicate <paramref name="dims"/> entries are silently deduplicated (matches <see cref="ChebyshevApproximation.Integrate"/>).</exception>
     public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
     {
         CheckBuilt();

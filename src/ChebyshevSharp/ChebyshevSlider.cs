@@ -353,7 +353,7 @@ public class ChebyshevSlider
     /// <param name="bounds">Sub-interval bounds per dim (positional with sorted dims). Null = full domain.</param>
     /// <returns>A boxed <c>double</c> when every dim is integrated; otherwise a new <see cref="ChebyshevSlider"/> over surviving dims.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
-    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range or duplicated indices, or <paramref name="bounds"/> are invalid.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="dims"/> contains out-of-range indices, or <paramref name="bounds"/> are invalid. Duplicate <paramref name="dims"/> entries are silently deduplicated (matches <see cref="ChebyshevApproximation.Integrate"/>).</exception>
     public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
     {
         if (!Built)
@@ -415,7 +415,6 @@ public class ChebyshevSlider
         // appropriate sub-interval bounds, then add contribution to pv_new.
         // Contribution = vol(T \ G_i) * (I_i - pv * vol(G_i ∩ T))
         // For "full" slides, vol(G_i ∩ T) is the product of widths over G_i.
-        var slideFullIntegrals = new Dictionary<int, double>();
         for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
         {
             var (kind, _) = slideKinds[slideIdx];
@@ -448,8 +447,6 @@ public class ChebyshevSlider
                 Ii = (double)slide.Integrate(dims: localDims);
             else
                 Ii = (double)slide.Integrate(dims: localDims, bounds: localBoundsList.ToArray());
-
-            slideFullIntegrals[slideIdx] = Ii;
 
             // vol(T \ G_i) — widths over dims in T but NOT in G_i.
             double volOutside = 1.0;
