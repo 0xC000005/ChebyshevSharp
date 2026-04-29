@@ -286,3 +286,44 @@ internal sealed class CountingProgress : IProgress<int>
         System.Threading.Interlocked.Increment(ref _calls);
     }
 }
+
+// ======================================================================
+// TestNWorkersValidation (Phase 6 Task 5)
+// ======================================================================
+
+public class TestNWorkersValidation
+{
+    private static double F(double[] p, object? _) => p[0];
+    private static double F2(double[] p) => p[0];
+
+    [Fact]
+    public void Test_approx_nworkers_zero_throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(F, 1,
+                new[] { new[] { 0.0, 1.0 } }, new[] { 5 }, nWorkers: 0));
+    }
+
+    [Fact]
+    public void Test_spline_nworkers_minus_two_throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new ChebyshevSpline(F, 1,
+                new[] { new[] { 0.0, 1.0 } }, new[] { 5 },
+                new[] { Array.Empty<double>() }, nWorkers: -2));
+    }
+
+    [Fact]
+    public void Test_slider_and_tt_nworkers_zero_throws()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new ChebyshevSlider(F, 1,
+                new[] { new[] { 0.0, 1.0 } }, new[] { 5 },
+                new[] { new[] { 0 } }, new[] { 0.5 }, nWorkers: 0));
+
+        Assert.Throws<ArgumentException>(() =>
+            new ChebyshevTT(F2, 2,
+                new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                new[] { 5, 5 }, nWorkers: 0));
+    }
+}
