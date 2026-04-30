@@ -11,6 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-04-29 — Phase 7: catch-up to PyChebyshev v0.21.1
+
+Bundles upstream PyChebyshev v0.21.0 + v0.21.1 into one cohesive post-port maintenance
+release. Parity tag advances 0.20.1 → 0.21.1.
+
+### Added
+- `ChebyshevSlider.Roots(dim, fixedDims)` / `Minimize` / `Maximize`
+- `ChebyshevTT.Roots(dim, fixedDims)` / `Minimize` / `Maximize`
+- `ChebyshevTT.SobolIndices()` — TT-native O(d·n·r²), no dense materialization
+
+### Fixed
+- `ChebyshevTT.GetEvaluationPoints` returns user-frame columns (was storage-frame)
+- `ChebyshevTT.EvalMulti` race condition: refactored to use non-mutating `EvalStorageFrame` helper
+- `ChebyshevTT.InnerProduct` now throws `ArgumentException` on `_dimOrder` mismatch (was silent wrong result)
+- `ChebyshevTT.Integrate` error messages reference user-frame dim indices (was storage-frame)
+- `Algebra.CheckCompatible` uses numerical tolerance (`np.allclose`-style) on `Domain[d]` (was exact `SequenceEqual`)
+
+### Performance
+- `VectorizedEvalBatch` hoists differentiation-matrix matmul outside per-point loop for non-zero derivative orders
+- `Calculus.Optimize1D` uses single vectorized barycentric evaluation over all candidates
+
+### Test count: 1103 → ~1113 (+10)
+
+Phase 7 coverage gap fillers: 10 tests in `Phase7CoverageGapTests.cs` (defensive paths, edge cases).
+
 ## [0.10.0] - 2026-04-29 — PyChebyshev parity v0.20.1
 
 ### Build performance (from PyChebyshev v0.19.0)
