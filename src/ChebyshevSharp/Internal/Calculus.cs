@@ -192,26 +192,57 @@ internal static class Calculus
 
         // Candidates: critical points + domain endpoints
         double a = domain[0], b = domain[1];
-        var candidates = new List<double> { a };
-        candidates.AddRange(critical);
-        candidates.Add(b);
+        var candidateList = new List<double> { a };
+        candidateList.AddRange(critical);
+        candidateList.Add(b);
+        double[] candidates = candidateList.ToArray();
 
-        // Evaluate original function at all candidates
-        double[] vals = new double[candidates.Count];
-        for (int i = 0; i < candidates.Count; i++)
-            vals[i] = BarycentricKernel.BarycentricInterpolate(candidates[i], nodes, values, baryWeights);
+        // Vectorized barycentric evaluation at all candidates simultaneously.
+        // Mirrors Python's vectorized _optimize_1d implementation.
+        int M = candidates.Length;
+        double[] vals = new double[M];
+        for (int m = 0; m < M; m++)
+        {
+            double cm = candidates[m];
+            // Check for exact node hit first (threshold matching BarycentricInterpolate).
+            bool exactHit = false;
+            double exactValue = 0.0;
+            for (int j = 0; j < n; j++)
+            {
+                if (Math.Abs(cm - nodes[j]) < 1e-14)
+                {
+                    exactHit = true;
+                    exactValue = values[j];
+                    break;
+                }
+            }
+            if (exactHit)
+            {
+                vals[m] = exactValue;
+                continue;
+            }
+            // Barycentric interpolation inline (no extra method call overhead).
+            double numer = 0.0, denom = 0.0;
+            for (int j = 0; j < n; j++)
+            {
+                double wod = baryWeights[j] / (cm - nodes[j]);
+                numer += wod * values[j];
+                denom += wod;
+            }
+            vals[m] = numer / denom;
+        }
 
         int idx;
         if (mode == "min")
         {
             idx = 0;
-            for (int i = 1; i < vals.Length; i++)
+            for (int i = 1; i < M; i++)
                 if (vals[i] < vals[idx]) idx = i;
         }
         else
         {
             idx = 0;
-            for (int i = 1; i < vals.Length; i++)
+            for (int i = 1; i < M; i++)
                 if (vals[i] > vals[idx]) idx = i;
         }
 

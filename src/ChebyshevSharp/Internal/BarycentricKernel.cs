@@ -191,6 +191,56 @@ internal static class BarycentricKernel
     }
 
     /// <summary>
+    /// Apply a differentiation matrix along axis <paramref name="axis"/> of a flat N-D tensor.
+    /// Equivalent to Python's <c>np.moveaxis(data, axis, -1) @ D_T; np.moveaxis(..., -1, axis)</c>.
+    /// The result has the same total size as <paramref name="data"/>.
+    /// </summary>
+    /// <param name="data">Flat N-D tensor in row-major order, total length = product of shape.</param>
+    /// <param name="shape">Shape of the tensor.</param>
+    /// <param name="axis">Axis along which to apply the differentiation matrix.</param>
+    /// <param name="diffMatrix">Differentiation matrix D, shape [n_axis, n_axis].</param>
+    /// <returns>New flat tensor with diff matrix applied along the specified axis.</returns>
+    internal static double[] MatmulAlongAxis(double[] data, int[] shape, int axis, double[,] diffMatrix)
+    {
+        int ndim = shape.Length;
+        int n_axis = shape[axis];
+
+        // Compute trailSize = product of dimensions after axis
+        int trailSize = 1;
+        for (int i = axis + 1; i < ndim; i++)
+            trailSize *= shape[i];
+
+        // Compute leadSize = product of dimensions before axis
+        int leadSize = 1;
+        for (int i = 0; i < axis; i++)
+            leadSize *= shape[i];
+
+        double[] result = new double[data.Length];
+
+        // For each (lead, trail) pair, apply the diff matrix to the vector along axis.
+        // data[lead * n_axis * trailSize + k * trailSize + trail]
+        // result[lead * n_axis * trailSize + k' * trailSize + trail]
+        //   = sum_k D[k', k] * data[...]
+        for (int lead = 0; lead < leadSize; lead++)
+        {
+            int leadOff = lead * n_axis * trailSize;
+            for (int trail = 0; trail < trailSize; trail++)
+            {
+                for (int kPrime = 0; kPrime < n_axis; kPrime++)
+                {
+                    double sum = 0.0;
+                    int srcBase = leadOff + trail;
+                    for (int k = 0; k < n_axis; k++)
+                        sum += diffMatrix[kPrime, k] * data[srcBase + k * trailSize];
+                    result[leadOff + kPrime * trailSize + trail] = sum;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Extract a 1-D slice from a flat N-D tensor along a given dimension at a given index.
     /// For indexing: takes all elements where dimension d has a specific index value.
     /// </summary>

@@ -462,16 +462,101 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Evaluate at multiple points.
+    /// Hoists derivative-matrix matmuls outside the per-point loop (they are
+    /// point-independent), then does only barycentric reductions per point.
     /// </summary>
     /// <param name="points">Points as double[N][numDimensions].</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Results array of length N.</returns>
     public double[] VectorizedEvalBatch(double[][] points, int[] derivativeOrder)
     {
+        if (TensorValues == null)
+            throw new InvalidOperationException("Call Build() first");
+
+        // Hoist: apply all derivative-matrix matmuls once — they are point-independent.
+        // Process from last dimension to first to match VectorizedEval ordering.
+        double[] tensorWithDerivs = ApplyDerivativePasses(TensorValues, NNodes, derivativeOrder);
+
         double[] results = new double[points.Length];
+        int totalSize = TensorValues.Length;
+
         for (int i = 0; i < points.Length; i++)
-            results[i] = VectorizedEval(points[i], derivativeOrder);
+        {
+            double[] current = tensorWithDerivs;
+            int curSize = totalSize;
+
+            // Per-point: only the barycentric reduction (no derivative passes).
+            for (int d = NumDimensions - 1; d >= 0; d--)
+            {
+                double x = points[i][d];
+                int lastDim = NNodes[d];
+                int leadSize = curSize / lastDim;
+
+                // Barycentric contraction along last axis (no diff-matrix here — already hoisted)
+                int exactIdx = -1;
+                for (int j = 0; j < lastDim; j++)
+                {
+                    if (Math.Abs(x - NodeArrays[d][j]) < 1e-14)
+                    {
+                        exactIdx = j;
+                        break;
+                    }
+                }
+
+                if (exactIdx >= 0)
+                {
+                    double[] res = new double[leadSize];
+                    for (int j = 0; j < leadSize; j++)
+                        res[j] = current[j * lastDim + exactIdx];
+                    current = res;
+                }
+                else
+                {
+                    double[] wNorm = new double[lastDim];
+                    double sumW = 0.0;
+                    for (int j = 0; j < lastDim; j++)
+                    {
+                        double wod = Weights![d][j] / (x - NodeArrays[d][j]);
+                        wNorm[j] = wod;
+                        sumW += wod;
+                    }
+                    double invSumW = 1.0 / sumW;
+                    for (int j = 0; j < lastDim; j++)
+                        wNorm[j] *= invSumW;
+
+                    current = BarycentricKernel.MatmulLastAxis(current, leadSize, lastDim, wNorm);
+                }
+
+                curSize = leadSize;
+            }
+
+            results[i] = current[0];
+        }
+
         return results;
+    }
+
+    /// <summary>
+    /// Apply differentiation-matrix passes to the full coefficient tensor (all axes,
+    /// shape unchanged). Used to hoist the point-independent part of
+    /// <see cref="VectorizedEvalBatch"/> outside the per-point loop.
+    /// Mirrors Python's <c>_apply_derivative_passes</c>.
+    /// </summary>
+    private double[] ApplyDerivativePasses(double[] tensor, int[] shape, int[] derivativeOrder)
+    {
+        double[] result = tensor;
+        // Process from last dimension to first (matches VectorizedEval ordering).
+        for (int d = NumDimensions - 1; d >= 0; d--)
+        {
+            int deriv = derivativeOrder[d];
+            if (deriv > 0)
+            {
+                double[,] dm = DiffMatrices![d];
+                for (int o = 0; o < deriv; o++)
+                    result = BarycentricKernel.MatmulAlongAxis(result, shape, d, dm);
+            }
+        }
+        return result;
     }
 
     /// <summary>
