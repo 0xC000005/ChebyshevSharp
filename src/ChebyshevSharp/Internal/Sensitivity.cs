@@ -129,7 +129,6 @@ internal static class Sensitivity
                 for (int j = 0; j < rL; j++)
                 {
                     double mij = M[i, j];
-                    if (mij == 0.0) continue;
                     for (int p = 0; p < nk; p++)
                         acc += mij * A[i, p, a] * wFull[k][p] * A[j, p, b];
                 }
@@ -191,7 +190,6 @@ internal static class Sensitivity
                 for (int j = 0; j < rL; j++)
                 {
                     double lij = L[k][i, j];
-                    if (lij == 0.0) continue;
                     for (int p = 0; p < nk; p++)
                         acc += lij * A[i, p, a] * wFull[k][p] * A[j, p, b];
                 }
@@ -216,7 +214,6 @@ internal static class Sensitivity
                 for (int b = 0; b < rR; b++)
                 {
                     double rab = R[k + 1][a, b];
-                    if (rab == 0.0) continue;
                     for (int p = 0; p < nk; p++)
                         acc += rab * A[i, p, a] * wFull[k][p] * A[j, p, b];
                 }
@@ -295,7 +292,6 @@ internal static class Sensitivity
             for (int jj = 0; jj < rLjj; jj++)
             {
                 double lij = L[j][i, jj];
-                if (lij == 0.0) continue;
                 for (int a = 0; a < rRjj; a++)
                 for (int b = 0; b < rRjj; b++)
                 {

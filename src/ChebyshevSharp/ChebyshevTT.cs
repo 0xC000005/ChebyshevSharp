@@ -2176,8 +2176,13 @@ public class ChebyshevTT
         // Compute indices in storage frame (0..d-1 positional in _coeffCores).
         var storage = Internal.Sensitivity.ComputeSobolFromTtCores(_coeffCores!);
 
+        // Fast path: identity _dimOrder needs no translation.
+        if (IsIdentityDimOrder())
+            return storage;
+
         // Translate storage-frame keys → user-frame keys.
         // _dimOrder[s] = u means storage position s holds original-dim u.
+        // This is the inverse permutation by _dimOrder.
         var userFirst = new double[_numDimensions];
         var userTotal = new double[_numDimensions];
         for (int s = 0; s < _numDimensions; s++)

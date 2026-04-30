@@ -276,24 +276,28 @@ public class TtDimOrderClusterTests
     [Fact]
     public void Test_integrate_out_of_domain_error_uses_user_frame_dim()
     {
-        // Build a TT with WithAutoOrder; the storage permutation may differ.
-        // Pass dims=[0] (user-frame) with out-of-domain bounds; the error
-        // message must reference dim 0, not the storage position.
+        // Use explicit Reorder + asymmetric per-dim domains to guarantee non-identity
+        // _dimOrder and exercise the user-frame error message logic.
         Func<double[], double> f = (p) => p[0] + p[1] + p[2];
-        var tt = ChebyshevTT.WithAutoOrder(f, 3,
-            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+        var tt = new ChebyshevTT(f, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { 5.0, 7.0 }, new[] { 100.0, 200.0 } },
             new[] { 6, 6, 6 },
-            maxRank: 4,
-            tolerance: 1e-10,
-            seed: 42,
-            method: "greedy_swap");
+            maxRank: 4, tolerance: 1e-10);
+        tt.Build(verbose: false, seed: 42);
+        var reordered = tt.Reorder(new[] { 2, 0, 1 });
 
-        // [-2.0, 1.0] is outside [-1, 1].
+        // Confirm non-identity _dimOrder so we exercise the user-frame error path.
+        Assert.False(reordered.DimOrder.SequenceEqual(new[] { 0, 1, 2 }),
+            "Reorder must produce non-identity _dimOrder for this test to be meaningful");
+
+        // user-frame dim 1 has domain [5, 7]; pass bounds outside it.
         var ex = Assert.Throws<ArgumentException>(() =>
-            tt.Integrate(dims: new[] { 0 }, bounds: new[] { (-2.0, 1.0) }));
+            reordered.Integrate(dims: new[] { 1 }, bounds: new[] { (0.0, 6.0) }));
 
-        // Must reference user-frame dim 0
-        Assert.Contains("dim 0", ex.Message);
+        // Error message must reference user-frame dim 1, NOT the storage position
+        // (which would be storage_dim = Array.IndexOf([2,0,1], 1) = 2).
+        Assert.Contains("dim 1", ex.Message);
+        Assert.DoesNotContain("dim 2", ex.Message);  // would be storage-frame index
     }
 
     [Fact]
