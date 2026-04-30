@@ -464,54 +464,55 @@ public class ChebyshevTT
     {
         CheckBuilt();
 
-        // If a non-identity _dimOrder is set, permute both the input point and each
-        // derivativeOrder from user-frame into storage frame so the FD machinery
-        // (which references _domain/_nNodes in storage frame) operates correctly.
-        // Then temporarily neutralize _dimOrder so the inner Eval/FdDerivative calls
-        // do not re-permute the already-storage-frame points (mirrors Python eval_multi).
+        // v0.21.1: race-safe via EvalStorageFrame helper that always operates in
+        // storage frame. Public EvalMulti permutes user-frame inputs once into
+        // local arrays — no mutation of self._dimOrder.
+        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:2172-2215.
+        double[] storagePoint = point;
+        int[][] storageOrders = derivativeOrders;
+
         if (!IsIdentityDimOrder())
         {
-            var permPoint = new double[_numDimensions];
-            for (int k = 0; k < _numDimensions; k++) permPoint[k] = point[_dimOrder[k]];
+            storagePoint = new double[_numDimensions];
+            for (int s = 0; s < _numDimensions; s++)
+                storagePoint[s] = point[_dimOrder[s]];
 
-            var permOrders = new int[derivativeOrders.Length][];
+            storageOrders = new int[derivativeOrders.Length][];
             for (int i = 0; i < derivativeOrders.Length; i++)
             {
-                permOrders[i] = new int[_numDimensions];
-                for (int k = 0; k < _numDimensions; k++)
-                    permOrders[i][k] = derivativeOrders[i][_dimOrder[k]];
-            }
-
-            var savedDimOrder = _dimOrder;
-            _dimOrder = Enumerable.Range(0, _numDimensions).ToArray();
-            try
-            {
-                double[] results = new double[permOrders.Length];
-                for (int i = 0; i < permOrders.Length; i++)
-                {
-                    bool allZero = true;
-                    for (int d = 0; d < permOrders[i].Length; d++)
-                        if (permOrders[i][d] != 0) { allZero = false; break; }
-                    results[i] = allZero ? Eval(permPoint) : FdDerivative(permPoint, permOrders[i]);
-                }
-                return results;
-            }
-            finally
-            {
-                _dimOrder = savedDimOrder;
+                storageOrders[i] = new int[_numDimensions];
+                for (int s = 0; s < _numDimensions; s++)
+                    storageOrders[i][s] = derivativeOrders[i][_dimOrder[s]];
             }
         }
 
-        double[] res = new double[derivativeOrders.Length];
-        for (int i = 0; i < derivativeOrders.Length; i++)
-        {
-            bool allZero = true;
-            for (int d = 0; d < derivativeOrders[i].Length; d++)
-                if (derivativeOrders[i][d] != 0) { allZero = false; break; }
+        var results = new double[storageOrders.Length];
+        for (int i = 0; i < storageOrders.Length; i++)
+            results[i] = EvalStorageFrame(storagePoint, storageOrders[i]);
+        return results;
+    }
 
-            res[i] = allZero ? Eval(point) : FdDerivative(point, derivativeOrders[i]);
-        }
-        return res;
+    /// <summary>
+    /// Evaluate at a single point assuming storage-frame inputs (no _dimOrder
+    /// remapping). The structural workhorse for Eval and EvalMulti.
+    /// </summary>
+    /// <param name="storagePoint">Point in storage frame.</param>
+    /// <param name="derivativeOrderStorage">Derivative orders in storage frame.
+    /// All-zero triggers the value path; otherwise FD machinery.</param>
+    /// <returns>Interpolated value (or FD derivative).</returns>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2172-2215</c>.
+    /// Does not mutate <see cref="_dimOrder"/>; safe under concurrent invocation.
+    /// </remarks>
+    private double EvalStorageFrame(double[] storagePoint, int[] derivativeOrderStorage)
+    {
+        bool allZero = true;
+        for (int d = 0; d < derivativeOrderStorage.Length; d++)
+            if (derivativeOrderStorage[d] != 0) { allZero = false; break; }
+
+        if (allZero)
+            return EvalCore(storagePoint);
+        return FdDerivative(storagePoint, derivativeOrderStorage);
     }
 
     private double FdDerivative(double[] point, int[] derivOrder)
@@ -567,7 +568,7 @@ public class ChebyshevTT
             double[] ptMinus = (double[])pt.Clone();
             ptPlus[d] += h;
             ptMinus[d] -= h;
-            return (Eval(ptPlus) - Eval(ptMinus)) / (2.0 * h);
+            return (EvalCore(ptPlus) - EvalCore(ptMinus)) / (2.0 * h);
         }
         else if (order == 2)
         {
@@ -575,7 +576,7 @@ public class ChebyshevTT
             double[] ptMinus = (double[])pt.Clone();
             ptPlus[d] += h;
             ptMinus[d] -= h;
-            return (Eval(ptPlus) - 2.0 * Eval(pt) + Eval(ptMinus)) / (h * h);
+            return (EvalCore(ptPlus) - 2.0 * EvalCore(pt) + EvalCore(ptMinus)) / (h * h);
         }
         else
         {
@@ -598,17 +599,17 @@ public class ChebyshevTT
             return p;
         }
 
-        double fpp = Eval(MakePt(+h1, +h2));
-        double fpm = Eval(MakePt(+h1, -h2));
-        double fmp = Eval(MakePt(-h1, +h2));
-        double fmm = Eval(MakePt(-h1, -h2));
+        double fpp = EvalCore(MakePt(+h1, +h2));
+        double fpm = EvalCore(MakePt(+h1, -h2));
+        double fmp = EvalCore(MakePt(-h1, +h2));
+        double fmm = EvalCore(MakePt(-h1, -h2));
         return (fpp - fpm - fmp + fmm) / (4.0 * h1 * h2);
     }
 
     private double FdNested(double[] point, List<(int dim, int order)> activeDims, int startIdx)
     {
         if (startIdx >= activeDims.Count)
-            return Eval(point);
+            return EvalCore(point);
 
         var (d, order) = activeDims[startIdx];
         double h = FdStep(d);

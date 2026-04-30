@@ -122,4 +122,98 @@ public class TtDimOrderClusterTests
         int ndim = tt.NumDimensions;
         Assert.Equal(n * ndim, flat.Length);
     }
+
+    [Fact]
+    public void Test_eval_multi_does_not_mutate_dim_order()
+    {
+        var tt = BuildAutoOrderTt();
+        var orderBefore = tt.DimOrder;
+
+        var derivOrders = new[] { new[] { 0, 0, 0 }, new[] { 1, 0, 0 } };
+        _ = tt.EvalMulti(new[] { 0.1, 0.2, 0.3 }, derivOrders);
+
+        var orderAfter = tt.DimOrder;
+        Assert.Equal(orderBefore, orderAfter);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task Test_eval_multi_concurrent_calls_no_exceptions()
+    {
+        // Race regression: 4 threads, 1000 calls each.
+        var tt = BuildAutoOrderTt();
+        var derivOrders = new[] { new[] { 0, 0, 0 }, new[] { 1, 0, 0 } };
+
+        var tasks = new System.Threading.Tasks.Task[4];
+        for (int t = 0; t < 4; t++)
+        {
+            int seed = t;
+            tasks[t] = System.Threading.Tasks.Task.Run(() =>
+            {
+                var rng = new Random(seed);
+                for (int i = 0; i < 1000; i++)
+                {
+                    var pt = new[] { rng.NextDouble() * 2 - 1, rng.NextDouble() * 2 - 1, rng.NextDouble() * 2 - 1 };
+                    var results = tt.EvalMulti(pt, derivOrders);
+                    Assert.Equal(2, results.Length);
+                    Assert.False(double.IsNaN(results[0]) || double.IsNaN(results[1]));
+                }
+            });
+        }
+        await System.Threading.Tasks.Task.WhenAll(tasks);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task Test_eval_multi_concurrent_results_match_serial()
+    {
+        // For deterministic input points, concurrent and serial calls produce
+        // identical results.
+        var tt = BuildAutoOrderTt();
+        var pt = new[] { 0.1, 0.2, 0.3 };
+        var derivOrders = new[] { new[] { 0, 0, 0 }, new[] { 1, 0, 0 }, new[] { 0, 1, 0 } };
+
+        // Serial baseline
+        var serial = tt.EvalMulti(pt, derivOrders);
+
+        // 8 concurrent calls
+        var tasks = new System.Threading.Tasks.Task<double[]>[8];
+        for (int t = 0; t < 8; t++)
+            tasks[t] = System.Threading.Tasks.Task.Run(() => tt.EvalMulti(pt, derivOrders));
+        var results = await System.Threading.Tasks.Task.WhenAll(tasks);
+
+        foreach (var concurrent in results)
+        {
+            for (int i = 0; i < serial.Length; i++)
+                Assert.Equal(serial[i], concurrent[i]);
+        }
+    }
+
+    [Fact]
+    public void Test_eval_multi_under_auto_order_returns_correct_value()
+    {
+        // After WithAutoOrder, Eval and EvalMulti's all-zero-derivative entry
+        // must agree.
+        var tt = BuildAutoOrderTt();
+        var pt = new[] { 0.4, 0.3, -0.2 };
+
+        double single = tt.Eval(pt);
+        var multi = tt.EvalMulti(pt, new[] { new[] { 0, 0, 0 } });
+        Assert.Equal(single, multi[0], precision: 10);
+    }
+
+    [Fact]
+    public void Test_eval_multi_identity_dim_order_unchanged()
+    {
+        // For canonical _dimOrder, EvalMulti behavior is unchanged.
+        Func<double[], double> f = (p) => p[0] + p[1] + p[2];
+        var tt = new ChebyshevTT(f, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10);
+        tt.Build(seed: 42);
+
+        var pt = new[] { 0.1, 0.2, 0.3 };
+        var multi = tt.EvalMulti(pt, new[] { new[] { 0, 0, 0 }, new[] { 1, 0, 0 } });
+        Assert.Equal(0.6, multi[0], precision: 4);  // f(0.1, 0.2, 0.3) = 0.6
+    }
 }
