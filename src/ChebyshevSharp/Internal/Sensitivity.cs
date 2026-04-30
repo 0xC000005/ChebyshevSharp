@@ -161,11 +161,14 @@ internal static class Sensitivity
 
         double variance = totalWeightedSquared - constantWeightedSquared;
 
-        if (variance <= 0.0 || variance < 1e-12 * Math.Abs(totalWeightedSquared))
+        if (variance <= 0.0 || variance < 1e-20)
         {
             // Constant or near-constant function.
             // Clamp variance to 0 for clean reporting (TT-Cross floating-point noise
             // can leave a tiny positive residual even for truly constant f).
+            // Absolute threshold 1e-20 matches the dense path (ComputeSobolFromCoeffs line 348)
+            // and is well above TT-Cross noise floor (~1e-29) but well below legitimate small
+            // signals such as f(x,y,z) = 1 + 1e-6*x (variance ~1.55e-11).
             return new SobolResult(new double[d], new double[d], 0.0);
         }
 
