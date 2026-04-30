@@ -7,9 +7,9 @@
 
     <!-- NuGet package metadata -->
     <PackageId>ChebyshevSharp</PackageId>
-    <Version>0.10.0</Version>
-    <PyChebyshevParity>0.20.1</PyChebyshevParity>
-    <InformationalVersion>0.10.0+pychebyshev.0.20.1</InformationalVersion>
+    <Version>0.11.0</Version>
+    <PyChebyshevParity>0.21.1</PyChebyshevParity>
+    <InformationalVersion>0.11.0+pychebyshev.0.21.1</InformationalVersion>
     <Authors>Max</Authors>
     <Description>ChebyshevSharp 0.10.0 — multi-dimensional Chebyshev tensor interpolation with analytical derivatives. Feature parity with PyChebyshev v0.20.1 + parallel build + adaptive refinement (AutoKnots, SobolIndices, TT dimensional reordering with full threading).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

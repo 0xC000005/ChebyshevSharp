@@ -88,3 +88,16 @@ Total: 50 new tests (613 -> 663 total)
 #   - regression test for Integrate bounds fix (1 test appended to CalculusTests.cs)
 # Skipped (Option C from master spec): plot_convergence, plot_1d, plot_2d_surface, plot_2d_contour (matplotlib helpers).
 # Total: 1018/1018 tests passing (946 + 72).
+
+=========================================================
+# Phase 7 (v0.11.0) — Catch-up to PyChebyshev v0.21.1 (v0.21.0 + v0.21.1 features) — DONE
+# Calculus parity completion: Slider/TT Roots/Minimize/Maximize + TT.SobolIndices TT-native
+# _dimOrder cluster fixes: GetEvaluationPoints user-frame, EvalMulti race-safe, InnerProduct mismatch raises, Integrate user-frame, Algebra numerical tolerance
+# Perf hoists: VectorizedEvalBatch matmul lift, Optimize1D vectorization
+#   - tests/SliderRootsTests.cs (7 tests; port of partial Python coverage, edge cases for multi-dim groups)
+#   - tests/TtCalculusTests.cs (8 tests; Roots/Minimize/Maximize with 1D and 3D fixtures, unbuilt validation)
+#   - tests/TtSobolIndicesTests.cs (8 tests; separable/coupling/1D edge cases, total-vs-first-order invariants)
+#   - tests/TtDimOrderClusterTests.cs (20 tests; GetEvaluationPoints user-frame, EvalMulti race safety, InnerProduct, Integrate error messages)
+#   - tests/Phase7CoverageGapTests.cs (10 tests; defensive paths: dim out-of-range, empty arrays, multi-dim partitions, custom domains, constant functions)
+# No tests skipped (all features fully ported).
+# Total: 1103 → ~1113 tests passing (+10 coverage gap fillers).

@@ -464,54 +464,55 @@ public class ChebyshevTT
     {
         CheckBuilt();
 
-        // If a non-identity _dimOrder is set, permute both the input point and each
-        // derivativeOrder from user-frame into storage frame so the FD machinery
-        // (which references _domain/_nNodes in storage frame) operates correctly.
-        // Then temporarily neutralize _dimOrder so the inner Eval/FdDerivative calls
-        // do not re-permute the already-storage-frame points (mirrors Python eval_multi).
+        // v0.21.1: race-safe via EvalStorageFrame helper that always operates in
+        // storage frame. Public EvalMulti permutes user-frame inputs once into
+        // local arrays — no mutation of self._dimOrder.
+        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:2172-2215.
+        double[] storagePoint = point;
+        int[][] storageOrders = derivativeOrders;
+
         if (!IsIdentityDimOrder())
         {
-            var permPoint = new double[_numDimensions];
-            for (int k = 0; k < _numDimensions; k++) permPoint[k] = point[_dimOrder[k]];
+            storagePoint = new double[_numDimensions];
+            for (int s = 0; s < _numDimensions; s++)
+                storagePoint[s] = point[_dimOrder[s]];
 
-            var permOrders = new int[derivativeOrders.Length][];
+            storageOrders = new int[derivativeOrders.Length][];
             for (int i = 0; i < derivativeOrders.Length; i++)
             {
-                permOrders[i] = new int[_numDimensions];
-                for (int k = 0; k < _numDimensions; k++)
-                    permOrders[i][k] = derivativeOrders[i][_dimOrder[k]];
-            }
-
-            var savedDimOrder = _dimOrder;
-            _dimOrder = Enumerable.Range(0, _numDimensions).ToArray();
-            try
-            {
-                double[] results = new double[permOrders.Length];
-                for (int i = 0; i < permOrders.Length; i++)
-                {
-                    bool allZero = true;
-                    for (int d = 0; d < permOrders[i].Length; d++)
-                        if (permOrders[i][d] != 0) { allZero = false; break; }
-                    results[i] = allZero ? Eval(permPoint) : FdDerivative(permPoint, permOrders[i]);
-                }
-                return results;
-            }
-            finally
-            {
-                _dimOrder = savedDimOrder;
+                storageOrders[i] = new int[_numDimensions];
+                for (int s = 0; s < _numDimensions; s++)
+                    storageOrders[i][s] = derivativeOrders[i][_dimOrder[s]];
             }
         }
 
-        double[] res = new double[derivativeOrders.Length];
-        for (int i = 0; i < derivativeOrders.Length; i++)
-        {
-            bool allZero = true;
-            for (int d = 0; d < derivativeOrders[i].Length; d++)
-                if (derivativeOrders[i][d] != 0) { allZero = false; break; }
+        var results = new double[storageOrders.Length];
+        for (int i = 0; i < storageOrders.Length; i++)
+            results[i] = EvalStorageFrame(storagePoint, storageOrders[i]);
+        return results;
+    }
 
-            res[i] = allZero ? Eval(point) : FdDerivative(point, derivativeOrders[i]);
-        }
-        return res;
+    /// <summary>
+    /// Evaluate at a single point assuming storage-frame inputs (no _dimOrder
+    /// remapping). The structural workhorse for Eval and EvalMulti.
+    /// </summary>
+    /// <param name="storagePoint">Point in storage frame.</param>
+    /// <param name="derivativeOrderStorage">Derivative orders in storage frame.
+    /// All-zero triggers the value path; otherwise FD machinery.</param>
+    /// <returns>Interpolated value (or FD derivative).</returns>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2172-2215</c>.
+    /// Does not mutate <see cref="_dimOrder"/>; safe under concurrent invocation.
+    /// </remarks>
+    private double EvalStorageFrame(double[] storagePoint, int[] derivativeOrderStorage)
+    {
+        bool allZero = true;
+        for (int d = 0; d < derivativeOrderStorage.Length; d++)
+            if (derivativeOrderStorage[d] != 0) { allZero = false; break; }
+
+        if (allZero)
+            return EvalCore(storagePoint);
+        return FdDerivative(storagePoint, derivativeOrderStorage);
     }
 
     private double FdDerivative(double[] point, int[] derivOrder)
@@ -567,7 +568,7 @@ public class ChebyshevTT
             double[] ptMinus = (double[])pt.Clone();
             ptPlus[d] += h;
             ptMinus[d] -= h;
-            return (Eval(ptPlus) - Eval(ptMinus)) / (2.0 * h);
+            return (EvalCore(ptPlus) - EvalCore(ptMinus)) / (2.0 * h);
         }
         else if (order == 2)
         {
@@ -575,7 +576,7 @@ public class ChebyshevTT
             double[] ptMinus = (double[])pt.Clone();
             ptPlus[d] += h;
             ptMinus[d] -= h;
-            return (Eval(ptPlus) - 2.0 * Eval(pt) + Eval(ptMinus)) / (h * h);
+            return (EvalCore(ptPlus) - 2.0 * EvalCore(pt) + EvalCore(ptMinus)) / (h * h);
         }
         else
         {
@@ -598,17 +599,17 @@ public class ChebyshevTT
             return p;
         }
 
-        double fpp = Eval(MakePt(+h1, +h2));
-        double fpm = Eval(MakePt(+h1, -h2));
-        double fmp = Eval(MakePt(-h1, +h2));
-        double fmm = Eval(MakePt(-h1, -h2));
+        double fpp = EvalCore(MakePt(+h1, +h2));
+        double fpm = EvalCore(MakePt(+h1, -h2));
+        double fmp = EvalCore(MakePt(-h1, +h2));
+        double fmm = EvalCore(MakePt(-h1, -h2));
         return (fpp - fpm - fmp + fmm) / (4.0 * h1 * h2);
     }
 
     private double FdNested(double[] point, List<(int dim, int order)> activeDims, int startIdx)
     {
         if (startIdx >= activeDims.Count)
-            return Eval(point);
+            return EvalCore(point);
 
         var (d, order) = activeDims[startIdx];
         double h = FdStep(d);
@@ -731,6 +732,29 @@ public class ChebyshevTT
                 .ToArray();
             sortedStoragePos = (int[])storagePosForBounds.Clone();
             Array.Sort(sortedStoragePos);
+        }
+
+        // v0.21.1: pre-validate bounds against user-frame domain so error messages
+        // reference user-frame dim indices (issue #20). The downstream NormalizeBounds
+        // would otherwise report storage-frame indices when _dimOrder is non-identity.
+        // Python source: spec §4.5.
+        if (bounds != null && bounds.Length > 0)
+        {
+            if (bounds.Length != sortedUserDims.Length)
+                throw new ArgumentException(
+                    $"bounds length {bounds.Length} != dims length {sortedUserDims.Length}");
+            for (int i = 0; i < bounds.Length; i++)
+            {
+                int userDim = sortedUserDims[i];
+                int storageDim = Array.IndexOf(_dimOrder, userDim);
+                double lo = _domain[storageDim][0], hi = _domain[storageDim][1];
+                var bd = bounds[i];
+                if (bd.lo > bd.hi)
+                    throw new ArgumentException($"bounds lo={bd.lo} > hi={bd.hi} for dim {userDim}");
+                if (bd.lo < lo - 1e-14 || bd.hi > hi + 1e-14)
+                    throw new ArgumentException(
+                        $"bounds ({bd.lo}, {bd.hi}) outside domain [{lo}, {hi}] for dim {userDim}");
+            }
         }
 
         // Validate bounds against storage-frame domain.
@@ -933,6 +957,160 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Roots / Minimize / Maximize (Phase 7 — PyChebyshev v0.21.1)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Return Domain reordered into user-frame indexing. For canonical
+    /// _dimOrder, this returns an array semantically equivalent to Domain.
+    /// For non-identity _dimOrder, _domain[s] is the storage-frame domain at
+    /// storage position s; user-frame dim u lives at storage position
+    /// Array.IndexOf(_dimOrder, u).
+    /// </summary>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1737-1747</c>.
+    /// </remarks>
+    private double[][] UserFrameDomain()
+    {
+        var result = new double[_numDimensions][];
+        for (int u = 0; u < _numDimensions; u++)
+        {
+            int s = Array.IndexOf(_dimOrder, u);
+            result[u] = _domain[s];
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Build a 1-D ChebyshevApproximation from this 1-D TT. Uses ToDense() to
+    /// extract the values vector (which already applies the inverse permutation
+    /// so values are in user frame), then constructs a ChebyshevApproximation
+    /// via FromValues.
+    /// </summary>
+    /// <remarks>
+    /// Precondition: this TT must be 1-D. Call Slice() to reduce a multi-D
+    /// TT to 1-D before calling this helper.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1704-1735</c>.
+    /// </remarks>
+    private ChebyshevApproximation To1DChebyshev()
+    {
+        if (_numDimensions != 1)
+            throw new InvalidOperationException(
+                $"To1DChebyshev requires a 1-D TT, got {_numDimensions}-D");
+
+        double[] values = ToDense();
+        double a = _domain[0][0];
+        double b = _domain[0][1];
+        return ChebyshevApproximation.FromValues(
+            values,
+            numDimensions: 1,
+            domain: new[] { new[] { a, b } },
+            nNodes: new[] { _nNodes[0] });
+    }
+
+    /// <summary>
+    /// Find all real roots of the TT-approximated function along a specified dimension.
+    /// Reduces to a 1-D problem by slicing all other dimensions to their fixed
+    /// values, then delegates to <see cref="ChebyshevApproximation.Roots"/>.
+    /// </summary>
+    /// <param name="dim">User-frame dimension. For 1-D TTs, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// user-frame dims except <paramref name="dim"/>. Validated against
+    /// user-frame domain.</param>
+    /// <returns>Sorted real root locations in the physical domain. Empty if no roots.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Under non-identity <see cref="DimOrder"/>, dim and fixedDims keys translate
+    /// to storage frame transparently inside <see cref="Slice"/> and
+    /// <see cref="ToDense"/>.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1749-1790</c>.
+    /// </remarks>
+    public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        CheckBuilt();
+
+        var (_, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(_numDimensions, dim, fixedDims, UserFrameDomain());
+
+        // Sort descending by dim index so that each sequential Slice call sees
+        // valid user-frame indices even after earlier dims are removed.
+        // This mirrors the Python approach of sorting by descending storage
+        // position in tensor_train.py:2078.
+        var sortedParams = ((int dimIndex, double value)[])sliceParams.Clone();
+        Array.Sort(sortedParams, (a, b) => b.dimIndex.CompareTo(a.dimIndex));
+
+        ChebyshevTT sliced = this;
+        foreach (var (sliceDim, sliceValue) in sortedParams)
+            sliced = sliced.Slice(sliceDim, sliceValue);
+
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Roots();
+    }
+
+    /// <summary>
+    /// Find the minimum value of the TT along a user-frame dimension.
+    /// </summary>
+    /// <param name="dim">User-frame dimension. For 1-D TTs, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// user-frame dims except <paramref name="dim"/>. Validated against
+    /// user-frame domain.</param>
+    /// <returns>Tuple of (minimum value, location where minimum is achieved).</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1792-1831</c>.
+    /// </remarks>
+    public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        CheckBuilt();
+
+        var (_, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(_numDimensions, dim, fixedDims, UserFrameDomain());
+
+        var sortedParams = ((int dimIndex, double value)[])sliceParams.Clone();
+        Array.Sort(sortedParams, (a, b) => b.dimIndex.CompareTo(a.dimIndex));
+
+        ChebyshevTT sliced = this;
+        foreach (var (sliceDim, sliceValue) in sortedParams)
+            sliced = sliced.Slice(sliceDim, sliceValue);
+
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Minimize();
+    }
+
+    /// <summary>
+    /// Find the maximum value of the TT along a user-frame dimension.
+    /// </summary>
+    /// <param name="dim">User-frame dimension. For 1-D TTs, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// user-frame dims except <paramref name="dim"/>. Validated against
+    /// user-frame domain.</param>
+    /// <returns>Tuple of (maximum value, location where maximum is achieved).</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1833-1872</c>.
+    /// </remarks>
+    public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        CheckBuilt();
+
+        var (_, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(_numDimensions, dim, fixedDims, UserFrameDomain());
+
+        var sortedParams = ((int dimIndex, double value)[])sliceParams.Clone();
+        Array.Sort(sortedParams, (a, b) => b.dimIndex.CompareTo(a.dimIndex));
+
+        ChebyshevTT sliced = this;
+        foreach (var (sliceDim, sliceValue) in sortedParams)
+            sliced = sliced.Slice(sliceDim, sliceValue);
+
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Maximize();
+    }
+
+    // ------------------------------------------------------------------
     // Canonicalization (Phase 2 — PyChebyshev v0.13)
     // ------------------------------------------------------------------
 
@@ -1005,6 +1183,15 @@ public class ChebyshevTT
                 throw new ArgumentException(
                     $"InnerProduct requires matching domain at dim {d}; got [{_domain[d][0]}, {_domain[d][1]}] vs [{other._domain[d][0]}, {other._domain[d][1]}]");
         }
+        // v0.21.1: strict _dimOrder check. Two TTs with different _dimOrder represent
+        // the same underlying interpolant under different storage permutations; the
+        // raw core-by-core contraction is not the inner product of the interpolants.
+        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:1488-1495.
+        if (!_dimOrder.SequenceEqual(other._dimOrder))
+            throw new ArgumentException(
+                $"InnerProduct requires matching _dimOrder; " +
+                $"got [{string.Join(", ", _dimOrder)}] vs [{string.Join(", ", other._dimOrder)}]. " +
+                $"Call other.Reorder(self.DimOrder) first.");
         return TensorTrainAlgebra.InnerProductCores(_coeffCores!, other._coeffCores!);
     }
 
@@ -1820,6 +2007,20 @@ public class ChebyshevTT
                 points[flat * ndim + d] = nodeArrays[d][indices[d]];
         }
 
+        // v0.21.1: permute columns by inverse _dimOrder so column k is the user-frame
+        // k-th coord (matches Approximation/Spline/Slider behavior).
+        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:2775-2800.
+        if (!IsIdentityDimOrder())
+        {
+            var inv = new int[ndim];
+            for (int s = 0; s < ndim; s++) inv[_dimOrder[s]] = s;
+            var permuted = new double[num * ndim];
+            for (int i = 0; i < num; i++)
+                for (int u = 0; u < ndim; u++)
+                    permuted[i * ndim + u] = points[i * ndim + inv[u]];
+            points = permuted;
+        }
+
         _evaluationPointsCache = points;
         return points;
     }
@@ -1949,6 +2150,48 @@ public class ChebyshevTT
                 throw new ArgumentException($"Duplicate entry {v} in permutation", nameof(perm));
             seen[v] = true;
         }
+    }
+
+    // ------------------------------------------------------------------
+    // SobolIndices (TT-native)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Compute first-order + total-order Sobol sensitivity indices natively
+    /// from the TT coefficient cores. O(d · n · r²) per dim, no dense materialization.
+    /// </summary>
+    /// <returns><see cref="SobolResult"/> with arrays keyed by user-frame dim indices.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <remarks>
+    /// Mathematically equivalent to <see cref="ChebyshevApproximation.SobolIndices"/>
+    /// applied to the dense version of the same function, but skips the O(n^d)
+    /// materialization. Under non-identity <see cref="DimOrder"/>, result keys are
+    /// translated from storage frame to user frame internally.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2823-2868</c>.
+    /// </remarks>
+    public SobolResult SobolIndices()
+    {
+        CheckBuilt();
+
+        // Compute indices in storage frame (0..d-1 positional in _coeffCores).
+        var storage = Internal.Sensitivity.ComputeSobolFromTtCores(_coeffCores!);
+
+        // Fast path: identity _dimOrder needs no translation.
+        if (IsIdentityDimOrder())
+            return storage;
+
+        // Translate storage-frame keys → user-frame keys.
+        // _dimOrder[s] = u means storage position s holds original-dim u.
+        // This is the inverse permutation by _dimOrder.
+        var userFirst = new double[_numDimensions];
+        var userTotal = new double[_numDimensions];
+        for (int s = 0; s < _numDimensions; s++)
+        {
+            int u = _dimOrder[s];
+            userFirst[u] = storage.FirstOrder[s];
+            userTotal[u] = storage.TotalOrder[s];
+        }
+        return new SobolResult(userFirst, userTotal, storage.Variance);
     }
 
     /// <summary>

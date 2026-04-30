@@ -6,6 +6,30 @@ namespace ChebyshevSharp.Internal;
 internal static class Algebra
 {
     /// <summary>
+    /// Numerical equality test for two double arrays. Mirrors NumPy's
+    /// <c>np.allclose(a, b, rtol, atol)</c>: <c>|a - b| &lt;= atol + rtol * |b|</c>
+    /// elementwise.
+    /// </summary>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/_algebra.py:46-49</c>.
+    /// Used to tolerate sub-ULP floating-point drift between equivalent
+    /// allocations (e.g., <c>tuple-of-tuples</c> vs <c>list-of-lists</c>
+    /// in upstream Python).
+    /// </remarks>
+    internal static bool DoublesAllClose(double[] a, double[] b,
+        double rtol = 1e-5, double atol = 1e-8)
+    {
+        if (a.Length != b.Length) return false;
+        for (int i = 0; i < a.Length; i++)
+        {
+            double diff = Math.Abs(a[i] - b[i]);
+            double bound = atol + rtol * Math.Abs(b[i]);
+            if (diff > bound) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Validate that two ChebyshevApproximation objects can be combined arithmetically.
     /// </summary>
     internal static void CheckCompatible(ChebyshevApproximation a, ChebyshevApproximation b)
@@ -28,11 +52,14 @@ internal static class Algebra
             throw new ArgumentException(
                 $"Node count mismatch: [{string.Join(", ", a.NNodes)}] vs [{string.Join(", ", b.NNodes)}]");
 
+        // v0.21.1: numerical comparison on Domain[d] (was SequenceEqual = exact).
+        // Tolerates sub-ULP drift between equivalent allocations.
         for (int d = 0; d < a.NumDimensions; d++)
         {
-            if (!a.Domain[d].SequenceEqual(b.Domain[d]))
+            if (!DoublesAllClose(a.Domain[d], b.Domain[d]))
                 throw new ArgumentException(
-                    $"Domain mismatch at dim {d}");
+                    $"Domain mismatch at dim {d}: " +
+                    $"[{a.Domain[d][0]}, {a.Domain[d][1]}] vs [{b.Domain[d][0]}, {b.Domain[d][1]}]");
         }
 
         if (a.MaxDerivativeOrder != b.MaxDerivativeOrder)
