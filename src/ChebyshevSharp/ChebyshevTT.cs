@@ -2105,6 +2105,43 @@ public class ChebyshevTT
         }
     }
 
+    // ------------------------------------------------------------------
+    // SobolIndices (TT-native)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Compute first-order + total-order Sobol sensitivity indices natively
+    /// from the TT coefficient cores. O(d · n · r²) per dim, no dense materialization.
+    /// </summary>
+    /// <returns><see cref="SobolResult"/> with arrays keyed by user-frame dim indices.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <remarks>
+    /// Mathematically equivalent to <see cref="ChebyshevApproximation.SobolIndices"/>
+    /// applied to the dense version of the same function, but skips the O(n^d)
+    /// materialization. Under non-identity <see cref="DimOrder"/>, result keys are
+    /// translated from storage frame to user frame internally.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2823-2868</c>.
+    /// </remarks>
+    public SobolResult SobolIndices()
+    {
+        CheckBuilt();
+
+        // Compute indices in storage frame (0..d-1 positional in _coeffCores).
+        var storage = Internal.Sensitivity.ComputeSobolFromTtCores(_coeffCores!);
+
+        // Translate storage-frame keys → user-frame keys.
+        // _dimOrder[s] = u means storage position s holds original-dim u.
+        var userFirst = new double[_numDimensions];
+        var userTotal = new double[_numDimensions];
+        for (int s = 0; s < _numDimensions; s++)
+        {
+            int u = _dimOrder[s];
+            userFirst[u] = storage.FirstOrder[s];
+            userTotal[u] = storage.TotalOrder[s];
+        }
+        return new SobolResult(userFirst, userTotal, storage.Variance);
+    }
+
     /// <summary>
     /// Test-only accessor: returns the raw coefficient cores array.
     /// Visible to the test project via InternalsVisibleTo.
