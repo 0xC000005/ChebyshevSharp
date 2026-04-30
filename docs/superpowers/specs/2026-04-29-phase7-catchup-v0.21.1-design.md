@@ -4,7 +4,7 @@
 **Master spec section:** `docs/superpowers/specs/2026-04-27-pychebyshev-v0.20.1-port-design.md` (parity tag advances 0.20.1 → 0.21.1)
 **Upstream parity target:** PyChebyshev v0.21.1 (bundles upstream v0.21.0 + v0.21.1)
 **Worktree (planned):** `.worktrees/phase7-catchup-v0.21.1`
-**Test count progression:** 1018 → ~1100 (+82 expected, ±2 drift per task)
+**Test count progression:** 1030 → ~1112 (+82 expected, ±2 drift per task)
 **Predecessor:** Phase 6 / v0.10.0 (shipped 2026-04-29; commit `cd2195a`)
 
 ---
@@ -453,17 +453,17 @@ across the phase from defensive tests added during review or test consolidations
 
 | Task | Description | Δ tests | Total |
 |---|---|---|---|
-| 1 | Submodule bump + scaffold + version bump | 0 | 1018 |
-| 2 | Slider.To1DChebyshev + Slider.Roots | +6 | 1024 |
-| 3 | Slider.Minimize + Slider.Maximize | +10 | 1034 |
-| 4 | TT.Roots + TT.Minimize + TT.Maximize | +15 | 1049 |
-| 5 | TT.SobolIndices | +12 | 1061 |
-| 6 | TT.GetEvaluationPoints user-frame fix | +5 | 1066 |
-| 7 | TT.EvalMulti race fix | +5 | 1071 |
-| 8 | TT.InnerProduct mismatch + Integrate user-frame error | +6 | 1077 |
-| 9 | Algebra.CheckCompatible numerical tolerance | +5 | 1082 |
-| 10 | Perf: VectorizedEvalBatch hoist + _optimize_1d vectorized | +8 | 1090 |
-| 11 | Coverage gap fillers + docs | +10 | 1100 |
+| 1 | Submodule bump + scaffold + version bump | 0 | 1030 |
+| 2 | Slider.To1DChebyshev + Slider.Roots | +6 | 1036 |
+| 3 | Slider.Minimize + Slider.Maximize | +10 | 1046 |
+| 4 | TT.Roots + TT.Minimize + TT.Maximize | +15 | 1061 |
+| 5 | TT.SobolIndices | +12 | 1073 |
+| 6 | TT.GetEvaluationPoints user-frame fix | +5 | 1078 |
+| 7 | TT.EvalMulti race fix | +5 | 1083 |
+| 8 | TT.InnerProduct mismatch + Integrate user-frame error | +6 | 1089 |
+| 9 | Algebra.CheckCompatible numerical tolerance | +5 | 1094 |
+| 10 | Perf: VectorizedEvalBatch hoist + _optimize_1d vectorized | +8 | 1102 |
+| 11 | Coverage gap fillers + docs | +10 | 1112 |
 
 Allow ±2 drift per task per Phase 4–6 precedent.
 
@@ -566,7 +566,7 @@ batch; if numerical drift exceeds `1e-13`, investigate before merging.
 ## 10. Definition of Done
 
 - All 11 tasks complete with two-stage review approval.
-- `dotnet test` passes 1098–1102 (target 1100, ±2 drift permitted).
+- `dotnet test` passes 1108–1116 (target 1112, ±2 drift per task permitted across the phase).
 - Codecov patch coverage on Phase 7 additions ≥ 96% (Phase 6 baseline).
 - `dotnet build` zero warnings.
 - CLAUDE.md status updated with v0.11.0 + parity 0.21.1.
