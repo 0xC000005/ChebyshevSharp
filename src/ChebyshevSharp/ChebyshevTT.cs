@@ -1974,6 +1974,20 @@ public class ChebyshevTT
                 points[flat * ndim + d] = nodeArrays[d][indices[d]];
         }
 
+        // v0.21.1: permute columns by inverse _dimOrder so column k is the user-frame
+        // k-th coord (matches Approximation/Spline/Slider behavior).
+        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:2775-2800.
+        if (!IsIdentityDimOrder())
+        {
+            var inv = new int[ndim];
+            for (int s = 0; s < ndim; s++) inv[_dimOrder[s]] = s;
+            var permuted = new double[num * ndim];
+            for (int i = 0; i < num; i++)
+                for (int u = 0; u < ndim; u++)
+                    permuted[i * ndim + u] = points[i * ndim + inv[u]];
+            points = permuted;
+        }
+
         _evaluationPointsCache = points;
         return points;
     }
