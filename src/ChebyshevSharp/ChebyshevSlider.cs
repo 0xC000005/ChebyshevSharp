@@ -1060,6 +1060,54 @@ public class ChebyshevSlider
         return cheb1D.Roots();
     }
 
+    /// <summary>
+    /// Find the minimum value of the slider along a specified dimension.
+    /// Reduces to a 1-D problem by slicing all other dimensions to their fixed
+    /// values, then delegates to <see cref="ChebyshevApproximation.Minimize"/>.
+    /// </summary>
+    /// <param name="dim">Target dimension. For 1-D sliders, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// dims except <paramref name="dim"/>.</param>
+    /// <returns>Tuple <c>(value, location)</c> where value is the minimum and
+    /// location is its coordinate in the target dimension.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1226-1264</c>.
+    /// </remarks>
+    public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        if (!Built)
+            throw new InvalidOperationException("Call Build() first");
+
+        var (validatedDim, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+
+        var sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Minimize();
+    }
+
+    /// <summary>
+    /// Find the maximum value of the slider along a specified dimension.
+    /// See <see cref="Minimize"/> for parameter details.
+    /// </summary>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1266-1283</c>.
+    /// </remarks>
+    public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        if (!Built)
+            throw new InvalidOperationException("Call Build() first");
+
+        var (validatedDim, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+
+        var sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Maximize();
+    }
+
     // ------------------------------------------------------------------
     // Arithmetic operators
     // ------------------------------------------------------------------
