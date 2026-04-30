@@ -7,8 +7,6 @@ namespace ChebyshevSharp.Tests;
 
 public class SliderRootsTests
 {
-    private static readonly double Tolerance = 1e-8;
-
     [Fact]
     public void Test_1D_slider_finds_known_root()
     {
