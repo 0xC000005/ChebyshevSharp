@@ -216,4 +216,125 @@ public class TtDimOrderClusterTests
         var multi = tt.EvalMulti(pt, new[] { new[] { 0, 0, 0 }, new[] { 1, 0, 0 } });
         Assert.Equal(0.6, multi[0], precision: 4);  // f(0.1, 0.2, 0.3) = 0.6
     }
+
+    [Fact]
+    public void Test_inner_product_mismatched_dim_order_throws()
+    {
+        Func<double[], double> f = (p) => p[0] + p[1] + p[2];
+        var a = new ChebyshevTT(f, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10);
+        a.Build(seed: 42);
+
+        // b is the same TT reordered. inner_product on mismatched _dimOrder must throw.
+        var b = a.Reorder(new[] { 2, 0, 1 });
+
+        var ex = Assert.Throws<ArgumentException>(() => a.InnerProduct(b));
+        Assert.Contains("_dimOrder", ex.Message);
+        Assert.Contains("Reorder", ex.Message);
+    }
+
+    [Fact]
+    public void Test_inner_product_after_alignment_returns_correct_value()
+    {
+        // Same setup as above, but align via Reorder; result should be sensible.
+        Func<double[], double> f = (p) => p[0] + p[1] + p[2];
+        var a = new ChebyshevTT(f, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10);
+        a.Build(seed: 42);
+
+        var b = a.Reorder(new[] { 2, 0, 1 });
+        // Bring b back to a's dim order
+        var bAligned = b.Reorder(a.DimOrder);
+
+        double ip = a.InnerProduct(bAligned);
+        Assert.False(double.IsNaN(ip));
+        Assert.True(ip > 0);  // self-inner-product is positive
+    }
+
+    [Fact]
+    public void Test_inner_product_identity_dim_order_unchanged()
+    {
+        Func<double[], double> f = (p) => p[0] + p[1];
+        var a = new ChebyshevTT(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10);
+        a.Build(seed: 42);
+
+        // Same TT as itself, no reordering — must succeed.
+        double ip = a.InnerProduct(a);
+        Assert.False(double.IsNaN(ip));
+    }
+
+    [Fact]
+    public void Test_integrate_out_of_domain_error_uses_user_frame_dim()
+    {
+        // Build a TT with WithAutoOrder; the storage permutation may differ.
+        // Pass dims=[0] (user-frame) with out-of-domain bounds; the error
+        // message must reference dim 0, not the storage position.
+        Func<double[], double> f = (p) => p[0] + p[1] + p[2];
+        var tt = ChebyshevTT.WithAutoOrder(f, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10,
+            seed: 42,
+            method: "greedy_swap");
+
+        // [-2.0, 1.0] is outside [-1, 1].
+        var ex = Assert.Throws<ArgumentException>(() =>
+            tt.Integrate(dims: new[] { 0 }, bounds: new[] { (-2.0, 1.0) }));
+
+        // Must reference user-frame dim 0
+        Assert.Contains("dim 0", ex.Message);
+    }
+
+    [Fact]
+    public void Test_integrate_in_domain_succeeds_for_auto_order()
+    {
+        Func<double[], double> f = (p) => p[0] + p[1];
+        var tt = ChebyshevTT.WithAutoOrder(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10,
+            seed: 42,
+            method: "greedy_swap");
+
+        // Full integration of x + y over [-1,1]^2 = 0.
+        double result = (double)tt.Integrate();
+        Assert.Equal(0.0, result, precision: 6);
+    }
+
+    [Fact]
+    public void Test_integrate_user_frame_partial()
+    {
+        // Build TT with WithAutoOrder; integrate only dim 0 in user frame.
+        Func<double[], double> f = (p) => p[0] + 2 * p[1];
+        var tt = ChebyshevTT.WithAutoOrder(f, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 6, 6 },
+            maxRank: 4,
+            tolerance: 1e-10,
+            seed: 42,
+            method: "greedy_swap");
+
+        // ∫ (x + 2y) dx from -1 to 1 = (x²/2 + 2yx) | -1 to 1 = 0 + 4y = 4y.
+        // Result is a 1-D TT in dim 1.
+        var partial = tt.Integrate(dims: new[] { 0 });
+        Assert.NotNull(partial);
+        Assert.IsType<ChebyshevTT>(partial);
+
+        // Sample at y = 0.5: should be ~2.0.
+        var partialTt = (ChebyshevTT)partial!;
+        double atY05 = partialTt.Eval(new[] { 0.5 });
+        Assert.Equal(2.0, atY05, precision: 4);
+    }
 }

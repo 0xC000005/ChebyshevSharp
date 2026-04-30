@@ -734,6 +734,29 @@ public class ChebyshevTT
             Array.Sort(sortedStoragePos);
         }
 
+        // v0.21.1: pre-validate bounds against user-frame domain so error messages
+        // reference user-frame dim indices (issue #20). The downstream NormalizeBounds
+        // would otherwise report storage-frame indices when _dimOrder is non-identity.
+        // Python source: spec §4.5.
+        if (bounds != null && bounds.Length > 0)
+        {
+            if (bounds.Length != sortedUserDims.Length)
+                throw new ArgumentException(
+                    $"bounds length {bounds.Length} != dims length {sortedUserDims.Length}");
+            for (int i = 0; i < bounds.Length; i++)
+            {
+                int userDim = sortedUserDims[i];
+                int storageDim = Array.IndexOf(_dimOrder, userDim);
+                double lo = _domain[storageDim][0], hi = _domain[storageDim][1];
+                var bd = bounds[i];
+                if (bd.lo > bd.hi)
+                    throw new ArgumentException($"bounds lo={bd.lo} > hi={bd.hi} for dim {userDim}");
+                if (bd.lo < lo - 1e-14 || bd.hi > hi + 1e-14)
+                    throw new ArgumentException(
+                        $"bounds ({bd.lo}, {bd.hi}) outside domain [{lo}, {hi}] for dim {userDim}");
+            }
+        }
+
         // Validate bounds against storage-frame domain.
         // NormalizeBounds is positional with `bounds`, so we pass storagePosForBounds
         // (NOT sortedStoragePos — re-sorting would break the bounds[i] ↔ dim[i] pairing
@@ -1160,6 +1183,15 @@ public class ChebyshevTT
                 throw new ArgumentException(
                     $"InnerProduct requires matching domain at dim {d}; got [{_domain[d][0]}, {_domain[d][1]}] vs [{other._domain[d][0]}, {other._domain[d][1]}]");
         }
+        // v0.21.1: strict _dimOrder check. Two TTs with different _dimOrder represent
+        // the same underlying interpolant under different storage permutations; the
+        // raw core-by-core contraction is not the inner product of the interpolants.
+        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:1488-1495.
+        if (!_dimOrder.SequenceEqual(other._dimOrder))
+            throw new ArgumentException(
+                $"InnerProduct requires matching _dimOrder; " +
+                $"got [{string.Join(", ", _dimOrder)}] vs [{string.Join(", ", other._dimOrder)}]. " +
+                $"Call other.Reorder(self.DimOrder) first.");
         return TensorTrainAlgebra.InnerProductCores(_coeffCores!, other._coeffCores!);
     }
 
