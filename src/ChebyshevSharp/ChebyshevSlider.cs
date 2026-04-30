@@ -997,6 +997,70 @@ public class ChebyshevSlider
     }
 
     // ------------------------------------------------------------------
+    // Calculus: roots / minimize / maximize (via 1-D projection)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Build a 1-D ChebyshevApproximation from this 1-D Slider by evaluating at
+    /// Chebyshev Type-I nodes. Used by Roots to delegate to the existing 1-D
+    /// calculus primitives on ChebyshevApproximation.
+    /// </summary>
+    /// <remarks>
+    /// Precondition: this Slider must be 1-D (NumDimensions == 1). Call Slice()
+    /// to reduce a multi-D Slider to 1-D before calling this helper.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1138-1176</c>.
+    /// </remarks>
+    private ChebyshevApproximation To1DChebyshev()
+    {
+        if (NumDimensions != 1)
+            throw new InvalidOperationException(
+                $"To1DChebyshev requires a 1-D slider, got {NumDimensions}-D");
+
+        int n = NNodes[0];
+        double a = Domain[0][0];
+        double b = Domain[0][1];
+        double[] chebNodes = Internal.BarycentricKernel.MakeNodesForDim(a, b, n);
+
+        var zeroOrder = new int[] { 0 };
+        var values = new double[n];
+        for (int i = 0; i < n; i++)
+            values[i] = Eval(new[] { chebNodes[i] }, zeroOrder);
+
+        return ChebyshevApproximation.FromValues(
+            values,
+            numDimensions: 1,
+            domain: new[] { new[] { a, b } },
+            nNodes: new[] { n });
+    }
+
+    /// <summary>
+    /// Find all real roots of the slider along a specified dimension.
+    /// Reduces to a 1-D problem by slicing all other dimensions to their
+    /// fixed values, then delegates to <see cref="ChebyshevApproximation.Roots"/>.
+    /// </summary>
+    /// <param name="dim">Target dimension. For 1-D sliders, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D sliders, <c>{dim_index: value}</c>
+    /// for all dimensions except <paramref name="dim"/>.</param>
+    /// <returns>Sorted real root locations in the physical domain. Empty if no roots.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="dim"/> or <paramref name="fixedDims"/> validation fails.</exception>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1178-1224</c>.
+    /// </remarks>
+    public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        if (!Built)
+            throw new InvalidOperationException("Call Build() first");
+
+        var (validatedDim, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+
+        var sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Roots();
+    }
+
+    // ------------------------------------------------------------------
     // Arithmetic operators
     // ------------------------------------------------------------------
 
