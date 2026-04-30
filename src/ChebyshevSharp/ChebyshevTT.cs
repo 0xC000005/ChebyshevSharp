@@ -933,6 +933,160 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
+    // Roots / Minimize / Maximize (Phase 7 — PyChebyshev v0.21.1)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Return Domain reordered into user-frame indexing. For canonical
+    /// _dimOrder, this returns an array semantically equivalent to Domain.
+    /// For non-identity _dimOrder, _domain[s] is the storage-frame domain at
+    /// storage position s; user-frame dim u lives at storage position
+    /// Array.IndexOf(_dimOrder, u).
+    /// </summary>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1737-1747</c>.
+    /// </remarks>
+    private double[][] UserFrameDomain()
+    {
+        var result = new double[_numDimensions][];
+        for (int u = 0; u < _numDimensions; u++)
+        {
+            int s = Array.IndexOf(_dimOrder, u);
+            result[u] = _domain[s];
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Build a 1-D ChebyshevApproximation from this 1-D TT. Uses ToDense() to
+    /// extract the values vector (which already applies the inverse permutation
+    /// so values are in user frame), then constructs a ChebyshevApproximation
+    /// via FromValues.
+    /// </summary>
+    /// <remarks>
+    /// Precondition: this TT must be 1-D. Call Slice() to reduce a multi-D
+    /// TT to 1-D before calling this helper.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1704-1735</c>.
+    /// </remarks>
+    private ChebyshevApproximation To1DChebyshev()
+    {
+        if (_numDimensions != 1)
+            throw new InvalidOperationException(
+                $"To1DChebyshev requires a 1-D TT, got {_numDimensions}-D");
+
+        double[] values = ToDense();
+        double a = _domain[0][0];
+        double b = _domain[0][1];
+        return ChebyshevApproximation.FromValues(
+            values,
+            numDimensions: 1,
+            domain: new[] { new[] { a, b } },
+            nNodes: new[] { _nNodes[0] });
+    }
+
+    /// <summary>
+    /// Find all real roots of the TT-approximated function along a specified dimension.
+    /// Reduces to a 1-D problem by slicing all other dimensions to their fixed
+    /// values, then delegates to <see cref="ChebyshevApproximation.Roots"/>.
+    /// </summary>
+    /// <param name="dim">User-frame dimension. For 1-D TTs, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// user-frame dims except <paramref name="dim"/>. Validated against
+    /// user-frame domain.</param>
+    /// <returns>Sorted real root locations in the physical domain. Empty if no roots.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Under non-identity <see cref="DimOrder"/>, dim and fixedDims keys translate
+    /// to storage frame transparently inside <see cref="Slice"/> and
+    /// <see cref="ToDense"/>.
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1749-1790</c>.
+    /// </remarks>
+    public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        CheckBuilt();
+
+        var (_, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(_numDimensions, dim, fixedDims, UserFrameDomain());
+
+        // Sort descending by dim index so that each sequential Slice call sees
+        // valid user-frame indices even after earlier dims are removed.
+        // This mirrors the Python approach of sorting by descending storage
+        // position in tensor_train.py:2078.
+        var sortedParams = ((int dimIndex, double value)[])sliceParams.Clone();
+        Array.Sort(sortedParams, (a, b) => b.dimIndex.CompareTo(a.dimIndex));
+
+        ChebyshevTT sliced = this;
+        foreach (var (sliceDim, sliceValue) in sortedParams)
+            sliced = sliced.Slice(sliceDim, sliceValue);
+
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Roots();
+    }
+
+    /// <summary>
+    /// Find the minimum value of the TT along a user-frame dimension.
+    /// </summary>
+    /// <param name="dim">User-frame dimension. For 1-D TTs, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// user-frame dims except <paramref name="dim"/>. Validated against
+    /// user-frame domain.</param>
+    /// <returns>Tuple of (minimum value, location where minimum is achieved).</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1792-1831</c>.
+    /// </remarks>
+    public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        CheckBuilt();
+
+        var (_, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(_numDimensions, dim, fixedDims, UserFrameDomain());
+
+        var sortedParams = ((int dimIndex, double value)[])sliceParams.Clone();
+        Array.Sort(sortedParams, (a, b) => b.dimIndex.CompareTo(a.dimIndex));
+
+        ChebyshevTT sliced = this;
+        foreach (var (sliceDim, sliceValue) in sortedParams)
+            sliced = sliced.Slice(sliceDim, sliceValue);
+
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Minimize();
+    }
+
+    /// <summary>
+    /// Find the maximum value of the TT along a user-frame dimension.
+    /// </summary>
+    /// <param name="dim">User-frame dimension. For 1-D TTs, defaults to 0.</param>
+    /// <param name="fixedDims">For multi-D, <c>{dim_index: value}</c> for all
+    /// user-frame dims except <paramref name="dim"/>. Validated against
+    /// user-frame domain.</param>
+    /// <returns>Tuple of (maximum value, location where maximum is achieved).</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If validation fails.</exception>
+    /// <remarks>
+    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1833-1872</c>.
+    /// </remarks>
+    public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    {
+        CheckBuilt();
+
+        var (_, sliceParams) =
+            Internal.Calculus.ValidateCalculusArgs(_numDimensions, dim, fixedDims, UserFrameDomain());
+
+        var sortedParams = ((int dimIndex, double value)[])sliceParams.Clone();
+        Array.Sort(sortedParams, (a, b) => b.dimIndex.CompareTo(a.dimIndex));
+
+        ChebyshevTT sliced = this;
+        foreach (var (sliceDim, sliceValue) in sortedParams)
+            sliced = sliced.Slice(sliceDim, sliceValue);
+
+        var cheb1D = sliced.To1DChebyshev();
+        return cheb1D.Maximize();
+    }
+
+    // ------------------------------------------------------------------
     // Canonicalization (Phase 2 — PyChebyshev v0.13)
     // ------------------------------------------------------------------
 
