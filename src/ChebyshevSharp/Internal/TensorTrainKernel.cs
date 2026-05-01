@@ -273,7 +273,12 @@ internal static class TensorTrainKernel
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
         int d = grids.Length;
         int[] n = new int[d];
-        for (int i = 0; i < d; i++) n[i] = grids[i].Length;
+        for (int i = 0; i < d; i++)
+        {
+            n[i] = grids[i].Length;
+            if (n[i] <= 0)
+                throw new ArgumentException("Node counts must be positive.", nameof(grids));
+        }
 
         var cache = new Dictionary<TupleKey, double>();
 
@@ -739,7 +744,6 @@ internal static class TensorTrainKernel
         long product = 1;
         for (int i = startInclusive; i < endExclusive; i++)
         {
-            if (values[i] <= 0) return 0;
             if (product >= cap || product > cap / values[i])
                 return cap;
             product *= values[i];

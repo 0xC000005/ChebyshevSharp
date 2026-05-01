@@ -251,6 +251,22 @@ public class TensorTrainCorrectnessTests
     }
 
     [Fact]
+    public void Cross_MaxRank1_Uses_Capped_Rank_Products()
+    {
+        var tt = new ChebyshevTT(
+            x => x.Sum(),
+            3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 3, 3, 3 },
+            maxRank: 1,
+            maxSweeps: 1);
+
+        tt.Build(verbose: false, method: "cross", seed: 42);
+
+        Assert.All(tt.TtRanks, rank => Assert.Equal(1, rank));
+    }
+
+    [Fact]
     public void GetEvaluationPoints_For_Huge_TT_Throws_Clear_Overflow()
     {
         const int dim = 35;
@@ -267,6 +283,73 @@ public class TensorTrainCorrectnessTests
 
         ex = Assert.Throws<OverflowException>(() => tt.GetEvaluationPoints());
         Assert.Contains("full Chebyshev grid", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("svd", "TT-SVD")]
+    [InlineData("als", "TT-ALS")]
+    public void Full_Tensor_Build_Methods_Throw_Clear_Overflow_When_Grid_Exceeds_Int(string method, string caller)
+    {
+        var tt = new ChebyshevTT(
+            x => x.Sum(),
+            2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 50_000, 50_000 },
+            maxRank: 2,
+            maxSweeps: 1);
+
+        var ex = Assert.Throws<OverflowException>(() => tt.Build(verbose: false, method: method));
+        Assert.Contains(caller, ex.Message);
+        Assert.Contains("exceeding int.MaxValue", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("svd", "TT-SVD")]
+    [InlineData("als", "TT-ALS")]
+    public void Full_Tensor_Build_Methods_Throw_Clear_Overflow_When_Grid_Exceeds_Long(string method, string caller)
+    {
+        const int dim = 5;
+        var tt = new ChebyshevTT(
+            x => x.Sum(),
+            dim,
+            Enumerable.Range(0, dim).Select(_ => new[] { -1.0, 1.0 }).ToArray(),
+            Enumerable.Repeat(50_000, dim).ToArray(),
+            maxRank: 2,
+            maxSweeps: 1);
+
+        var ex = Assert.Throws<OverflowException>(() => tt.Build(verbose: false, method: method));
+        Assert.Contains(caller, ex.Message);
+        Assert.Contains("grid is too large", ex.Message);
+    }
+
+    [Fact]
+    public void TtSvd_Rejects_Zero_Length_Internal_Grid()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevSharp.Internal.TensorTrainKernel.TtSvd(
+                _ => 0.0,
+                new[] { Array.Empty<double>() },
+                maxRank: 1,
+                tol: 1e-6,
+                verbose: false));
+
+        Assert.Contains("Node counts must be positive", ex.Message);
+    }
+
+    [Fact]
+    public void TtCross_Rejects_Zero_Length_Internal_Grid()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevSharp.Internal.TensorTrainKernel.TtCross(
+                _ => 0.0,
+                new[] { Array.Empty<double>(), new[] { 0.0 } },
+                maxRank: 1,
+                tol: 1e-6,
+                maxSweeps: 1,
+                verbose: false,
+                seed: 42));
+
+        Assert.Contains("Node counts must be positive", ex.Message);
     }
 
     // ------------------------------------------------------------------
