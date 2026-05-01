@@ -222,6 +222,53 @@ public class TensorTrainCorrectnessTests
             $"7D error {Math.Abs(approx - exact):E2}");
     }
 
+    [Fact]
+    public void Cross_35D_N7_Does_Not_Overflow_Rank_Caps_Or_Diagnostics()
+    {
+        const int dim = 35;
+        Func<double[], double> f = x => x.Sum();
+        var tt = new ChebyshevTT(
+            f,
+            dim,
+            Enumerable.Range(0, dim).Select(_ => new[] { -1.0, 1.0 }).ToArray(),
+            Enumerable.Repeat(7, dim).ToArray(),
+            maxRank: 12,
+            tolerance: 1e-5,
+            maxSweeps: 1);
+
+        tt.Build(verbose: false, method: "cross", seed: 42);
+
+        Assert.True(tt.IsConstructionFinished());
+        Assert.True(tt.TotalBuildEvals > 0);
+        Assert.True(tt.CompressionRatio > 0);
+
+        string description = tt.ToString();
+        Assert.Contains("ChebyshevTT (35D, built)", description);
+        Assert.Contains("Compression:", description);
+        string compressionLine = description.Split('\n').Single(line => line.Contains("Compression:"));
+        string fullGridCount = compressionLine.Split("Compression:", StringSplitOptions.None)[1].Split("->", StringSplitOptions.None)[0];
+        Assert.DoesNotContain("-", fullGridCount);
+    }
+
+    [Fact]
+    public void GetEvaluationPoints_For_Huge_TT_Throws_Clear_Overflow()
+    {
+        const int dim = 35;
+        var tt = new ChebyshevTT(
+            x => x.Sum(),
+            dim,
+            Enumerable.Range(0, dim).Select(_ => new[] { -1.0, 1.0 }).ToArray(),
+            Enumerable.Repeat(7, dim).ToArray(),
+            maxRank: 12,
+            maxSweeps: 1);
+
+        var ex = Assert.Throws<OverflowException>(() => tt.GetNumEvaluationPoints());
+        Assert.Contains("full Chebyshev grid", ex.Message);
+
+        ex = Assert.Throws<OverflowException>(() => tt.GetEvaluationPoints());
+        Assert.Contains("full Chebyshev grid", ex.Message);
+    }
+
     // ------------------------------------------------------------------
     // 7. Save/load preserves all metadata
     // ------------------------------------------------------------------

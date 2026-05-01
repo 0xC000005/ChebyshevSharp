@@ -93,11 +93,10 @@ public class ChebyshevTT
         get
         {
             CheckBuilt();
-            long fullSize = 1;
-            for (int i = 0; i < _numDimensions; i++) fullSize *= _nNodes[i];
+            double fullSize = FullGridSizeAsDouble();
             int ttSize = 0;
             for (int i = 0; i < _coeffCores!.Length; i++) ttSize += _coeffCores[i].Size;
-            return (double)fullSize / ttSize;
+            return fullSize / ttSize;
         }
     }
 
@@ -203,8 +202,7 @@ public class ChebyshevTT
         var sw = Stopwatch.StartNew();
         _cachedErrorEstimate = null;
 
-        long fullTensorSize = 1;
-        for (int i = 0; i < _numDimensions; i++) fullTensorSize *= _nNodes[i];
+        double fullTensorSize = FullGridSizeAsDouble();
 
         if (verbose)
         {
@@ -264,8 +262,29 @@ public class ChebyshevTT
             for (int i = 0; i < _coeffCores.Length; i++) ttStorage += _coeffCores[i].Size;
             Console.WriteLine($"  Built in {_buildTime:F3}s ({nEvals:N0} function evaluations)");
             Console.WriteLine($"  TT ranks: [{string.Join(", ", _ttRanks)}]");
-            Console.WriteLine($"  Compression: {fullTensorSize:N0} -> {ttStorage:N0} elements ({(double)fullTensorSize / ttStorage:F1}x)");
+            Console.WriteLine($"  Compression: {fullTensorSize:N0} -> {ttStorage:N0} elements ({fullTensorSize / ttStorage:F1}x)");
         }
+    }
+
+    private double FullGridSizeAsDouble()
+    {
+        double total = 1.0;
+        for (int i = 0; i < _numDimensions; i++) total *= _nNodes[i];
+        return total;
+    }
+
+    private int FullGridSizeAsIntForMaterialization(string caller)
+    {
+        long total = 1;
+        for (int i = 0; i < _numDimensions; i++)
+        {
+            if (total > int.MaxValue / _nNodes[i])
+                throw new OverflowException(
+                    $"{caller} requires materializing the full Chebyshev grid, but the grid is too large. " +
+                    "Use sparse TT evaluation for high-dimensional tensors.");
+            total *= _nNodes[i];
+        }
+        return (int)total;
     }
 
     private void CheckBuilt()
@@ -1221,16 +1240,11 @@ public class ChebyshevTT
         for (int k = 0; k < _numDimensions; k++)
             grids[k] = BarycentricKernel.MakeNodesForDim(_domain[k][0], _domain[k][1], _nNodes[k]);
 
-        // Cache by mixed-radix flat index.
-        var cache = new Dictionary<long, double>();
-        long[] strides = new long[_numDimensions];
-        strides[_numDimensions - 1] = 1;
-        for (int i = _numDimensions - 2; i >= 0; i--) strides[i] = strides[i + 1] * _nNodes[i + 1];
+        var cache = new Dictionary<Internal.TupleKey, double>();
 
         Func<int[], double> evalsAt = idx =>
         {
-            long key = 0;
-            for (int i = 0; i < _numDimensions; i++) key += idx[i] * strides[i];
+            var key = new Internal.TupleKey(idx);
             if (!cache.TryGetValue(key, out double v))
             {
                 var pt = new double[_numDimensions];
@@ -1361,9 +1375,7 @@ public class ChebyshevTT
     public double[] ToDense()
     {
         CheckBuilt();
-        long total = 1;
-        for (int i = 0; i < _numDimensions; i++)
-            total = checked(total * _nNodes[i]);
+        long total = FullGridSizeAsIntForMaterialization(nameof(ToDense));
         if (total * 8 > int.MaxValue)
             throw new OverflowException(
                 $"ToDense would allocate {total} doubles ({total * 8} bytes), exceeding int.MaxValue. " +
@@ -1894,8 +1906,7 @@ public class ChebyshevTT
     public override string ToString()
     {
         string status = _built ? "built" : "not built";
-        long fullTensorSize = 1;
-        for (int i = 0; i < _numDimensions; i++) fullTensorSize *= _nNodes[i];
+        double fullTensorSize = FullGridSizeAsDouble();
 
         int maxDisplay = 6;
         string nodesStr, domainStr;
@@ -1970,9 +1981,7 @@ public class ChebyshevTT
     /// <returns>The total count of Chebyshev nodes across all dimensions.</returns>
     public int GetNumEvaluationPoints()
     {
-        int total = 1;
-        foreach (int n in _nNodes) total *= n;
-        return total;
+        return FullGridSizeAsIntForMaterialization(nameof(GetNumEvaluationPoints));
     }
 
     /// <summary>
