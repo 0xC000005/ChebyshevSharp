@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-05-01 — TT high-dimensional overflow fix ([#23](https://github.com/0xC000005/ChebyshevSharp/issues/23))
+
+### Fixed
+- `ChebyshevTT.Build(method: "cross")` no longer overflows rank-cap arithmetic or cache keys for high-dimensional grids such as `N=35`, `n=7`.
+- `ChebyshevTT` full-grid diagnostics no longer wrap fixed-width integer products for large tensor shapes.
+- Full-grid materialization paths now fail with clear overflow errors when the dense Chebyshev grid is too large.
+
+### CI
+- Added Codecov patch coverage policy for PRs.
+
 ## [0.11.0] - 2026-04-29 — Phase 7: catch-up to PyChebyshev v0.21.1
 
 Bundles upstream PyChebyshev v0.21.0 + v0.21.1 into one cohesive post-port maintenance
