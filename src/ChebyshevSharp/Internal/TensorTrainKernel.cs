@@ -273,16 +273,18 @@ internal static class TensorTrainKernel
         var rng = seed.HasValue ? new Random(seed.Value) : new Random();
         int d = grids.Length;
         int[] n = new int[d];
-        for (int i = 0; i < d; i++) n[i] = grids[i].Length;
+        for (int i = 0; i < d; i++)
+        {
+            n[i] = grids[i].Length;
+            if (n[i] <= 0)
+                throw new ArgumentException("Node counts must be positive.", nameof(grids));
+        }
 
-        // Eval cache: key = mixed-radix encoding of grid indices
-        var cache = new Dictionary<long, double>();
+        var cache = new Dictionary<TupleKey, double>();
 
         double EvalFunc(int[] gridIndices)
         {
-            long key = 0;
-            for (int dim = 0; dim < d; dim++)
-                key = key * n[dim] + gridIndices[dim];
+            var key = new TupleKey(gridIndices);
 
             if (!cache.TryGetValue(key, out double val))
             {
@@ -321,10 +323,8 @@ internal static class TensorTrainKernel
         rankCaps[0] = 1; rankCaps[d] = 1;
         for (int k = 1; k < d; k++)
         {
-            long leftSize = 1;
-            for (int i = 0; i < k; i++) leftSize *= n[i];
-            long rightSize = 1;
-            for (int i = k; i < d; i++) rightSize *= n[i];
+            long leftSize = ProductAtMost(n, 0, k, maxRank);
+            long rightSize = ProductAtMost(n, k, d, maxRank);
             rankCaps[k] = (int)Math.Min(maxRank, Math.Min(leftSize, rightSize));
         }
 
@@ -739,6 +739,39 @@ internal static class TensorTrainKernel
         return (cores, cache.Count);
     }
 
+    private static long ProductAtMost(int[] values, int startInclusive, int endExclusive, long cap)
+    {
+        long product = 1;
+        for (int i = startInclusive; i < endExclusive; i++)
+        {
+            if (product >= cap || product > cap / values[i])
+                return cap;
+            product *= values[i];
+        }
+        return product;
+    }
+
+    private static long FullGridSizeAsLong(int[] nNodes, string caller)
+    {
+        long total = 1;
+        for (int i = 0; i < nNodes.Length; i++)
+        {
+            if (nNodes[i] <= 0)
+                throw new ArgumentException("Node counts must be positive.", nameof(nNodes));
+            if (total > long.MaxValue / nNodes[i])
+                throw new OverflowException(
+                    $"{caller} requires materializing the full Chebyshev grid, but the grid is too large. " +
+                    "Use TT-Cross for high-dimensional sparse builds.");
+            total *= nNodes[i];
+        }
+
+        if (total > int.MaxValue)
+            throw new OverflowException(
+                $"{caller} requires materializing {total:N0} full Chebyshev grid points, exceeding int.MaxValue. " +
+                "Use TT-Cross for high-dimensional sparse builds.");
+        return total;
+    }
+
     // ------------------------------------------------------------------
     // TT-SVD — full tensor evaluation then sequential SVD decomposition
     // ------------------------------------------------------------------
@@ -759,8 +792,7 @@ internal static class TensorTrainKernel
         int[] n = new int[d];
         for (int i = 0; i < d; i++) n[i] = grids[i].Length;
 
-        long fullSize = 1;
-        for (int i = 0; i < d; i++) fullSize *= n[i];
+        long fullSize = FullGridSizeAsLong(n, "TT-SVD");
 
         if (verbose)
             Console.WriteLine($"  Building full tensor ({fullSize:N0} evaluations)...");
@@ -1328,21 +1360,11 @@ internal static class TensorTrainKernel
         for (int i = 0; i < d; i++) nNodes[i] = grids[i].Length;
 
         var rng = randomState.HasValue ? new Random(randomState.Value) : new Random();
-        var cache = new Dictionary<long, double>();
-        long[] strides = new long[d];
-        strides[d - 1] = 1;
-        for (int i = d - 2; i >= 0; i--) strides[i] = strides[i + 1] * nNodes[i + 1];
-
-        long Key(int[] idx)
-        {
-            long key = 0;
-            for (int i = 0; i < d; i++) key += idx[i] * strides[i];
-            return key;
-        }
+        var cache = new Dictionary<TupleKey, double>();
 
         Func<int[], double> evalsAt = idx =>
         {
-            long key = Key(idx);
+            var key = new TupleKey(idx);
             if (!cache.TryGetValue(key, out double v))
             {
                 var pt = new double[d];
@@ -1354,8 +1376,7 @@ internal static class TensorTrainKernel
         };
 
         // Materialize target tensor once.
-        long total = 1;
-        for (int i = 0; i < d; i++) total = checked(total * nNodes[i]);
+        long total = FullGridSizeAsLong(nNodes, "TT-ALS");
         int totalInt = checked((int)total);
         double[] target = new double[totalInt];
         int[] tmp = new int[d];
