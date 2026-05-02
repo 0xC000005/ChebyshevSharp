@@ -19,6 +19,8 @@
     <PackageTags>chebyshev;interpolation;barycentric;numerical;tensor;derivatives</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>0.11.1</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup>
