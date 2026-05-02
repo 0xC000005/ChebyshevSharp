@@ -52,6 +52,9 @@ The algorithm converges when the relative approximation error drops below the sp
 
 TT-SVD evaluates the function on the full tensor grid, then decomposes it via sequential truncated SVD (Oseledets 2011). This is deterministic and produces the optimal rank-$r$ approximation in the Frobenius norm, but requires $n^d$ function evaluations. Use TT-SVD only when the full grid is feasible (typically $d \leq 6$) and you need a deterministic reference or the best possible accuracy at a given rank.
 
+> **Dense-grid guard.**
+> TT-Cross is the production path for high-dimensional tensors. TT-SVD, `FromValues`, and `ToDense()` intentionally validate dense element counts and byte sizes before allocation. A shape such as 35 nodes in 7 dimensions is a reasonable TT-Cross target but an invalid dense materialization target; ChebyshevSharp throws a clear overflow error instead of wrapping fixed-width products or attempting an impossible allocation.
+
 ## Quick Start
 
 ```csharp
@@ -275,8 +278,9 @@ var tt = ChebyshevTT.FromValues(dense, 2,
 double[] flat = tt.ToDense();   // row-major Π nNodes
 ```
 
-Throws `OverflowException` if `Π nNodes * 8 > int.MaxValue`. Use for
-inspection / round-trip testing, not high-D production.
+Throws `OverflowException` if the dense shape or byte count exceeds supported
+array limits. Use for inspection and round-trip testing, not high-dimensional
+production workflows.
 
 ## Slicing & Extrusion — `Slice` / `Extrude`
 
@@ -362,6 +366,8 @@ After the TT decomposition produces value cores (containing function values at C
 Evaluation then contracts the Chebyshev polynomial vectors $[T_0(x), T_1(x), \ldots, T_{n-1}(x)]$ against the coefficient cores, which is a standard TT inner product.
 
 ## References
+
+See [Citations](citations.md) for DOI links and citation-style guidance.
 
 1. Oseledets, I. V. (2011). "Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 33(5):2295--2317.
 2. Oseledets, I. V. & Tyrtyshnikov, E. E. (2010). "TT-cross approximation for multidimensional arrays." *Linear Algebra and its Applications* 432(1):70--88.

@@ -8,4 +8,8 @@
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/ChebyshevSharp.Benchmarks/ChebyshevSharp.Benchmarks.csproj" />
   </Folder>
+  <Folder Name="/examples/">
+    <Project Path="examples/QuickStart/QuickStart.csproj" />
+    <Project Path="examples/TensorTrainHighDim/TensorTrainHighDim.csproj" />
+  </Folder>
 </Solution>
