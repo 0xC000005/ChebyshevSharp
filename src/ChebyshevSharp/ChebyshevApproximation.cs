@@ -240,9 +240,10 @@ public class ChebyshevApproximation
     /// </summary>
     internal void BuildFixedGrid(bool verbose = true)
     {
-        int total = 1;
-        for (int d = 0; d < NumDimensions; d++)
-            total *= NNodes[d];
+        int total = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(NNodes, nameof(BuildFixedGrid)),
+            nameof(BuildFixedGrid),
+            NNodes);
 
         if (verbose)
             Console.WriteLine($"Building {NumDimensions}D Chebyshev approximation ({total:N0} evaluations)...");
@@ -332,9 +333,9 @@ public class ChebyshevApproximation
             else
             {
                 // Compute size of leading dimensions
-                int leadSize = 1;
-                for (int i = 0; i < d; i++)
-                    leadSize *= currentShape[i];
+                int leadSize = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(currentShape.Take(d), nameof(Eval)),
+                    nameof(Eval));
 
                 // Contract dimension d
                 double[] next = new double[leadSize];
@@ -674,9 +675,10 @@ public class ChebyshevApproximation
         {
             double maxErrThisDim = 0.0;
             int[] otherShape = NNodes.Where((_, i) => i != d).ToArray();
-            int otherTotal = 1;
-            for (int i = 0; i < otherShape.Length; i++)
-                otherTotal *= otherShape[i];
+            int otherTotal = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(otherShape, nameof(ErrorEstimatePerDim)),
+                nameof(ErrorEstimatePerDim),
+                otherShape);
 
             for (int otherFlat = 0; otherFlat < otherTotal; otherFlat++)
             {
@@ -929,15 +931,16 @@ public class ChebyshevApproximation
                 $"len(domain)={domain.Length} and len(nNodes)={nNodes.Length} " +
                 $"must both equal numDimensions={numDimensions}");
 
+        int totalPoints = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(nNodes, nameof(Nodes)),
+            nameof(Nodes),
+            nNodes);
+
         double[][] nodesPerDim = new double[numDimensions][];
         for (int d = 0; d < numDimensions; d++)
             nodesPerDim[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
 
         // Build full grid (Cartesian product, C-order)
-        int totalPoints = 1;
-        for (int d = 0; d < numDimensions; d++)
-            totalPoints *= nNodes[d];
-
         double[][] fullGrid = new double[totalPoints][];
         int[] indices = new int[numDimensions];
         for (int flat = 0; flat < totalPoints; flat++)
@@ -978,9 +981,10 @@ public class ChebyshevApproximation
                 $"len(domain)={domain.Length} and len(nNodes)={nNodes.Length} " +
                 $"must both equal numDimensions={numDimensions}");
 
-        int expectedTotal = 1;
-        for (int d = 0; d < numDimensions; d++)
-            expectedTotal *= nNodes[d];
+        int expectedTotal = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(nNodes, nameof(FromValues)),
+            nameof(FromValues),
+            nNodes);
 
         if (tensorValues.Length != expectedTotal)
             throw new ArgumentException(
@@ -1393,9 +1397,7 @@ public class ChebyshevApproximation
     public override string ToString()
     {
         bool built = TensorValues != null;
-        int totalNodes = 1;
-        for (int d = 0; d < NumDimensions; d++)
-            totalNodes *= NNodes[d];
+        long totalNodes = TensorShape.CheckedProduct(NNodes, nameof(ToString));
         string status = built ? "built" : "not built";
 
         int maxDisplay = 6;
@@ -1452,7 +1454,11 @@ public class ChebyshevApproximation
             int rows = DiffMatrices[d].GetLength(0);
             int cols = DiffMatrices[d].GetLength(1);
             // Transpose and flatten in one pass (row-major)
-            var flat = new double[rows * cols];
+            int flatLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { rows, cols }, nameof(PrecomputeTransposedDiffMatrices)),
+                nameof(PrecomputeTransposedDiffMatrices),
+                new[] { rows, cols });
+            var flat = new double[flatLength];
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < cols; j++)
                     flat[j * rows + i] = DiffMatrices[d][i, j];
@@ -1470,7 +1476,9 @@ public class ChebyshevApproximation
         int[] strides = new int[ndim];
         strides[ndim - 1] = 1;
         for (int i = ndim - 2; i >= 0; i--)
-            strides[i] = strides[i + 1] * shape[i + 1];
+            strides[i] = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(shape.Skip(i + 1), nameof(Extract1DSlice)),
+                nameof(Extract1DSlice));
 
         // Decompose otherFlat into multi-index for other dimensions
         int[] otherStrides = new int[otherShape.Length];
@@ -1478,7 +1486,9 @@ public class ChebyshevApproximation
         {
             otherStrides[otherShape.Length - 1] = 1;
             for (int i = otherShape.Length - 2; i >= 0; i--)
-                otherStrides[i] = otherStrides[i + 1] * otherShape[i + 1];
+                otherStrides[i] = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(otherShape.Skip(i + 1), nameof(Extract1DSlice)),
+                    nameof(Extract1DSlice));
         }
 
         int baseIdx = 0;
@@ -1504,7 +1514,11 @@ public class ChebyshevApproximation
     {
         int rows = matrix.GetLength(0);
         int cols = matrix.GetLength(1);
-        double[] flat = new double[rows * cols];
+        int flatLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { rows, cols }, nameof(Flatten2D)),
+            nameof(Flatten2D),
+            new[] { rows, cols });
+        double[] flat = new double[flatLength];
         for (int i = 0; i < rows; i++)
             for (int j = 0; j < cols; j++)
                 flat[i * cols + j] = matrix[i, j];
@@ -1558,9 +1572,10 @@ public class ChebyshevApproximation
     /// <returns>The total count of Chebyshev nodes in the tensor grid.</returns>
     public int GetNumEvaluationPoints()
     {
-        int total = 1;
-        foreach (int n in NNodes) total *= n;
-        return total;
+        return TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(NNodes, nameof(GetNumEvaluationPoints)),
+            nameof(GetNumEvaluationPoints),
+            NNodes);
     }
 
     /// <summary>
@@ -1574,7 +1589,11 @@ public class ChebyshevApproximation
 
         int num = GetNumEvaluationPoints();
         int ndim = NumDimensions;
-        var points = new double[num * ndim];
+        int coordinateCount = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { num, ndim }, nameof(GetEvaluationPoints)),
+            nameof(GetEvaluationPoints),
+            new[] { num, ndim });
+        var points = new double[coordinateCount];
         var indices = new int[ndim];
 
         for (int flat = 0; flat < num; flat++)
@@ -1610,8 +1629,10 @@ public class ChebyshevApproximation
     /// <exception cref="ArgumentException">Thrown when values length does not match the expected product of nNodes.</exception>
     public void SetOriginalFunctionValues(double[] values)
     {
-        int expected = 1;
-        for (int d = 0; d < NumDimensions; d++) expected *= NNodes[d];
+        int expected = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(NNodes, nameof(SetOriginalFunctionValues)),
+            nameof(SetOriginalFunctionValues),
+            NNodes);
         if (values.Length != expected)
             throw new ArgumentException(
                 $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", NNodes)}]");

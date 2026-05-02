@@ -26,7 +26,10 @@ internal static class TensorTrainExtrude
 
         for (int k = 0; k < d - 1; k++)
         {
-            int rows = rPrev * nNodes[k];
+            int rows = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { rPrev, nNodes[k] }, nameof(FromValuesTtSvd)),
+                nameof(FromValuesTtSvd),
+                new[] { rPrev, nNodes[k] });
             int cols = C.Length / rows;
             // Build MathNet matrix from C (flat row-major)
             var Cm = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.Create(rows, cols, 0.0);
@@ -62,7 +65,11 @@ internal static class TensorTrainExtrude
             cores[k] = core;
 
             // C = diag(S[:rank]) @ Vt[:rank, :]
-            var newC = new double[rank * cols];
+            int newCLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { rank, cols }, nameof(FromValuesTtSvd)),
+                nameof(FromValuesTtSvd),
+                new[] { rank, cols });
+            var newC = new double[newCLength];
             for (int r = 0; r < rank; r++)
                 for (int j = 0; j < cols; j++)
                     newC[r * cols + j] = S[r] * Vt[r, j];
@@ -152,7 +159,11 @@ internal static class TensorTrainExtrude
             if (abs < minAbs) { minAbs = abs; exactIdx = j; }
         }
 
-        double[] M = new double[rL * rR];
+        int matrixLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { rL, rR }, nameof(SliceCores)),
+            nameof(SliceCores),
+            new[] { rL, rR });
+        double[] M = new double[matrixLength];
         if (minAbs < 1e-14)
         {
             // Fast path: value coincides with a node — just take a slice.

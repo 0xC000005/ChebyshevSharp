@@ -275,14 +275,12 @@ public class ChebyshevTT
 
     private int FullGridSizeAsIntForMaterialization(string caller)
     {
-        long total = 1;
-        for (int i = 0; i < _numDimensions; i++)
+        long total = TensorShape.ProductAtMost(_nNodes, int.MaxValue);
+        if (total > int.MaxValue)
         {
-            if (total > int.MaxValue / _nNodes[i])
-                throw new OverflowException(
-                    $"{caller} requires materializing the full Chebyshev grid, but the grid is too large. " +
-                    "Use sparse TT evaluation for high-dimensional tensors.");
-            total *= _nNodes[i];
+            throw new OverflowException(
+                $"{caller} requires materializing the full Chebyshev grid, but the grid is too large. " +
+                "Use sparse TT evaluation for high-dimensional tensors.");
         }
         return (int)total;
     }
@@ -348,7 +346,11 @@ public class ChebyshevTT
             // Contract: v[i,k] = sum_j q[j] * core[i,j,k]
             var core = _coeffCores![d];
             int rRight = core.RRight;
-            double[] v = new double[resultRows * rRight];
+            int vLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { resultRows, rRight }, nameof(Eval)),
+                nameof(Eval),
+                new[] { resultRows, rRight });
+            double[] v = new double[vLength];
 
             for (int i = 0; i < resultRows; i++)
                 for (int k = 0; k < rRight; k++)
@@ -423,7 +425,11 @@ public class ChebyshevTT
             int rRight = core.RRight;
 
             // Compute Q[n, j] = T_j(scaled_n) for all n
-            double[] Q = new double[N * nk]; // Q[n * nk + j]
+            int qLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { N, nk }, nameof(EvalBatch)),
+                nameof(EvalBatch),
+                new[] { N, nk });
+            double[] Q = new double[qLength]; // Q[n * nk + j]
             for (int nn = 0; nn < N; nn++)
             {
                 double scaled = 2.0 * (points[nn, d] - a) / (b - a) - 1.0;
@@ -433,7 +439,11 @@ public class ChebyshevTT
             }
 
             // V[n,i,k] = sum_j Q[n,j] * core[i,j,k]
-            double[] V = new double[N * rLeft * rRight];
+            int vLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { N, rLeft, rRight }, nameof(EvalBatch)),
+                nameof(EvalBatch),
+                new[] { N, rLeft, rRight });
+            double[] V = new double[vLength];
             for (int nn = 0; nn < N; nn++)
                 for (int i = 0; i < rLeft; i++)
                     for (int k = 0; k < rRight; k++)
@@ -446,7 +456,11 @@ public class ChebyshevTT
 
             // newResult[n, k] = sum_j result[n, j] * V[n, j, k]
             // result is (N, resultCols), V is (N, rLeft, rRight), rLeft == resultCols
-            double[] newResult = new double[N * rRight];
+            int newResultLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { N, rRight }, nameof(EvalBatch)),
+                nameof(EvalBatch),
+                new[] { N, rRight });
+            double[] newResult = new double[newResultLength];
             for (int nn = 0; nn < N; nn++)
                 for (int k = 0; k < rRight; k++)
                 {
@@ -1318,8 +1332,7 @@ public class ChebyshevTT
         if (nNodes.Length != numDimensions)
             throw new ArgumentException(
                 $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
-        long expected = 1;
-        for (int i = 0; i < numDimensions; i++) expected = checked(expected * nNodes[i]);
+        long expected = TensorShape.CheckedProduct(nNodes, nameof(FromValues));
         if (tensorValues.LongLength != expected)
             throw new ArgumentException(
                 $"tensorValues has shape mismatch: length {tensorValues.LongLength} but expected Π nNodes = {expected}");
@@ -1375,10 +1388,11 @@ public class ChebyshevTT
     public double[] ToDense()
     {
         CheckBuilt();
-        long total = FullGridSizeAsIntForMaterialization(nameof(ToDense));
-        if (total * 8 > int.MaxValue)
+        int total = FullGridSizeAsIntForMaterialization(nameof(ToDense));
+        long byteSize = TensorShape.CheckedByteSize(total, sizeof(double), nameof(ToDense));
+        if (byteSize > int.MaxValue)
             throw new OverflowException(
-                $"ToDense would allocate {total} doubles ({total * 8} bytes), exceeding int.MaxValue. " +
+                $"ToDense would allocate {total} doubles ({byteSize} bytes), exceeding int.MaxValue. " +
                 "Use ToDense for low-dimensional inspection only.");
 
         var dense = TensorTrainExtrude.ToDenseEinsumChain(_coeffCores!, _nNodes);
@@ -2001,7 +2015,11 @@ public class ChebyshevTT
         for (int d = 0; d < ndim; d++)
             nodeArrays[d] = BarycentricKernel.MakeNodesForDim(_domain[d][0], _domain[d][1], _nNodes[d]);
 
-        var points = new double[num * ndim];
+        int coordinateCount = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { num, ndim }, nameof(GetEvaluationPoints)),
+            nameof(GetEvaluationPoints),
+            new[] { num, ndim });
+        var points = new double[coordinateCount];
         var indices = new int[ndim];
 
         for (int flat = 0; flat < num; flat++)
@@ -2023,7 +2041,7 @@ public class ChebyshevTT
         {
             var inv = new int[ndim];
             for (int s = 0; s < ndim; s++) inv[_dimOrder[s]] = s;
-            var permuted = new double[num * ndim];
+            var permuted = new double[coordinateCount];
             for (int i = 0; i < num; i++)
                 for (int u = 0; u < ndim; u++)
                     permuted[i * ndim + u] = points[i * ndim + inv[u]];

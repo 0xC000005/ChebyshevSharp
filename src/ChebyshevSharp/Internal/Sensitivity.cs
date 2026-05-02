@@ -52,10 +52,12 @@ internal static class Sensitivity
         for (int d = 0; d < nDim; d++)
         {
             int n = shape[d];
-            int outer = 1;
-            for (int k = 0; k < d; k++) outer *= shape[k];
-            int inner = 1;
-            for (int k = d + 1; k < nDim; k++) inner *= shape[k];
+            int outer = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(shape.Take(d), nameof(ChebyshevCoefficientsND)),
+                nameof(ChebyshevCoefficientsND));
+            int inner = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(shape.Skip(d + 1), nameof(ChebyshevCoefficientsND)),
+                nameof(ChebyshevCoefficientsND));
 
             var slice = new double[n];
             for (int o = 0; o < outer; o++)

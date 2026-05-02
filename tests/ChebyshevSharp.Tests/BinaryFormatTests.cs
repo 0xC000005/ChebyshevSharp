@@ -778,6 +778,22 @@ public class PcbFormatDefensiveTests
         Assert.Contains("tensorValues", ex.Message);
     }
 
+    [Fact]
+    public void Test_write_approx_body_rejects_overflowing_tensor_shape()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<OverflowException>(() =>
+            PcbFormat.WriteApproximationBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 }, new[] { 0.0, 1.0 } },
+                nNodes: new[] { 46341, 46341 },
+                tensorValues: new double[1]));
+
+        Assert.Contains("WriteApproximationBody", ex.Message);
+        Assert.Contains("46341", ex.Message);
+    }
+
     // --- ReadApproximationBody malformed-input rejection ---
 
     [Fact]
@@ -861,6 +877,23 @@ public class PcbFormatDefensiveTests
                     new double[5]                           // wrong length
                 }));
         Assert.Contains("piece tensor length", ex.Message);
+    }
+
+    [Fact]
+    public void Test_write_spline_body_rejects_overflowing_piece_tensor_shape()
+    {
+        using var ms = new MemoryStream();
+        using var w = new BinaryWriter(ms);
+        var ex = Assert.Throws<OverflowException>(() =>
+            PcbFormat.WriteSplineBody(
+                w,
+                domain: new[] { new[] { 0.0, 1.0 }, new[] { 0.0, 1.0 } },
+                nNodes: new[] { 46341, 46341 },
+                knotsPerDim: new[] { Array.Empty<double>(), Array.Empty<double>() },
+                pieceTensorValues: new[] { new double[1] }));
+
+        Assert.Contains("WriteSplineBody", ex.Message);
+        Assert.Contains("46341", ex.Message);
     }
 
     // --- ReadSplineBody malformed-input rejection ---
