@@ -2184,10 +2184,12 @@ public class ChebyshevTT
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Compute first-order + total-order Sobol sensitivity indices natively
-    /// from the TT coefficient cores. O(d · n · r²) per dim, no dense materialization.
+    /// Compute first-order + total-order variance-based sensitivity indices natively
+    /// from the TT coefficient cores. The variance is with respect to the Chebyshev
+    /// orthogonality weight on the normalized domain. O(d · n · r²) per dim,
+    /// no dense materialization.
     /// </summary>
-    /// <returns><see cref="SobolResult"/> with arrays keyed by user-frame dim indices.</returns>
+    /// <returns><see cref="SobolResult"/> with arrays keyed by user-frame dim indices and Chebyshev-weighted total Variance.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     /// <remarks>
     /// Mathematically equivalent to <see cref="ChebyshevApproximation.SobolIndices"/>

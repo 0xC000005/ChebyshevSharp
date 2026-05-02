@@ -59,6 +59,7 @@ double dfdx = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 | Understand convergence and derivatives | [Mathematical Concepts](docs/concepts.md) |
 | Build high-dimensional coupled approximations | [Tensor Train Interpolation](docs/tensor-train.md) |
 | Validate changes locally | [Testing & Validation](docs/testing-and-validation.md) |
+| Contribute code or docs | [Contributing](docs/contributing.md) |
 | Check algorithm sources | [Citations](docs/citations.md) |
 
 ## API Reference

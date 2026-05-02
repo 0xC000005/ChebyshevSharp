@@ -16,8 +16,20 @@ items:
   - uid: ChebyshevSharp.ChebyshevTT
     name: ChebyshevTT
     type: Class
+  - uid: ChebyshevSharp.Domain
+    name: Domain
+    type: Class
   - uid: ChebyshevSharp.NodeInfo
     name: NodeInfo
+    type: Class
+  - uid: ChebyshevSharp.Ns
+    name: Ns
+    type: Class
+  - uid: ChebyshevSharp.SobolResult
+    name: SobolResult
+    type: Class
+  - uid: ChebyshevSharp.SpecialPoints
+    name: SpecialPoints
     type: Class
   - uid: ChebyshevSharp.SplineNodeInfo
     name: SplineNodeInfo

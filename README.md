@@ -144,6 +144,13 @@ Full documentation is available at **[0xc000005.github.io/ChebyshevSharp](https:
 - [Citations](https://0xc000005.github.io/ChebyshevSharp/docs/citations.html)
 - [API Reference](https://0xc000005.github.io/ChebyshevSharp/api/ChebyshevSharp.html)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, required
+checks, Codecov policy, Stryker.NET mutation-testing expectations, and PR
+checklist. For a shorter site version, see
+[Contributing](https://0xc000005.github.io/ChebyshevSharp/docs/contributing.html).
+
 ## License
 
 MIT

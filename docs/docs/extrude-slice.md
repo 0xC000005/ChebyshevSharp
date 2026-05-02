@@ -36,7 +36,7 @@ form the bridge between Chebyshev proxies on heterogeneous risk-factor sets.
 The barycentric basis functions satisfy a fundamental identity:
 
 $$
-\sum_{j=0}^{n} \ell_j(x) = 1
+\sum_{j=0}^{n-1} \ell_j(x) = 1
 $$
 
 for all $x$ in the domain. This is because any polynomial interpolation scheme
@@ -125,7 +125,7 @@ $\sum_j v \cdot \ell_j(x^*) = v \cdot 1 = v$.
 
 > **Book reference:** Extrusion and slicing of Chebyshev Tensors is described
 > in Section 24.2.1, Listing 24.15 (slice) and Listing 24.16 (extrude) of
-> Ruiz & Zeron (2021), *Machine Learning for Risk Calculations*, Wiley Finance.
+> Ruiz & Zeron (2022), *Machine Learning for Risk Calculations: A Practitioner's View*, Wiley Finance.
 
 ## Quick Start
 
@@ -164,7 +164,7 @@ double price = portfolio.VectorizedEval(
 | `ChebyshevApproximation` | Yes | Yes |
 | `ChebyshevSpline` | Yes | Yes |
 | `ChebyshevSlider` | Yes | Yes |
-| `ChebyshevTT` | No | No |
+| `ChebyshevTT` | Yes | Yes |
 
 ## Extrude API
 
@@ -356,10 +356,23 @@ When slicing a slider, two cases arise:
 
 See [Sliding Technique](slider.md) for details.
 
+### ChebyshevTT
+
+`ChebyshevTT.Extrude(dim, newDomain, newN)` inserts a constant coefficient core
+for the new dimension, preserving the represented function while expanding the
+domain. `ChebyshevTT.Slice(dim, value)` converts the target core to value space,
+evaluates the barycentric basis at `value`, and absorbs the resulting matrix into
+the adjacent core. Both operations avoid materializing the original dense grid.
+
+```csharp
+var tt3d = tt2d.Extrude(2, (0.0, 1.0), 9);
+var tt1d = tt3d.Slice(1, 0.25);
+```
+
+See [Tensor Train Interpolation](tensor-train.md) for details.
+
 ## Limitations
 
-- **No `ChebyshevTT` support** -- extrusion and slicing for Tensor Train
-  interpolants are not currently implemented.
 - **Operand must be built** -- `Build()` must have been called before
   calling `Extrude()` or `Slice()`.
 - **No cross-type operations** -- you cannot extrude a `ChebyshevSpline`
@@ -371,7 +384,7 @@ See [Sliding Technique](slider.md) for details.
 
 - Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation."
   *SIAM Review* 46(3):501--517.
-- Ruiz, G. & Zeron, M. (2021). *Machine Learning for Risk Calculations.*
+- Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.*
   Wiley Finance. Section 24.2.1.
 - Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.*
   SIAM. Chapter 8.

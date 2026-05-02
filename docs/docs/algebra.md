@@ -68,7 +68,8 @@ $$
 For scalar multiplication: $\|cf - cp_f\|_\infty = |c| \cdot \epsilon_f$.
 
 The linearity of Chebyshev Tensor operations is described in Section 3.9 of Ruiz
-& Zeron (2021), *Machine Learning for Risk Calculations*, Wiley Finance.
+& Zeron (2022), *Machine Learning for Risk Calculations: A Practitioner's View*,
+Wiley Finance.
 
 ## Quick Start
 
@@ -138,6 +139,8 @@ Additional requirements for specific classes:
 
 - **`ChebyshevSpline`**: same `Knots` in every dimension
 - **`ChebyshevSlider`**: same `Partition` and same `PivotPoint`
+- **`ChebyshevTT`**: same `DimOrder`; call `Reorder()` first when two TTs
+  store the same user dimensions in different TT positions
 
 An exception is thrown if any of these conditions are not met:
 
@@ -161,7 +164,8 @@ var c = a + b;  // throws ArgumentException: domain mismatch
 
 ## Derivatives
 
-Derivatives propagate automatically through algebraic operations. The combined
+For `ChebyshevApproximation`, `ChebyshevSpline`, and `ChebyshevSlider`,
+derivatives propagate automatically through algebraic operations. The combined
 interpolant inherits the spectral differentiation matrices from its operands, so
 no re-computation is needed:
 
@@ -183,6 +187,10 @@ double gamma = portfolio.VectorizedEval(point, new[] { 2, 0, 0 });
 This follows directly from the linearity corollary: the spectral differentiation
 matrices $\mathcal{D}_k$ depend only on grid positions, not on function values.
 See [Computing Greeks](greeks.md) for more on analytical derivatives.
+
+`ChebyshevTT` algebra combines coefficient cores for function values. TT
+derivatives continue to use the `EvalMulti` finite-difference path on the
+combined TT.
 
 ## Error Estimation
 
@@ -270,6 +278,16 @@ double val = combined.Eval(new[] { 0.5, 0.5, 0.5, 0.5, 0.5 }, new[] { 0, 0, 0, 0
 
 Each slide is combined independently, preserving the additive decomposition structure.
 
+### ChebyshevTT Addition
+
+Two TTs with the same domain, node counts, and `DimOrder` can be added or
+subtracted. The result is rounded with TT-SVD to the larger operand `maxRank`.
+
+```csharp
+var combined = ttA + ttB;
+var aligned = ttA + ttB.Reorder(ttA.DimOrder);
+```
+
 ## Why Pointwise Products are NOT Supported
 
 The product $f \cdot g$ is **not** $\mathbf{v}_f \odot \mathbf{v}_g$ (element-wise product of grid
@@ -287,8 +305,9 @@ grid refinement step and is not supported.
 
 ## Limitations
 
-- **No `ChebyshevTT` operators** -- TT addition requires rank control (rank of
-  $T_f + T_g$ is $r_f + r_g$) and is not currently implemented.
+- **TT binary operators are rank-rounded** -- `ChebyshevTT` supports scalar
+  arithmetic and pointwise `+` / `-` on compatible TT grids. Pointwise products
+  are still not supported.
 - **No cross-type operations** -- you cannot add a `ChebyshevApproximation` to a
   `ChebyshevSpline` or a `ChebyshevSlider`.
 - **Operands must share exact grid parameters** -- domain, node counts, derivative
@@ -300,5 +319,5 @@ grid refinement step and is not supported.
 
 - Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation."
   *SIAM Review* 46(3):501--517.
-- Ruiz, G. & Zeron, M. (2021). *Machine Learning for Risk Calculations.*
+- Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.*
   Wiley Finance. Section 3.9.

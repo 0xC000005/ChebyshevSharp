@@ -25,6 +25,7 @@ f(\mathbf{x}) \approx v + \sum_{i=1}^{k} \bigl[ s_i(\mathbf{x}_{G_i}) - v \bigr]
 $$
 
 where $\mathbf{x}_{G_i}$ denotes the components of $\mathbf{x}$ belonging to group $i$.
+Equivalently, this is $\sum_i s_i(\mathbf{x}_{G_i}) - (k-1)v$, matching the MoCaX C implementation's explicit subtraction of `(num_partial_functions - 1) * reference_value`.
 
 ## When to Use Sliding
 
@@ -158,7 +159,7 @@ slider.Save("slider.json");
 var loaded = ChebyshevSlider.Load("slider.json");
 ```
 
-The loaded slider is fully functional for evaluation, derivatives, error estimation, extrusion, slicing, and arithmetic. The original function reference is not retained (`Function` is `null` after load).
+The loaded slider is fully functional for evaluation, derivatives, error estimation, integration, roots/optimization, extrusion, slicing, and arithmetic. The original function reference is not retained (`Function` is `null` after load).
 
 ## Extrusion and Slicing
 
@@ -202,10 +203,10 @@ Both operands must have the same dimensions, domain, node counts, **partition**,
 | High dimensions, general coupling | [`ChebyshevTT`](tensor-train.md) | $O(d \cdot n \cdot r^2)$ |
 
 > **Method availability.**
-> `ChebyshevSlider` does **not** support `Nodes()`, `FromValues()`, `EvalBatch()`,
-> `Integrate()`, `Roots()`, `Minimize()`, or `Maximize()`. These operations require the
-> full tensor grid, which the sliding decomposition avoids by design. Use
-> `ChebyshevApproximation` or `ChebyshevSpline` for these features.
+> `ChebyshevSlider` does **not** support `Nodes()`, `FromValues()`, or `EvalBatch()`.
+> It does support integration, roots, minimization, and maximization. Roots and
+> optimization slice the slider to a 1-D proxy before delegating to the standard
+> Chebyshev calculus routines.
 
 ## References
 

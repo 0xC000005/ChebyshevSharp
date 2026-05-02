@@ -1,179 +1,182 @@
 ### YamlMime:ManagedReference
 items:
-- uid: ChebyshevSharp.SplinePieceNodeInfo
-  commentId: T:ChebyshevSharp.SplinePieceNodeInfo
-  id: SplinePieceNodeInfo
+- uid: ChebyshevSharp.SobolResult
+  commentId: T:ChebyshevSharp.SobolResult
+  id: SobolResult
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.SplinePieceNodeInfo.FullGrid
-  - ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
-  - ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
-  - ChebyshevSharp.SplinePieceNodeInfo.Shape
-  - ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  - ChebyshevSharp.SobolResult.#ctor(System.Double[],System.Double[],System.Double)
+  - ChebyshevSharp.SobolResult.FirstOrder
+  - ChebyshevSharp.SobolResult.TotalOrder
+  - ChebyshevSharp.SobolResult.Variance
   langs:
   - csharp
   - vb
-  name: SplinePieceNodeInfo
-  nameWithType: SplinePieceNodeInfo
-  fullName: ChebyshevSharp.SplinePieceNodeInfo
+  name: SobolResult
+  nameWithType: SobolResult
+  fullName: ChebyshevSharp.SobolResult
   type: Class
   source:
-    id: SplinePieceNodeInfo
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2397
+    id: SobolResult
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Node information for a single piece of a spline.
+  summary: >-
+    Result of <code>SobolIndices()</code> on Chebyshev interpolants: per-dimension
+
+    Sobol sensitivity indices computed from spectral Chebyshev coefficients
+
+    (no Monte Carlo).
   example: []
   syntax:
-    content: public class SplinePieceNodeInfo
-    content.vb: Public Class SplinePieceNodeInfo
+    content: 'public sealed record SobolResult : IEquatable<SobolResult>'
+    content.vb: Public NotInheritable Class SobolResult Implements IEquatable(Of SobolResult)
   inheritance:
   - System.Object
+  implements:
+  - System.IEquatable{ChebyshevSharp.SobolResult}
   inheritedMembers:
   - System.Object.Equals(System.Object)
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
-  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
-  id: PieceIndex
-  parent: ChebyshevSharp.SplinePieceNodeInfo
+- uid: ChebyshevSharp.SobolResult.#ctor(System.Double[],System.Double[],System.Double)
+  commentId: M:ChebyshevSharp.SobolResult.#ctor(System.Double[],System.Double[],System.Double)
+  id: '#ctor(System.Double[],System.Double[],System.Double)'
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: PieceIndex
-  nameWithType: SplinePieceNodeInfo.PieceIndex
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
-  type: Property
+  name: SobolResult(double[], double[], double)
+  nameWithType: SobolResult.SobolResult(double[], double[], double)
+  fullName: ChebyshevSharp.SobolResult.SobolResult(double[], double[], double)
+  type: Constructor
   source:
-    id: PieceIndex
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2400
+    id: .ctor
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Multi-index of this piece.
+  summary: >-
+    Result of <code>SobolIndices()</code> on Chebyshev interpolants: per-dimension
+
+    Sobol sensitivity indices computed from spectral Chebyshev coefficients
+
+    (no Monte Carlo).
   example: []
   syntax:
-    content: public int[] PieceIndex { get; set; }
-    parameters: []
-    return:
-      type: System.Int32[]
-    content.vb: Public Property PieceIndex As Integer()
-  overload: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex*
-- uid: ChebyshevSharp.SplinePieceNodeInfo.SubDomain
-  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.SubDomain
-  id: SubDomain
-  parent: ChebyshevSharp.SplinePieceNodeInfo
+    content: public SobolResult(double[] FirstOrder, double[] TotalOrder, double Variance)
+    parameters:
+    - id: FirstOrder
+      type: System.Double[]
+      description: First-order index per dimension. Sums to ≤ 1; sums to 1 for purely additive functions.
+    - id: TotalOrder
+      type: System.Double[]
+      description: Total-order index per dimension. <code>FirstOrder[d] ≤ TotalOrder[d]</code> always.
+    - id: Variance
+      type: System.Double
+      description: >-
+        Total spectral variance Σ_{α≠0} c_α² ‖T_α‖². When zero or at numerical
+
+        noise level, the function is effectively constant and the indices are
+
+        meaningless.
+    content.vb: Public Sub New(FirstOrder As Double(), TotalOrder As Double(), Variance As Double)
+  overload: ChebyshevSharp.SobolResult.#ctor*
+  nameWithType.vb: SobolResult.New(Double(), Double(), Double)
+  fullName.vb: ChebyshevSharp.SobolResult.New(Double(), Double(), Double)
+  name.vb: New(Double(), Double(), Double)
+- uid: ChebyshevSharp.SobolResult.FirstOrder
+  commentId: P:ChebyshevSharp.SobolResult.FirstOrder
+  id: FirstOrder
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: SubDomain
-  nameWithType: SplinePieceNodeInfo.SubDomain
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.SubDomain
+  name: FirstOrder
+  nameWithType: SobolResult.FirstOrder
+  fullName: ChebyshevSharp.SobolResult.FirstOrder
   type: Property
   source:
-    id: SubDomain
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2402
+    id: FirstOrder
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Sub-domain bounds for this piece.
+  summary: First-order index per dimension. Sums to ≤ 1; sums to 1 for purely additive functions.
   example: []
   syntax:
-    content: public double[][] SubDomain { get; set; }
+    content: public double[] FirstOrder { get; init; }
     parameters: []
     return:
-      type: System.Double[][]
-    content.vb: Public Property SubDomain As Double()()
-  overload: ChebyshevSharp.SplinePieceNodeInfo.SubDomain*
-- uid: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
-  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
-  id: NodesPerDim
-  parent: ChebyshevSharp.SplinePieceNodeInfo
+      type: System.Double[]
+    content.vb: Public Property FirstOrder As Double()
+  overload: ChebyshevSharp.SobolResult.FirstOrder*
+- uid: ChebyshevSharp.SobolResult.TotalOrder
+  commentId: P:ChebyshevSharp.SobolResult.TotalOrder
+  id: TotalOrder
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: NodesPerDim
-  nameWithType: SplinePieceNodeInfo.NodesPerDim
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
+  name: TotalOrder
+  nameWithType: SobolResult.TotalOrder
+  fullName: ChebyshevSharp.SobolResult.TotalOrder
   type: Property
   source:
-    id: NodesPerDim
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2404
+    id: TotalOrder
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Per-dimension node arrays.
+  summary: Total-order index per dimension. <code>FirstOrder[d] ≤ TotalOrder[d]</code> always.
   example: []
   syntax:
-    content: public double[][] NodesPerDim { get; set; }
+    content: public double[] TotalOrder { get; init; }
     parameters: []
     return:
-      type: System.Double[][]
-    content.vb: Public Property NodesPerDim As Double()()
-  overload: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim*
-- uid: ChebyshevSharp.SplinePieceNodeInfo.FullGrid
-  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.FullGrid
-  id: FullGrid
-  parent: ChebyshevSharp.SplinePieceNodeInfo
+      type: System.Double[]
+    content.vb: Public Property TotalOrder As Double()
+  overload: ChebyshevSharp.SobolResult.TotalOrder*
+- uid: ChebyshevSharp.SobolResult.Variance
+  commentId: P:ChebyshevSharp.SobolResult.Variance
+  id: Variance
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: FullGrid
-  nameWithType: SplinePieceNodeInfo.FullGrid
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.FullGrid
+  name: Variance
+  nameWithType: SobolResult.Variance
+  fullName: ChebyshevSharp.SobolResult.Variance
   type: Property
   source:
-    id: FullGrid
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2406
+    id: Variance
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Full Cartesian product grid.
+  summary: >-
+    Total spectral variance Σ_{α≠0} c_α² ‖T_α‖². When zero or at numerical
+
+    noise level, the function is effectively constant and the indices are
+
+    meaningless.
   example: []
   syntax:
-    content: public double[][] FullGrid { get; set; }
+    content: public double Variance { get; init; }
     parameters: []
     return:
-      type: System.Double[][]
-    content.vb: Public Property FullGrid As Double()()
-  overload: ChebyshevSharp.SplinePieceNodeInfo.FullGrid*
-- uid: ChebyshevSharp.SplinePieceNodeInfo.Shape
-  commentId: P:ChebyshevSharp.SplinePieceNodeInfo.Shape
-  id: Shape
-  parent: ChebyshevSharp.SplinePieceNodeInfo
-  langs:
-  - csharp
-  - vb
-  name: Shape
-  nameWithType: SplinePieceNodeInfo.Shape
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.Shape
-  type: Property
-  source:
-    id: Shape
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2408
-  assemblies:
-  - ChebyshevSharp
-  namespace: ChebyshevSharp
-  summary: Tensor shape.
-  example: []
-  syntax:
-    content: public int[] Shape { get; set; }
-    parameters: []
-    return:
-      type: System.Int32[]
-    content.vb: Public Property Shape As Integer()
-  overload: ChebyshevSharp.SplinePieceNodeInfo.Shape*
+      type: System.Double
+    content.vb: Public Property Variance As Double
+  overload: ChebyshevSharp.SobolResult.Variance*
 references:
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
@@ -192,6 +195,39 @@ references:
   nameWithType.vb: Object
   fullName.vb: Object
   name.vb: Object
+- uid: System.IEquatable{ChebyshevSharp.SobolResult}
+  commentId: T:System.IEquatable{ChebyshevSharp.SobolResult}
+  parent: System
+  definition: System.IEquatable`1
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<SobolResult>
+  nameWithType: IEquatable<SobolResult>
+  fullName: System.IEquatable<ChebyshevSharp.SobolResult>
+  nameWithType.vb: IEquatable(Of SobolResult)
+  fullName.vb: System.IEquatable(Of ChebyshevSharp.SobolResult)
+  name.vb: IEquatable(Of SobolResult)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - uid: ChebyshevSharp.SobolResult
+    name: SobolResult
+    href: ChebyshevSharp.SobolResult.html
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ChebyshevSharp.SobolResult
+    name: SobolResult
+    href: ChebyshevSharp.SobolResult.html
+  - name: )
 - uid: System.Object.Equals(System.Object)
   commentId: M:System.Object.Equals(System.Object)
   parent: System.Object
@@ -318,30 +354,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -418,57 +430,57 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex*
-  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
-  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_PieceIndex
-  name: PieceIndex
-  nameWithType: SplinePieceNodeInfo.PieceIndex
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.PieceIndex
-- uid: System.Int32[]
+- uid: System.IEquatable`1
+  commentId: T:System.IEquatable`1
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int[]
-  nameWithType: int[]
-  fullName: int[]
-  nameWithType.vb: Integer()
-  fullName.vb: Integer()
-  name.vb: Integer()
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<T>
+  nameWithType: IEquatable<T>
+  fullName: System.IEquatable<T>
+  nameWithType.vb: IEquatable(Of T)
+  fullName.vb: System.IEquatable(Of T)
+  name.vb: IEquatable(Of T)
   spec.csharp:
-  - uid: System.Int32
-    name: int
+  - uid: System.IEquatable`1
+    name: IEquatable
     isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '['
-  - name: ']'
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - name: T
+  - name: '>'
   spec.vb:
-  - uid: System.Int32
-    name: Integer
+  - uid: System.IEquatable`1
+    name: IEquatable
     isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
   - name: (
+  - name: Of
+  - name: " "
+  - name: T
   - name: )
-- uid: ChebyshevSharp.SplinePieceNodeInfo.SubDomain*
-  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.SubDomain
-  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_SubDomain
-  name: SubDomain
-  nameWithType: SplinePieceNodeInfo.SubDomain
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.SubDomain
-- uid: System.Double[][]
+- uid: ChebyshevSharp.SobolResult.#ctor*
+  commentId: Overload:ChebyshevSharp.SobolResult.#ctor
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult__ctor_System_Double___System_Double___System_Double_
+  name: SobolResult
+  nameWithType: SobolResult.SobolResult
+  fullName: ChebyshevSharp.SobolResult.SobolResult
+  nameWithType.vb: SobolResult.New
+  fullName.vb: ChebyshevSharp.SobolResult.New
+  name.vb: New
+- uid: System.Double[]
   isExternal: true
   href: https://learn.microsoft.com/dotnet/api/system.double
-  name: double[][]
-  nameWithType: double[][]
-  fullName: double[][]
-  nameWithType.vb: Double()()
-  fullName.vb: Double()()
-  name.vb: Double()()
+  name: double[]
+  nameWithType: double[]
+  fullName: double[]
+  nameWithType.vb: Double()
+  fullName.vb: Double()
+  name.vb: Double()
   spec.csharp:
   - uid: System.Double
     name: double
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.double
-  - name: '['
-  - name: ']'
   - name: '['
   - name: ']'
   spec.vb:
@@ -478,23 +490,32 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.double
   - name: (
   - name: )
-  - name: (
-  - name: )
-- uid: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim*
-  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
-  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_NodesPerDim
-  name: NodesPerDim
-  nameWithType: SplinePieceNodeInfo.NodesPerDim
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.NodesPerDim
-- uid: ChebyshevSharp.SplinePieceNodeInfo.FullGrid*
-  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.FullGrid
-  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_FullGrid
-  name: FullGrid
-  nameWithType: SplinePieceNodeInfo.FullGrid
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.FullGrid
-- uid: ChebyshevSharp.SplinePieceNodeInfo.Shape*
-  commentId: Overload:ChebyshevSharp.SplinePieceNodeInfo.Shape
-  href: ChebyshevSharp.SplinePieceNodeInfo.html#ChebyshevSharp_SplinePieceNodeInfo_Shape
-  name: Shape
-  nameWithType: SplinePieceNodeInfo.Shape
-  fullName: ChebyshevSharp.SplinePieceNodeInfo.Shape
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ChebyshevSharp.SobolResult.FirstOrder*
+  commentId: Overload:ChebyshevSharp.SobolResult.FirstOrder
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult_FirstOrder
+  name: FirstOrder
+  nameWithType: SobolResult.FirstOrder
+  fullName: ChebyshevSharp.SobolResult.FirstOrder
+- uid: ChebyshevSharp.SobolResult.TotalOrder*
+  commentId: Overload:ChebyshevSharp.SobolResult.TotalOrder
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult_TotalOrder
+  name: TotalOrder
+  nameWithType: SobolResult.TotalOrder
+  fullName: ChebyshevSharp.SobolResult.TotalOrder
+- uid: ChebyshevSharp.SobolResult.Variance*
+  commentId: Overload:ChebyshevSharp.SobolResult.Variance
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult_Variance
+  name: Variance
+  nameWithType: SobolResult.Variance
+  fullName: ChebyshevSharp.SobolResult.Variance

@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-05-02 — Quality and documentation hardening ([#25](https://github.com/0xC000005/ChebyshevSharp/pull/25), [#26](https://github.com/0xC000005/ChebyshevSharp/pull/26), [#27](https://github.com/0xC000005/ChebyshevSharp/pull/27), [#28](https://github.com/0xC000005/ChebyshevSharp/pull/28))
+
+### Added
+- Shared tensor-shape arithmetic guards now cover dense construction, serialization, slicing/extrusion, axis kernels, slider diagnostics, and Tensor Train materialization paths.
+- Deterministic FsCheck property tests cover batch-vs-loop evaluation, save/load preservation, extrude/slice recovery, algebra identities, and TT reorder preservation.
+- Stryker.NET mutation testing configuration plus a scheduled/manual mutation workflow target high-risk numerical files.
+- Runnable examples: `examples/QuickStart` and `examples/TensorTrainHighDim`.
+- Documentation pages for class selection, testing and validation, and citations.
+- Root `CONTRIBUTING.md`, docs-site contributor guide, and GitHub PR template with coverage and mutation-testing expectations.
+
+### Changed
+- CI now validates formatting, analyzer build, package validation, tests with coverage, Codecov patch coverage, and DocFX documentation.
+- User documentation is organized around tutorials, how-to guides, concepts, and reference material.
+- README and package metadata now reflect PyChebyshev v0.21.1 parity and available `ChebyshevTT` functionality.
+- Mathematical docs now state the Type I node convention, explain how it differs from MoCaX/Ruiz--Zeron Lobatto grids, and clarify the Chebyshev-weighted meaning of `SobolIndices()`.
+- `SobolIndices()` now uses a scale-relative numerical-noise floor instead of a fixed absolute variance cutoff, preserving legitimate low-amplitude sensitivity signals.
+- `ChebyshevTT.SobolIndices()` now contracts nonconstant coefficient energy directly instead of subtracting nearly equal total and constant energies, avoiding cancellation for functions such as `1 + eps * x`.
+
+### Fixed
+- Tensor-size and byte-size products now fail fast with clear overflow errors instead of wrapping fixed-width arithmetic.
+- Tensor Train documentation now warns that TT-Cross can be feasible while dense-grid materialization is intentionally guarded.
+- Stale documentation claims about Slider calculus and TT extrusion/slicing/arithmetic availability were corrected.
+
 ## [0.11.1] - 2026-05-01 — TT high-dimensional overflow fix ([#23](https://github.com/0xC000005/ChebyshevSharp/issues/23))
 
 ### Fixed

@@ -6,6 +6,11 @@ namespace ChebyshevSharp.Internal;
 /// </summary>
 internal static class Sensitivity
 {
+    // DCT and TT contractions can leave tiny nonzero energy for exactly constant
+    // functions. Use a scale-relative floor so valid low-amplitude signals are not
+    // erased by a fixed absolute cutoff.
+    private const double RelativeVarianceNoiseFloor = 1e-28;
+
     /// <summary>Chebyshev T_n inner product norm² under weight 1/√(1-x²) on [-1,1].</summary>
     private static double ChebyshevNormSquared(int n) => n == 0 ? Math.PI : Math.PI / 2.0;
 
@@ -15,6 +20,69 @@ internal static class Sensitivity
         double r = 1.0;
         for (int i = 0; i < alpha.Length; i++) r *= ChebyshevNormSquared(alpha[i]);
         return r;
+    }
+
+    private static bool IsNumericalZeroVariance(double variance, double totalWeightedSquared)
+    {
+        if (variance <= 0.0) return true;
+        double scale = Math.Abs(totalWeightedSquared);
+        if (scale == 0.0) return false;
+        return variance <= scale * RelativeVarianceNoiseFloor;
+    }
+
+    private static void AddWeightedCoreContraction(
+        double[,] source,
+        TensorTrainKernel.TtCore core,
+        double[] weights,
+        int startDegree,
+        int endDegreeExclusive,
+        double[,] target)
+    {
+        int rL = core.RLeft, rR = core.RRight;
+        for (int a = 0; a < rR; a++)
+            for (int b = 0; b < rR; b++)
+            {
+                double acc = 0.0;
+                for (int i = 0; i < rL; i++)
+                    for (int j = 0; j < rL; j++)
+                    {
+                        double sij = source[i, j];
+                        if (sij == 0.0) continue;
+                        for (int p = startDegree; p < endDegreeExclusive; p++)
+                            acc += sij * core[i, p, a] * weights[p] * core[j, p, b];
+                    }
+                target[a, b] += acc;
+            }
+    }
+
+    private static double ContractNonconstantWeightedSquared(
+        TensorTrainKernel.TtCore[] cores,
+        double[][] weights)
+    {
+        var zero = new double[1, 1];
+        var nonzero = new double[1, 1];
+        zero[0, 0] = 1.0;
+
+        for (int k = 0; k < cores.Length; k++)
+        {
+            var core = cores[k];
+            var nextZero = new double[core.RRight, core.RRight];
+            var nextNonzero = new double[core.RRight, core.RRight];
+
+            // Still all-zero multi-index: only degree 0 may be selected.
+            AddWeightedCoreContraction(zero, core, weights[k], 0, 1, nextZero);
+
+            // Already nonzero: any degree keeps the path nonconstant.
+            AddWeightedCoreContraction(nonzero, core, weights[k], 0, core.NNodes, nextNonzero);
+
+            // First nonzero degree can occur in this core.
+            AddWeightedCoreContraction(zero, core, weights[k], 1, core.NNodes, nextNonzero);
+
+            zero = nextZero;
+            nonzero = nextNonzero;
+        }
+
+        return nonzero[0, 0];
     }
 
     /// <summary>Convert flat row-major index → multi-index (one int per dimension).</summary>
@@ -110,36 +178,6 @@ internal static class Sensitivity
             wFull[k][0] = pi;
         }
 
-        // ---- total_weighted_squared
-        // Iterative left-to-right contraction:
-        //   M_{k+1}[a,b] = Σ_{i,j,p} M_k[i,j] * (A_k[i,p,a] * w_k[p]) * A_k[j,p,b]
-        // M_0 = [[1.0]] (shape 1×1 → shape r_{k} × r_{k} after step k)
-        int r0 = cores[0].RLeft;  // Should be 1
-        var M = new double[r0, r0];
-        M[0, 0] = 1.0;
-
-        for (int k = 0; k < d; k++)
-        {
-            var A = cores[k];
-            int rL = A.RLeft, nk = A.NNodes, rR = A.RRight;
-            var Mnew = new double[rR, rR];
-            for (int a = 0; a < rR; a++)
-                for (int b = 0; b < rR; b++)
-                {
-                    double acc = 0.0;
-                    for (int i = 0; i < rL; i++)
-                        for (int j = 0; j < rL; j++)
-                        {
-                            double mij = M[i, j];
-                            for (int p = 0; p < nk; p++)
-                                acc += mij * A[i, p, a] * wFull[k][p] * A[j, p, b];
-                        }
-                    Mnew[a, b] = acc;
-                }
-            M = Mnew;
-        }
-        double totalWeightedSquared = M[0, 0];
-
         // ---- constant term c_0 (all-zero multi-index)
         // v = product of cores[k][:, 0, :] chained left-to-right from [1.0]
         double[] v = new double[cores[0].RLeft];
@@ -159,17 +197,11 @@ internal static class Sensitivity
         }
         double c0 = v[0];  // scalar since rRight of last core == 1
         double constantWeightedSquared = c0 * c0 * Math.Pow(pi, d);
+        double variance = ContractNonconstantWeightedSquared(cores, wFull);
+        double totalWeightedSquared = constantWeightedSquared + variance;
 
-        double variance = totalWeightedSquared - constantWeightedSquared;
-
-        if (variance <= 0.0 || variance < 1e-20)
+        if (IsNumericalZeroVariance(variance, totalWeightedSquared))
         {
-            // Constant or near-constant function.
-            // Clamp variance to 0 for clean reporting (TT-Cross floating-point noise
-            // can leave a tiny positive residual even for truly constant f).
-            // Absolute threshold 1e-20 matches the dense path (ComputeSobolFromCoeffs line 348)
-            // and is well above TT-Cross noise floor (~1e-29) but well below legitimate small
-            // signals such as f(x,y,z) = 1 + 1e-6*x (variance ~1.55e-11).
             return new SobolResult(new double[d], new double[d], 0.0);
         }
 
@@ -285,11 +317,11 @@ internal static class Sensitivity
             firstOrder[j] = sumSquared * weightFirst / variance;
 
             // ---- total-order energy[j]:
-            // = total_weighted_squared - sum_{alpha_j = 0} weighted
-            // sum_alpha_j_zero = π * einsum("ij,ia,jb,ab->", L[j], c_j0, c_j0, R[j+1])
-            // where c_j0 = cores[j][:, 0, :]  (shape rLj × rRj)
+            // sum every weighted coefficient where alpha_j > 0. Computing this
+            // directly avoids cancellation in total - alpha_j_zero for functions
+            // with a large constant offset and tiny but valid sensitivity signal.
             int rLjj = cores[j].RLeft, rRjj = cores[j].RRight;
-            double sumAlphaJZero = 0.0;
+            double sumAlphaJPositive = 0.0;
             for (int i = 0; i < rLjj; i++)
                 for (int jj = 0; jj < rLjj; jj++)
                 {
@@ -297,11 +329,12 @@ internal static class Sensitivity
                     for (int a = 0; a < rRjj; a++)
                         for (int b = 0; b < rRjj; b++)
                         {
-                            sumAlphaJZero += lij * cores[j][i, 0, a] * cores[j][jj, 0, b] * R[j + 1][a, b];
+                            double rab = R[j + 1][a, b];
+                            for (int p = 1; p < cores[j].NNodes; p++)
+                                sumAlphaJPositive += lij * cores[j][i, p, a] * wFull[j][p] * cores[j][jj, p, b] * rab;
                         }
                 }
-            sumAlphaJZero *= pi;
-            totalOrder[j] = (totalWeightedSquared - sumAlphaJZero) / variance;
+            totalOrder[j] = sumAlphaJPositive / variance;
         }
 
         return new SobolResult(firstOrder, totalOrder, variance);
@@ -323,6 +356,7 @@ internal static class Sensitivity
         var firstOrder = new double[nDim];
         var totalOrder = new double[nDim];
         double variance = 0;
+        double totalWeightedSquared = 0;
 
         for (long flat = 0; flat < coeffs.Length; flat++)
         {
@@ -331,22 +365,19 @@ internal static class Sensitivity
             int firstNonzeroDim = -1;
             for (int d = 0; d < nDim; d++)
                 if (alpha[d] > 0) { nonzeroCount++; if (firstNonzeroDim == -1) firstNonzeroDim = d; }
-            if (nonzeroCount == 0) continue;  // skip α = 0 (mean term).
 
             double c = coeffs[flat];
             if (c == 0) continue;
             double energy = c * c * MultiIndexNormSquared(alpha);
+            totalWeightedSquared += energy;
+            if (nonzeroCount == 0) continue;  // skip α = 0 (mean term).
             variance += energy;
             for (int d = 0; d < nDim; d++)
                 if (alpha[d] > 0) totalOrder[d] += energy;
             if (nonzeroCount == 1) firstOrder[firstNonzeroDim] += energy;
         }
 
-        // Constant / near-constant function: variance is either exactly 0 (Python parity)
-        // or floating-point DCT-II noise (~1e-29 in C#). Returning zero indices on the
-        // noise-floor path keeps the contract sane. Variance is reported as-is so callers
-        // can choose their own constancy threshold.
-        if (variance == 0 || variance < 1e-20)
+        if (IsNumericalZeroVariance(variance, totalWeightedSquared))
             return new SobolResult(new double[nDim], new double[nDim], variance);
         for (int d = 0; d < nDim; d++)
         {

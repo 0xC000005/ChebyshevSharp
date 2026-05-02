@@ -7,11 +7,11 @@
 
     <!-- NuGet package metadata -->
     <PackageId>ChebyshevSharp</PackageId>
-    <Version>0.11.1</Version>
+    <Version>0.12.0</Version>
     <PyChebyshevParity>0.21.1</PyChebyshevParity>
-    <InformationalVersion>0.11.1+pychebyshev.0.21.1</InformationalVersion>
+    <InformationalVersion>0.12.0+pychebyshev.0.21.1</InformationalVersion>
     <Authors>Max</Authors>
-    <Description>ChebyshevSharp 0.11.1 — multi-dimensional Chebyshev tensor interpolation for .NET with dense, spline, sliding, and Tensor Train approximations. Feature parity with PyChebyshev v0.21.1, including TT dimensional reordering, high-dimensional overflow guards, parallel build, adaptive refinement, Sobol indices, and package validation.</Description>
+    <Description>ChebyshevSharp 0.12.0 — multi-dimensional Chebyshev tensor interpolation for .NET with dense, spline, sliding, and Tensor Train approximations. Feature parity with PyChebyshev v0.21.1, including high-dimensional tensor-size guards, CI/package validation gates, property and mutation testing, runnable examples, and reorganized documentation.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/0xC000005/ChebyshevSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/0xC000005/ChebyshevSharp</RepositoryUrl>

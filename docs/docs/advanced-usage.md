@@ -124,7 +124,7 @@ Slicing is used internally by `Roots`, `Minimize`, and `Maximize` to reduce mult
 
 `ChebyshevSlider` supports slicing. If the sliced dimension belongs to a multi-dimension group, the slide is sliced within that group. If it is a singleton group, the slide is evaluated and its contribution is absorbed into the remaining slides. See [Sliding Technique](slider.md) for details.
 
-`ChebyshevTT` does **not** support extrusion or slicing.
+`ChebyshevTT` supports rank-aware extrusion and slicing. Extrusion inserts a constant coefficient core for the new dimension; slicing converts the sliced core to value space, evaluates barycentric weights along that axis, and absorbs the resulting matrix into the neighboring core.
 
 ## Arithmetic Operators
 
@@ -146,7 +146,7 @@ Arithmetic on interpolants is exact at the nodes. Between nodes, the result is t
 
 `ChebyshevSlider` also supports arithmetic operators. Both operands must have the same partition and pivot point in addition to domain and node counts. See [Sliding Technique](slider.md) for details.
 
-`ChebyshevTT` does **not** support arithmetic operators.
+`ChebyshevTT` supports scalar arithmetic and pointwise `+` / `-` for compatible TT grids. Binary TT arithmetic requires matching dimensions, domains, node counts, and `DimOrder`; use `Reorder()` before combining TTs built with different user-frame permutations.
 
 ## Derivative Orders
 

@@ -8,7 +8,11 @@ items:
   - ChebyshevSharp.ChebyshevSlider
   - ChebyshevSharp.ChebyshevSpline
   - ChebyshevSharp.ChebyshevTT
+  - ChebyshevSharp.Domain
   - ChebyshevSharp.NodeInfo
+  - ChebyshevSharp.Ns
+  - ChebyshevSharp.SobolResult
+  - ChebyshevSharp.SpecialPoints
   - ChebyshevSharp.SplineNodeInfo
   - ChebyshevSharp.SplinePieceNodeInfo
   langs:
@@ -69,6 +73,34 @@ references:
   name: ChebyshevTT
   nameWithType: ChebyshevTT
   fullName: ChebyshevSharp.ChebyshevTT
+- uid: ChebyshevSharp.Domain
+  commentId: T:ChebyshevSharp.Domain
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.Domain.html
+  name: Domain
+  nameWithType: Domain
+  fullName: ChebyshevSharp.Domain
+- uid: ChebyshevSharp.Ns
+  commentId: T:ChebyshevSharp.Ns
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.Ns.html
+  name: Ns
+  nameWithType: Ns
+  fullName: ChebyshevSharp.Ns
+- uid: ChebyshevSharp.SobolResult
+  commentId: T:ChebyshevSharp.SobolResult
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.SobolResult.html
+  name: SobolResult
+  nameWithType: SobolResult
+  fullName: ChebyshevSharp.SobolResult
+- uid: ChebyshevSharp.SpecialPoints
+  commentId: T:ChebyshevSharp.SpecialPoints
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.SpecialPoints.html
+  name: SpecialPoints
+  nameWithType: SpecialPoints
+  fullName: ChebyshevSharp.SpecialPoints
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
   href: ChebyshevSharp.html

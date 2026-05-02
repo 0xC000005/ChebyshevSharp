@@ -1,123 +1,180 @@
 ### YamlMime:ManagedReference
 items:
-- uid: ChebyshevSharp.NodeInfo
-  commentId: T:ChebyshevSharp.NodeInfo
-  id: NodeInfo
+- uid: ChebyshevSharp.Domain
+  commentId: T:ChebyshevSharp.Domain
+  id: Domain
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.NodeInfo.FullGrid
-  - ChebyshevSharp.NodeInfo.NodesPerDim
-  - ChebyshevSharp.NodeInfo.Shape
+  - ChebyshevSharp.Domain.#ctor(System.Double[][])
+  - ChebyshevSharp.Domain.Bounds
+  - ChebyshevSharp.Domain.op_Implicit(ChebyshevSharp.Domain)~System.Double[][]
+  - ChebyshevSharp.Domain.op_Implicit(System.Double[][])~ChebyshevSharp.Domain
   langs:
   - csharp
   - vb
-  name: NodeInfo
-  nameWithType: NodeInfo
-  fullName: ChebyshevSharp.NodeInfo
+  name: Domain
+  nameWithType: Domain
+  fullName: ChebyshevSharp.Domain
   type: Class
   source:
-    id: NodeInfo
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1794
+    id: Domain
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    startLine: 9
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Information about Chebyshev nodes for a given configuration.
+  summary: >-
+    Typed wrapper for a multi-dimensional rectangular domain.
+
+    Each entry is a 2-element array <code>[lo, hi]</code>.
+
+    Implicit conversions to and from jagged double arrays let you pass
+
+    either form to constructors that accept <code>Domain</code>.
   example: []
   syntax:
-    content: public class NodeInfo
-    content.vb: Public Class NodeInfo
+    content: 'public sealed record Domain : IEquatable<Domain>'
+    content.vb: Public NotInheritable Class Domain Implements IEquatable(Of Domain)
   inheritance:
   - System.Object
+  implements:
+  - System.IEquatable{ChebyshevSharp.Domain}
   inheritedMembers:
   - System.Object.Equals(System.Object)
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: ChebyshevSharp.NodeInfo.NodesPerDim
-  commentId: P:ChebyshevSharp.NodeInfo.NodesPerDim
-  id: NodesPerDim
-  parent: ChebyshevSharp.NodeInfo
+- uid: ChebyshevSharp.Domain.#ctor(System.Double[][])
+  commentId: M:ChebyshevSharp.Domain.#ctor(System.Double[][])
+  id: '#ctor(System.Double[][])'
+  parent: ChebyshevSharp.Domain
   langs:
   - csharp
   - vb
-  name: NodesPerDim
-  nameWithType: NodeInfo.NodesPerDim
-  fullName: ChebyshevSharp.NodeInfo.NodesPerDim
-  type: Property
+  name: Domain(double[][])
+  nameWithType: Domain.Domain(double[][])
+  fullName: ChebyshevSharp.Domain.Domain(double[][])
+  type: Constructor
   source:
-    id: NodesPerDim
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1797
+    id: .ctor
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    startLine: 9
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Chebyshev nodes for each dimension, sorted ascending.
+  summary: >-
+    Typed wrapper for a multi-dimensional rectangular domain.
+
+    Each entry is a 2-element array <code>[lo, hi]</code>.
+
+    Implicit conversions to and from jagged double arrays let you pass
+
+    either form to constructors that accept <code>Domain</code>.
   example: []
   syntax:
-    content: public double[][] NodesPerDim { get; set; }
+    content: public Domain(double[][] Bounds)
+    parameters:
+    - id: Bounds
+      type: System.Double[][]
+      description: Per-dimension <code>[lo, hi]</code> pairs.
+    content.vb: Public Sub New(Bounds As Double()())
+  overload: ChebyshevSharp.Domain.#ctor*
+  nameWithType.vb: Domain.New(Double()())
+  fullName.vb: ChebyshevSharp.Domain.New(Double()())
+  name.vb: New(Double()())
+- uid: ChebyshevSharp.Domain.Bounds
+  commentId: P:ChebyshevSharp.Domain.Bounds
+  id: Bounds
+  parent: ChebyshevSharp.Domain
+  langs:
+  - csharp
+  - vb
+  name: Bounds
+  nameWithType: Domain.Bounds
+  fullName: ChebyshevSharp.Domain.Bounds
+  type: Property
+  source:
+    id: Bounds
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    startLine: 9
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Per-dimension <code>[lo, hi]</code> pairs.
+  example: []
+  syntax:
+    content: public double[][] Bounds { get; init; }
     parameters: []
     return:
       type: System.Double[][]
-    content.vb: Public Property NodesPerDim As Double()()
-  overload: ChebyshevSharp.NodeInfo.NodesPerDim*
-- uid: ChebyshevSharp.NodeInfo.FullGrid
-  commentId: P:ChebyshevSharp.NodeInfo.FullGrid
-  id: FullGrid
-  parent: ChebyshevSharp.NodeInfo
+    content.vb: Public Property Bounds As Double()()
+  overload: ChebyshevSharp.Domain.Bounds*
+- uid: ChebyshevSharp.Domain.op_Implicit(System.Double[][])~ChebyshevSharp.Domain
+  commentId: M:ChebyshevSharp.Domain.op_Implicit(System.Double[][])~ChebyshevSharp.Domain
+  id: op_Implicit(System.Double[][])~ChebyshevSharp.Domain
+  parent: ChebyshevSharp.Domain
   langs:
   - csharp
   - vb
-  name: FullGrid
-  nameWithType: NodeInfo.FullGrid
-  fullName: ChebyshevSharp.NodeInfo.FullGrid
-  type: Property
+  name: implicit operator Domain(double[][])
+  nameWithType: Domain.implicit operator Domain(double[][])
+  fullName: ChebyshevSharp.Domain.implicit operator ChebyshevSharp.Domain(double[][])
+  type: Operator
   source:
-    id: FullGrid
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1800
+    id: op_Implicit
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    startLine: 12
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Full grid (Cartesian product of all nodes), shape (totalPoints, numDimensions).
+  summary: Implicit conversion from jagged double array to Domain.
   example: []
   syntax:
-    content: public double[][] FullGrid { get; set; }
-    parameters: []
+    content: public static implicit operator Domain(double[][] bounds)
+    parameters:
+    - id: bounds
+      type: System.Double[][]
+    return:
+      type: ChebyshevSharp.Domain
+    content.vb: Public Shared Widening Operator CType(bounds As Double()()) As Domain
+  overload: ChebyshevSharp.Domain.op_Implicit*
+  nameWithType.vb: Domain.CType(Double()())
+  fullName.vb: ChebyshevSharp.Domain.CType(Double()())
+  name.vb: CType(Double()())
+- uid: ChebyshevSharp.Domain.op_Implicit(ChebyshevSharp.Domain)~System.Double[][]
+  commentId: M:ChebyshevSharp.Domain.op_Implicit(ChebyshevSharp.Domain)~System.Double[][]
+  id: op_Implicit(ChebyshevSharp.Domain)~System.Double[][]
+  parent: ChebyshevSharp.Domain
+  langs:
+  - csharp
+  - vb
+  name: implicit operator double[][](Domain)
+  nameWithType: Domain.implicit operator double[][](Domain)
+  fullName: ChebyshevSharp.Domain.implicit operator double[][](ChebyshevSharp.Domain)
+  type: Operator
+  source:
+    id: op_Implicit
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    startLine: 15
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Implicit conversion from Domain to jagged double array.
+  example: []
+  syntax:
+    content: public static implicit operator double[][](Domain d)
+    parameters:
+    - id: d
+      type: ChebyshevSharp.Domain
     return:
       type: System.Double[][]
-    content.vb: Public Property FullGrid As Double()()
-  overload: ChebyshevSharp.NodeInfo.FullGrid*
-- uid: ChebyshevSharp.NodeInfo.Shape
-  commentId: P:ChebyshevSharp.NodeInfo.Shape
-  id: Shape
-  parent: ChebyshevSharp.NodeInfo
-  langs:
-  - csharp
-  - vb
-  name: Shape
-  nameWithType: NodeInfo.Shape
-  fullName: ChebyshevSharp.NodeInfo.Shape
-  type: Property
-  source:
-    id: Shape
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1803
-  assemblies:
-  - ChebyshevSharp
-  namespace: ChebyshevSharp
-  summary: Expected tensor shape (== nNodes).
-  example: []
-  syntax:
-    content: public int[] Shape { get; set; }
-    parameters: []
-    return:
-      type: System.Int32[]
-    content.vb: Public Property Shape As Integer()
-  overload: ChebyshevSharp.NodeInfo.Shape*
+    content.vb: Public Shared Widening Operator CType(d As Domain) As Double()()
+  overload: ChebyshevSharp.Domain.op_Implicit*
+  nameWithType.vb: Domain.CType(Domain)
+  fullName.vb: ChebyshevSharp.Domain.CType(ChebyshevSharp.Domain)
+  name.vb: CType(Domain)
 references:
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
@@ -136,6 +193,39 @@ references:
   nameWithType.vb: Object
   fullName.vb: Object
   name.vb: Object
+- uid: System.IEquatable{ChebyshevSharp.Domain}
+  commentId: T:System.IEquatable{ChebyshevSharp.Domain}
+  parent: System
+  definition: System.IEquatable`1
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<Domain>
+  nameWithType: IEquatable<Domain>
+  fullName: System.IEquatable<ChebyshevSharp.Domain>
+  nameWithType.vb: IEquatable(Of Domain)
+  fullName.vb: System.IEquatable(Of ChebyshevSharp.Domain)
+  name.vb: IEquatable(Of Domain)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - uid: ChebyshevSharp.Domain
+    name: Domain
+    href: ChebyshevSharp.Domain.html
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ChebyshevSharp.Domain
+    name: Domain
+    href: ChebyshevSharp.Domain.html
+  - name: )
 - uid: System.Object.Equals(System.Object)
   commentId: M:System.Object.Equals(System.Object)
   parent: System.Object
@@ -262,30 +352,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -362,12 +428,43 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: ChebyshevSharp.NodeInfo.NodesPerDim*
-  commentId: Overload:ChebyshevSharp.NodeInfo.NodesPerDim
-  href: ChebyshevSharp.NodeInfo.html#ChebyshevSharp_NodeInfo_NodesPerDim
-  name: NodesPerDim
-  nameWithType: NodeInfo.NodesPerDim
-  fullName: ChebyshevSharp.NodeInfo.NodesPerDim
+- uid: System.IEquatable`1
+  commentId: T:System.IEquatable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<T>
+  nameWithType: IEquatable<T>
+  fullName: System.IEquatable<T>
+  nameWithType.vb: IEquatable(Of T)
+  fullName.vb: System.IEquatable(Of T)
+  name.vb: IEquatable(Of T)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ChebyshevSharp.Domain.#ctor*
+  commentId: Overload:ChebyshevSharp.Domain.#ctor
+  href: ChebyshevSharp.Domain.html#ChebyshevSharp_Domain__ctor_System_Double_____
+  name: Domain
+  nameWithType: Domain.Domain
+  fullName: ChebyshevSharp.Domain.Domain
+  nameWithType.vb: Domain.New
+  fullName.vb: ChebyshevSharp.Domain.New
+  name.vb: New
 - uid: System.Double[][]
   isExternal: true
   href: https://learn.microsoft.com/dotnet/api/system.double
@@ -395,38 +492,28 @@ references:
   - name: )
   - name: (
   - name: )
-- uid: ChebyshevSharp.NodeInfo.FullGrid*
-  commentId: Overload:ChebyshevSharp.NodeInfo.FullGrid
-  href: ChebyshevSharp.NodeInfo.html#ChebyshevSharp_NodeInfo_FullGrid
-  name: FullGrid
-  nameWithType: NodeInfo.FullGrid
-  fullName: ChebyshevSharp.NodeInfo.FullGrid
-- uid: ChebyshevSharp.NodeInfo.Shape*
-  commentId: Overload:ChebyshevSharp.NodeInfo.Shape
-  href: ChebyshevSharp.NodeInfo.html#ChebyshevSharp_NodeInfo_Shape
-  name: Shape
-  nameWithType: NodeInfo.Shape
-  fullName: ChebyshevSharp.NodeInfo.Shape
-- uid: System.Int32[]
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int[]
-  nameWithType: int[]
-  fullName: int[]
-  nameWithType.vb: Integer()
-  fullName.vb: Integer()
-  name.vb: Integer()
+- uid: ChebyshevSharp.Domain.Bounds*
+  commentId: Overload:ChebyshevSharp.Domain.Bounds
+  href: ChebyshevSharp.Domain.html#ChebyshevSharp_Domain_Bounds
+  name: Bounds
+  nameWithType: Domain.Bounds
+  fullName: ChebyshevSharp.Domain.Bounds
+- uid: ChebyshevSharp.Domain.op_Implicit*
+  commentId: Overload:ChebyshevSharp.Domain.op_Implicit
+  name: implicit operator
+  nameWithType: Domain.implicit operator
+  fullName: ChebyshevSharp.Domain.implicit operator
+  nameWithType.vb: Domain.CType
+  fullName.vb: ChebyshevSharp.Domain.CType
+  name.vb: CType
   spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '['
-  - name: ']'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: (
-  - name: )
+  - name: implicit
+  - name: " "
+  - name: operator
+- uid: ChebyshevSharp.Domain
+  commentId: T:ChebyshevSharp.Domain
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.Domain.html
+  name: Domain
+  nameWithType: Domain
+  fullName: ChebyshevSharp.Domain

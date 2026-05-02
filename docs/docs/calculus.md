@@ -30,6 +30,33 @@ The return type is `object` — cast to `double` or `ChebyshevApproximation` dep
 
 **How it works:** Integration is performed as a tensor contraction — the tensor of function values is contracted along the integrated dimensions with the Fejer-1 quadrature weight vector. The weights are computed from the Chebyshev coefficients via DCT-III. For sub-interval integration, modified weights are computed that account for the restricted bounds.
 
+On the reference interval, the implementation uses Chebyshev moments
+
+$$
+m_k = \int_{-1}^{1} T_k(t)\,dt =
+\begin{cases}
+2/(1-k^2), & k \text{ even}, \\
+0, & k \text{ odd}.
+\end{cases}
+$$
+
+Fejer-1 weights are then the DCT-III of these moments, reversed into ChebyshevSharp's ascending node order. For sub-intervals $[t_{\mathrm{lo}}, t_{\mathrm{hi}}]$, the moments become
+
+$$
+m_0 = t_{\mathrm{hi}} - t_{\mathrm{lo}}, \qquad
+m_1 = \frac{t_{\mathrm{hi}}^2 - t_{\mathrm{lo}}^2}{2},
+$$
+
+and for $k \ge 2$:
+
+$$
+m_k = \frac{1}{2}\left[
+\frac{T_{k+1}(t_{\mathrm{hi}})-T_{k+1}(t_{\mathrm{lo}})}{k+1}
+-
+\frac{T_{k-1}(t_{\mathrm{hi}})-T_{k-1}(t_{\mathrm{lo}})}{k-1}
+\right].
+$$
+
 **Accuracy:** Since Fejer-1 weights integrate degree n-1 polynomials exactly, and the Chebyshev interpolant is a polynomial of degree n-1, the quadrature is exact for the interpolant. The only error comes from the interpolation itself. For well-resolved functions, integration accuracy matches the interpolation accuracy.
 
 For `ChebyshevSpline`, integration sums across pieces with automatic bound clipping to each piece's sub-domain. See [Piecewise Chebyshev Interpolation](spline.md) for details.
@@ -96,16 +123,17 @@ For `ChebyshevSpline`, optimization searches each piece independently and return
 
 | Operation | `ChebyshevApproximation` | `ChebyshevSpline` | `ChebyshevSlider` | `ChebyshevTT` |
 |-----------|:---:|:---:|:---:|:---:|
-| Integrate | Yes | Yes | Yes (v0.9.0) | Yes (v0.9.0) |
-| Roots | Yes | Yes | No | No |
-| Minimize / Maximize | Yes | Yes | No | No |
+| Integrate | Yes | Yes | Yes | Yes |
+| Roots | Yes | Yes | Yes | Yes |
+| Minimize / Maximize | Yes | Yes | Yes | Yes |
 
-As of v0.9.0, all four classes support integration. Roots, Minimize, and Maximize remain limited to `ChebyshevApproximation` and `ChebyshevSpline` — matching PyChebyshev's v0.21 deferral for Slider and TT.
+For `ChebyshevSlider` and `ChebyshevTT`, roots and optimization reduce the requested dimension to a 1-D interpolant by slicing all other dimensions, then delegate to `ChebyshevApproximation`. For TT this materializes only the reduced 1-D slice, not the original dense grid.
 
 ## References
 
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
 2. Good, I. J. (1961). "The Colleague Matrix, a Chebyshev Analogue of the Companion Matrix." *The Quarterly Journal of Mathematics* 12(1):61-68.
+3. Waldvogel, J. (2006). "Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules." *BIT Numerical Mathematics* 46(1):195-202.
 
 ## Slider Integration (v0.9.0)
 
@@ -158,4 +186,4 @@ double partial = (double)tt.Integrate(
     bounds: new[] { (-0.5, 0.5), (0.0, 1.0) });
 ```
 
-Note that `Roots`, `Minimize`, and `Maximize` are not yet available on `ChebyshevSlider` or `ChebyshevTT` — they remain deferred to a future phase, matching PyChebyshev's v0.21 deferral.
+`Roots`, `Minimize`, and `Maximize` are available on `ChebyshevSlider` and `ChebyshevTT` by slicing to a 1-D proxy and applying the same colleague-matrix calculus path used by `ChebyshevApproximation`.

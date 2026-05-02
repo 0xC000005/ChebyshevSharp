@@ -82,7 +82,7 @@ public class TtSobolIndicesTests
     public void Test_pure_coupling_zero_first_order()
     {
         // f(x, y, z) = x * y has zero first-order energy in dims 0 and 1
-        // (under uniform measure on [-1, 1] both x and y have mean 0,
+        // (under the Chebyshev orthogonality measure, both x and y have mean 0,
         // so the additive parts integrate to zero).
         var tt = Build3DTt((x, y, z) => x * y);
         var result = tt.SobolIndices();
@@ -203,24 +203,23 @@ public class TtSobolIndicesTests
     [Fact]
     public void Test_large_constant_plus_small_signal_recovers_dim()
     {
-        // f(x, y, z) = 1.0 + 1e-6 * x. The signal in dim 0 is small relative
+        // f(x, y, z) = 1.0 + 1e-12 * x. The signal in dim 0 is small relative
         // to the constant offset, but legitimate; the clamp must not silently
         // suppress it.
-        Func<double[], object?, double> f = (p, _) => 1.0 + 1e-6 * p[0];
-        var tt = new ChebyshevTT((p) => 1.0 + 1e-6 * p[0], 3,
+        var tt = new ChebyshevTT((p) => 1.0 + 1e-12 * p[0], 3,
             new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
             new[] { 8, 8, 8 },
             maxRank: 4,
-            tolerance: 1e-12);
-        tt.Build(verbose: false, seed: 42);
+            tolerance: 1e-14);
+        tt.Build(verbose: false, method: "svd");
 
         var result = tt.SobolIndices();
 
         // Variance should be positive and small (not clamped to zero).
-        Assert.True(result.Variance > 1e-15,
+        Assert.True(result.Variance > 1e-25,
             $"Variance={result.Variance} should be positive (not clamped) for legitimate small signal");
         // Dim 0 carries all the signal; FirstOrder[0] should dominate.
         Assert.True(result.FirstOrder[0] > 0.95,
-            $"FirstOrder[0]={result.FirstOrder[0]} should be near 1.0 for f = 1 + 1e-6*x");
+            $"FirstOrder[0]={result.FirstOrder[0]} should be near 1.0 for f = 1 + 1e-12*x");
     }
 }

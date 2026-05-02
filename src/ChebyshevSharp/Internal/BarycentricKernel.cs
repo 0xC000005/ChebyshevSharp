@@ -136,18 +136,13 @@ internal static class BarycentricKernel
     /// </summary>
     internal static double[] MakeNodesForDim(double lo, double hi, int n)
     {
-        // chebpts1(n): cos(pi*(2k+1)/(2n)) for k=0..n-1, which is the same as
-        // cos((2*(n-k)-1)*pi/(2n)) in ascending order.
-        // numpy.polynomial.chebyshev.chebpts1 returns them in ascending order.
+        // NumPy chebpts1(n) uses Type-I roots cos(pi*(2k+1)/(2n)).
+        // Generate the roots and sort ascending to match PyChebyshev parity.
         double[] nodesStd = new double[n];
         for (int k = 0; k < n; k++)
         {
-            // chebpts1 formula: cos(pi * (n - 1 - 2k) / (2n)) for k=0..n-1
-            // Actually numpy uses: x_k = cos(pi*(2*(n-1-k)+1)/(2n)) for k=0..n-1 ascending
-            // Simpler: generate descending then reverse
             nodesStd[k] = Math.Cos(Math.PI * (2 * k + 1) / (2 * n));
         }
-        // nodesStd is in descending order, sort ascending
         Array.Sort(nodesStd);
 
         // Map from [-1,1] to [lo, hi]

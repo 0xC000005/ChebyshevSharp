@@ -10,11 +10,21 @@ This page covers the mathematical foundations behind ChebyshevSharp. Understandi
 
 Polynomial interpolation with equally-spaced points suffers from **Runge's phenomenon** (Runge 1901) -- wild oscillations near interval endpoints that worsen as polynomial degree increases. Chebyshev nodes solve this by clustering near boundaries:
 
-$$x_i = \cos\left(\frac{(2i-1)\pi}{2n}\right), \quad i = 1, \ldots, n$$
+$$x_i = \cos\left(\frac{(2i+1)\pi}{2n}\right), \quad i = 0, \ldots, n-1$$
 
 These are the **Type I Chebyshev nodes** (roots of the Chebyshev polynomial $T_n$), also called Gauss--Chebyshev nodes. ChebyshevSharp stores them in ascending order after mapping to the user-specified domain $[a, b]$:
 
 $$\tilde{x}_i = \frac{a + b}{2} + \frac{b - a}{2}\, x_i$$
+
+### Node Convention and Upstream Split
+
+ChebyshevSharp intentionally follows PyChebyshev's NumPy `chebpts1` convention: `n` Type I root nodes, no interval endpoints, and a DCT-II coefficient transform. This convention is used by `ErrorEstimate()`, `SobolIndices()`, Fejer-1 integration weights, and TT coefficient cores.
+
+The MoCaX C library and the Ruiz--Zeron text use a different valid Chebyshev grid: Chebyshev--Lobatto/extrema nodes
+
+$$y_i = \cos\left(\frac{i\pi}{N}\right), \quad i = 0, \ldots, N,$$
+
+which include both endpoints and naturally pair with DCT-I / Clenshaw--Curtis style formulas. Both grids have logarithmic Lebesgue growth and spectral convergence for analytic functions. They are not storage-compatible: values sampled on a MoCaX Lobatto grid cannot be passed directly to ChebyshevSharp `FromValues()` without resampling onto Type I nodes.
 
 The Lebesgue constant for Chebyshev nodes grows only logarithmically:
 
@@ -48,7 +58,7 @@ For the full theory, see Trefethen (2013), *Approximation Theory and Approximati
 
 The interpolating polynomial is expressed in the **second-form barycentric formula** (Berrut & Trefethen 2004):
 
-$$p(x) = \frac{\displaystyle\sum_{i=0}^{n} \frac{w_i\, f_i}{x - x_i}}{\displaystyle\sum_{i=0}^{n} \frac{w_i}{x - x_i}}$$
+$$p(x) = \frac{\displaystyle\sum_{i=0}^{n-1} \frac{w_i\, f_i}{x - x_i}}{\displaystyle\sum_{i=0}^{n-1} \frac{w_i}{x - x_i}}$$
 
 where the barycentric weights $w_i = 1 / \prod_{j \neq i}(x_i - x_j)$ depend **only on node positions**, not on function values. This has two important consequences:
 
@@ -111,3 +121,4 @@ double[] results = cheb.VectorizedEvalMulti(
 - Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501--517.
 - Runge, C. (1901). "Uber empirische Funktionen und die Interpolation zwischen aquidistanten Ordinaten." *Zeitschrift fur Mathematik und Physik* 46:224--243.
 - Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
+- Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance.

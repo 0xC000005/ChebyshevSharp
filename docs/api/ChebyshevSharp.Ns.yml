@@ -1,123 +1,176 @@
 ### YamlMime:ManagedReference
 items:
-- uid: ChebyshevSharp.SplineNodeInfo
-  commentId: T:ChebyshevSharp.SplineNodeInfo
-  id: SplineNodeInfo
+- uid: ChebyshevSharp.Ns
+  commentId: T:ChebyshevSharp.Ns
+  id: Ns
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.SplineNodeInfo.NumPieces
-  - ChebyshevSharp.SplineNodeInfo.PieceShape
-  - ChebyshevSharp.SplineNodeInfo.Pieces
+  - ChebyshevSharp.Ns.#ctor(System.Int32[])
+  - ChebyshevSharp.Ns.Counts
+  - ChebyshevSharp.Ns.op_Implicit(ChebyshevSharp.Ns)~System.Int32[]
+  - ChebyshevSharp.Ns.op_Implicit(System.Int32[])~ChebyshevSharp.Ns
   langs:
   - csharp
   - vb
-  name: SplineNodeInfo
-  nameWithType: SplineNodeInfo
-  fullName: ChebyshevSharp.SplineNodeInfo
+  name: Ns
+  nameWithType: Ns
+  fullName: ChebyshevSharp.Ns
   type: Class
   source:
-    id: SplineNodeInfo
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2412
+    id: Ns
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Ns.cs
+    startLine: 8
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Node information for all pieces of a spline.
+  summary: >-
+    Typed wrapper for per-dimension Chebyshev node counts.
+
+    Implicit conversions to and from integer arrays let you pass either
+
+    form to constructors that accept <code>Ns</code>.
   example: []
   syntax:
-    content: public class SplineNodeInfo
-    content.vb: Public Class SplineNodeInfo
+    content: 'public sealed record Ns : IEquatable<Ns>'
+    content.vb: Public NotInheritable Class Ns Implements IEquatable(Of Ns)
   inheritance:
   - System.Object
+  implements:
+  - System.IEquatable{ChebyshevSharp.Ns}
   inheritedMembers:
   - System.Object.Equals(System.Object)
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: ChebyshevSharp.SplineNodeInfo.Pieces
-  commentId: P:ChebyshevSharp.SplineNodeInfo.Pieces
-  id: Pieces
-  parent: ChebyshevSharp.SplineNodeInfo
+- uid: ChebyshevSharp.Ns.#ctor(System.Int32[])
+  commentId: M:ChebyshevSharp.Ns.#ctor(System.Int32[])
+  id: '#ctor(System.Int32[])'
+  parent: ChebyshevSharp.Ns
   langs:
   - csharp
   - vb
-  name: Pieces
-  nameWithType: SplineNodeInfo.Pieces
-  fullName: ChebyshevSharp.SplineNodeInfo.Pieces
-  type: Property
+  name: Ns(int[])
+  nameWithType: Ns.Ns(int[])
+  fullName: ChebyshevSharp.Ns.Ns(int[])
+  type: Constructor
   source:
-    id: Pieces
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2415
+    id: .ctor
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Ns.cs
+    startLine: 8
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Per-piece node info.
+  summary: >-
+    Typed wrapper for per-dimension Chebyshev node counts.
+
+    Implicit conversions to and from integer arrays let you pass either
+
+    form to constructors that accept <code>Ns</code>.
   example: []
   syntax:
-    content: public SplinePieceNodeInfo[] Pieces { get; set; }
-    parameters: []
-    return:
-      type: ChebyshevSharp.SplinePieceNodeInfo[]
-    content.vb: Public Property Pieces As SplinePieceNodeInfo()
-  overload: ChebyshevSharp.SplineNodeInfo.Pieces*
-- uid: ChebyshevSharp.SplineNodeInfo.NumPieces
-  commentId: P:ChebyshevSharp.SplineNodeInfo.NumPieces
-  id: NumPieces
-  parent: ChebyshevSharp.SplineNodeInfo
+    content: public Ns(int[] Counts)
+    parameters:
+    - id: Counts
+      type: System.Int32[]
+      description: Number of nodes per dimension.
+    content.vb: Public Sub New(Counts As Integer())
+  overload: ChebyshevSharp.Ns.#ctor*
+  nameWithType.vb: Ns.New(Integer())
+  fullName.vb: ChebyshevSharp.Ns.New(Integer())
+  name.vb: New(Integer())
+- uid: ChebyshevSharp.Ns.Counts
+  commentId: P:ChebyshevSharp.Ns.Counts
+  id: Counts
+  parent: ChebyshevSharp.Ns
   langs:
   - csharp
   - vb
-  name: NumPieces
-  nameWithType: SplineNodeInfo.NumPieces
-  fullName: ChebyshevSharp.SplineNodeInfo.NumPieces
+  name: Counts
+  nameWithType: Ns.Counts
+  fullName: ChebyshevSharp.Ns.Counts
   type: Property
   source:
-    id: NumPieces
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2417
+    id: Counts
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Ns.cs
+    startLine: 8
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Total number of pieces.
+  summary: Number of nodes per dimension.
   example: []
   syntax:
-    content: public int NumPieces { get; set; }
-    parameters: []
-    return:
-      type: System.Int32
-    content.vb: Public Property NumPieces As Integer
-  overload: ChebyshevSharp.SplineNodeInfo.NumPieces*
-- uid: ChebyshevSharp.SplineNodeInfo.PieceShape
-  commentId: P:ChebyshevSharp.SplineNodeInfo.PieceShape
-  id: PieceShape
-  parent: ChebyshevSharp.SplineNodeInfo
-  langs:
-  - csharp
-  - vb
-  name: PieceShape
-  nameWithType: SplineNodeInfo.PieceShape
-  fullName: ChebyshevSharp.SplineNodeInfo.PieceShape
-  type: Property
-  source:
-    id: PieceShape
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 2419
-  assemblies:
-  - ChebyshevSharp
-  namespace: ChebyshevSharp
-  summary: Per-dimension piece counts.
-  example: []
-  syntax:
-    content: public int[] PieceShape { get; set; }
+    content: public int[] Counts { get; init; }
     parameters: []
     return:
       type: System.Int32[]
-    content.vb: Public Property PieceShape As Integer()
-  overload: ChebyshevSharp.SplineNodeInfo.PieceShape*
+    content.vb: Public Property Counts As Integer()
+  overload: ChebyshevSharp.Ns.Counts*
+- uid: ChebyshevSharp.Ns.op_Implicit(System.Int32[])~ChebyshevSharp.Ns
+  commentId: M:ChebyshevSharp.Ns.op_Implicit(System.Int32[])~ChebyshevSharp.Ns
+  id: op_Implicit(System.Int32[])~ChebyshevSharp.Ns
+  parent: ChebyshevSharp.Ns
+  langs:
+  - csharp
+  - vb
+  name: implicit operator Ns(int[])
+  nameWithType: Ns.implicit operator Ns(int[])
+  fullName: ChebyshevSharp.Ns.implicit operator ChebyshevSharp.Ns(int[])
+  type: Operator
+  source:
+    id: op_Implicit
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Ns.cs
+    startLine: 11
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Implicit conversion from integer array to Ns.
+  example: []
+  syntax:
+    content: public static implicit operator Ns(int[] counts)
+    parameters:
+    - id: counts
+      type: System.Int32[]
+    return:
+      type: ChebyshevSharp.Ns
+    content.vb: Public Shared Widening Operator CType(counts As Integer()) As Ns
+  overload: ChebyshevSharp.Ns.op_Implicit*
+  nameWithType.vb: Ns.CType(Integer())
+  fullName.vb: ChebyshevSharp.Ns.CType(Integer())
+  name.vb: CType(Integer())
+- uid: ChebyshevSharp.Ns.op_Implicit(ChebyshevSharp.Ns)~System.Int32[]
+  commentId: M:ChebyshevSharp.Ns.op_Implicit(ChebyshevSharp.Ns)~System.Int32[]
+  id: op_Implicit(ChebyshevSharp.Ns)~System.Int32[]
+  parent: ChebyshevSharp.Ns
+  langs:
+  - csharp
+  - vb
+  name: implicit operator int[](Ns)
+  nameWithType: Ns.implicit operator int[](Ns)
+  fullName: ChebyshevSharp.Ns.implicit operator int[](ChebyshevSharp.Ns)
+  type: Operator
+  source:
+    id: op_Implicit
+    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Ns.cs
+    startLine: 14
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Implicit conversion from Ns to integer array.
+  example: []
+  syntax:
+    content: public static implicit operator int[](Ns n)
+    parameters:
+    - id: n
+      type: ChebyshevSharp.Ns
+    return:
+      type: System.Int32[]
+    content.vb: Public Shared Widening Operator CType(n As Ns) As Integer()
+  overload: ChebyshevSharp.Ns.op_Implicit*
+  nameWithType.vb: Ns.CType(Ns)
+  fullName.vb: ChebyshevSharp.Ns.CType(ChebyshevSharp.Ns)
+  name.vb: CType(Ns)
 references:
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
@@ -136,6 +189,39 @@ references:
   nameWithType.vb: Object
   fullName.vb: Object
   name.vb: Object
+- uid: System.IEquatable{ChebyshevSharp.Ns}
+  commentId: T:System.IEquatable{ChebyshevSharp.Ns}
+  parent: System
+  definition: System.IEquatable`1
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<Ns>
+  nameWithType: IEquatable<Ns>
+  fullName: System.IEquatable<ChebyshevSharp.Ns>
+  nameWithType.vb: IEquatable(Of Ns)
+  fullName.vb: System.IEquatable(Of ChebyshevSharp.Ns)
+  name.vb: IEquatable(Of Ns)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - uid: ChebyshevSharp.Ns
+    name: Ns
+    href: ChebyshevSharp.Ns.html
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ChebyshevSharp.Ns
+    name: Ns
+    href: ChebyshevSharp.Ns.html
+  - name: )
 - uid: System.Object.Equals(System.Object)
   commentId: M:System.Object.Equals(System.Object)
   parent: System.Object
@@ -262,30 +348,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -362,56 +424,43 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: ChebyshevSharp.SplineNodeInfo.Pieces*
-  commentId: Overload:ChebyshevSharp.SplineNodeInfo.Pieces
-  href: ChebyshevSharp.SplineNodeInfo.html#ChebyshevSharp_SplineNodeInfo_Pieces
-  name: Pieces
-  nameWithType: SplineNodeInfo.Pieces
-  fullName: ChebyshevSharp.SplineNodeInfo.Pieces
-- uid: ChebyshevSharp.SplinePieceNodeInfo[]
+- uid: System.IEquatable`1
+  commentId: T:System.IEquatable`1
   isExternal: true
-  href: ChebyshevSharp.SplinePieceNodeInfo.html
-  name: SplinePieceNodeInfo[]
-  nameWithType: SplinePieceNodeInfo[]
-  fullName: ChebyshevSharp.SplinePieceNodeInfo[]
-  nameWithType.vb: SplinePieceNodeInfo()
-  fullName.vb: ChebyshevSharp.SplinePieceNodeInfo()
-  name.vb: SplinePieceNodeInfo()
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<T>
+  nameWithType: IEquatable<T>
+  fullName: System.IEquatable<T>
+  nameWithType.vb: IEquatable(Of T)
+  fullName.vb: System.IEquatable(Of T)
+  name.vb: IEquatable(Of T)
   spec.csharp:
-  - uid: ChebyshevSharp.SplinePieceNodeInfo
-    name: SplinePieceNodeInfo
-    href: ChebyshevSharp.SplinePieceNodeInfo.html
-  - name: '['
-  - name: ']'
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - name: T
+  - name: '>'
   spec.vb:
-  - uid: ChebyshevSharp.SplinePieceNodeInfo
-    name: SplinePieceNodeInfo
-    href: ChebyshevSharp.SplinePieceNodeInfo.html
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
   - name: (
+  - name: Of
+  - name: " "
+  - name: T
   - name: )
-- uid: ChebyshevSharp.SplineNodeInfo.NumPieces*
-  commentId: Overload:ChebyshevSharp.SplineNodeInfo.NumPieces
-  href: ChebyshevSharp.SplineNodeInfo.html#ChebyshevSharp_SplineNodeInfo_NumPieces
-  name: NumPieces
-  nameWithType: SplineNodeInfo.NumPieces
-  fullName: ChebyshevSharp.SplineNodeInfo.NumPieces
-- uid: System.Int32
-  commentId: T:System.Int32
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int
-  nameWithType: int
-  fullName: int
-  nameWithType.vb: Integer
-  fullName.vb: Integer
-  name.vb: Integer
-- uid: ChebyshevSharp.SplineNodeInfo.PieceShape*
-  commentId: Overload:ChebyshevSharp.SplineNodeInfo.PieceShape
-  href: ChebyshevSharp.SplineNodeInfo.html#ChebyshevSharp_SplineNodeInfo_PieceShape
-  name: PieceShape
-  nameWithType: SplineNodeInfo.PieceShape
-  fullName: ChebyshevSharp.SplineNodeInfo.PieceShape
+- uid: ChebyshevSharp.Ns.#ctor*
+  commentId: Overload:ChebyshevSharp.Ns.#ctor
+  href: ChebyshevSharp.Ns.html#ChebyshevSharp_Ns__ctor_System_Int32___
+  name: Ns
+  nameWithType: Ns.Ns
+  fullName: ChebyshevSharp.Ns.Ns
+  nameWithType.vb: Ns.New
+  fullName.vb: ChebyshevSharp.Ns.New
+  name.vb: New
 - uid: System.Int32[]
   isExternal: true
   href: https://learn.microsoft.com/dotnet/api/system.int32
@@ -435,3 +484,28 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.int32
   - name: (
   - name: )
+- uid: ChebyshevSharp.Ns.Counts*
+  commentId: Overload:ChebyshevSharp.Ns.Counts
+  href: ChebyshevSharp.Ns.html#ChebyshevSharp_Ns_Counts
+  name: Counts
+  nameWithType: Ns.Counts
+  fullName: ChebyshevSharp.Ns.Counts
+- uid: ChebyshevSharp.Ns.op_Implicit*
+  commentId: Overload:ChebyshevSharp.Ns.op_Implicit
+  name: implicit operator
+  nameWithType: Ns.implicit operator
+  fullName: ChebyshevSharp.Ns.implicit operator
+  nameWithType.vb: Ns.CType
+  fullName.vb: ChebyshevSharp.Ns.CType
+  name.vb: CType
+  spec.csharp:
+  - name: implicit
+  - name: " "
+  - name: operator
+- uid: ChebyshevSharp.Ns
+  commentId: T:ChebyshevSharp.Ns
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.Ns.html
+  name: Ns
+  nameWithType: Ns
+  fullName: ChebyshevSharp.Ns
