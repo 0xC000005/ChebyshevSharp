@@ -47,5 +47,7 @@
   href: parallel-build.md
 - name: Adaptive Refinement
   href: adaptive-refinement.md
+- name: Testing & Validation
+  href: testing-and-validation.md
 - name: Changelog
   href: changelog.md
