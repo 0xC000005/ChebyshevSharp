@@ -367,7 +367,7 @@ Evaluation then contracts the Chebyshev polynomial vectors $[T_0(x), T_1(x), \ld
 
 ## References
 
-See [Citations](citations.md) for DOI links and citation-style guidance.
+See [Citations](citations.md) for the references used by this page.
 
 1. Oseledets, I. V. (2011). "Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 33(5):2295--2317.
 2. Oseledets, I. V. & Tyrtyshnikov, E. E. (2010). "TT-cross approximation for multidimensional arrays." *Linear Algebra and its Applications* 432(1):70--88.
