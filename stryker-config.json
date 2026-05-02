@@ -1,0 +1,25 @@
+{
+  "stryker-config": {
+    "solution": "ChebyshevSharp.slnx",
+    "project": "src/ChebyshevSharp/ChebyshevSharp.csproj",
+    "test-projects": [
+      "tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj"
+    ],
+    "mutate": [
+      "**/Internal/TensorShape.cs",
+      "**/Internal/ExtrudeSlice.cs",
+      "**/ChebyshevTT.cs",
+      "**/Internal/TensorTrainKernel.cs"
+    ],
+    "reporters": [
+      "progress",
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 0
+    }
+  }
+}
