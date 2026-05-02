@@ -11,8 +11,39 @@ on:
   workflow_dispatch:
 
 jobs:
+  validation:
+    name: Format, Pack, and Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes --verbosity minimal
+
+      - name: Build release
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Pack with package validation
+        run: dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artifacts/packages
+
+      - name: Install DocFX
+        run: dotnet tool install --global docfx
+
+      - name: Build docs
+        run: docfx docs/docfx.json
+
   test:
     runs-on: ubuntu-latest
+    needs: [validation]
     strategy:
       matrix:
         dotnet-version: ["8.0.x", "10.0.x"]
@@ -45,11 +76,15 @@ jobs:
   all-tests:
     name: All Tests Passed
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [validation, test]
     if: always()
     steps:
-      - name: Check test results
+      - name: Check validation and test results
         run: |
+          if [[ "${{ needs.validation.result }}" != "success" ]]; then
+            echo "Validation failed"
+            exit 1
+          fi
           if [[ "${{ needs.test.result }}" != "success" ]]; then
             echo "Tests failed"
             exit 1

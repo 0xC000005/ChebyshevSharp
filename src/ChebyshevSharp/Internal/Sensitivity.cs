@@ -124,18 +124,18 @@ internal static class Sensitivity
             int rL = A.RLeft, nk = A.NNodes, rR = A.RRight;
             var Mnew = new double[rR, rR];
             for (int a = 0; a < rR; a++)
-            for (int b = 0; b < rR; b++)
-            {
-                double acc = 0.0;
-                for (int i = 0; i < rL; i++)
-                for (int j = 0; j < rL; j++)
+                for (int b = 0; b < rR; b++)
                 {
-                    double mij = M[i, j];
-                    for (int p = 0; p < nk; p++)
-                        acc += mij * A[i, p, a] * wFull[k][p] * A[j, p, b];
+                    double acc = 0.0;
+                    for (int i = 0; i < rL; i++)
+                        for (int j = 0; j < rL; j++)
+                        {
+                            double mij = M[i, j];
+                            for (int p = 0; p < nk; p++)
+                                acc += mij * A[i, p, a] * wFull[k][p] * A[j, p, b];
+                        }
+                    Mnew[a, b] = acc;
                 }
-                Mnew[a, b] = acc;
-            }
             M = Mnew;
         }
         double totalWeightedSquared = M[0, 0];
@@ -185,18 +185,18 @@ internal static class Sensitivity
             int rL = A.RLeft, nk = A.NNodes, rR = A.RRight;
             var Lnew = new double[rR, rR];
             for (int a = 0; a < rR; a++)
-            for (int b = 0; b < rR; b++)
-            {
-                double acc = 0.0;
-                for (int i = 0; i < rL; i++)
-                for (int j = 0; j < rL; j++)
+                for (int b = 0; b < rR; b++)
                 {
-                    double lij = L[k][i, j];
-                    for (int p = 0; p < nk; p++)
-                        acc += lij * A[i, p, a] * wFull[k][p] * A[j, p, b];
+                    double acc = 0.0;
+                    for (int i = 0; i < rL; i++)
+                        for (int j = 0; j < rL; j++)
+                        {
+                            double lij = L[k][i, j];
+                            for (int p = 0; p < nk; p++)
+                                acc += lij * A[i, p, a] * wFull[k][p] * A[j, p, b];
+                        }
+                    Lnew[a, b] = acc;
                 }
-                Lnew[a, b] = acc;
-            }
             L[k + 1] = Lnew;
         }
 
@@ -209,18 +209,18 @@ internal static class Sensitivity
             int rL = A.RLeft, nk = A.NNodes, rR = A.RRight;
             var Rnew = new double[rL, rL];
             for (int i = 0; i < rL; i++)
-            for (int j = 0; j < rL; j++)
-            {
-                double acc = 0.0;
-                for (int a = 0; a < rR; a++)
-                for (int b = 0; b < rR; b++)
+                for (int j = 0; j < rL; j++)
                 {
-                    double rab = R[k + 1][a, b];
-                    for (int p = 0; p < nk; p++)
-                        acc += rab * A[i, p, a] * wFull[k][p] * A[j, p, b];
+                    double acc = 0.0;
+                    for (int a = 0; a < rR; a++)
+                        for (int b = 0; b < rR; b++)
+                        {
+                            double rab = R[k + 1][a, b];
+                            for (int p = 0; p < nk; p++)
+                                acc += rab * A[i, p, a] * wFull[k][p] * A[j, p, b];
+                        }
+                    Rnew[i, j] = acc;
                 }
-                Rnew[i, j] = acc;
-            }
             R[k] = Rnew;
         }
 
@@ -291,15 +291,15 @@ internal static class Sensitivity
             int rLjj = cores[j].RLeft, rRjj = cores[j].RRight;
             double sumAlphaJZero = 0.0;
             for (int i = 0; i < rLjj; i++)
-            for (int jj = 0; jj < rLjj; jj++)
-            {
-                double lij = L[j][i, jj];
-                for (int a = 0; a < rRjj; a++)
-                for (int b = 0; b < rRjj; b++)
+                for (int jj = 0; jj < rLjj; jj++)
                 {
-                    sumAlphaJZero += lij * cores[j][i, 0, a] * cores[j][jj, 0, b] * R[j + 1][a, b];
+                    double lij = L[j][i, jj];
+                    for (int a = 0; a < rRjj; a++)
+                        for (int b = 0; b < rRjj; b++)
+                        {
+                            sumAlphaJZero += lij * cores[j][i, 0, a] * cores[j][jj, 0, b] * R[j + 1][a, b];
+                        }
                 }
-            }
             sumAlphaJZero *= pi;
             totalOrder[j] = (totalWeightedSquared - sumAlphaJZero) / variance;
         }
