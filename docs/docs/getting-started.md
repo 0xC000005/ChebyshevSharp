@@ -11,7 +11,7 @@ dotnet add package ChebyshevSharp
 Or add to your `.csproj`:
 
 ```xml
-<PackageReference Include="ChebyshevSharp" Version="0.11.1" />
+<PackageReference Include="ChebyshevSharp" Version="0.12.0" />
 ```
 
 The [BlasSharp.OpenBlas](https://www.nuget.org/packages/BlasSharp.OpenBlas) package is included as a transitive dependency and provides pre-built OpenBLAS binaries for all platforms (Windows, Linux, macOS). No system BLAS installation is required.
@@ -107,7 +107,7 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 
 `ChebyshevSpline` supports the same API as `ChebyshevApproximation` (eval, derivatives, batch, multi, save/load, arithmetic, extrusion, slicing, integration, roots, optimization). See [Piecewise Chebyshev Interpolation](spline.md) for a full guide.
 
-`ChebyshevSlider` supports eval, eval_multi, error estimation, save/load, extrusion, slicing, and arithmetic operators. It does not support batch eval, integration, roots, or optimization. See [Sliding Technique](slider.md) for a full guide.
+`ChebyshevSlider` supports eval, eval_multi, error estimation, save/load, integration, roots, optimization, extrusion, slicing, and arithmetic operators. It does not support batch eval or the `Nodes()`/`FromValues()` workflow. See [Sliding Technique](slider.md) for a full guide.
 
 `ChebyshevTT` supports eval, batch eval, finite-difference derivatives, error estimation, save/load, integration, roots, optimization, algebra, extrusion, slicing, rank refinement, and dimension reordering. It intentionally guards dense materialization paths because a full grid can exceed memory even when TT-Cross is feasible. See [Tensor Train Interpolation](tensor-train.md) for a full guide.
 

@@ -5,24 +5,40 @@ items:
   id: ChebyshevSlider
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)
+  - ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})
   - ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
   - ChebyshevSharp.ChebyshevSlider.BuildTime
   - ChebyshevSharp.ChebyshevSlider.Built
+  - ChebyshevSharp.ChebyshevSlider.Clone
   - ChebyshevSharp.ChebyshevSlider.Domain
   - ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+  - ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32)
   - ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32[])
   - ChebyshevSharp.ChebyshevSlider.EvalMulti(System.Double[],System.Int32[][])
   - ChebyshevSharp.ChebyshevSlider.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
   - ChebyshevSharp.ChebyshevSlider.Function
+  - ChebyshevSharp.ChebyshevSlider.GetAdditionalData
+  - ChebyshevSharp.ChebyshevSlider.GetConstructorType
+  - ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+  - ChebyshevSharp.ChebyshevSlider.GetDescriptor
+  - ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints
+  - ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints
+  - ChebyshevSharp.ChebyshevSlider.GetUsedNs
+  - ChebyshevSharp.ChebyshevSlider.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  - ChebyshevSharp.ChebyshevSlider.IsConstructionFinished
   - ChebyshevSharp.ChebyshevSlider.Load(System.String)
   - ChebyshevSharp.ChebyshevSlider.MaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevSlider.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  - ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
   - ChebyshevSharp.ChebyshevSlider.NNodes
   - ChebyshevSharp.ChebyshevSlider.NumDimensions
   - ChebyshevSharp.ChebyshevSlider.Partition
   - ChebyshevSharp.ChebyshevSlider.PivotPoint
   - ChebyshevSharp.ChebyshevSlider.PivotValue
+  - ChebyshevSharp.ChebyshevSlider.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
   - ChebyshevSharp.ChebyshevSlider.Save(System.String)
+  - ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
   - ChebyshevSharp.ChebyshevSlider.Slice(System.ValueTuple{System.Int32,System.Double}[])
   - ChebyshevSharp.ChebyshevSlider.ToReprString
   - ChebyshevSharp.ChebyshevSlider.ToString
@@ -392,16 +408,16 @@ items:
       type: System.Double
     content.vb: Public Property BuildTime As Double
   overload: ChebyshevSharp.ChebyshevSlider.BuildTime*
-- uid: ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)
-  commentId: M:ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)
-  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32)'
+- uid: ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  commentId: M:ChebyshevSharp.ChebyshevSlider.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32[][],System.Double[],System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})'
   parent: ChebyshevSharp.ChebyshevSlider
   langs:
   - csharp
   - vb
-  name: ChebyshevSlider(Func<double[], object?, double>, int, double[][], int[], int[][], double[], int)
-  nameWithType: ChebyshevSlider.ChebyshevSlider(Func<double[], object?, double>, int, double[][], int[], int[][], double[], int)
-  fullName: ChebyshevSharp.ChebyshevSlider.ChebyshevSlider(System.Func<double[], object?, double>, int, double[][], int[], int[][], double[], int)
+  name: ChebyshevSlider(Func<double[], object?, double>, int, double[][], int[], int[][], double[], int, object?, int?, IProgress<int>?)
+  nameWithType: ChebyshevSlider.ChebyshevSlider(Func<double[], object?, double>, int, double[][], int[], int[][], double[], int, object?, int?, IProgress<int>?)
+  fullName: ChebyshevSharp.ChebyshevSlider.ChebyshevSlider(System.Func<double[], object?, double>, int, double[][], int[], int[][], double[], int, object?, int?, System.IProgress<int>?)
   type: Constructor
   source:
     remote:
@@ -410,14 +426,15 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 71
+    startLine: 84
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
   summary: Create a new ChebyshevSlider.
+  remarks: 'Thread safety: the user-supplied function must be thread-safe when <code class="paramref">nWorkers</code> is non-null.'
   example: []
   syntax:
-    content: public ChebyshevSlider(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] nNodes, int[][] partition, double[] pivotPoint, int maxDerivativeOrder = 2)
+    content: public ChebyshevSlider(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] nNodes, int[][] partition, double[] pivotPoint, int maxDerivativeOrder = 2, object? additionalData = null, int? nWorkers = null, IProgress<int>? progress = null)
     parameters:
     - id: function
       type: System.Func{System.Double[],System.Object,System.Double}
@@ -440,11 +457,20 @@ items:
     - id: maxDerivativeOrder
       type: System.Int32
       description: Maximum derivative order to support (default 2).
-    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), partition As Integer()(), pivotPoint As Double(), maxDerivativeOrder As Integer = 2)
+    - id: additionalData
+      type: System.Object
+      description: Optional user data object threaded through every f(point, data) call during Build.
+    - id: nWorkers
+      type: System.Nullable{System.Int32}
+      description: Number of parallel workers for function evaluation. null = sequential; -1 = <xref href="System.Environment.ProcessorCount" data-throw-if-not-resolved="false"></xref>; positive = exact count.
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: Optional progress reporter; receives cumulative evaluation count across all slides.
+    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), partition As Integer()(), pivotPoint As Double(), maxDerivativeOrder As Integer = 2, additionalData As Object = Nothing, nWorkers As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing)
   overload: ChebyshevSharp.ChebyshevSlider.#ctor*
-  nameWithType.vb: ChebyshevSlider.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer)
-  fullName.vb: ChebyshevSharp.ChebyshevSlider.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer)
-  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer)
+  nameWithType.vb: ChebyshevSlider.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer, Object, Integer?, IProgress(Of Integer))
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer, Object, Integer?, System.IProgress(Of Integer))
+  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer()(), Double(), Integer, Object, Integer?, IProgress(Of Integer))
 - uid: ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
   commentId: M:ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
   id: Build(System.Boolean)
@@ -463,7 +489,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Build
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 136
+    startLine: 155
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -501,7 +527,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 224
+    startLine: 257
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -549,7 +575,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalMulti
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 297
+    startLine: 330
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -590,7 +616,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorEstimate
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 316
+    startLine: 349
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -610,6 +636,59 @@ items:
       description: Estimated interpolation error (per-slide sum).
     content.vb: Public Function ErrorEstimate() As Double
   overload: ChebyshevSharp.ChebyshevSlider.ErrorEstimate*
+- uid: ChebyshevSharp.ChebyshevSlider.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  id: Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Integrate(int[]?, (double lo, double hi)[]?)
+  nameWithType: ChebyshevSlider.Integrate(int[]?, (double lo, double hi)[]?)
+  fullName: ChebyshevSharp.ChebyshevSlider.Integrate(int[]?, (double lo, double hi)[]?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Integrate
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 377
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Integrate the slider approximation over one or more dimensions.
+
+    Uses the closed-form decomposition of the sliding sum:
+      f(x) ≈ pv + Σ_i [s_i(x_{G_i}) - pv]
+    Each slide's integral is computed via <xref href="ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32%5b%5d%2cSystem.ValueTuple%7bSystem.Double%2cSystem.Double%7d%5b%5d)" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
+    parameters:
+    - id: dims
+      type: System.Int32[]
+      description: Dimensions to integrate out. Null = all (full integration → scalar).
+    - id: bounds
+      type: System.ValueTuple{System.Double,System.Double}[]
+      description: Sub-interval bounds per dim (positional with sorted dims). Null = full domain.
+    return:
+      type: System.Object
+      description: A boxed <code>double</code> when every dim is integrated; otherwise a new <xref href="ChebyshevSharp.ChebyshevSlider" data-throw-if-not-resolved="false"></xref> over surviving dims.
+    content.vb: Public Function Integrate(dims As Integer() = Nothing, bounds As (lo As Double, hi As Double)() = Nothing) As Object
+  overload: ChebyshevSharp.ChebyshevSlider.Integrate*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If <code class="paramref">dims</code> contains out-of-range indices, or <code class="paramref">bounds</code> are invalid. Duplicate <code class="paramref">dims</code> entries are silently deduplicated (matches <xref href="ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32%5b%5d%2cSystem.ValueTuple%7bSystem.Double%2cSystem.Double%7d%5b%5d)" data-throw-if-not-resolved="false"></xref>).
+  nameWithType.vb: ChebyshevSlider.Integrate(Integer(), (lo As Double, hi As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Integrate(Integer(), (lo As Double, hi As Double)())
+  name.vb: Integrate(Integer(), (lo As Double, hi As Double)())
 - uid: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
   commentId: P:ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
   id: TotalBuildEvals
@@ -628,7 +707,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TotalBuildEvals
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 330
+    startLine: 629
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -659,7 +738,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Save
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 354
+    startLine: 655
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -694,7 +773,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Load
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 402
+    startLine: 707
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -732,7 +811,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Extrude
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 498
+    startLine: 819
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -777,7 +856,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Slice
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 580
+    startLine: 901
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -797,6 +876,162 @@ items:
   nameWithType.vb: ChebyshevSlider.Slice(ParamArray (dimIndex As Integer, value As Double)())
   fullName.vb: ChebyshevSharp.ChebyshevSlider.Slice(ParamArray (dimIndex As Integer, value As Double)())
   name.vb: Slice(ParamArray (dimIndex As Integer, value As Double)())
+- uid: ChebyshevSharp.ChebyshevSlider.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Roots(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevSlider.Roots(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevSlider.Roots(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Roots
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1055
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Find all real roots of the slider along a specified dimension.
+
+    Reduces to a 1-D problem by slicing all other dimensions to their
+
+    fixed values, then delegates to <xref href="ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable%7bSystem.Int32%7d%2cSystem.Collections.Generic.Dictionary%7bSystem.Int32%2cSystem.Double%7d)" data-throw-if-not-resolved="false"></xref>.
+  remarks: 'Python source: <code>ref/PyChebyshev/src/pychebyshev/slider.py:1178-1224</code>.'
+  example: []
+  syntax:
+    content: public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+      description: Target dimension. For 1-D sliders, defaults to 0.
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+      description: >-
+        For multi-D sliders, <code>{dim_index: value}</code>
+            for all dimensions except <code class="paramref">dim</code>.
+    return:
+      type: System.Double[]
+      description: Sorted real root locations in the physical domain. Empty if no roots.
+    content.vb: Public Function Roots([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As Double()
+  overload: ChebyshevSharp.ChebyshevSlider.Roots*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If <code class="paramref">dim</code> or <code class="paramref">fixedDims</code> validation fails.
+  nameWithType.vb: ChebyshevSlider.Roots(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Roots(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Roots(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Minimize(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevSlider.Minimize(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevSlider.Minimize(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Minimize
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1083
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Find the minimum value of the slider along a specified dimension.
+
+    Reduces to a 1-D problem by slicing all other dimensions to their fixed
+
+    values, then delegates to <xref href="ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable%7bSystem.Int32%7d%2cSystem.Collections.Generic.Dictionary%7bSystem.Int32%2cSystem.Double%7d)" data-throw-if-not-resolved="false"></xref>.
+  remarks: 'Python source: <code>ref/PyChebyshev/src/pychebyshev/slider.py:1226-1264</code>.'
+  example: []
+  syntax:
+    content: public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+      description: Target dimension. For 1-D sliders, defaults to 0.
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+      description: >-
+        For multi-D, <code>{dim_index: value}</code> for all
+            dims except <code class="paramref">dim</code>.
+    return:
+      type: System.ValueTuple{System.Double,System.Double}
+      description: >-
+        Tuple <code>(value, location)</code> where value is the minimum and
+            location is its coordinate in the target dimension.
+    content.vb: Public Function Minimize([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As (value As Double, location As Double)
+  overload: ChebyshevSharp.ChebyshevSlider.Minimize*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If validation fails.
+  nameWithType.vb: ChebyshevSlider.Minimize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Minimize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Minimize(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevSlider.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Maximize(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevSlider.Maximize(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevSlider.Maximize(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Maximize
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1103
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Find the maximum value of the slider along a specified dimension.
+
+    See <xref href="ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable%7bSystem.Int32%7d%2cSystem.Collections.Generic.Dictionary%7bSystem.Int32%2cSystem.Double%7d)" data-throw-if-not-resolved="false"></xref> for parameter details.
+  remarks: 'Python source: <code>ref/PyChebyshev/src/pychebyshev/slider.py:1266-1283</code>.'
+  example: []
+  syntax:
+    content: public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+    return:
+      type: System.ValueTuple{System.Double,System.Double}
+    content.vb: Public Function Maximize([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As (value As Double, location As Double)
+  overload: ChebyshevSharp.ChebyshevSlider.Maximize*
+  nameWithType.vb: ChebyshevSlider.Maximize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Maximize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Maximize(Integer?, Dictionary(Of Integer, Double))
 - uid: ChebyshevSharp.ChebyshevSlider.op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
   commentId: M:ChebyshevSharp.ChebyshevSlider.op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
   id: op_Addition(ChebyshevSharp.ChebyshevSlider,ChebyshevSharp.ChebyshevSlider)
@@ -815,7 +1050,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Addition
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 729
+    startLine: 1162
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -853,7 +1088,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Subtraction
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 746
+    startLine: 1179
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -891,7 +1126,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 763
+    startLine: 1196
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -929,7 +1164,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 778
+    startLine: 1211
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -967,7 +1202,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Division
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 781
+    startLine: 1214
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1005,7 +1240,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_UnaryNegation
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 784
+    startLine: 1217
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1041,7 +1276,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToReprString
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 791
+    startLine: 1224
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1071,7 +1306,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToString
     path: ../src/ChebyshevSharp/ChebyshevSlider.cs
-    startLine: 801
+    startLine: 1234
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1084,6 +1319,416 @@ items:
     content.vb: Public Overrides Function ToString() As String
   overridden: System.Object.ToString
   overload: ChebyshevSharp.ChebyshevSlider.ToString*
+- uid: ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
+  id: SetDescriptor(System.String)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: SetDescriptor(string)
+  nameWithType: ChebyshevSlider.SetDescriptor(string)
+  fullName: ChebyshevSharp.ChebyshevSlider.SetDescriptor(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SetDescriptor
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1324
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Set a free-form descriptor string for this slider.
+  example: []
+  syntax:
+    content: public void SetDescriptor(string descriptor)
+    parameters:
+    - id: descriptor
+      type: System.String
+    content.vb: Public Sub SetDescriptor(descriptor As String)
+  overload: ChebyshevSharp.ChebyshevSlider.SetDescriptor*
+  nameWithType.vb: ChebyshevSlider.SetDescriptor(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.SetDescriptor(String)
+  name.vb: SetDescriptor(String)
+- uid: ChebyshevSharp.ChebyshevSlider.GetDescriptor
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetDescriptor
+  id: GetDescriptor
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetDescriptor()
+  nameWithType: ChebyshevSlider.GetDescriptor()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetDescriptor()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDescriptor
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1327
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Get the descriptor previously set via <xref href="ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)" data-throw-if-not-resolved="false"></xref>; null if unset.
+  example: []
+  syntax:
+    content: public string? GetDescriptor()
+    return:
+      type: System.String
+    content.vb: Public Function GetDescriptor() As String
+  overload: ChebyshevSharp.ChebyshevSlider.GetDescriptor*
+- uid: ChebyshevSharp.ChebyshevSlider.IsConstructionFinished
+  commentId: M:ChebyshevSharp.ChebyshevSlider.IsConstructionFinished
+  id: IsConstructionFinished
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: IsConstructionFinished()
+  nameWithType: ChebyshevSlider.IsConstructionFinished()
+  fullName: ChebyshevSharp.ChebyshevSlider.IsConstructionFinished()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: IsConstructionFinished
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1330
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: True if <xref href="ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref>/<xref href="ChebyshevSharp.ChebyshevSlider.Load(System.String)" data-throw-if-not-resolved="false"></xref> completed.
+  example: []
+  syntax:
+    content: public bool IsConstructionFinished()
+    return:
+      type: System.Boolean
+    content.vb: Public Function IsConstructionFinished() As Boolean
+  overload: ChebyshevSharp.ChebyshevSlider.IsConstructionFinished*
+- uid: ChebyshevSharp.ChebyshevSlider.GetConstructorType
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetConstructorType
+  id: GetConstructorType
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetConstructorType()
+  nameWithType: ChebyshevSlider.GetConstructorType()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetConstructorType()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetConstructorType
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1333
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Returns one of: "function" (Build), "load" (Load).'
+  example: []
+  syntax:
+    content: public string GetConstructorType()
+    return:
+      type: System.String
+    content.vb: Public Function GetConstructorType() As String
+  overload: ChebyshevSharp.ChebyshevSlider.GetConstructorType*
+- uid: ChebyshevSharp.ChebyshevSlider.GetUsedNs
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetUsedNs
+  id: GetUsedNs
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetUsedNs()
+  nameWithType: ChebyshevSlider.GetUsedNs()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetUsedNs()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetUsedNs
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1336
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Per-dimension Chebyshev node counts actually used.
+  example: []
+  syntax:
+    content: public int[] GetUsedNs()
+    return:
+      type: System.Int32[]
+    content.vb: Public Function GetUsedNs() As Integer()
+  overload: ChebyshevSharp.ChebyshevSlider.GetUsedNs*
+- uid: ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder
+  id: GetMaxDerivativeOrder
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetMaxDerivativeOrder()
+  nameWithType: ChebyshevSlider.GetMaxDerivativeOrder()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetMaxDerivativeOrder
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1339
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Maximum derivative order this slider supports.
+  example: []
+  syntax:
+    content: public int GetMaxDerivativeOrder()
+    return:
+      type: System.Int32
+    content.vb: Public Function GetMaxDerivativeOrder() As Integer
+  overload: ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder*
+- uid: ChebyshevSharp.ChebyshevSlider.GetAdditionalData
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetAdditionalData
+  id: GetAdditionalData
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetAdditionalData()
+  nameWithType: ChebyshevSlider.GetAdditionalData()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetAdditionalData()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetAdditionalData
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1346
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Returns the user-supplied <code>additionalData</code> object passed to the constructor,
+
+    or null if none was provided. Same value is threaded through every <code>f(point, data)</code>
+
+    call during <xref href="ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public object? GetAdditionalData()
+    return:
+      type: System.Object
+    content.vb: Public Function GetAdditionalData() As Object
+  overload: ChebyshevSharp.ChebyshevSlider.GetAdditionalData*
+- uid: ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints
+  id: GetNumEvaluationPoints
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetNumEvaluationPoints()
+  nameWithType: ChebyshevSlider.GetNumEvaluationPoints()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetNumEvaluationPoints
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1352
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Total number of evaluation points across all slides.
+  example: []
+  syntax:
+    content: public int GetNumEvaluationPoints()
+    return:
+      type: System.Int32
+      description: The sum of GetNumEvaluationPoints() from each slide.
+    content.vb: Public Function GetNumEvaluationPoints() As Integer
+  overload: ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints*
+- uid: ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints
+  id: GetEvaluationPoints
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetEvaluationPoints()
+  nameWithType: ChebyshevSlider.GetEvaluationPoints()
+  fullName: ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetEvaluationPoints
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1366
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Flat row-major array of all slider evaluation points, expanded to full ndim using PivotPoint.
+
+    Each slide's local coordinates are mapped to full-ndim space via the Partition and PivotPoint.
+
+    Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+  example: []
+  syntax:
+    content: public double[] GetEvaluationPoints()
+    return:
+      type: System.Double[]
+      description: Double array of full-ndim node coordinates, flattened in row-major order.
+    content.vb: Public Function GetEvaluationPoints() As Double()
+  overload: ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints*
+- uid: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+  id: GetDerivativeId(System.Int32[])
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevSlider.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDerivativeId
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1407
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Register or look up a derivative-orders tuple. Returns a stable
+
+    session-local int id for the same orders. Used in conjunction with
+
+    the <code>Eval(point, derivativeId)</code> overload.
+  example: []
+  syntax:
+    content: public int GetDerivativeId(int[] orders)
+    parameters:
+    - id: orders
+      type: System.Int32[]
+      description: Derivative order per dimension.
+    return:
+      type: System.Int32
+      description: A stable int id for this orders tuple (0-based, assigned in registration order).
+    content.vb: Public Function GetDerivativeId(orders As Integer()) As Integer
+  overload: ChebyshevSharp.ChebyshevSlider.GetDerivativeId*
+  nameWithType.vb: ChebyshevSlider.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+- uid: ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Eval(System.Double[],System.Int32)
+  id: Eval(System.Double[],System.Int32)
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Eval(double[], int)
+  nameWithType: ChebyshevSlider.Eval(double[], int)
+  fullName: ChebyshevSharp.ChebyshevSlider.Eval(double[], int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Eval
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1423
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate at <code class="paramref">point</code> using a previously-registered derivative id.
+  example: []
+  syntax:
+    content: public double Eval(double[] point, int derivativeId)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Evaluation point.
+    - id: derivativeId
+      type: System.Int32
+      description: Id returned by <xref href="ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32%5b%5d)" data-throw-if-not-resolved="false"></xref>.
+    return:
+      type: System.Double
+      description: Interpolated value at the given derivative order.
+    content.vb: Public Function Eval(point As Double(), derivativeId As Integer) As Double
+  overload: ChebyshevSharp.ChebyshevSlider.Eval*
+  exceptions:
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: Thrown when <code class="paramref">derivativeId</code> has not been registered.
+  nameWithType.vb: ChebyshevSlider.Eval(Double(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Eval(Double(), Integer)
+  name.vb: Eval(Double(), Integer)
+- uid: ChebyshevSharp.ChebyshevSlider.Clone
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Clone
+  id: Clone
+  parent: ChebyshevSharp.ChebyshevSlider
+  langs:
+  - csharp
+  - vb
+  name: Clone()
+  nameWithType: ChebyshevSlider.Clone()
+  fullName: ChebyshevSharp.ChebyshevSlider.Clone()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSlider.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Clone
+    path: ../src/ChebyshevSharp/ChebyshevSlider.cs
+    startLine: 1445
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Returns a deep copy of this slider. The source <xref href="ChebyshevSharp.ChebyshevSlider.Function" data-throw-if-not-resolved="false"></xref>
+
+    callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+
+    the function. All precomputed slides and state are deep-copied.
+  example: []
+  syntax:
+    content: public ChebyshevSlider Clone()
+    return:
+      type: ChebyshevSharp.ChebyshevSlider
+      description: A fully independent <xref href="ChebyshevSharp.ChebyshevSlider" data-throw-if-not-resolved="false"></xref> with <xref href="ChebyshevSharp.ChebyshevSlider.Function" data-throw-if-not-resolved="false"></xref> set to null.
+    content.vb: Public Function Clone() As ChebyshevSlider
+  overload: ChebyshevSharp.ChebyshevSlider.Clone*
 references:
 - uid: ChebyshevSharp.ChebyshevApproximation
   commentId: T:ChebyshevSharp.ChebyshevApproximation
@@ -1607,15 +2252,136 @@ references:
   name: BuildTime
   nameWithType: ChebyshevSlider.BuildTime
   fullName: ChebyshevSharp.ChebyshevSlider.BuildTime
+- uid: System.Environment.ProcessorCount
+  commentId: P:System.Environment.ProcessorCount
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.environment.processorcount
+  name: ProcessorCount
+  nameWithType: Environment.ProcessorCount
+  fullName: System.Environment.ProcessorCount
 - uid: ChebyshevSharp.ChebyshevSlider.#ctor*
   commentId: Overload:ChebyshevSharp.ChebyshevSlider.#ctor
-  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider__ctor_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Int32_____System_Double___System_Int32_
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider__ctor_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Int32_____System_Double___System_Int32_System_Object_System_Nullable_System_Int32__System_IProgress_System_Int32__
   name: ChebyshevSlider
   nameWithType: ChebyshevSlider.ChebyshevSlider
   fullName: ChebyshevSharp.ChebyshevSlider.ChebyshevSlider
   nameWithType.vb: ChebyshevSlider.New
   fullName.vb: ChebyshevSharp.ChebyshevSlider.New
   name.vb: New
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: System.IProgress{System.Int32}
+  commentId: T:System.IProgress{System.Int32}
+  parent: System
+  definition: System.IProgress`1
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<int>
+  nameWithType: IProgress<int>
+  fullName: System.IProgress<int>
+  nameWithType.vb: IProgress(Of Integer)
+  fullName.vb: System.IProgress(Of Integer)
+  name.vb: IProgress(Of Integer)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.IProgress`1
+  commentId: T:System.IProgress`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<T>
+  nameWithType: IProgress<T>
+  fullName: System.IProgress<T>
+  nameWithType.vb: IProgress(Of T)
+  fullName.vb: System.IProgress(Of T)
+  name.vb: IProgress(Of T)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
 - uid: ChebyshevSharp.ChebyshevSlider.Build*
   commentId: Overload:ChebyshevSharp.ChebyshevSlider.Build
   href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Build_System_Boolean_
@@ -1640,6 +2406,208 @@ references:
   name: ErrorEstimate
   nameWithType: ChebyshevSlider.ErrorEstimate
   fullName: ChebyshevSharp.ChebyshevSlider.ErrorEstimate
+- uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  name: Integrate(int[], (double lo, double hi)[])
+  nameWithType: ChebyshevApproximation.Integrate(int[], (double lo, double hi)[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Integrate(int[], (double lo, double hi)[])
+  nameWithType.vb: ChebyshevApproximation.Integrate(Integer(), (lo As Double, hi As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Integrate(Integer(), (lo As Double, hi As Double)())
+  name.vb: Integrate(Integer(), (lo As Double, hi As Double)())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+    name: Integrate
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+    name: Integrate
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider
+  commentId: T:ChebyshevSharp.ChebyshevSlider
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevSlider.html
+  name: ChebyshevSlider
+  nameWithType: ChebyshevSlider
+  fullName: ChebyshevSharp.ChebyshevSlider
+- uid: ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Build_System_Boolean_
+  name: Build(bool)
+  nameWithType: ChebyshevSlider.Build(bool)
+  fullName: ChebyshevSharp.ChebyshevSlider.Build(bool)
+  nameWithType.vb: ChebyshevSlider.Build(Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Build(Boolean)
+  name.vb: Build(Boolean)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+    name: Build
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Build_System_Boolean_
+  - name: (
+  - uid: System.Boolean
+    name: bool
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSlider.Build(System.Boolean)
+    name: Build
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Build_System_Boolean_
+  - name: (
+  - uid: System.Boolean
+    name: Boolean
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: )
+- uid: System.InvalidOperationException
+  commentId: T:System.InvalidOperationException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.invalidoperationexception
+  name: InvalidOperationException
+  nameWithType: InvalidOperationException
+  fullName: System.InvalidOperationException
+- uid: System.ArgumentException
+  commentId: T:System.ArgumentException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentexception
+  name: ArgumentException
+  nameWithType: ArgumentException
+  fullName: System.ArgumentException
+- uid: ChebyshevSharp.ChebyshevSlider.Integrate*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Integrate
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  name: Integrate
+  nameWithType: ChebyshevSlider.Integrate
+  fullName: ChebyshevSharp.ChebyshevSlider.Integrate
+- uid: System.ValueTuple{System.Double,System.Double}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double lo, double hi)[]
+  nameWithType: (double lo, double hi)[]
+  fullName: (double lo, double hi)[]
+  nameWithType.vb: (lo As Double, hi As Double)()
+  fullName.vb: (lo As Double, hi As Double)()
+  name.vb: (lo As Double, hi As Double)()
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
 - uid: ChebyshevSharp.ChebyshevSlider.TotalBuildEvals*
   commentId: Overload:ChebyshevSharp.ChebyshevSlider.TotalBuildEvals
   href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_TotalBuildEvals
@@ -1669,13 +2637,6 @@ references:
   name: Load
   nameWithType: ChebyshevSlider.Load
   fullName: ChebyshevSharp.ChebyshevSlider.Load
-- uid: ChebyshevSharp.ChebyshevSlider
-  commentId: T:ChebyshevSharp.ChebyshevSlider
-  parent: ChebyshevSharp
-  href: ChebyshevSharp.ChebyshevSlider.html
-  name: ChebyshevSlider
-  nameWithType: ChebyshevSlider
-  fullName: ChebyshevSharp.ChebyshevSlider
 - uid: ChebyshevSharp.ChebyshevSlider.Extrude*
   commentId: Overload:ChebyshevSharp.ChebyshevSlider.Extrude
   href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Extrude_System_ValueTuple_System_Int32_System_Double___System_Int32____
@@ -1832,6 +2793,428 @@ references:
   - name: )
   - name: (
   - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Roots(int?, Dictionary<int, double>)
+  nameWithType: ChebyshevApproximation.Roots(int?, Dictionary<int, double>)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Roots(int?, System.Collections.Generic.Dictionary<int, double>)
+  nameWithType.vb: ChebyshevApproximation.Roots(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Roots(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Roots(Integer?, Dictionary(Of Integer, Double))
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Roots
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Roots
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.Roots*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Roots
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Roots
+  nameWithType: ChebyshevSlider.Roots
+  fullName: ChebyshevSharp.ChebyshevSlider.Roots
+- uid: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+  commentId: T:System.Collections.Generic.Dictionary{System.Int32,System.Double}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.Dictionary`2
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<int, double>
+  nameWithType: Dictionary<int, double>
+  fullName: System.Collections.Generic.Dictionary<int, double>
+  nameWithType.vb: Dictionary(Of Integer, Double)
+  fullName.vb: System.Collections.Generic.Dictionary(Of Integer, Double)
+  name.vb: Dictionary(Of Integer, Double)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.Collections.Generic.Dictionary`2
+  commentId: T:System.Collections.Generic.Dictionary`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<TKey, TValue>
+  nameWithType: Dictionary<TKey, TValue>
+  fullName: System.Collections.Generic.Dictionary<TKey, TValue>
+  nameWithType.vb: Dictionary(Of TKey, TValue)
+  fullName.vb: System.Collections.Generic.Dictionary(Of TKey, TValue)
+  name.vb: Dictionary(Of TKey, TValue)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Minimize(int?, Dictionary<int, double>)
+  nameWithType: ChebyshevApproximation.Minimize(int?, Dictionary<int, double>)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Minimize(int?, System.Collections.Generic.Dictionary<int, double>)
+  nameWithType.vb: ChebyshevApproximation.Minimize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Minimize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Minimize(Integer?, Dictionary(Of Integer, Double))
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Minimize
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Minimize
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.Minimize*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Minimize
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Minimize
+  nameWithType: ChebyshevSlider.Minimize
+  fullName: ChebyshevSharp.ChebyshevSlider.Minimize
+- uid: System.ValueTuple{System.Double,System.Double}
+  commentId: T:System.ValueTuple{System.Double,System.Double}
+  parent: System
+  definition: System.ValueTuple`2
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double lo, double hi)
+  nameWithType: (double lo, double hi)
+  fullName: (double lo, double hi)
+  nameWithType.vb: (lo As Double, hi As Double)
+  fullName.vb: (lo As Double, hi As Double)
+  name.vb: (lo As Double, hi As Double)
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.ValueTuple`2
+  commentId: T:System.ValueTuple`2
+  name: (T1, T2)
+  nameWithType: (T1, T2)
+  fullName: (T1, T2)
+  spec.csharp:
+  - name: (
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+  spec.vb:
+  - name: (
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Minimize(int?, Dictionary<int, double>)
+  nameWithType: ChebyshevSlider.Minimize(int?, Dictionary<int, double>)
+  fullName: ChebyshevSharp.ChebyshevSlider.Minimize(int?, System.Collections.Generic.Dictionary<int, double>)
+  nameWithType.vb: ChebyshevSlider.Minimize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Minimize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Minimize(Integer?, Dictionary(Of Integer, Double))
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Minimize
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSlider.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Minimize
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.Maximize*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Maximize
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Maximize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Maximize
+  nameWithType: ChebyshevSlider.Maximize
+  fullName: ChebyshevSharp.ChebyshevSlider.Maximize
 - uid: ChebyshevSharp.ChebyshevSlider.op_Addition*
   commentId: Overload:ChebyshevSharp.ChebyshevSlider.op_Addition
   href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_op_Addition_ChebyshevSharp_ChebyshevSlider_ChebyshevSharp_ChebyshevSlider_
@@ -1943,3 +3326,176 @@ references:
   name: ToString
   nameWithType: ChebyshevSlider.ToString
   fullName: ChebyshevSharp.ChebyshevSlider.ToString
+- uid: ChebyshevSharp.ChebyshevSlider.SetDescriptor*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.SetDescriptor
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_SetDescriptor_System_String_
+  name: SetDescriptor
+  nameWithType: ChebyshevSlider.SetDescriptor
+  fullName: ChebyshevSharp.ChebyshevSlider.SetDescriptor
+- uid: ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_SetDescriptor_System_String_
+  name: SetDescriptor(string)
+  nameWithType: ChebyshevSlider.SetDescriptor(string)
+  fullName: ChebyshevSharp.ChebyshevSlider.SetDescriptor(string)
+  nameWithType.vb: ChebyshevSlider.SetDescriptor(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.SetDescriptor(String)
+  name.vb: SetDescriptor(String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
+    name: SetDescriptor
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_SetDescriptor_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSlider.SetDescriptor(System.String)
+    name: SetDescriptor
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_SetDescriptor_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.GetDescriptor*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetDescriptor
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetDescriptor
+  name: GetDescriptor
+  nameWithType: ChebyshevSlider.GetDescriptor
+  fullName: ChebyshevSharp.ChebyshevSlider.GetDescriptor
+- uid: ChebyshevSharp.ChebyshevSlider.Load(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSlider.Load(System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Load_System_String_
+  name: Load(string)
+  nameWithType: ChebyshevSlider.Load(string)
+  fullName: ChebyshevSharp.ChebyshevSlider.Load(string)
+  nameWithType.vb: ChebyshevSlider.Load(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.Load(String)
+  name.vb: Load(String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSlider.Load(System.String)
+    name: Load
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Load_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSlider.Load(System.String)
+    name: Load
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Load_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSlider.IsConstructionFinished*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.IsConstructionFinished
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_IsConstructionFinished
+  name: IsConstructionFinished
+  nameWithType: ChebyshevSlider.IsConstructionFinished
+  fullName: ChebyshevSharp.ChebyshevSlider.IsConstructionFinished
+- uid: ChebyshevSharp.ChebyshevSlider.GetConstructorType*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetConstructorType
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetConstructorType
+  name: GetConstructorType
+  nameWithType: ChebyshevSlider.GetConstructorType
+  fullName: ChebyshevSharp.ChebyshevSlider.GetConstructorType
+- uid: ChebyshevSharp.ChebyshevSlider.GetUsedNs*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetUsedNs
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetUsedNs
+  name: GetUsedNs
+  nameWithType: ChebyshevSlider.GetUsedNs
+  fullName: ChebyshevSharp.ChebyshevSlider.GetUsedNs
+- uid: ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetMaxDerivativeOrder
+  name: GetMaxDerivativeOrder
+  nameWithType: ChebyshevSlider.GetMaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevSlider.GetMaxDerivativeOrder
+- uid: ChebyshevSharp.ChebyshevSlider.GetAdditionalData*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetAdditionalData
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetAdditionalData
+  name: GetAdditionalData
+  nameWithType: ChebyshevSlider.GetAdditionalData
+  fullName: ChebyshevSharp.ChebyshevSlider.GetAdditionalData
+- uid: ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetNumEvaluationPoints
+  name: GetNumEvaluationPoints
+  nameWithType: ChebyshevSlider.GetNumEvaluationPoints
+  fullName: ChebyshevSharp.ChebyshevSlider.GetNumEvaluationPoints
+- uid: ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetEvaluationPoints
+  name: GetEvaluationPoints
+  nameWithType: ChebyshevSlider.GetEvaluationPoints
+  fullName: ChebyshevSharp.ChebyshevSlider.GetEvaluationPoints
+- uid: ChebyshevSharp.ChebyshevSlider.GetDerivativeId*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.GetDerivativeId
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetDerivativeId_System_Int32___
+  name: GetDerivativeId
+  nameWithType: ChebyshevSlider.GetDerivativeId
+  fullName: ChebyshevSharp.ChebyshevSlider.GetDerivativeId
+- uid: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetDerivativeId_System_Int32___
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevSlider.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(int[])
+  nameWithType.vb: ChebyshevSlider.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+    name: GetDerivativeId
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetDerivativeId_System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSlider.GetDerivativeId(System.Int32[])
+    name: GetDerivativeId
+    href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_GetDerivativeId_System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: )
+- uid: System.ArgumentOutOfRangeException
+  commentId: T:System.ArgumentOutOfRangeException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception
+  name: ArgumentOutOfRangeException
+  nameWithType: ArgumentOutOfRangeException
+  fullName: System.ArgumentOutOfRangeException
+- uid: ChebyshevSharp.ChebyshevSlider.Function
+  commentId: P:ChebyshevSharp.ChebyshevSlider.Function
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Function
+  name: Function
+  nameWithType: ChebyshevSlider.Function
+  fullName: ChebyshevSharp.ChebyshevSlider.Function
+- uid: ChebyshevSharp.ChebyshevSlider.Clone*
+  commentId: Overload:ChebyshevSharp.ChebyshevSlider.Clone
+  href: ChebyshevSharp.ChebyshevSlider.html#ChebyshevSharp_ChebyshevSlider_Clone
+  name: Clone
+  nameWithType: ChebyshevSlider.Clone
+  fullName: ChebyshevSharp.ChebyshevSlider.Clone

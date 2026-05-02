@@ -23,13 +23,13 @@ The serialization format is JSON. All pre-computed data is saved: nodes, barycen
 
 Loaded interpolants cannot call `Build()` since they do not retain the original function reference. Pre-transposed differentiation matrices (`DiffMatricesTFlat`) are recomputed on load from the stored differentiation matrices.
 
-**Format note:** ChebyshevSharp uses its own JSON format, not Python pickle. Files saved by PyChebyshev cannot be loaded by ChebyshevSharp and vice versa. To transfer between languages, use `FromValues` with exported node positions and function values.
+**Format note:** ChebyshevSharp uses its own JSON format, not Python pickle. Files saved by PyChebyshev cannot be loaded by ChebyshevSharp and vice versa. To transfer between languages, use `FromValues` with exported Type I node positions and function values.
 
 `ChebyshevSpline` also supports `Save` and `Load` with the same JSON format. The serialized file includes all pieces and knot positions. `Nodes()` and `FromValues()` are available for `ChebyshevSpline` as well. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
 `ChebyshevSlider` supports `Save` and `Load`. The serialized file includes the partition, pivot point, pivot value, and all slide states. `Nodes()` and `FromValues()` are not available for `ChebyshevSlider` — use the constructor and `Build()` workflow instead. See [Sliding Technique](slider.md) for details.
 
-`ChebyshevTT` supports `Save` and `Load`. The serialized file includes all coefficient cores, TT ranks, domain, node counts, and build metadata. `Nodes()` and `FromValues()` are not available for `ChebyshevTT`. If the file was saved with a different library version, a `LoadWarning` property is set. See [Tensor Train Interpolation](tensor-train.md) for details.
+`ChebyshevTT` supports `Save` and `Load`. The serialized file includes all coefficient cores, TT ranks, domain, node counts, and build metadata. `Nodes()` and `FromValues()` are available for TT workflows; `FromValues()` compresses the supplied dense tensor via TT-SVD. If the file was saved with a different library version, a `LoadWarning` property is set. See [Tensor Train Interpolation](tensor-train.md) for details.
 
 ## FromValues
 
@@ -98,6 +98,8 @@ $$
 These are mapped to the domain $[a, b]$ via the affine transformation $\text{node} = \tfrac{a+b}{2} + \tfrac{b-a}{2}\,x_i$. Nodes are stored in ascending order within each dimension (smallest first).
 
 Type I nodes avoid the endpoints of the interval. This is advantageous when the function has singularities or discontinuities at the boundary [1, Ch. 3].
+
+MoCaX C uses Chebyshev--Lobatto/extrema nodes with endpoints. If your external values come from MoCaX, rebuild them on ChebyshevSharp's Type I nodes or resample before calling `FromValues()`.
 
 ## References
 

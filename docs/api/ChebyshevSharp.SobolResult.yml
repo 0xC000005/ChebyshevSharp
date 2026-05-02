@@ -1,139 +1,202 @@
 ### YamlMime:ManagedReference
 items:
-- uid: ChebyshevSharp.NodeInfo
-  commentId: T:ChebyshevSharp.NodeInfo
-  id: NodeInfo
+- uid: ChebyshevSharp.SobolResult
+  commentId: T:ChebyshevSharp.SobolResult
+  id: SobolResult
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.NodeInfo.FullGrid
-  - ChebyshevSharp.NodeInfo.NodesPerDim
-  - ChebyshevSharp.NodeInfo.Shape
+  - ChebyshevSharp.SobolResult.#ctor(System.Double[],System.Double[],System.Double)
+  - ChebyshevSharp.SobolResult.FirstOrder
+  - ChebyshevSharp.SobolResult.TotalOrder
+  - ChebyshevSharp.SobolResult.Variance
   langs:
   - csharp
   - vb
-  name: NodeInfo
-  nameWithType: NodeInfo
-  fullName: ChebyshevSharp.NodeInfo
+  name: SobolResult
+  nameWithType: SobolResult
+  fullName: ChebyshevSharp.SobolResult
   type: Class
   source:
     remote:
-      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      path: src/ChebyshevSharp/SobolResult.cs
       branch: main
       repo: https://github.com/0xC000005/ChebyshevSharp.git
-    id: NodeInfo
-    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1794
+    id: SobolResult
+    path: ../src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Information about Chebyshev nodes for a given configuration.
+  summary: >-
+    Result of <code>SobolIndices()</code> on Chebyshev interpolants: per-dimension
+
+    Sobol sensitivity indices computed from spectral Chebyshev coefficients
+
+    (no Monte Carlo).
   example: []
   syntax:
-    content: public class NodeInfo
-    content.vb: Public Class NodeInfo
+    content: 'public sealed record SobolResult : IEquatable<SobolResult>'
+    content.vb: Public NotInheritable Class SobolResult Implements IEquatable(Of SobolResult)
   inheritance:
   - System.Object
+  implements:
+  - System.IEquatable{ChebyshevSharp.SobolResult}
   inheritedMembers:
   - System.Object.Equals(System.Object)
   - System.Object.Equals(System.Object,System.Object)
   - System.Object.GetHashCode
   - System.Object.GetType
-  - System.Object.MemberwiseClone
   - System.Object.ReferenceEquals(System.Object,System.Object)
   - System.Object.ToString
-- uid: ChebyshevSharp.NodeInfo.NodesPerDim
-  commentId: P:ChebyshevSharp.NodeInfo.NodesPerDim
-  id: NodesPerDim
-  parent: ChebyshevSharp.NodeInfo
+- uid: ChebyshevSharp.SobolResult.#ctor(System.Double[],System.Double[],System.Double)
+  commentId: M:ChebyshevSharp.SobolResult.#ctor(System.Double[],System.Double[],System.Double)
+  id: '#ctor(System.Double[],System.Double[],System.Double)'
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: NodesPerDim
-  nameWithType: NodeInfo.NodesPerDim
-  fullName: ChebyshevSharp.NodeInfo.NodesPerDim
-  type: Property
+  name: SobolResult(double[], double[], double)
+  nameWithType: SobolResult.SobolResult(double[], double[], double)
+  fullName: ChebyshevSharp.SobolResult.SobolResult(double[], double[], double)
+  type: Constructor
   source:
     remote:
-      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      path: src/ChebyshevSharp/SobolResult.cs
       branch: main
       repo: https://github.com/0xC000005/ChebyshevSharp.git
-    id: NodesPerDim
-    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1797
+    id: .ctor
+    path: ../src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Chebyshev nodes for each dimension, sorted ascending.
+  summary: >-
+    Result of <code>SobolIndices()</code> on Chebyshev interpolants: per-dimension
+
+    Sobol sensitivity indices computed from spectral Chebyshev coefficients
+
+    (no Monte Carlo).
   example: []
   syntax:
-    content: public double[][] NodesPerDim { get; set; }
-    parameters: []
-    return:
-      type: System.Double[][]
-    content.vb: Public Property NodesPerDim As Double()()
-  overload: ChebyshevSharp.NodeInfo.NodesPerDim*
-- uid: ChebyshevSharp.NodeInfo.FullGrid
-  commentId: P:ChebyshevSharp.NodeInfo.FullGrid
-  id: FullGrid
-  parent: ChebyshevSharp.NodeInfo
+    content: public SobolResult(double[] FirstOrder, double[] TotalOrder, double Variance)
+    parameters:
+    - id: FirstOrder
+      type: System.Double[]
+      description: First-order index per dimension. Sums to ≤ 1; sums to 1 for purely additive functions.
+    - id: TotalOrder
+      type: System.Double[]
+      description: Total-order index per dimension. <code>FirstOrder[d] ≤ TotalOrder[d]</code> always.
+    - id: Variance
+      type: System.Double
+      description: >-
+        Total spectral variance Σ_{α≠0} c_α² ‖T_α‖². When zero or at numerical
+
+        noise level, the function is effectively constant and the indices are
+
+        meaningless.
+    content.vb: Public Sub New(FirstOrder As Double(), TotalOrder As Double(), Variance As Double)
+  overload: ChebyshevSharp.SobolResult.#ctor*
+  nameWithType.vb: SobolResult.New(Double(), Double(), Double)
+  fullName.vb: ChebyshevSharp.SobolResult.New(Double(), Double(), Double)
+  name.vb: New(Double(), Double(), Double)
+- uid: ChebyshevSharp.SobolResult.FirstOrder
+  commentId: P:ChebyshevSharp.SobolResult.FirstOrder
+  id: FirstOrder
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: FullGrid
-  nameWithType: NodeInfo.FullGrid
-  fullName: ChebyshevSharp.NodeInfo.FullGrid
+  name: FirstOrder
+  nameWithType: SobolResult.FirstOrder
+  fullName: ChebyshevSharp.SobolResult.FirstOrder
   type: Property
   source:
     remote:
-      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      path: src/ChebyshevSharp/SobolResult.cs
       branch: main
       repo: https://github.com/0xC000005/ChebyshevSharp.git
-    id: FullGrid
-    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1800
+    id: FirstOrder
+    path: ../src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Full grid (Cartesian product of all nodes), shape (totalPoints, numDimensions).
+  summary: First-order index per dimension. Sums to ≤ 1; sums to 1 for purely additive functions.
   example: []
   syntax:
-    content: public double[][] FullGrid { get; set; }
+    content: public double[] FirstOrder { get; init; }
     parameters: []
     return:
-      type: System.Double[][]
-    content.vb: Public Property FullGrid As Double()()
-  overload: ChebyshevSharp.NodeInfo.FullGrid*
-- uid: ChebyshevSharp.NodeInfo.Shape
-  commentId: P:ChebyshevSharp.NodeInfo.Shape
-  id: Shape
-  parent: ChebyshevSharp.NodeInfo
+      type: System.Double[]
+    content.vb: Public Property FirstOrder As Double()
+  overload: ChebyshevSharp.SobolResult.FirstOrder*
+- uid: ChebyshevSharp.SobolResult.TotalOrder
+  commentId: P:ChebyshevSharp.SobolResult.TotalOrder
+  id: TotalOrder
+  parent: ChebyshevSharp.SobolResult
   langs:
   - csharp
   - vb
-  name: Shape
-  nameWithType: NodeInfo.Shape
-  fullName: ChebyshevSharp.NodeInfo.Shape
+  name: TotalOrder
+  nameWithType: SobolResult.TotalOrder
+  fullName: ChebyshevSharp.SobolResult.TotalOrder
   type: Property
   source:
     remote:
-      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      path: src/ChebyshevSharp/SobolResult.cs
       branch: main
       repo: https://github.com/0xC000005/ChebyshevSharp.git
-    id: Shape
-    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
-    startLine: 1803
+    id: TotalOrder
+    path: ../src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Expected tensor shape (== nNodes).
+  summary: Total-order index per dimension. <code>FirstOrder[d] ≤ TotalOrder[d]</code> always.
   example: []
   syntax:
-    content: public int[] Shape { get; set; }
+    content: public double[] TotalOrder { get; init; }
     parameters: []
     return:
-      type: System.Int32[]
-    content.vb: Public Property Shape As Integer()
-  overload: ChebyshevSharp.NodeInfo.Shape*
+      type: System.Double[]
+    content.vb: Public Property TotalOrder As Double()
+  overload: ChebyshevSharp.SobolResult.TotalOrder*
+- uid: ChebyshevSharp.SobolResult.Variance
+  commentId: P:ChebyshevSharp.SobolResult.Variance
+  id: Variance
+  parent: ChebyshevSharp.SobolResult
+  langs:
+  - csharp
+  - vb
+  name: Variance
+  nameWithType: SobolResult.Variance
+  fullName: ChebyshevSharp.SobolResult.Variance
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/SobolResult.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Variance
+    path: ../src/ChebyshevSharp/SobolResult.cs
+    startLine: 14
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Total spectral variance Σ_{α≠0} c_α² ‖T_α‖². When zero or at numerical
+
+    noise level, the function is effectively constant and the indices are
+
+    meaningless.
+  example: []
+  syntax:
+    content: public double Variance { get; init; }
+    parameters: []
+    return:
+      type: System.Double
+    content.vb: Public Property Variance As Double
+  overload: ChebyshevSharp.SobolResult.Variance*
 references:
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
@@ -152,6 +215,39 @@ references:
   nameWithType.vb: Object
   fullName.vb: Object
   name.vb: Object
+- uid: System.IEquatable{ChebyshevSharp.SobolResult}
+  commentId: T:System.IEquatable{ChebyshevSharp.SobolResult}
+  parent: System
+  definition: System.IEquatable`1
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<SobolResult>
+  nameWithType: IEquatable<SobolResult>
+  fullName: System.IEquatable<ChebyshevSharp.SobolResult>
+  nameWithType.vb: IEquatable(Of SobolResult)
+  fullName.vb: System.IEquatable(Of ChebyshevSharp.SobolResult)
+  name.vb: IEquatable(Of SobolResult)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - uid: ChebyshevSharp.SobolResult
+    name: SobolResult
+    href: ChebyshevSharp.SobolResult.html
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: ChebyshevSharp.SobolResult
+    name: SobolResult
+    href: ChebyshevSharp.SobolResult.html
+  - name: )
 - uid: System.Object.Equals(System.Object)
   commentId: M:System.Object.Equals(System.Object)
   parent: System.Object
@@ -278,30 +374,6 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.object.gettype
   - name: (
   - name: )
-- uid: System.Object.MemberwiseClone
-  commentId: M:System.Object.MemberwiseClone
-  parent: System.Object
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  name: MemberwiseClone()
-  nameWithType: object.MemberwiseClone()
-  fullName: object.MemberwiseClone()
-  nameWithType.vb: Object.MemberwiseClone()
-  fullName.vb: Object.MemberwiseClone()
-  spec.csharp:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
-  spec.vb:
-  - uid: System.Object.MemberwiseClone
-    name: MemberwiseClone
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone
-  - name: (
-  - name: )
 - uid: System.Object.ReferenceEquals(System.Object,System.Object)
   commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
   parent: System.Object
@@ -378,28 +450,57 @@ references:
   name: System
   nameWithType: System
   fullName: System
-- uid: ChebyshevSharp.NodeInfo.NodesPerDim*
-  commentId: Overload:ChebyshevSharp.NodeInfo.NodesPerDim
-  href: ChebyshevSharp.NodeInfo.html#ChebyshevSharp_NodeInfo_NodesPerDim
-  name: NodesPerDim
-  nameWithType: NodeInfo.NodesPerDim
-  fullName: ChebyshevSharp.NodeInfo.NodesPerDim
-- uid: System.Double[][]
+- uid: System.IEquatable`1
+  commentId: T:System.IEquatable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  name: IEquatable<T>
+  nameWithType: IEquatable<T>
+  fullName: System.IEquatable<T>
+  nameWithType.vb: IEquatable(Of T)
+  fullName.vb: System.IEquatable(Of T)
+  name.vb: IEquatable(Of T)
+  spec.csharp:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IEquatable`1
+    name: IEquatable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iequatable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ChebyshevSharp.SobolResult.#ctor*
+  commentId: Overload:ChebyshevSharp.SobolResult.#ctor
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult__ctor_System_Double___System_Double___System_Double_
+  name: SobolResult
+  nameWithType: SobolResult.SobolResult
+  fullName: ChebyshevSharp.SobolResult.SobolResult
+  nameWithType.vb: SobolResult.New
+  fullName.vb: ChebyshevSharp.SobolResult.New
+  name.vb: New
+- uid: System.Double[]
   isExternal: true
   href: https://learn.microsoft.com/dotnet/api/system.double
-  name: double[][]
-  nameWithType: double[][]
-  fullName: double[][]
-  nameWithType.vb: Double()()
-  fullName.vb: Double()()
-  name.vb: Double()()
+  name: double[]
+  nameWithType: double[]
+  fullName: double[]
+  nameWithType.vb: Double()
+  fullName.vb: Double()
+  name.vb: Double()
   spec.csharp:
   - uid: System.Double
     name: double
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.double
-  - name: '['
-  - name: ']'
   - name: '['
   - name: ']'
   spec.vb:
@@ -409,40 +510,32 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.double
   - name: (
   - name: )
-  - name: (
-  - name: )
-- uid: ChebyshevSharp.NodeInfo.FullGrid*
-  commentId: Overload:ChebyshevSharp.NodeInfo.FullGrid
-  href: ChebyshevSharp.NodeInfo.html#ChebyshevSharp_NodeInfo_FullGrid
-  name: FullGrid
-  nameWithType: NodeInfo.FullGrid
-  fullName: ChebyshevSharp.NodeInfo.FullGrid
-- uid: ChebyshevSharp.NodeInfo.Shape*
-  commentId: Overload:ChebyshevSharp.NodeInfo.Shape
-  href: ChebyshevSharp.NodeInfo.html#ChebyshevSharp_NodeInfo_Shape
-  name: Shape
-  nameWithType: NodeInfo.Shape
-  fullName: ChebyshevSharp.NodeInfo.Shape
-- uid: System.Int32[]
+- uid: System.Double
+  commentId: T:System.Double
+  parent: System
   isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int[]
-  nameWithType: int[]
-  fullName: int[]
-  nameWithType.vb: Integer()
-  fullName.vb: Integer()
-  name.vb: Integer()
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '['
-  - name: ']'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: (
-  - name: )
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double
+  nameWithType: double
+  fullName: double
+  nameWithType.vb: Double
+  fullName.vb: Double
+  name.vb: Double
+- uid: ChebyshevSharp.SobolResult.FirstOrder*
+  commentId: Overload:ChebyshevSharp.SobolResult.FirstOrder
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult_FirstOrder
+  name: FirstOrder
+  nameWithType: SobolResult.FirstOrder
+  fullName: ChebyshevSharp.SobolResult.FirstOrder
+- uid: ChebyshevSharp.SobolResult.TotalOrder*
+  commentId: Overload:ChebyshevSharp.SobolResult.TotalOrder
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult_TotalOrder
+  name: TotalOrder
+  nameWithType: SobolResult.TotalOrder
+  fullName: ChebyshevSharp.SobolResult.TotalOrder
+- uid: ChebyshevSharp.SobolResult.Variance*
+  commentId: Overload:ChebyshevSharp.SobolResult.Variance
+  href: ChebyshevSharp.SobolResult.html#ChebyshevSharp_SobolResult_Variance
+  name: Variance
+  nameWithType: SobolResult.Variance
+  fullName: ChebyshevSharp.SobolResult.Variance

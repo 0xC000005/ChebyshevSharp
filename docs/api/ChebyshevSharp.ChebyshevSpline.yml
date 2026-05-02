@@ -5,34 +5,57 @@ items:
   id: ChebyshevSpline
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
+  - ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  - ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[][],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  - ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Nullable{System.Int32}[],System.Double[][],System.Nullable{System.Double},System.Int32,System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  - ChebyshevSharp.ChebyshevSpline.AutoKnots(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Object,System.String,System.Double,System.Int32,System.Int32,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
   - ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
   - ChebyshevSharp.ChebyshevSpline.BuildTime
   - ChebyshevSharp.ChebyshevSpline.Built
+  - ChebyshevSharp.ChebyshevSpline.Clone
   - ChebyshevSharp.ChebyshevSpline.Domain
   - ChebyshevSharp.ChebyshevSpline.ErrorEstimate
+  - ChebyshevSharp.ChebyshevSpline.ErrorThreshold
+  - ChebyshevSharp.ChebyshevSpline.Eval(System.Double[],System.Int32)
   - ChebyshevSharp.ChebyshevSpline.Eval(System.Double[],System.Int32[])
   - ChebyshevSharp.ChebyshevSpline.EvalBatch(System.Double[][],System.Int32[])
   - ChebyshevSharp.ChebyshevSpline.EvalMulti(System.Double[],System.Int32[][])
   - ChebyshevSharp.ChebyshevSpline.Extrude(System.ValueTuple{System.Int32,System.Double[],System.Int32}[])
   - ChebyshevSharp.ChebyshevSpline.FromValues(System.Double[][],System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
   - ChebyshevSharp.ChebyshevSpline.Function
+  - ChebyshevSharp.ChebyshevSpline.GetAdditionalData
+  - ChebyshevSharp.ChebyshevSpline.GetConstructorType
+  - ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+  - ChebyshevSharp.ChebyshevSpline.GetDescriptor
+  - ChebyshevSharp.ChebyshevSpline.GetErrorThreshold
+  - ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints
+  - ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints
+  - ChebyshevSharp.ChebyshevSpline.GetSpecialPoints
+  - ChebyshevSharp.ChebyshevSpline.GetUsedNs
   - ChebyshevSharp.ChebyshevSpline.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  - ChebyshevSharp.ChebyshevSpline.IsConstructionFinished
   - ChebyshevSharp.ChebyshevSpline.Knots
   - ChebyshevSharp.ChebyshevSpline.Load(System.String)
   - ChebyshevSharp.ChebyshevSpline.MaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevSpline.MaxN
   - ChebyshevSharp.ChebyshevSpline.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
   - ChebyshevSharp.ChebyshevSpline.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
   - ChebyshevSharp.ChebyshevSpline.NNodes
   - ChebyshevSharp.ChebyshevSpline.Nodes(System.Int32,System.Double[][],System.Int32[],System.Double[][])
   - ChebyshevSharp.ChebyshevSpline.NumDimensions
   - ChebyshevSharp.ChebyshevSpline.NumPieces
+  - ChebyshevSharp.ChebyshevSpline.PeekFormatVersion(System.String)
   - ChebyshevSharp.ChebyshevSpline.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
-  - ChebyshevSharp.ChebyshevSpline.Save(System.String)
+  - ChebyshevSharp.ChebyshevSpline.Save(System.String,System.String)
+  - ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+  - ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
   - ChebyshevSharp.ChebyshevSpline.Slice(System.ValueTuple{System.Int32,System.Double}[])
+  - ChebyshevSharp.ChebyshevSpline.SobolIndices
   - ChebyshevSharp.ChebyshevSpline.ToReprString
   - ChebyshevSharp.ChebyshevSpline.ToString
   - ChebyshevSharp.ChebyshevSpline.TotalBuildEvals
+  - ChebyshevSharp.ChebyshevSpline.WithSpecialPoints(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Double[][],System.Int32[][],System.Int32[],System.Nullable{System.Double},System.Int32,System.Int32)
   - ChebyshevSharp.ChebyshevSpline.op_Addition(ChebyshevSharp.ChebyshevSpline,ChebyshevSharp.ChebyshevSpline)
   - ChebyshevSharp.ChebyshevSpline.op_Division(ChebyshevSharp.ChebyshevSpline,System.Double)
   - ChebyshevSharp.ChebyshevSpline.op_Multiply(ChebyshevSharp.ChebyshevSpline,System.Double)
@@ -334,16 +357,78 @@ items:
       type: System.Double
     content.vb: Public Property BuildTime As Double
   overload: ChebyshevSharp.ChebyshevSpline.BuildTime*
-- uid: ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
-  commentId: M:ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
-  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)'
+- uid: ChebyshevSharp.ChebyshevSpline.ErrorThreshold
+  commentId: P:ChebyshevSharp.ChebyshevSpline.ErrorThreshold
+  id: ErrorThreshold
   parent: ChebyshevSharp.ChebyshevSpline
   langs:
   - csharp
   - vb
-  name: ChebyshevSpline(Func<double[], object?, double>, int, double[][], int[], double[][], int)
-  nameWithType: ChebyshevSpline.ChebyshevSpline(Func<double[], object?, double>, int, double[][], int[], double[][], int)
-  fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int[], double[][], int)
+  name: ErrorThreshold
+  nameWithType: ChebyshevSpline.ErrorThreshold
+  fullName: ChebyshevSharp.ChebyshevSpline.ErrorThreshold
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ErrorThreshold
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 55
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Target supremum-norm error for per-piece auto-N construction. Null in fixed-N mode.
+  example: []
+  syntax:
+    content: public double? ErrorThreshold { get; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Double}
+    content.vb: Public Property ErrorThreshold As Double?
+  overload: ChebyshevSharp.ChebyshevSpline.ErrorThreshold*
+- uid: ChebyshevSharp.ChebyshevSpline.MaxN
+  commentId: P:ChebyshevSharp.ChebyshevSpline.MaxN
+  id: MaxN
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: MaxN
+  nameWithType: ChebyshevSpline.MaxN
+  fullName: ChebyshevSharp.ChebyshevSpline.MaxN
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: MaxN
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 58
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Maximum nodes per dimension per piece for the auto-N doubling loop. Default 64.
+  example: []
+  syntax:
+    content: public int MaxN { get; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property MaxN As Integer
+  overload: ChebyshevSharp.ChebyshevSpline.MaxN*
+- uid: ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  commentId: M:ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})'
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevSpline(Func<double[], object?, double>, int, double[][], int[], double[][], int, object?, bool, int?, IProgress<int>?)
+  nameWithType: ChebyshevSpline.ChebyshevSpline(Func<double[], object?, double>, int, double[][], int[], double[][], int, object?, bool, int?, IProgress<int>?)
+  fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int[], double[][], int, object?, bool, int?, System.IProgress<int>?)
   type: Constructor
   source:
     remote:
@@ -352,14 +437,15 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 65
+    startLine: 90
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
   summary: Create a new ChebyshevSpline.
+  remarks: 'Thread safety: the user-supplied function must be thread-safe when <code class="paramref">nWorkers</code> is non-null.'
   example: []
   syntax:
-    content: public ChebyshevSpline(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] nNodes, double[][] knots, int maxDerivativeOrder = 2)
+    content: public ChebyshevSpline(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] nNodes, double[][] knots, int maxDerivativeOrder = 2, object? additionalData = null, bool deferBuild = false, int? nWorkers = null, IProgress<int>? progress = null)
     parameters:
     - id: function
       type: System.Func{System.Double[],System.Object,System.Double}
@@ -379,11 +465,185 @@ items:
     - id: maxDerivativeOrder
       type: System.Int32
       description: Maximum derivative order to support (default 2).
-    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), knots As Double()(), maxDerivativeOrder As Integer = 2)
+    - id: additionalData
+      type: System.Object
+      description: Optional user data object threaded through every f(point, data) call during Build.
+    - id: deferBuild
+      type: System.Boolean
+      description: If true, skip eager build. Call <xref href="ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double%5b%5d)" data-throw-if-not-resolved="false"></xref> to finish construction.
+    - id: nWorkers
+      type: System.Nullable{System.Int32}
+      description: Number of parallel workers for function evaluation. null = sequential; -1 = <xref href="System.Environment.ProcessorCount" data-throw-if-not-resolved="false"></xref>; positive = exact count.
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: Optional progress reporter; receives cumulative evaluation count across all pieces.
+    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), knots As Double()(), maxDerivativeOrder As Integer = 2, additionalData As Object = Nothing, deferBuild As Boolean = False, nWorkers As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing)
   overload: ChebyshevSharp.ChebyshevSpline.#ctor*
-  nameWithType.vb: ChebyshevSpline.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Double()(), Integer)
-  fullName.vb: ChebyshevSharp.ChebyshevSpline.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Double()(), Integer)
-  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Double()(), Integer)
+  nameWithType.vb: ChebyshevSpline.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Double()(), Integer, Object, Boolean, Integer?, IProgress(Of Integer))
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Double()(), Integer, Object, Boolean, Integer?, System.IProgress(Of Integer))
+  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Double()(), Integer, Object, Boolean, Integer?, IProgress(Of Integer))
+- uid: ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Nullable{System.Int32}[],System.Double[][],System.Nullable{System.Double},System.Int32,System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  commentId: M:ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Nullable{System.Int32}[],System.Double[][],System.Nullable{System.Double},System.Int32,System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Nullable{System.Int32}[],System.Double[][],System.Nullable{System.Double},System.Int32,System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})'
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevSpline(Func<double[], object?, double>, int, double[][], int?[]?, double[][]?, double?, int, int, object?, bool, int?, IProgress<int>?)
+  nameWithType: ChebyshevSpline.ChebyshevSpline(Func<double[], object?, double>, int, double[][], int?[]?, double[][]?, double?, int, int, object?, bool, int?, IProgress<int>?)
+  fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int?[]?, double[][]?, double?, int, int, object?, bool, int?, System.IProgress<int>?)
+  type: Constructor
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: .ctor
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 149
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Create a piecewise Chebyshev spline with optional error-driven auto-N construction.
+  remarks: 'Thread safety: the user-supplied function must be thread-safe when <code class="paramref">nWorkers</code> is non-null.'
+  example: []
+  syntax:
+    content: public ChebyshevSpline(Func<double[], object?, double> function, int numDimensions, double[][] domain, int?[]? nNodes = null, double[][]? knots = null, double? errorThreshold = null, int maxN = 64, int maxDerivativeOrder = 2, object? additionalData = null, bool deferBuild = false, int? nWorkers = null, IProgress<int>? progress = null)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Object,System.Double}
+      description: Function to approximate.
+    - id: numDimensions
+      type: System.Int32
+      description: Number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds per dimension.
+    - id: nNodes
+      type: System.Nullable{System.Int32}[]
+      description: Number of nodes per dimension; null entries signal auto-N. Pass null to make every dim auto-N (requires errorThreshold).
+    - id: knots
+      type: System.Double[][]
+      description: Interior knots per dimension. Null defaults to empty arrays (single piece per dim).
+    - id: errorThreshold
+      type: System.Nullable{System.Double}
+      description: Target supremum-norm error per piece. Required if any nNodes entry is null.
+    - id: maxN
+      type: System.Int32
+      description: Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).
+    - id: maxDerivativeOrder
+      type: System.Int32
+      description: Maximum derivative order to support (default 2).
+    - id: additionalData
+      type: System.Object
+      description: Optional user data object threaded through every f(point, data) call during Build.
+    - id: deferBuild
+      type: System.Boolean
+      description: If true, skip eager build. Call <xref href="ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double%5b%5d)" data-throw-if-not-resolved="false"></xref> to finish construction.
+    - id: nWorkers
+      type: System.Nullable{System.Int32}
+      description: Number of parallel workers for function evaluation. null = sequential; -1 = <xref href="System.Environment.ProcessorCount" data-throw-if-not-resolved="false"></xref>; positive = exact count.
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: Optional progress reporter; receives cumulative evaluation count across all pieces.
+    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodes As Integer?() = Nothing, knots As Double()() = Nothing, errorThreshold As Double? = Nothing, maxN As Integer = 64, maxDerivativeOrder As Integer = 2, additionalData As Object = Nothing, deferBuild As Boolean = False, nWorkers As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing)
+  overload: ChebyshevSharp.ChebyshevSpline.#ctor*
+  nameWithType.vb: ChebyshevSpline.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer?(), Double()(), Double?, Integer, Integer, Object, Boolean, Integer?, IProgress(Of Integer))
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer?(), Double()(), Double?, Integer, Integer, Object, Boolean, Integer?, System.IProgress(Of Integer))
+  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer?(), Double()(), Double?, Integer, Integer, Object, Boolean, Integer?, IProgress(Of Integer))
+- uid: ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[][],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  commentId: M:ChebyshevSharp.ChebyshevSpline.#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[][],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  id: '#ctor(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[][],System.Double[][],System.Int32,System.Object,System.Boolean,System.Nullable{System.Int32},System.IProgress{System.Int32})'
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: ChebyshevSpline(Func<double[], object?, double>, int, double[][], int[][], double[][], int, object?, bool, int?, IProgress<int>?)
+  nameWithType: ChebyshevSpline.ChebyshevSpline(Func<double[], object?, double>, int, double[][], int[][], double[][], int, object?, bool, int?, IProgress<int>?)
+  fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int[][], double[][], int, object?, bool, int?, System.IProgress<int>?)
+  type: Constructor
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: .ctor
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 232
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Create a piecewise Chebyshev spline with per-sub-interval node counts.
+  remarks: 'Thread safety: the user-supplied function must be thread-safe when <code class="paramref">nWorkers</code> is non-null.'
+  example: []
+  syntax:
+    content: public ChebyshevSpline(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[][] nNodesNested, double[][] knots, int maxDerivativeOrder = 2, object? additionalData = null, bool deferBuild = false, int? nWorkers = null, IProgress<int>? progress = null)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Object,System.Double}
+      description: Function to approximate.
+    - id: numDimensions
+      type: System.Int32
+      description: Number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds per dimension.
+    - id: nNodesNested
+      type: System.Int32[][]
+      description: 'Nested array: nNodesNested[d][i] is the node count for piece i along dim d. Length per dim must equal knots[d].Length + 1.'
+    - id: knots
+      type: System.Double[][]
+      description: Interior knots per dimension. Required (no default) when using nested form.
+    - id: maxDerivativeOrder
+      type: System.Int32
+      description: Maximum derivative order to support (default 2).
+    - id: additionalData
+      type: System.Object
+      description: Optional user data object threaded through every f(point, data) call during Build.
+    - id: deferBuild
+      type: System.Boolean
+      description: If true, skip eager build. Call <xref href="ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double%5b%5d)" data-throw-if-not-resolved="false"></xref> to finish construction.
+    - id: nWorkers
+      type: System.Nullable{System.Int32}
+      description: Number of parallel workers for function evaluation. null = sequential; -1 = <xref href="System.Environment.ProcessorCount" data-throw-if-not-resolved="false"></xref>; positive = exact count.
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: Optional progress reporter; receives cumulative evaluation count across all pieces.
+    content.vb: Public Sub New([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), nNodesNested As Integer()(), knots As Double()(), maxDerivativeOrder As Integer = 2, additionalData As Object = Nothing, deferBuild As Boolean = False, nWorkers As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing)
+  overload: ChebyshevSharp.ChebyshevSpline.#ctor*
+  nameWithType.vb: ChebyshevSpline.New(Func(Of Double(), Object, Double), Integer, Double()(), Integer()(), Double()(), Integer, Object, Boolean, Integer?, IProgress(Of Integer))
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.New(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer()(), Double()(), Integer, Object, Boolean, Integer?, System.IProgress(Of Integer))
+  name.vb: New(Func(Of Double(), Object, Double), Integer, Double()(), Integer()(), Double()(), Integer, Object, Boolean, Integer?, IProgress(Of Integer))
+- uid: ChebyshevSharp.ChebyshevSpline.GetErrorThreshold
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetErrorThreshold
+  id: GetErrorThreshold
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetErrorThreshold()
+  nameWithType: ChebyshevSpline.GetErrorThreshold()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetErrorThreshold()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetErrorThreshold
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 289
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Return the error threshold passed to the constructor, or null in fixed-N mode.
+  example: []
+  syntax:
+    content: public double? GetErrorThreshold()
+    return:
+      type: System.Nullable{System.Double}
+    content.vb: Public Function GetErrorThreshold() As Double?
+  overload: ChebyshevSharp.ChebyshevSpline.GetErrorThreshold*
 - uid: ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
   commentId: M:ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
   id: Build(System.Boolean)
@@ -402,7 +662,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Build
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 169
+    startLine: 361
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -437,7 +697,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 294
+    startLine: 540
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -478,7 +738,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalMulti
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 309
+    startLine: 555
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -519,7 +779,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalBatch
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 325
+    startLine: 571
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -560,7 +820,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorEstimate
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 374
+    startLine: 620
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -593,7 +853,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumPieces
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 395
+    startLine: 641
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -624,7 +884,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TotalBuildEvals
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 406
+    startLine: 653
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -637,16 +897,101 @@ items:
       type: System.Int32
     content.vb: Public ReadOnly Property TotalBuildEvals As Integer
   overload: ChebyshevSharp.ChebyshevSpline.TotalBuildEvals*
-- uid: ChebyshevSharp.ChebyshevSpline.Save(System.String)
-  commentId: M:ChebyshevSharp.ChebyshevSpline.Save(System.String)
-  id: Save(System.String)
+- uid: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Double[][],System.Int32[][],System.Int32[],System.Nullable{System.Double},System.Int32,System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.WithSpecialPoints(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Double[][],System.Int32[][],System.Int32[],System.Nullable{System.Double},System.Int32,System.Int32)
+  id: WithSpecialPoints(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Double[][],System.Int32[][],System.Int32[],System.Nullable{System.Double},System.Int32,System.Int32)
   parent: ChebyshevSharp.ChebyshevSpline
   langs:
   - csharp
   - vb
-  name: Save(string)
-  nameWithType: ChebyshevSpline.Save(string)
-  fullName: ChebyshevSharp.ChebyshevSpline.Save(string)
+  name: WithSpecialPoints(Func<double[], object?, double>, int, double[][], double[][], int[][]?, int[]?, double?, int, int)
+  nameWithType: ChebyshevSpline.WithSpecialPoints(Func<double[], object?, double>, int, double[][], double[][], int[][]?, int[]?, double?, int, int)
+  fullName: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints(System.Func<double[], object?, double>, int, double[][], double[][], int[][]?, int[]?, double?, int, int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: WithSpecialPoints
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 702
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Create a <xref href="ChebyshevSharp.ChebyshevSpline" data-throw-if-not-resolved="false"></xref> with kinks declared via <code class="paramref">specialPoints</code>
+
+    (a more user-friendly name than <code>knots</code> when the function has known non-smooth points).
+
+    Functionally equivalent to passing the same values as knots to a regular constructor.
+  remarks: >-
+    Python's <code>ChebyshevApproximation(special_points=...)</code> returns a
+
+    <code>ChebyshevSpline</code> at construction time.  C# constructors cannot return a
+
+    different type; this static factory is the C#-idiomatic equivalent.
+
+    Exactly one of <code class="paramref">nNodesNested</code>, <code class="paramref">nNodes</code>, or
+
+    <code class="paramref">errorThreshold</code> must be supplied.
+  example: []
+  syntax:
+    content: public static ChebyshevSpline WithSpecialPoints(Func<double[], object?, double> function, int numDimensions, double[][] domain, double[][] specialPoints, int[][]? nNodesNested = null, int[]? nNodes = null, double? errorThreshold = null, int maxN = 64, int maxDerivativeOrder = 2)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Object,System.Double}
+      description: Function to approximate.
+    - id: numDimensions
+      type: System.Int32
+      description: Number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds per dimension.
+    - id: specialPoints
+      type: System.Double[][]
+      description: >-
+        Per-dim list of kink locations. Equivalent to knots;
+            outer length must equal <code class="paramref">numDimensions</code>.
+    - id: nNodesNested
+      type: System.Int32[][]
+      description: >-
+        Per-sub-interval node counts (per dim, per piece).
+            Mutually exclusive with <code class="paramref">errorThreshold</code>.
+    - id: nNodes
+      type: System.Int32[]
+      description: >-
+        Flat per-dim node counts (shared across pieces).
+            Mutually exclusive with <code class="paramref">nNodesNested</code> and <code class="paramref">errorThreshold</code>.
+    - id: errorThreshold
+      type: System.Nullable{System.Double}
+      description: >-
+        Target error per piece.
+            Mutually exclusive with <code class="paramref">nNodes</code>/<code class="paramref">nNodesNested</code>.
+    - id: maxN
+      type: System.Int32
+      description: Cap on doubling-loop nodes per dimension (default 64).
+    - id: maxDerivativeOrder
+      type: System.Int32
+      description: Maximum derivative order to support (default 2).
+    return:
+      type: ChebyshevSharp.ChebyshevSpline
+      description: An unbuilt <xref href="ChebyshevSharp.ChebyshevSpline" data-throw-if-not-resolved="false"></xref> ready for <code>Build()</code>.
+    content.vb: Public Shared Function WithSpecialPoints([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), specialPoints As Double()(), nNodesNested As Integer()() = Nothing, nNodes As Integer() = Nothing, errorThreshold As Double? = Nothing, maxN As Integer = 64, maxDerivativeOrder As Integer = 2) As ChebyshevSpline
+  overload: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints*
+  nameWithType.vb: ChebyshevSpline.WithSpecialPoints(Func(Of Double(), Object, Double), Integer, Double()(), Double()(), Integer()(), Integer(), Double?, Integer, Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints(System.Func(Of Double(), Object, Double), Integer, Double()(), Double()(), Integer()(), Integer(), Double?, Integer, Integer)
+  name.vb: WithSpecialPoints(Func(Of Double(), Object, Double), Integer, Double()(), Double()(), Integer()(), Integer(), Double?, Integer, Integer)
+- uid: ChebyshevSharp.ChebyshevSpline.Save(System.String,System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.Save(System.String,System.String)
+  id: Save(System.String,System.String)
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: Save(string, string)
+  nameWithType: ChebyshevSpline.Save(string, string)
+  fullName: ChebyshevSharp.ChebyshevSpline.Save(string, string)
   type: Method
   source:
     remote:
@@ -655,23 +1000,76 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Save
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 425
+    startLine: 760
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Save the built spline to a file using JSON serialization.
+  summary: Save the built spline to a file.
   example: []
   syntax:
-    content: public void Save(string path)
+    content: public void Save(string path, string format = "json")
     parameters:
     - id: path
       type: System.String
       description: Destination file path.
-    content.vb: Public Sub Save(path As String)
+    - id: format
+      type: System.String
+      description: "\"json\" (default) or \"binary\". Binary requires\n    flat (non-nested) nNodes — throws NotSupportedException otherwise."
+    content.vb: Public Sub Save(path As String, format As String = "json")
   overload: ChebyshevSharp.ChebyshevSpline.Save*
-  nameWithType.vb: ChebyshevSpline.Save(String)
-  fullName.vb: ChebyshevSharp.ChebyshevSpline.Save(String)
-  name.vb: Save(String)
+  nameWithType.vb: ChebyshevSpline.Save(String, String)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.Save(String, String)
+  name.vb: Save(String, String)
+- uid: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.PeekFormatVersion(System.String)
+  id: PeekFormatVersion(System.String)
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: PeekFormatVersion(string)
+  nameWithType: ChebyshevSpline.PeekFormatVersion(string)
+  fullName: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: PeekFormatVersion
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 848
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Read the major version byte of a .pcb binary file without deserializing the body.
+
+    Useful for forward-compat tooling.
+  example: []
+  syntax:
+    content: public static int PeekFormatVersion(string path)
+    parameters:
+    - id: path
+      type: System.String
+      description: Path to a .pcb file.
+    return:
+      type: System.Int32
+      description: The major format version (currently 1).
+    content.vb: Public Shared Function PeekFormatVersion(path As String) As Integer
+  overload: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion*
+  exceptions:
+  - type: System.IO.FileNotFoundException
+    commentId: T:System.IO.FileNotFoundException
+    description: Thrown if the path does not exist.
+  - type: System.IO.InvalidDataException
+    commentId: T:System.IO.InvalidDataException
+    description: >-
+      Thrown if the file is not a .pcb file
+          (no magic header) or is shorter than 12 bytes.
+  nameWithType.vb: ChebyshevSpline.PeekFormatVersion(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion(String)
+  name.vb: PeekFormatVersion(String)
 - uid: ChebyshevSharp.ChebyshevSpline.Load(System.String)
   commentId: M:ChebyshevSharp.ChebyshevSpline.Load(System.String)
   id: Load(System.String)
@@ -690,11 +1088,14 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Load
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 471
+    startLine: 857
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
-  summary: Load a previously saved spline from a file.
+  summary: >-
+    Load a previously saved spline from a file.
+
+    Auto-detects binary (.pcb magic) vs JSON format.
   example: []
   syntax:
     content: public static ChebyshevSpline Load(string path)
@@ -728,7 +1129,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Nodes
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 540
+    startLine: 972
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -775,7 +1176,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: FromValues
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 598
+    startLine: 1032
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -828,7 +1229,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Extrude
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 704
+    startLine: 1143
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -866,7 +1267,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Slice
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 758
+    startLine: 1197
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -904,7 +1305,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Integrate
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 882
+    startLine: 1322
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -945,7 +1346,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Roots
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1132
+    startLine: 1573
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -986,7 +1387,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Minimize
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1177
+    startLine: 1618
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1027,7 +1428,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Maximize
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1210
+    startLine: 1651
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1068,7 +1469,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Addition
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1272
+    startLine: 1713
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1106,7 +1507,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Subtraction
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1287
+    startLine: 1728
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1144,7 +1545,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1302
+    startLine: 1743
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1182,7 +1583,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1316
+    startLine: 1757
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1220,7 +1621,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Division
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1322
+    startLine: 1763
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1258,7 +1659,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_UnaryNegation
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1328
+    startLine: 1769
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1294,7 +1695,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToReprString
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1338
+    startLine: 1779
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1324,7 +1725,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToString
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1348
+    startLine: 1789
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -1338,6 +1739,618 @@ items:
     content.vb: Public Overrides Function ToString() As String
   overridden: System.Object.ToString
   overload: ChebyshevSharp.ChebyshevSpline.ToString*
+- uid: ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+  id: SetDescriptor(System.String)
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: SetDescriptor(string)
+  nameWithType: ChebyshevSpline.SetDescriptor(string)
+  fullName: ChebyshevSharp.ChebyshevSpline.SetDescriptor(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SetDescriptor
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1897
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Set a free-form descriptor string for this spline.
+  example: []
+  syntax:
+    content: public void SetDescriptor(string descriptor)
+    parameters:
+    - id: descriptor
+      type: System.String
+    content.vb: Public Sub SetDescriptor(descriptor As String)
+  overload: ChebyshevSharp.ChebyshevSpline.SetDescriptor*
+  nameWithType.vb: ChebyshevSpline.SetDescriptor(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.SetDescriptor(String)
+  name.vb: SetDescriptor(String)
+- uid: ChebyshevSharp.ChebyshevSpline.GetDescriptor
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetDescriptor
+  id: GetDescriptor
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetDescriptor()
+  nameWithType: ChebyshevSpline.GetDescriptor()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetDescriptor()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDescriptor
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1900
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Get the descriptor previously set via <xref href="ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)" data-throw-if-not-resolved="false"></xref>; null if unset.
+  example: []
+  syntax:
+    content: public string? GetDescriptor()
+    return:
+      type: System.String
+    content.vb: Public Function GetDescriptor() As String
+  overload: ChebyshevSharp.ChebyshevSpline.GetDescriptor*
+- uid: ChebyshevSharp.ChebyshevSpline.IsConstructionFinished
+  commentId: M:ChebyshevSharp.ChebyshevSpline.IsConstructionFinished
+  id: IsConstructionFinished
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: IsConstructionFinished()
+  nameWithType: ChebyshevSpline.IsConstructionFinished()
+  fullName: ChebyshevSharp.ChebyshevSpline.IsConstructionFinished()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: IsConstructionFinished
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1903
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: True if <xref href="ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref>/<xref href="ChebyshevSharp.ChebyshevSpline.FromValues(System.Double%5b%5d%5b%5d%2cSystem.Int32%2cSystem.Double%5b%5d%5b%5d%2cSystem.Int32%5b%5d%2cSystem.Double%5b%5d%5b%5d%2cSystem.Int32)" data-throw-if-not-resolved="false"></xref>/<xref href="ChebyshevSharp.ChebyshevSpline.Load(System.String)" data-throw-if-not-resolved="false"></xref> completed.
+  example: []
+  syntax:
+    content: public bool IsConstructionFinished()
+    return:
+      type: System.Boolean
+    content.vb: Public Function IsConstructionFinished() As Boolean
+  overload: ChebyshevSharp.ChebyshevSpline.IsConstructionFinished*
+- uid: ChebyshevSharp.ChebyshevSpline.GetConstructorType
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetConstructorType
+  id: GetConstructorType
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetConstructorType()
+  nameWithType: ChebyshevSpline.GetConstructorType()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetConstructorType()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetConstructorType
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1906
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load).'
+  example: []
+  syntax:
+    content: public string GetConstructorType()
+    return:
+      type: System.String
+    content.vb: Public Function GetConstructorType() As String
+  overload: ChebyshevSharp.ChebyshevSpline.GetConstructorType*
+- uid: ChebyshevSharp.ChebyshevSpline.GetUsedNs
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetUsedNs
+  id: GetUsedNs
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetUsedNs()
+  nameWithType: ChebyshevSpline.GetUsedNs()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetUsedNs()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetUsedNs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1909
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Per-dimension Chebyshev node counts actually used per piece.
+  example: []
+  syntax:
+    content: public int[] GetUsedNs()
+    return:
+      type: System.Int32[]
+    content.vb: Public Function GetUsedNs() As Integer()
+  overload: ChebyshevSharp.ChebyshevSpline.GetUsedNs*
+- uid: ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder
+  id: GetMaxDerivativeOrder
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetMaxDerivativeOrder()
+  nameWithType: ChebyshevSpline.GetMaxDerivativeOrder()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetMaxDerivativeOrder
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1912
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Maximum derivative order this spline supports.
+  example: []
+  syntax:
+    content: public int GetMaxDerivativeOrder()
+    return:
+      type: System.Int32
+    content.vb: Public Function GetMaxDerivativeOrder() As Integer
+  overload: ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder*
+- uid: ChebyshevSharp.ChebyshevSpline.GetAdditionalData
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetAdditionalData
+  id: GetAdditionalData
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetAdditionalData()
+  nameWithType: ChebyshevSpline.GetAdditionalData()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetAdditionalData()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetAdditionalData
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1919
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Returns the user-supplied <code>additionalData</code> object passed to the constructor,
+
+    or null if none was provided. Same value is threaded through every <code>f(point, data)</code>
+
+    call during <xref href="ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public object? GetAdditionalData()
+    return:
+      type: System.Object
+    content.vb: Public Function GetAdditionalData() As Object
+  overload: ChebyshevSharp.ChebyshevSpline.GetAdditionalData*
+- uid: ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints
+  id: GetNumEvaluationPoints
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetNumEvaluationPoints()
+  nameWithType: ChebyshevSpline.GetNumEvaluationPoints()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetNumEvaluationPoints
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1925
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Total number of evaluation points across all spline pieces.
+  example: []
+  syntax:
+    content: public int GetNumEvaluationPoints()
+    return:
+      type: System.Int32
+      description: The sum of GetNumEvaluationPoints() from each piece.
+    content.vb: Public Function GetNumEvaluationPoints() As Integer
+  overload: ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints*
+- uid: ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints
+  id: GetEvaluationPoints
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetEvaluationPoints()
+  nameWithType: ChebyshevSpline.GetEvaluationPoints()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetEvaluationPoints
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1941
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Flat row-major array of all spline piece evaluation points, concatenated sequentially.
+
+    Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+  example: []
+  syntax:
+    content: public double[] GetEvaluationPoints()
+    return:
+      type: System.Double[]
+      description: Double array of concatenated piece node coordinates, flattened in row-major order.
+    content.vb: Public Function GetEvaluationPoints() As Double()
+  overload: ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints*
+- uid: ChebyshevSharp.ChebyshevSpline.GetSpecialPoints
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetSpecialPoints
+  id: GetSpecialPoints
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetSpecialPoints()
+  nameWithType: ChebyshevSpline.GetSpecialPoints()
+  fullName: ChebyshevSharp.ChebyshevSpline.GetSpecialPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetSpecialPoints
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1969
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Get the knots (special points) used for spline construction.
+  example: []
+  syntax:
+    content: public double[][]? GetSpecialPoints()
+    return:
+      type: System.Double[][]
+      description: Interior knots per dimension, or null if no interior knots were used.
+    content.vb: Public Function GetSpecialPoints() As Double()()
+  overload: ChebyshevSharp.ChebyshevSpline.GetSpecialPoints*
+- uid: ChebyshevSharp.ChebyshevSpline.SobolIndices
+  commentId: M:ChebyshevSharp.ChebyshevSpline.SobolIndices
+  id: SobolIndices
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: SobolIndices()
+  nameWithType: ChebyshevSpline.SobolIndices()
+  fullName: ChebyshevSharp.ChebyshevSpline.SobolIndices()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SobolIndices
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 1987
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Compute variance-based sensitivity indices aggregated across spline pieces.
+
+    Per-piece coefficients are computed under the Chebyshev measure on each piece's
+
+    local domain; per-piece contributions are weighted by domain volume × variance,
+
+    then normalized by global variance. For a single-piece spline, this reduces to
+
+    the <xref href="ChebyshevSharp.ChebyshevApproximation.SobolIndices" data-throw-if-not-resolved="false"></xref> case.
+  example: []
+  syntax:
+    content: public SobolResult SobolIndices()
+    return:
+      type: ChebyshevSharp.SobolResult
+      description: A <xref href="ChebyshevSharp.SobolResult" data-throw-if-not-resolved="false"></xref> with per-dim FirstOrder, TotalOrder, and Chebyshev-weighted global Variance.
+    content.vb: Public Function SobolIndices() As SobolResult
+  overload: ChebyshevSharp.ChebyshevSpline.SobolIndices*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)" data-throw-if-not-resolved="false"></xref> has not been called.
+- uid: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
+  commentId: M:ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
+  id: SetOriginalFunctionValues(System.Double[])
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: SetOriginalFunctionValues(double[])
+  nameWithType: ChebyshevSpline.SetOriginalFunctionValues(double[])
+  fullName: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(double[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SetOriginalFunctionValues
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 2035
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Populate this spline's tensor values from a precomputed flat array.
+
+    Used after constructing with <code>deferBuild: true</code>. Bit-identical to
+
+    the <code>FromValues</code> factory.
+
+    Values are concatenated in flat piece-index C-order: piece 0 values first, then piece 1, etc.
+  example: []
+  syntax:
+    content: public void SetOriginalFunctionValues(double[] values)
+    parameters:
+    - id: values
+      type: System.Double[]
+      description: Flat array concatenating all pieces' values in piece-flat-index order.
+    content.vb: Public Sub SetOriginalFunctionValues(values As Double())
+  overload: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues*
+  exceptions:
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: Thrown when values length does not match the expected total across all pieces.
+  nameWithType.vb: ChebyshevSpline.SetOriginalFunctionValues(Double())
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(Double())
+  name.vb: SetOriginalFunctionValues(Double())
+- uid: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+  id: GetDerivativeId(System.Int32[])
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevSpline.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDerivativeId
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 2111
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Register or look up a derivative-orders tuple. Returns a stable
+
+    session-local int id for the same orders. Used in conjunction with
+
+    the <code>Eval(point, derivativeId)</code> overload.
+  example: []
+  syntax:
+    content: public int GetDerivativeId(int[] orders)
+    parameters:
+    - id: orders
+      type: System.Int32[]
+      description: Derivative order per dimension.
+    return:
+      type: System.Int32
+      description: A stable int id for this orders tuple (0-based, assigned in registration order).
+    content.vb: Public Function GetDerivativeId(orders As Integer()) As Integer
+  overload: ChebyshevSharp.ChebyshevSpline.GetDerivativeId*
+  nameWithType.vb: ChebyshevSpline.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+- uid: ChebyshevSharp.ChebyshevSpline.Eval(System.Double[],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.Eval(System.Double[],System.Int32)
+  id: Eval(System.Double[],System.Int32)
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: Eval(double[], int)
+  nameWithType: ChebyshevSpline.Eval(double[], int)
+  fullName: ChebyshevSharp.ChebyshevSpline.Eval(double[], int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Eval
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 2127
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate at <code class="paramref">point</code> using a previously-registered derivative id.
+  example: []
+  syntax:
+    content: public double Eval(double[] point, int derivativeId)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Evaluation point.
+    - id: derivativeId
+      type: System.Int32
+      description: Id returned by <xref href="ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32%5b%5d)" data-throw-if-not-resolved="false"></xref>.
+    return:
+      type: System.Double
+      description: Interpolated value at the given derivative order.
+    content.vb: Public Function Eval(point As Double(), derivativeId As Integer) As Double
+  overload: ChebyshevSharp.ChebyshevSpline.Eval*
+  exceptions:
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: Thrown when <code class="paramref">derivativeId</code> has not been registered.
+  nameWithType.vb: ChebyshevSpline.Eval(Double(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.Eval(Double(), Integer)
+  name.vb: Eval(Double(), Integer)
+- uid: ChebyshevSharp.ChebyshevSpline.Clone
+  commentId: M:ChebyshevSharp.ChebyshevSpline.Clone
+  id: Clone
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: Clone()
+  nameWithType: ChebyshevSpline.Clone()
+  fullName: ChebyshevSharp.ChebyshevSpline.Clone()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Clone
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 2149
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Returns a deep copy of this spline. The source <xref href="ChebyshevSharp.ChebyshevSpline.Function" data-throw-if-not-resolved="false"></xref>
+
+    callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+
+    the function. All precomputed pieces and state are deep-copied.
+  example: []
+  syntax:
+    content: public ChebyshevSpline Clone()
+    return:
+      type: ChebyshevSharp.ChebyshevSpline
+      description: A fully independent <xref href="ChebyshevSharp.ChebyshevSpline" data-throw-if-not-resolved="false"></xref> with <xref href="ChebyshevSharp.ChebyshevSpline.Function" data-throw-if-not-resolved="false"></xref> set to null.
+    content.vb: Public Function Clone() As ChebyshevSpline
+  overload: ChebyshevSharp.ChebyshevSpline.Clone*
+- uid: ChebyshevSharp.ChebyshevSpline.AutoKnots(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Object,System.String,System.Double,System.Int32,System.Int32,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.AutoKnots(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Object,System.String,System.Double,System.Int32,System.Int32,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  id: AutoKnots(System.Func{System.Double[],System.Object,System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Object,System.String,System.Double,System.Int32,System.Int32,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  parent: ChebyshevSharp.ChebyshevSpline
+  langs:
+  - csharp
+  - vb
+  name: AutoKnots(Func<double[], object?, double>, int, double[][], int[], int, object?, string?, double, int, int, int?, IProgress<int>?, bool)
+  nameWithType: ChebyshevSpline.AutoKnots(Func<double[], object?, double>, int, double[][], int[], int, object?, string?, double, int, int, int?, IProgress<int>?, bool)
+  fullName: ChebyshevSharp.ChebyshevSpline.AutoKnots(System.Func<double[], object?, double>, int, double[][], int[], int, object?, string?, double, int, int, int?, System.IProgress<int>?, bool)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: AutoKnots
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
+    startLine: 2209
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Auto-place knots at function kinks via a curvature-spike scan, then build the
+
+    resulting <xref href="ChebyshevSharp.ChebyshevSpline" data-throw-if-not-resolved="false"></xref>. Mirrors PyChebyshev <code>spline.py:2111</code>.
+  remarks: >-
+    When <code class="paramref">nWorkers</code> is non-null, <code class="paramref">function</code> may be
+
+    invoked concurrently from multiple threads. Functions that capture mutable state
+
+    must use locks or external synchronization, or pass <code>nWorkers: null</code>.
+  example: []
+  syntax:
+    content: public static ChebyshevSpline AutoKnots(Func<double[], object?, double> function, int numDimensions, double[][] domain, int[] numNodes, int maxOrderDerivative = 2, object? additionalData = null, string? descriptor = null, double thresholdFactor = 5, int maxKnotsPerDim = 5, int nScanPoints = 200, int? nWorkers = null, IProgress<int>? progress = null, bool verbose = false)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Object,System.Double}
+      description: f(point, additionalData) → double; must return finite at every scan point.
+    - id: numDimensions
+      type: System.Int32
+      description: Number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds for each dimension as double[ndim][2].
+    - id: numNodes
+      type: System.Int32[]
+      description: Per-piece node counts; same shape as the regular ctor.
+    - id: maxOrderDerivative
+      type: System.Int32
+      description: Max derivative order. Default 2.
+    - id: additionalData
+      type: System.Object
+      description: Optional user data threaded through f calls.
+    - id: descriptor
+      type: System.String
+      description: Optional free-form descriptor.
+    - id: thresholdFactor
+      type: System.Double
+      description: Spike threshold = thresholdFactor × mean(|d²f|). Default 5.0.
+    - id: maxKnotsPerDim
+      type: System.Int32
+      description: Cap on knots per dimension. Default 5. Zero means no auto-knots.
+    - id: nScanPoints
+      type: System.Int32
+      description: Number of scan points per dim. Default 200; must be at least 3.
+    - id: nWorkers
+      type: System.Nullable{System.Int32}
+      description: See <xref href="ChebyshevSharp.ChebyshevSpline" data-throw-if-not-resolved="false"></xref> ctor.
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: See <xref href="ChebyshevSharp.ChebyshevSpline" data-throw-if-not-resolved="false"></xref> ctor.
+    - id: verbose
+      type: System.Boolean
+      description: If true, print scan progress.
+    return:
+      type: ChebyshevSharp.ChebyshevSpline
+      description: A built ChebyshevSpline with the discovered knots.
+    content.vb: Public Shared Function AutoKnots([function] As Func(Of Double(), Object, Double), numDimensions As Integer, domain As Double()(), numNodes As Integer(), maxOrderDerivative As Integer = 2, additionalData As Object = Nothing, descriptor As String = Nothing, thresholdFactor As Double = 5, maxKnotsPerDim As Integer = 5, nScanPoints As Integer = 200, nWorkers As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing, verbose As Boolean = False) As ChebyshevSpline
+  overload: ChebyshevSharp.ChebyshevSpline.AutoKnots*
+  nameWithType.vb: ChebyshevSpline.AutoKnots(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer, Object, String, Double, Integer, Integer, Integer?, IProgress(Of Integer), Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.AutoKnots(System.Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer, Object, String, Double, Integer, Integer, Integer?, System.IProgress(Of Integer), Boolean)
+  name.vb: AutoKnots(Func(Of Double(), Object, Double), Integer, Double()(), Integer(), Integer, Object, String, Double, Integer, Integer, Integer?, IProgress(Of Integer), Boolean)
 references:
 - uid: ChebyshevSharp.ChebyshevApproximation
   commentId: T:ChebyshevSharp.ChebyshevApproximation
@@ -1799,15 +2812,263 @@ references:
   nameWithType.vb: Double
   fullName.vb: Double
   name.vb: Double
+- uid: ChebyshevSharp.ChebyshevSpline.ErrorThreshold*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.ErrorThreshold
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_ErrorThreshold
+  name: ErrorThreshold
+  nameWithType: ChebyshevSpline.ErrorThreshold
+  fullName: ChebyshevSharp.ChebyshevSpline.ErrorThreshold
+- uid: System.Nullable{System.Double}
+  commentId: T:System.Nullable{System.Double}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double?
+  nameWithType: double?
+  fullName: double?
+  nameWithType.vb: Double?
+  fullName.vb: Double?
+  name.vb: Double?
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '?'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSpline.MaxN*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.MaxN
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_MaxN
+  name: MaxN
+  nameWithType: ChebyshevSpline.MaxN
+  fullName: ChebyshevSharp.ChebyshevSpline.MaxN
+- uid: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
+  commentId: M:ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetOriginalFunctionValues_System_Double___
+  name: SetOriginalFunctionValues(double[])
+  nameWithType: ChebyshevSpline.SetOriginalFunctionValues(double[])
+  fullName: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(double[])
+  nameWithType.vb: ChebyshevSpline.SetOriginalFunctionValues(Double())
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(Double())
+  name.vb: SetOriginalFunctionValues(Double())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
+    name: SetOriginalFunctionValues
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetOriginalFunctionValues_System_Double___
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(System.Double[])
+    name: SetOriginalFunctionValues
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetOriginalFunctionValues_System_Double___
+  - name: (
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: )
+- uid: System.Environment.ProcessorCount
+  commentId: P:System.Environment.ProcessorCount
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.environment.processorcount
+  name: ProcessorCount
+  nameWithType: Environment.ProcessorCount
+  fullName: System.Environment.ProcessorCount
 - uid: ChebyshevSharp.ChebyshevSpline.#ctor*
   commentId: Overload:ChebyshevSharp.ChebyshevSpline.#ctor
-  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline__ctor_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Double_____System_Int32_
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline__ctor_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Double_____System_Int32_System_Object_System_Boolean_System_Nullable_System_Int32__System_IProgress_System_Int32__
   name: ChebyshevSpline
   nameWithType: ChebyshevSpline.ChebyshevSpline
   fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline
   nameWithType.vb: ChebyshevSpline.New
   fullName.vb: ChebyshevSharp.ChebyshevSpline.New
   name.vb: New
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: System.IProgress{System.Int32}
+  commentId: T:System.IProgress{System.Int32}
+  parent: System
+  definition: System.IProgress`1
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<int>
+  nameWithType: IProgress<int>
+  fullName: System.IProgress<int>
+  nameWithType.vb: IProgress(Of Integer)
+  fullName.vb: System.IProgress(Of Integer)
+  name.vb: IProgress(Of Integer)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: System.IProgress`1
+  commentId: T:System.IProgress`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<T>
+  nameWithType: IProgress<T>
+  fullName: System.IProgress<T>
+  nameWithType.vb: IProgress(Of T)
+  fullName.vb: System.IProgress(Of T)
+  name.vb: IProgress(Of T)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Nullable{System.Int32}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?[]
+  nameWithType: int?[]
+  fullName: int?[]
+  nameWithType.vb: Integer?()
+  fullName.vb: Integer?()
+  name.vb: Integer?()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: (
+  - name: )
+- uid: System.Int32[][]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int[][]
+  nameWithType: int[][]
+  fullName: int[][]
+  nameWithType.vb: Integer()()
+  fullName.vb: Integer()()
+  name.vb: Integer()()
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSpline.GetErrorThreshold*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetErrorThreshold
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetErrorThreshold
+  name: GetErrorThreshold
+  nameWithType: ChebyshevSpline.GetErrorThreshold
+  fullName: ChebyshevSharp.ChebyshevSpline.GetErrorThreshold
 - uid: ChebyshevSharp.ChebyshevSpline.Build*
   commentId: Overload:ChebyshevSharp.ChebyshevSpline.Build
   href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Build_System_Boolean_
@@ -1849,33 +3110,6 @@ references:
   name: EvalMulti
   nameWithType: ChebyshevSpline.EvalMulti
   fullName: ChebyshevSharp.ChebyshevSpline.EvalMulti
-- uid: System.Int32[][]
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int[][]
-  nameWithType: int[][]
-  fullName: int[][]
-  nameWithType.vb: Integer()()
-  fullName.vb: Integer()()
-  name.vb: Integer()()
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '['
-  - name: ']'
-  - name: '['
-  - name: ']'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: (
-  - name: )
-  - name: (
-  - name: )
 - uid: ChebyshevSharp.ChebyshevSpline.EvalBatch*
   commentId: Overload:ChebyshevSharp.ChebyshevSpline.EvalBatch
   href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_EvalBatch_System_Double_____System_Int32___
@@ -1900,9 +3134,22 @@ references:
   name: TotalBuildEvals
   nameWithType: ChebyshevSpline.TotalBuildEvals
   fullName: ChebyshevSharp.ChebyshevSpline.TotalBuildEvals
+- uid: ChebyshevSharp.ChebyshevSpline
+  commentId: T:ChebyshevSharp.ChebyshevSpline
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevSpline.html
+  name: ChebyshevSpline
+  nameWithType: ChebyshevSpline
+  fullName: ChebyshevSharp.ChebyshevSpline
+- uid: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.WithSpecialPoints
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_WithSpecialPoints_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Double_____System_Int32_____System_Int32___System_Nullable_System_Double__System_Int32_System_Int32_
+  name: WithSpecialPoints
+  nameWithType: ChebyshevSpline.WithSpecialPoints
+  fullName: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints
 - uid: ChebyshevSharp.ChebyshevSpline.Save*
   commentId: Overload:ChebyshevSharp.ChebyshevSpline.Save
-  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Save_System_String_
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Save_System_String_System_String_
   name: Save
   nameWithType: ChebyshevSpline.Save
   fullName: ChebyshevSharp.ChebyshevSpline.Save
@@ -1917,19 +3164,32 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
+- uid: System.IO.FileNotFoundException
+  commentId: T:System.IO.FileNotFoundException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.io.filenotfoundexception
+  name: FileNotFoundException
+  nameWithType: FileNotFoundException
+  fullName: System.IO.FileNotFoundException
+- uid: System.IO.InvalidDataException
+  commentId: T:System.IO.InvalidDataException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.io.invaliddataexception
+  name: InvalidDataException
+  nameWithType: InvalidDataException
+  fullName: System.IO.InvalidDataException
+- uid: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.PeekFormatVersion
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_PeekFormatVersion_System_String_
+  name: PeekFormatVersion
+  nameWithType: ChebyshevSpline.PeekFormatVersion
+  fullName: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion
 - uid: ChebyshevSharp.ChebyshevSpline.Load*
   commentId: Overload:ChebyshevSharp.ChebyshevSpline.Load
   href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Load_System_String_
   name: Load
   nameWithType: ChebyshevSpline.Load
   fullName: ChebyshevSharp.ChebyshevSpline.Load
-- uid: ChebyshevSharp.ChebyshevSpline
-  commentId: T:ChebyshevSharp.ChebyshevSpline
-  parent: ChebyshevSharp
-  href: ChebyshevSharp.ChebyshevSpline.html
-  name: ChebyshevSpline
-  nameWithType: ChebyshevSpline
-  fullName: ChebyshevSharp.ChebyshevSpline
 - uid: ChebyshevSharp.ChebyshevSpline.Nodes*
   commentId: Overload:ChebyshevSharp.ChebyshevSpline.Nodes
   href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Nodes_System_Int32_System_Double_____System_Int32___System_Double_____
@@ -2176,29 +3436,6 @@ references:
   name: Roots
   nameWithType: ChebyshevSpline.Roots
   fullName: ChebyshevSharp.ChebyshevSpline.Roots
-- uid: System.Nullable{System.Int32}
-  commentId: T:System.Nullable{System.Int32}
-  parent: System
-  definition: System.Nullable`1
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int?
-  nameWithType: int?
-  fullName: int?
-  nameWithType.vb: Integer?
-  fullName.vb: Integer?
-  name.vb: Integer?
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
 - uid: System.Collections.Generic.Dictionary{System.Int32,System.Double}
   commentId: T:System.Collections.Generic.Dictionary{System.Int32,System.Double}
   parent: System.Collections.Generic
@@ -2245,34 +3482,6 @@ references:
     name: Double
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.double
-  - name: )
-- uid: System.Nullable`1
-  commentId: T:System.Nullable`1
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  name: Nullable<T>
-  nameWithType: Nullable<T>
-  fullName: System.Nullable<T>
-  nameWithType.vb: Nullable(Of T)
-  fullName.vb: System.Nullable(Of T)
-  name.vb: Nullable(Of T)
-  spec.csharp:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: <
-  - name: T
-  - name: '>'
-  spec.vb:
-  - uid: System.Nullable`1
-    name: Nullable
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
-  - name: (
-  - name: Of
-  - name: " "
-  - name: T
   - name: )
 - uid: System.Collections.Generic.Dictionary`2
   commentId: T:System.Collections.Generic.Dictionary`2
@@ -2356,12 +3565,12 @@ references:
   parent: System
   definition: System.ValueTuple`2
   href: https://learn.microsoft.com/dotnet/api/system.double
-  name: (double value, double location)
-  nameWithType: (double value, double location)
-  fullName: (double value, double location)
-  nameWithType.vb: (value As Double, location As Double)
-  fullName.vb: (value As Double, location As Double)
-  name.vb: (value As Double, location As Double)
+  name: (double lo, double hi)
+  nameWithType: (double lo, double hi)
+  fullName: (double lo, double hi)
+  nameWithType.vb: (lo As Double, hi As Double)
+  fullName.vb: (lo As Double, hi As Double)
+  name.vb: (lo As Double, hi As Double)
   spec.csharp:
   - name: (
   - uid: System.Double
@@ -2369,9 +3578,9 @@ references:
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.double
   - name: " "
-  - uid: System.ValueTuple{System.Double,System.Double}.value
-    name: value
-    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.value
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
   - name: ','
   - name: " "
   - uid: System.Double
@@ -2379,15 +3588,15 @@ references:
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.double
   - name: " "
-  - uid: System.ValueTuple{System.Double,System.Double}.location
-    name: location
-    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.location
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
   - name: )
   spec.vb:
   - name: (
-  - uid: System.ValueTuple{System.Double,System.Double}.value
-    name: value
-    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.value
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
   - name: " "
   - name: As
   - name: " "
@@ -2397,9 +3606,9 @@ references:
     href: https://learn.microsoft.com/dotnet/api/system.double
   - name: ','
   - name: " "
-  - uid: System.ValueTuple{System.Double,System.Double}.location
-    name: location
-    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.location
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
   - name: " "
   - name: As
   - name: " "
@@ -2544,3 +3753,387 @@ references:
   name: ToString
   nameWithType: ChebyshevSpline.ToString
   fullName: ChebyshevSharp.ChebyshevSpline.ToString
+- uid: ChebyshevSharp.ChebyshevSpline.SetDescriptor*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.SetDescriptor
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetDescriptor_System_String_
+  name: SetDescriptor
+  nameWithType: ChebyshevSpline.SetDescriptor
+  fullName: ChebyshevSharp.ChebyshevSpline.SetDescriptor
+- uid: ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetDescriptor_System_String_
+  name: SetDescriptor(string)
+  nameWithType: ChebyshevSpline.SetDescriptor(string)
+  fullName: ChebyshevSharp.ChebyshevSpline.SetDescriptor(string)
+  nameWithType.vb: ChebyshevSpline.SetDescriptor(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.SetDescriptor(String)
+  name.vb: SetDescriptor(String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+    name: SetDescriptor
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetDescriptor_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSpline.SetDescriptor(System.String)
+    name: SetDescriptor
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetDescriptor_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSpline.GetDescriptor*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetDescriptor
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetDescriptor
+  name: GetDescriptor
+  nameWithType: ChebyshevSpline.GetDescriptor
+  fullName: ChebyshevSharp.ChebyshevSpline.GetDescriptor
+- uid: ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Build_System_Boolean_
+  name: Build(bool)
+  nameWithType: ChebyshevSpline.Build(bool)
+  fullName: ChebyshevSharp.ChebyshevSpline.Build(bool)
+  nameWithType.vb: ChebyshevSpline.Build(Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.Build(Boolean)
+  name.vb: Build(Boolean)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
+    name: Build
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Build_System_Boolean_
+  - name: (
+  - uid: System.Boolean
+    name: bool
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSpline.Build(System.Boolean)
+    name: Build
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Build_System_Boolean_
+  - name: (
+  - uid: System.Boolean
+    name: Boolean
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSpline.FromValues(System.Double[][],System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.FromValues(System.Double[][],System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_FromValues_System_Double_____System_Int32_System_Double_____System_Int32___System_Double_____System_Int32_
+  name: FromValues(double[][], int, double[][], int[], double[][], int)
+  nameWithType: ChebyshevSpline.FromValues(double[][], int, double[][], int[], double[][], int)
+  fullName: ChebyshevSharp.ChebyshevSpline.FromValues(double[][], int, double[][], int[], double[][], int)
+  nameWithType.vb: ChebyshevSpline.FromValues(Double()(), Integer, Double()(), Integer(), Double()(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.FromValues(Double()(), Integer, Double()(), Integer(), Double()(), Integer)
+  name.vb: FromValues(Double()(), Integer, Double()(), Integer(), Double()(), Integer)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSpline.FromValues(System.Double[][],System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
+    name: FromValues
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_FromValues_System_Double_____System_Int32_System_Double_____System_Int32___System_Double_____System_Int32_
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSpline.FromValues(System.Double[][],System.Int32,System.Double[][],System.Int32[],System.Double[][],System.Int32)
+    name: FromValues
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_FromValues_System_Double_____System_Int32_System_Double_____System_Int32___System_Double_____System_Int32_
+  - name: (
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSpline.Load(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevSpline.Load(System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Load_System_String_
+  name: Load(string)
+  nameWithType: ChebyshevSpline.Load(string)
+  fullName: ChebyshevSharp.ChebyshevSpline.Load(string)
+  nameWithType.vb: ChebyshevSpline.Load(String)
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.Load(String)
+  name.vb: Load(String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSpline.Load(System.String)
+    name: Load
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Load_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSpline.Load(System.String)
+    name: Load
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Load_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevSpline.IsConstructionFinished*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.IsConstructionFinished
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_IsConstructionFinished
+  name: IsConstructionFinished
+  nameWithType: ChebyshevSpline.IsConstructionFinished
+  fullName: ChebyshevSharp.ChebyshevSpline.IsConstructionFinished
+- uid: ChebyshevSharp.ChebyshevSpline.GetConstructorType*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetConstructorType
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetConstructorType
+  name: GetConstructorType
+  nameWithType: ChebyshevSpline.GetConstructorType
+  fullName: ChebyshevSharp.ChebyshevSpline.GetConstructorType
+- uid: ChebyshevSharp.ChebyshevSpline.GetUsedNs*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetUsedNs
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetUsedNs
+  name: GetUsedNs
+  nameWithType: ChebyshevSpline.GetUsedNs
+  fullName: ChebyshevSharp.ChebyshevSpline.GetUsedNs
+- uid: ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetMaxDerivativeOrder
+  name: GetMaxDerivativeOrder
+  nameWithType: ChebyshevSpline.GetMaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder
+- uid: ChebyshevSharp.ChebyshevSpline.GetAdditionalData*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetAdditionalData
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetAdditionalData
+  name: GetAdditionalData
+  nameWithType: ChebyshevSpline.GetAdditionalData
+  fullName: ChebyshevSharp.ChebyshevSpline.GetAdditionalData
+- uid: ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetNumEvaluationPoints
+  name: GetNumEvaluationPoints
+  nameWithType: ChebyshevSpline.GetNumEvaluationPoints
+  fullName: ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints
+- uid: ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetEvaluationPoints
+  name: GetEvaluationPoints
+  nameWithType: ChebyshevSpline.GetEvaluationPoints
+  fullName: ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints
+- uid: ChebyshevSharp.ChebyshevSpline.GetSpecialPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetSpecialPoints
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetSpecialPoints
+  name: GetSpecialPoints
+  nameWithType: ChebyshevSpline.GetSpecialPoints
+  fullName: ChebyshevSharp.ChebyshevSpline.GetSpecialPoints
+- uid: ChebyshevSharp.ChebyshevApproximation.SobolIndices
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.SobolIndices
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_SobolIndices
+  name: SobolIndices()
+  nameWithType: ChebyshevApproximation.SobolIndices()
+  fullName: ChebyshevSharp.ChebyshevApproximation.SobolIndices()
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.SobolIndices
+    name: SobolIndices
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_SobolIndices
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.SobolIndices
+    name: SobolIndices
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_SobolIndices
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.SobolResult
+  commentId: T:ChebyshevSharp.SobolResult
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.SobolResult.html
+  name: SobolResult
+  nameWithType: SobolResult
+  fullName: ChebyshevSharp.SobolResult
+- uid: System.InvalidOperationException
+  commentId: T:System.InvalidOperationException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.invalidoperationexception
+  name: InvalidOperationException
+  nameWithType: InvalidOperationException
+  fullName: System.InvalidOperationException
+- uid: ChebyshevSharp.ChebyshevSpline.SobolIndices*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.SobolIndices
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SobolIndices
+  name: SobolIndices
+  nameWithType: ChebyshevSpline.SobolIndices
+  fullName: ChebyshevSharp.ChebyshevSpline.SobolIndices
+- uid: System.ArgumentException
+  commentId: T:System.ArgumentException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentexception
+  name: ArgumentException
+  nameWithType: ArgumentException
+  fullName: System.ArgumentException
+- uid: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_SetOriginalFunctionValues_System_Double___
+  name: SetOriginalFunctionValues
+  nameWithType: ChebyshevSpline.SetOriginalFunctionValues
+  fullName: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues
+- uid: ChebyshevSharp.ChebyshevSpline.GetDerivativeId*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.GetDerivativeId
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetDerivativeId_System_Int32___
+  name: GetDerivativeId
+  nameWithType: ChebyshevSpline.GetDerivativeId
+  fullName: ChebyshevSharp.ChebyshevSpline.GetDerivativeId
+- uid: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetDerivativeId_System_Int32___
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevSpline.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(int[])
+  nameWithType.vb: ChebyshevSpline.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+    name: GetDerivativeId
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetDerivativeId_System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(System.Int32[])
+    name: GetDerivativeId
+    href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_GetDerivativeId_System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: )
+- uid: System.ArgumentOutOfRangeException
+  commentId: T:System.ArgumentOutOfRangeException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception
+  name: ArgumentOutOfRangeException
+  nameWithType: ArgumentOutOfRangeException
+  fullName: System.ArgumentOutOfRangeException
+- uid: ChebyshevSharp.ChebyshevSpline.Function
+  commentId: P:ChebyshevSharp.ChebyshevSpline.Function
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Function
+  name: Function
+  nameWithType: ChebyshevSpline.Function
+  fullName: ChebyshevSharp.ChebyshevSpline.Function
+- uid: ChebyshevSharp.ChebyshevSpline.Clone*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.Clone
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_Clone
+  name: Clone
+  nameWithType: ChebyshevSpline.Clone
+  fullName: ChebyshevSharp.ChebyshevSpline.Clone
+- uid: ChebyshevSharp.ChebyshevSpline.AutoKnots*
+  commentId: Overload:ChebyshevSharp.ChebyshevSpline.AutoKnots
+  href: ChebyshevSharp.ChebyshevSpline.html#ChebyshevSharp_ChebyshevSpline_AutoKnots_System_Func_System_Double___System_Object_System_Double__System_Int32_System_Double_____System_Int32___System_Int32_System_Object_System_String_System_Double_System_Int32_System_Int32_System_Nullable_System_Int32__System_IProgress_System_Int32__System_Boolean_
+  name: AutoKnots
+  nameWithType: ChebyshevSpline.AutoKnots
+  fullName: ChebyshevSharp.ChebyshevSpline.AutoKnots

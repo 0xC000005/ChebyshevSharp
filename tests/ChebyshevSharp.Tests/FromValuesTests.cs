@@ -33,6 +33,48 @@ public class TestNodesApprox
     }
 
     [Fact]
+    public void Nodes_UseTypeIRoots_NotLobattoEndpoints()
+    {
+        var info = ChebyshevApproximation.Nodes(1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+
+        double[] expected =
+        {
+            -Math.Cos(Math.PI / 8.0),
+            -Math.Cos(3.0 * Math.PI / 8.0),
+            Math.Cos(3.0 * Math.PI / 8.0),
+            Math.Cos(Math.PI / 8.0),
+        };
+
+        for (int i = 0; i < expected.Length; i++)
+            TestFixtures.AssertClose(expected[i], info.NodesPerDim[0][i], atol: 1e-15);
+
+        Assert.DoesNotContain(-1.0, info.NodesPerDim[0]);
+        Assert.DoesNotContain(1.0, info.NodesPerDim[0]);
+    }
+
+    [Fact]
+    public void FromValues_LobattoSamplesAreNotTypeICompatible()
+    {
+        // MoCaX/Ruiz use Lobatto/extrema nodes including endpoints. ChebyshevSharp
+        // FromValues expects Type-I roots, so a value vector sampled on Lobatto nodes
+        // must be rebuilt or resampled before import.
+        double[] lobattoNodes = { -1.0, -0.5, 0.5, 1.0 };
+        double[] lobattoValues = lobattoNodes.Select(x => x * x).ToArray();
+
+        var cheb = ChebyshevApproximation.FromValues(
+            lobattoValues,
+            1,
+            new[] { new[] { -1.0, 1.0 } },
+            new[] { 4 });
+
+        double x = 0.5;
+        double interpretedAsTypeI = cheb.VectorizedEval(new[] { x }, new[] { 0 });
+        double expected = x * x;
+        Assert.True(Math.Abs(interpretedAsTypeI - expected) > 0.1,
+            $"Lobatto-sampled x^2 values should not be treated as Type-I samples; got {interpretedAsTypeI}");
+    }
+
+    [Fact]
     public void Nodes_Shape_2D()
     {
         var info = ChebyshevApproximation.Nodes(2, new[] { new[] { -1.0, 1.0 }, new[] { 0.0, 3.0 } }, new[] { 8, 12 });

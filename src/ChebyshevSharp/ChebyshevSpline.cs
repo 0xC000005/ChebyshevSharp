@@ -1977,13 +1977,13 @@ public class ChebyshevSpline
     }
 
     /// <summary>
-    /// Compute Sobol sensitivity indices aggregated across spline pieces.
+    /// Compute variance-based sensitivity indices aggregated across spline pieces.
     /// Per-piece coefficients are computed under the Chebyshev measure on each piece's
     /// local domain; per-piece contributions are weighted by domain volume × variance,
     /// then normalized by global variance. For a single-piece spline, this reduces to
     /// the <see cref="ChebyshevApproximation.SobolIndices"/> case.
     /// </summary>
-    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, global Variance.</returns>
+    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, and Chebyshev-weighted global Variance.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public SobolResult SobolIndices()
     {

@@ -22,7 +22,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SplineNodeInfo
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1490
+    startLine: 2412
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -59,7 +59,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Pieces
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1493
+    startLine: 2415
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -90,7 +90,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumPieces
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1495
+    startLine: 2417
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -121,7 +121,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: PieceShape
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1497
+    startLine: 2419
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp

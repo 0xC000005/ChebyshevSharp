@@ -24,7 +24,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SplinePieceNodeInfo
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1475
+    startLine: 2397
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -61,7 +61,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: PieceIndex
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1478
+    startLine: 2400
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -92,7 +92,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SubDomain
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1480
+    startLine: 2402
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -123,7 +123,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NodesPerDim
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1482
+    startLine: 2404
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -154,7 +154,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: FullGrid
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1484
+    startLine: 2406
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -185,7 +185,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Shape
     path: ../src/ChebyshevSharp/ChebyshevSpline.cs
-    startLine: 1486
+    startLine: 2408
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp

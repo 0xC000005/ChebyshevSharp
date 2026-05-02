@@ -5,23 +5,67 @@ items:
   id: ChebyshevTT
   parent: ChebyshevSharp
   children:
-  - ChebyshevSharp.ChebyshevTT.#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32)
+  - ChebyshevSharp.ChebyshevTT.#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  - ChebyshevSharp.ChebyshevTT.AddInPlace(ChebyshevSharp.ChebyshevTT)
   - ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
+  - ChebyshevSharp.ChebyshevTT.BuildWarning
+  - ChebyshevSharp.ChebyshevTT.Clone
   - ChebyshevSharp.ChebyshevTT.CompressionRatio
+  - ChebyshevSharp.ChebyshevTT.DefaultRoundTolerance
+  - ChebyshevSharp.ChebyshevTT.DimOrder
   - ChebyshevSharp.ChebyshevTT.Domain
   - ChebyshevSharp.ChebyshevTT.ErrorEstimate
   - ChebyshevSharp.ChebyshevTT.Eval(System.Double[])
+  - ChebyshevSharp.ChebyshevTT.Eval(System.Double[],System.Int32)
   - ChebyshevSharp.ChebyshevTT.EvalBatch(System.Double[0:,0:])
   - ChebyshevSharp.ChebyshevTT.EvalMulti(System.Double[],System.Int32[][])
+  - ChebyshevSharp.ChebyshevTT.Extrude(System.Int32,System.ValueTuple{System.Double,System.Double},System.Int32)
+  - ChebyshevSharp.ChebyshevTT.FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double)
+  - ChebyshevSharp.ChebyshevTT.GetAdditionalData
+  - ChebyshevSharp.ChebyshevTT.GetConstructorType
+  - ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+  - ChebyshevSharp.ChebyshevTT.GetDescriptor
+  - ChebyshevSharp.ChebyshevTT.GetEvaluationPoints
+  - ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder
+  - ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints
+  - ChebyshevSharp.ChebyshevTT.GetUsedNs
+  - ChebyshevSharp.ChebyshevTT.InnerProduct(ChebyshevSharp.ChebyshevTT)
+  - ChebyshevSharp.ChebyshevTT.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  - ChebyshevSharp.ChebyshevTT.IsConstructionFinished
   - ChebyshevSharp.ChebyshevTT.Load(System.String)
   - ChebyshevSharp.ChebyshevTT.LoadWarning
   - ChebyshevSharp.ChebyshevTT.MaxRank
+  - ChebyshevSharp.ChebyshevTT.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  - ChebyshevSharp.ChebyshevTT.Method
+  - ChebyshevSharp.ChebyshevTT.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
   - ChebyshevSharp.ChebyshevTT.NNodes
+  - ChebyshevSharp.ChebyshevTT.NegateInPlace
+  - ChebyshevSharp.ChebyshevTT.Nodes(System.Int32,System.Double[][],System.Int32[])
   - ChebyshevSharp.ChebyshevTT.NumDimensions
+  - ChebyshevSharp.ChebyshevTT.OrthLeft(System.Int32)
+  - ChebyshevSharp.ChebyshevTT.OrthRight(System.Int32)
+  - ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+  - ChebyshevSharp.ChebyshevTT.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  - ChebyshevSharp.ChebyshevTT.RoundInPlace(System.Double)
+  - ChebyshevSharp.ChebyshevTT.RunCompletion(System.Double,System.Int32,System.Boolean)
   - ChebyshevSharp.ChebyshevTT.Save(System.String)
+  - ChebyshevSharp.ChebyshevTT.ScalarDivInPlace(System.Double)
+  - ChebyshevSharp.ChebyshevTT.ScalarMulInPlace(System.Double)
+  - ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+  - ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+  - ChebyshevSharp.ChebyshevTT.SobolIndices
+  - ChebyshevSharp.ChebyshevTT.SubInPlace(ChebyshevSharp.ChebyshevTT)
+  - ChebyshevSharp.ChebyshevTT.ToDense
   - ChebyshevSharp.ChebyshevTT.ToString
   - ChebyshevSharp.ChebyshevTT.TotalBuildEvals
   - ChebyshevSharp.ChebyshevTT.TtRanks
+  - ChebyshevSharp.ChebyshevTT.WithAutoOrder(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Object,System.Int32,System.String,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  - ChebyshevSharp.ChebyshevTT.op_Addition(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  - ChebyshevSharp.ChebyshevTT.op_Division(ChebyshevSharp.ChebyshevTT,System.Double)
+  - ChebyshevSharp.ChebyshevTT.op_Multiply(ChebyshevSharp.ChebyshevTT,System.Double)
+  - ChebyshevSharp.ChebyshevTT.op_Multiply(System.Double,ChebyshevSharp.ChebyshevTT)
+  - ChebyshevSharp.ChebyshevTT.op_Subtraction(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  - ChebyshevSharp.ChebyshevTT.op_UnaryNegation(ChebyshevSharp.ChebyshevTT)
   langs:
   - csharp
   - vb
@@ -36,7 +80,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ChebyshevTT
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 14
+    startLine: 15
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -79,7 +123,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: LoadWarning
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 33
+    startLine: 43
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -92,6 +136,73 @@ items:
       type: System.String
     content.vb: Public Property LoadWarning As String
   overload: ChebyshevSharp.ChebyshevTT.LoadWarning*
+- uid: ChebyshevSharp.ChebyshevTT.BuildWarning
+  commentId: P:ChebyshevSharp.ChebyshevTT.BuildWarning
+  id: BuildWarning
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: BuildWarning
+  nameWithType: ChebyshevTT.BuildWarning
+  fullName: ChebyshevSharp.ChebyshevTT.BuildWarning
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: BuildWarning
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 46
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Warning emitted by Build() if maxRank was reached before tolerance was satisfied during ALS. Null otherwise.
+  example: []
+  syntax:
+    content: public string? BuildWarning { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property BuildWarning As String
+  overload: ChebyshevSharp.ChebyshevTT.BuildWarning*
+- uid: ChebyshevSharp.ChebyshevTT.Method
+  commentId: P:ChebyshevSharp.ChebyshevTT.Method
+  id: Method
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Method
+  nameWithType: ChebyshevTT.Method
+  fullName: ChebyshevSharp.ChebyshevTT.Method
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Method
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 53
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Build method that produced the current cores: <code>"cross"</code>, <code>"svd"</code>, or <code>"als"</code>.
+
+    <code>null</code> only before <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> is called or after <xref href="ChebyshevSharp.ChebyshevTT.Load(System.String)" data-throw-if-not-resolved="false"></xref> from a
+
+    pre-v0.6.0 JSON file that predates this property.
+  example: []
+  syntax:
+    content: public string? Method { get; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Method As String
+  overload: ChebyshevSharp.ChebyshevTT.Method*
 - uid: ChebyshevSharp.ChebyshevTT.NumDimensions
   commentId: P:ChebyshevSharp.ChebyshevTT.NumDimensions
   id: NumDimensions
@@ -110,7 +221,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumDimensions
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 36
+    startLine: 59
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -141,7 +252,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Domain
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 39
+    startLine: 62
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -172,7 +283,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NNodes
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 42
+    startLine: 65
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -203,7 +314,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: MaxRank
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 45
+    startLine: 68
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -234,7 +345,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TotalBuildEvals
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 48
+    startLine: 71
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -265,7 +376,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TtRanks
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 54
+    startLine: 77
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -300,7 +411,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: CompressionRatio
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 67
+    startLine: 90
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -317,16 +428,16 @@ items:
   - type: System.InvalidOperationException
     commentId: T:System.InvalidOperationException
     description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
-- uid: ChebyshevSharp.ChebyshevTT.#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32)
-  commentId: M:ChebyshevSharp.ChebyshevTT.#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32)
-  id: '#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32)'
+- uid: ChebyshevSharp.ChebyshevTT.#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  commentId: M:ChebyshevSharp.ChebyshevTT.#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})
+  id: '#ctor(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Int32,System.Object,System.Nullable{System.Int32},System.IProgress{System.Int32})'
   parent: ChebyshevSharp.ChebyshevTT
   langs:
   - csharp
   - vb
-  name: ChebyshevTT(Func<double[], double>, int, double[][], int[], int, double, int)
-  nameWithType: ChebyshevTT.ChebyshevTT(Func<double[], double>, int, double[][], int[], int, double, int)
-  fullName: ChebyshevSharp.ChebyshevTT.ChebyshevTT(System.Func<double[], double>, int, double[][], int[], int, double, int)
+  name: ChebyshevTT(Func<double[], double>, int, double[][], int[], int, double, int, int, object?, int?, IProgress<int>?)
+  nameWithType: ChebyshevTT.ChebyshevTT(Func<double[], double>, int, double[][], int[], int, double, int, int, object?, int?, IProgress<int>?)
+  fullName: ChebyshevSharp.ChebyshevTT.ChebyshevTT(System.Func<double[], double>, int, double[][], int[], int, double, int, int, object?, int?, System.IProgress<int>?)
   type: Constructor
   source:
     remote:
@@ -335,14 +446,15 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 90
+    startLine: 119
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
   summary: Create a new ChebyshevTT interpolant.
+  remarks: 'Thread safety: TT-Cross is inherently sequential; <code class="paramref">nWorkers</code> is accepted but has no effect.'
   example: []
   syntax:
-    content: public ChebyshevTT(Func<double[], double> function, int numDimensions, double[][] domain, int[] nNodes, int maxRank = 10, double tolerance = 1E-06, int maxSweeps = 10)
+    content: public ChebyshevTT(Func<double[], double> function, int numDimensions, double[][] domain, int[] nNodes, int maxRank = 10, double tolerance = 1E-06, int maxSweeps = 10, int maxDerivativeOrder = 2, object? additionalData = null, int? nWorkers = null, IProgress<int>? progress = null)
     parameters:
     - id: function
       type: System.Func{System.Double[],System.Double}
@@ -365,11 +477,27 @@ items:
     - id: maxSweeps
       type: System.Int32
       description: Maximum number of TT-Cross sweeps. Default is 10.
-    content.vb: Public Sub New([function] As Func(Of Double(), Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), maxRank As Integer = 10, tolerance As Double = 1E-06, maxSweeps As Integer = 10)
+    - id: maxDerivativeOrder
+      type: System.Int32
+      description: Maximum derivative order to support. Default is 2.
+    - id: additionalData
+      type: System.Object
+      description: Optional user data object stored for introspection via <xref href="ChebyshevSharp.ChebyshevTT.GetAdditionalData" data-throw-if-not-resolved="false"></xref>. NOT threaded through build calls (TT function signature has no data arg).
+    - id: nWorkers
+      type: System.Nullable{System.Int32}
+      description: >-
+        Accepted for API symmetry with the other classes but
+            ignored: TT-Cross is adaptive sampling, not pre-grid evaluation. Pass null.
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: >-
+        Optional progress reporter; receives the cumulative
+            sweep count after each TT-Cross sweep.
+    content.vb: Public Sub New([function] As Func(Of Double(), Double), numDimensions As Integer, domain As Double()(), nNodes As Integer(), maxRank As Integer = 10, tolerance As Double = 1E-06, maxSweeps As Integer = 10, maxDerivativeOrder As Integer = 2, additionalData As Object = Nothing, nWorkers As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing)
   overload: ChebyshevSharp.ChebyshevTT.#ctor*
-  nameWithType.vb: ChebyshevTT.New(Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer)
-  fullName.vb: ChebyshevSharp.ChebyshevTT.New(System.Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer)
-  name.vb: New(Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer)
+  nameWithType.vb: ChebyshevTT.New(Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer, Integer, Object, Integer?, IProgress(Of Integer))
+  fullName.vb: ChebyshevSharp.ChebyshevTT.New(System.Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer, Integer, Object, Integer?, System.IProgress(Of Integer))
+  name.vb: New(Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer, Integer, Object, Integer?, IProgress(Of Integer))
 - uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
   commentId: M:ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
   id: Build(System.Boolean,System.Nullable{System.Int32},System.String)
@@ -388,7 +516,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Build
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 153
+    startLine: 194
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -402,16 +530,16 @@ items:
       description: If true, print build progress.
     - id: seed
       type: System.Nullable{System.Int32}
-      description: Random seed for TT-Cross initialization. Ignored for method="svd".
+      description: Random seed for TT-Cross/ALS initialization. Ignored for method="svd".
     - id: method
       type: System.String
-      description: "\"cross\" (default) or \"svd\"."
+      description: "\"cross\" (default), \"svd\", or \"als\"."
     content.vb: Public Sub Build(verbose As Boolean = True, seed As Integer? = Nothing, method As String = "cross")
   overload: ChebyshevSharp.ChebyshevTT.Build*
   exceptions:
   - type: System.ArgumentException
     commentId: T:System.ArgumentException
-    description: If method is not "cross" or "svd".
+    description: If method is not "cross", "svd", or "als".
   nameWithType.vb: ChebyshevTT.Build(Boolean, Integer?, String)
   fullName.vb: ChebyshevSharp.ChebyshevTT.Build(Boolean, Integer?, String)
   name.vb: Build(Boolean, Integer?, String)
@@ -433,7 +561,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 232
+    startLine: 312
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -478,7 +606,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalBatch
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 295
+    startLine: 395
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -523,7 +651,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalMulti
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 372
+    startLine: 495
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -570,7 +698,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorEstimate
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 524
+    startLine: 686
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -589,6 +717,1139 @@ items:
   - type: System.InvalidOperationException
     commentId: T:System.InvalidOperationException
     description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+- uid: ChebyshevSharp.ChebyshevTT.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevTT.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  id: Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Integrate(int[]?, (double lo, double hi)[]?)
+  nameWithType: ChebyshevTT.Integrate(int[]?, (double lo, double hi)[]?)
+  fullName: ChebyshevSharp.ChebyshevTT.Integrate(int[]?, (double lo, double hi)[]?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Integrate
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 727
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Integrate the TT-approximated function over selected dimensions.
+
+    Per-dim Fejér-1 quadrature is applied to the value-space cores
+
+    (Chebyshev coefficient cores are converted to value cores via
+
+    <xref href="ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(ChebyshevSharp.Internal.TensorTrainKernel.TtCore)" data-throw-if-not-resolved="false"></xref> before contraction).
+  example: []
+  syntax:
+    content: public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
+    parameters:
+    - id: dims
+      type: System.Int32[]
+      description: Dimensions to integrate out. Null = all (full integration → scalar).
+    - id: bounds
+      type: System.ValueTuple{System.Double,System.Double}[]
+      description: Sub-interval bounds per dim (positional with sorted dims). Null = full domain.
+    return:
+      type: System.Object
+      description: A boxed <code>double</code> when every dim is integrated; otherwise a new <xref href="ChebyshevSharp.ChebyshevTT" data-throw-if-not-resolved="false"></xref> over surviving dims.
+    content.vb: Public Function Integrate(dims As Integer() = Nothing, bounds As (lo As Double, hi As Double)() = Nothing) As Object
+  overload: ChebyshevSharp.ChebyshevTT.Integrate*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If <code class="paramref">dims</code> contains out-of-range indices, or <code class="paramref">bounds</code> are invalid. Duplicate <code class="paramref">dims</code> entries are silently deduplicated (matches <xref href="ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32%5b%5d%2cSystem.ValueTuple%7bSystem.Double%2cSystem.Double%7d%5b%5d)" data-throw-if-not-resolved="false"></xref>).
+  nameWithType.vb: ChebyshevTT.Integrate(Integer(), (lo As Double, hi As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Integrate(Integer(), (lo As Double, hi As Double)())
+  name.vb: Integrate(Integer(), (lo As Double, hi As Double)())
+- uid: ChebyshevSharp.ChebyshevTT.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevTT.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Roots(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevTT.Roots(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevTT.Roots(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Roots
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1061
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Find all real roots of the TT-approximated function along a specified dimension.
+
+    Reduces to a 1-D problem by slicing all other dimensions to their fixed
+
+    values, then delegates to <xref href="ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable%7bSystem.Int32%7d%2cSystem.Collections.Generic.Dictionary%7bSystem.Int32%2cSystem.Double%7d)" data-throw-if-not-resolved="false"></xref>.
+  remarks: >-
+    Under non-identity <xref href="ChebyshevSharp.ChebyshevTT.DimOrder" data-throw-if-not-resolved="false"></xref>, dim and fixedDims keys translate
+
+    to storage frame transparently inside <xref href="ChebyshevSharp.ChebyshevTT.Slice(System.Int32%2cSystem.Double)" data-throw-if-not-resolved="false"></xref> and
+
+    <xref href="ChebyshevSharp.ChebyshevTT.ToDense" data-throw-if-not-resolved="false"></xref>.
+
+    Python source: <code>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1749-1790</code>.
+  example: []
+  syntax:
+    content: public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+      description: User-frame dimension. For 1-D TTs, defaults to 0.
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+      description: >-
+        For multi-D, <code>{dim_index: value}</code> for all
+            user-frame dims except <code class="paramref">dim</code>. Validated against
+            user-frame domain.
+    return:
+      type: System.Double[]
+      description: Sorted real root locations in the physical domain. Empty if no roots.
+    content.vb: Public Function Roots([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As Double()
+  overload: ChebyshevSharp.ChebyshevTT.Roots*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If validation fails.
+  nameWithType.vb: ChebyshevTT.Roots(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Roots(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Roots(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevTT.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevTT.Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Minimize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Minimize(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevTT.Minimize(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevTT.Minimize(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Minimize
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1096
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Find the minimum value of the TT along a user-frame dimension.
+  remarks: 'Python source: <code>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1792-1831</code>.'
+  example: []
+  syntax:
+    content: public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+      description: User-frame dimension. For 1-D TTs, defaults to 0.
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+      description: >-
+        For multi-D, <code>{dim_index: value}</code> for all
+            user-frame dims except <code class="paramref">dim</code>. Validated against
+            user-frame domain.
+    return:
+      type: System.ValueTuple{System.Double,System.Double}
+      description: Tuple of (minimum value, location where minimum is achieved).
+    content.vb: Public Function Minimize([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As (value As Double, location As Double)
+  overload: ChebyshevSharp.ChebyshevTT.Minimize*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If validation fails.
+  nameWithType.vb: ChebyshevTT.Minimize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Minimize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Minimize(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevTT.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevTT.Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  id: Maximize(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Maximize(int?, Dictionary<int, double>?)
+  nameWithType: ChebyshevTT.Maximize(int?, Dictionary<int, double>?)
+  fullName: ChebyshevSharp.ChebyshevTT.Maximize(int?, System.Collections.Generic.Dictionary<int, double>?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Maximize
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1127
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Find the maximum value of the TT along a user-frame dimension.
+  remarks: 'Python source: <code>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1833-1872</code>.'
+  example: []
+  syntax:
+    content: public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
+    parameters:
+    - id: dim
+      type: System.Nullable{System.Int32}
+      description: User-frame dimension. For 1-D TTs, defaults to 0.
+    - id: fixedDims
+      type: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+      description: >-
+        For multi-D, <code>{dim_index: value}</code> for all
+            user-frame dims except <code class="paramref">dim</code>. Validated against
+            user-frame domain.
+    return:
+      type: System.ValueTuple{System.Double,System.Double}
+      description: Tuple of (maximum value, location where maximum is achieved).
+    content.vb: Public Function Maximize([dim] As Integer? = Nothing, fixedDims As Dictionary(Of Integer, Double) = Nothing) As (value As Double, location As Double)
+  overload: ChebyshevSharp.ChebyshevTT.Maximize*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If validation fails.
+  nameWithType.vb: ChebyshevTT.Maximize(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Maximize(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Maximize(Integer?, Dictionary(Of Integer, Double))
+- uid: ChebyshevSharp.ChebyshevTT.OrthLeft(System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevTT.OrthLeft(System.Int32)
+  id: OrthLeft(System.Int32)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: OrthLeft(int)
+  nameWithType: ChebyshevTT.OrthLeft(int)
+  fullName: ChebyshevSharp.ChebyshevTT.OrthLeft(int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: OrthLeft
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1157
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Left-orthogonalize cores [0..position-1] in place by absorbing each
+
+    core's R factor into the next core's left bond. The represented tensor
+
+    is unchanged.
+  example: []
+  syntax:
+    content: public void OrthLeft(int position)
+    parameters:
+    - id: position
+      type: System.Int32
+      description: Pivot index, must be in [1, NumDimensions - 1].
+    content.vb: Public Sub OrthLeft(position As Integer)
+  overload: ChebyshevSharp.ChebyshevTT.OrthLeft*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: If position is outside [1, NumDimensions - 1].
+  nameWithType.vb: ChebyshevTT.OrthLeft(Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.OrthLeft(Integer)
+  name.vb: OrthLeft(Integer)
+- uid: ChebyshevSharp.ChebyshevTT.OrthRight(System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevTT.OrthRight(System.Int32)
+  id: OrthRight(System.Int32)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: OrthRight(int)
+  nameWithType: ChebyshevTT.OrthRight(int)
+  fullName: ChebyshevSharp.ChebyshevTT.OrthRight(int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: OrthRight
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1178
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Right-orthogonalize cores [position+1..NumDimensions-1] in place by
+
+    absorbing each core's L factor into the previous core's right bond.
+
+    The represented tensor is unchanged.
+  example: []
+  syntax:
+    content: public void OrthRight(int position)
+    parameters:
+    - id: position
+      type: System.Int32
+      description: Pivot index, must be in [0, NumDimensions - 2].
+    content.vb: Public Sub OrthRight(position As Integer)
+  overload: ChebyshevSharp.ChebyshevTT.OrthRight*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: If position is outside [0, NumDimensions - 2].
+  nameWithType.vb: ChebyshevTT.OrthRight(Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.OrthRight(Integer)
+  name.vb: OrthRight(Integer)
+- uid: ChebyshevSharp.ChebyshevTT.InnerProduct(ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.InnerProduct(ChebyshevSharp.ChebyshevTT)
+  id: InnerProduct(ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: InnerProduct(ChebyshevTT)
+  nameWithType: ChebyshevTT.InnerProduct(ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.InnerProduct(ChebyshevSharp.ChebyshevTT)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: InnerProduct
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1200
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Frobenius inner product of the Chebyshev coefficient tensors of two TTs.
+
+    Both TTs must share the same <xref href="ChebyshevSharp.ChebyshevTT.NumDimensions" data-throw-if-not-resolved="false"></xref>, <xref href="ChebyshevSharp.ChebyshevTT.Domain" data-throw-if-not-resolved="false"></xref>,
+
+    and <xref href="ChebyshevSharp.ChebyshevTT.NNodes" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public double InnerProduct(ChebyshevTT other)
+    parameters:
+    - id: other
+      type: ChebyshevSharp.ChebyshevTT
+      description: The other TT.
+    return:
+      type: System.Double
+      description: Σ_{i_1,…,i_d} C_self[i] * C_other[i].
+    content.vb: Public Function InnerProduct(other As ChebyshevTT) As Double
+  overload: ChebyshevSharp.ChebyshevTT.InnerProduct*
+  exceptions:
+  - type: System.ArgumentNullException
+    commentId: T:System.ArgumentNullException
+    description: If <code class="paramref">other</code> is null.
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If either TT has not been built.
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If domain or nNodes do not match.
+- uid: ChebyshevSharp.ChebyshevTT.RunCompletion(System.Double,System.Int32,System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevTT.RunCompletion(System.Double,System.Int32,System.Boolean)
+  id: RunCompletion(System.Double,System.Int32,System.Boolean)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: RunCompletion(double, int, bool)
+  nameWithType: ChebyshevTT.RunCompletion(double, int, bool)
+  fullName: ChebyshevSharp.ChebyshevTT.RunCompletion(double, int, bool)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: RunCompletion
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1239
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Refine the TT at its current rank via ALS sweeps. Works on any built TT
+
+    (from "cross", "svd", or "als"). Rank does not grow; only per-core
+
+    coefficients are refined.
+  example: []
+  syntax:
+    content: public void RunCompletion(double tolerance = 1E-08, int maxIter = 50, bool verbose = false)
+    parameters:
+    - id: tolerance
+      type: System.Double
+      description: Stop when inner-sweep relative change falls below this.
+    - id: maxIter
+      type: System.Int32
+      description: Maximum number of outer ALS sweeps.
+    - id: verbose
+      type: System.Boolean
+      description: Print per-sweep residuals.
+    content.vb: Public Sub RunCompletion(tolerance As Double = 1E-08, maxIter As Integer = 50, verbose As Boolean = False)
+  overload: ChebyshevSharp.ChebyshevTT.RunCompletion*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called or if <code>Function</code> is null (loaded TT).
+  nameWithType.vb: ChebyshevTT.RunCompletion(Double, Integer, Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.RunCompletion(Double, Integer, Boolean)
+  name.vb: RunCompletion(Double, Integer, Boolean)
+- uid: ChebyshevSharp.ChebyshevTT.Nodes(System.Int32,System.Double[][],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevTT.Nodes(System.Int32,System.Double[][],System.Int32[])
+  id: Nodes(System.Int32,System.Double[][],System.Int32[])
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Nodes(int, double[][], int[])
+  nameWithType: ChebyshevTT.Nodes(int, double[][], int[])
+  fullName: ChebyshevSharp.ChebyshevTT.Nodes(int, double[][], int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Nodes
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1293
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Compute the Chebyshev Type I node positions per dimension scaled to
+
+    the user's domain. Static factory matching <xref href="ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32%2cSystem.Double%5b%5d%5b%5d%2cSystem.Int32%5b%5d)" data-throw-if-not-resolved="false"></xref>.
+  example: []
+  syntax:
+    content: public static (double[][] NodesPerDim, int[] Shape) Nodes(int numDimensions, double[][] domain, int[] nNodes)
+    parameters:
+    - id: numDimensions
+      type: System.Int32
+      description: Number of dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds [lo, hi] per dimension.
+    - id: nNodes
+      type: System.Int32[]
+      description: Number of nodes per dimension.
+    return:
+      type: System.ValueTuple{System.Double[][],System.Int32[]}
+      description: (NodesPerDim[d][j], Shape[d]) — node arrays in ascending order.
+    content.vb: Public Shared Function Nodes(numDimensions As Integer, domain As Double()(), nNodes As Integer()) As (NodesPerDim As Double()(), Shape As Integer())
+  overload: ChebyshevSharp.ChebyshevTT.Nodes*
+  nameWithType.vb: ChebyshevTT.Nodes(Integer, Double()(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Nodes(Integer, Double()(), Integer())
+  name.vb: Nodes(Integer, Double()(), Integer())
+- uid: ChebyshevSharp.ChebyshevTT.FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double)
+  id: FromValues(System.Double[],System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: FromValues(double[], int, double[][], int[], int, double)
+  nameWithType: ChebyshevTT.FromValues(double[], int, double[][], int[], int, double)
+  fullName: ChebyshevSharp.ChebyshevTT.FromValues(double[], int, double[][], int[], int, double)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: FromValues
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1320
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Build a TT directly from a precomputed dense tensor (skips function evaluation).
+
+    Uses TT-SVD for compression. The resulting TT has <code>Function = null</code>.
+  example: []
+  syntax:
+    content: public static ChebyshevTT FromValues(double[] tensorValues, int numDimensions, double[][] domain, int[] nNodes, int maxRank = 10, double tolerance = 1E-06)
+    parameters:
+    - id: tensorValues
+      type: System.Double[]
+      description: Flat row-major dense tensor of length Π nNodes.
+    - id: numDimensions
+      type: System.Int32
+      description: Number of dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds [lo, hi] per dimension.
+    - id: nNodes
+      type: System.Int32[]
+      description: Number of nodes per dimension.
+    - id: maxRank
+      type: System.Int32
+      description: Maximum TT rank (default 10).
+    - id: tolerance
+      type: System.Double
+      description: SVD truncation tolerance (default 1e-6).
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Function FromValues(tensorValues As Double(), numDimensions As Integer, domain As Double()(), nNodes As Integer(), maxRank As Integer = 10, tolerance As Double = 1E-06) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.FromValues*
+  exceptions:
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If tensorValues length doesn't match Π nNodes, or contains NaN/Infinity.
+  nameWithType.vb: ChebyshevTT.FromValues(Double(), Integer, Double()(), Integer(), Integer, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.FromValues(Double(), Integer, Double()(), Integer(), Integer, Double)
+  name.vb: FromValues(Double(), Integer, Double()(), Integer(), Integer, Double)
+- uid: ChebyshevSharp.ChebyshevTT.ToDense
+  commentId: M:ChebyshevSharp.ChebyshevTT.ToDense
+  id: ToDense
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: ToDense()
+  nameWithType: ChebyshevTT.ToDense()
+  fullName: ChebyshevSharp.ChebyshevTT.ToDense()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ToDense
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1387
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Materialize the TT chain into a full row-major dense tensor.
+
+    Length is Π NNodes; <code>dense[flat]</code> equals <code>Eval(point_at_grid_idx)</code>
+
+    where flat is the row-major index into the grid shape.
+
+    Use sparingly: storage is Π NNodes doubles.
+  example: []
+  syntax:
+    content: public double[] ToDense()
+    return:
+      type: System.Double[]
+    content.vb: Public Function ToDense() As Double()
+  overload: ChebyshevSharp.ChebyshevTT.ToDense*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.OverflowException
+    commentId: T:System.OverflowException
+    description: If Π NNodes * 8 exceeds <code>int.MaxValue</code>.
+- uid: ChebyshevSharp.ChebyshevTT.Extrude(System.Int32,System.ValueTuple{System.Double,System.Double},System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevTT.Extrude(System.Int32,System.ValueTuple{System.Double,System.Double},System.Int32)
+  id: Extrude(System.Int32,System.ValueTuple{System.Double,System.Double},System.Int32)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Extrude(int, (double Lo, double Hi), int)
+  nameWithType: ChebyshevTT.Extrude(int, (double Lo, double Hi), int)
+  fullName: ChebyshevSharp.ChebyshevTT.Extrude(int, (double Lo, double Hi), int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Extrude
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1438
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Insert a new dimension at index <code class="paramref">dim</code> where the function
+
+    is constant. The extruded TT evaluates identically to the original over
+
+    the existing dimensions, regardless of the new dimension's coordinate.
+  example: []
+  syntax:
+    content: public ChebyshevTT Extrude(int dim, (double Lo, double Hi) newDomain, int newN)
+    parameters:
+    - id: dim
+      type: System.Int32
+      description: Insertion index, 0 &lt;= dim &lt;= NumDimensions.
+    - id: newDomain
+      type: System.ValueTuple{System.Double,System.Double}
+      description: Domain (lo, hi) for the new dimension.
+    - id: newN
+      type: System.Int32
+      description: Number of nodes for the new dimension.
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Function Extrude([dim] As Integer, newDomain As (Lo As Double, Hi As Double), newN As Integer) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.Extrude*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: If dim is outside [0, NumDimensions].
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If newDomain.Lo &gt;= newDomain.Hi, or newN &lt; 2.
+  nameWithType.vb: ChebyshevTT.Extrude(Integer, (Lo As Double, Hi As Double), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Extrude(Integer, (Lo As Double, Hi As Double), Integer)
+  name.vb: Extrude(Integer, (Lo As Double, Hi As Double), Integer)
+- uid: ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+  id: Slice(System.Int32,System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Slice(int, double)
+  nameWithType: ChebyshevTT.Slice(int, double)
+  fullName: ChebyshevSharp.ChebyshevTT.Slice(int, double)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Slice
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1498
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Fix dimension <code class="paramref">dim</code> at <code class="paramref">value</code>, returning
+
+    a TT over the remaining (NumDimensions - 1) dimensions.
+  example: []
+  syntax:
+    content: public ChebyshevTT Slice(int dim, double value)
+    parameters:
+    - id: dim
+      type: System.Int32
+      description: Dimension to slice, 0 &lt;= dim &lt; NumDimensions.
+    - id: value
+      type: System.Double
+      description: Value at which to fix the dimension; must lie within the domain.
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Function Slice([dim] As Integer, value As Double) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.Slice*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: If dim is out of range or value is outside the domain.
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If NumDimensions == 1 (would produce 0D result).
+  nameWithType.vb: ChebyshevTT.Slice(Integer, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Slice(Integer, Double)
+  name.vb: Slice(Integer, Double)
+- uid: ChebyshevSharp.ChebyshevTT.op_Multiply(ChebyshevSharp.ChebyshevTT,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.op_Multiply(ChebyshevSharp.ChebyshevTT,System.Double)
+  id: op_Multiply(ChebyshevSharp.ChebyshevTT,System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: operator *(ChebyshevTT, double)
+  nameWithType: ChebyshevTT.operator *(ChebyshevTT, double)
+  fullName: ChebyshevSharp.ChebyshevTT.operator *(ChebyshevSharp.ChebyshevTT, double)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Multiply
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1589
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Scalar multiplication: <code>tt * scalar</code>.'
+  example: []
+  syntax:
+    content: public static ChebyshevTT operator *(ChebyshevTT tt, double scalar)
+    parameters:
+    - id: tt
+      type: ChebyshevSharp.ChebyshevTT
+    - id: scalar
+      type: System.Double
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Operator *(tt As ChebyshevTT, scalar As Double) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.op_Multiply*
+  nameWithType.vb: ChebyshevTT.*(ChebyshevTT, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.*(ChebyshevSharp.ChebyshevTT, Double)
+  name.vb: '*(ChebyshevTT, Double)'
+- uid: ChebyshevSharp.ChebyshevTT.op_Multiply(System.Double,ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.op_Multiply(System.Double,ChebyshevSharp.ChebyshevTT)
+  id: op_Multiply(System.Double,ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: operator *(double, ChebyshevTT)
+  nameWithType: ChebyshevTT.operator *(double, ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.operator *(double, ChebyshevSharp.ChebyshevTT)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Multiply
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1602
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Scalar multiplication: <code>scalar * tt</code>.'
+  example: []
+  syntax:
+    content: public static ChebyshevTT operator *(double scalar, ChebyshevTT tt)
+    parameters:
+    - id: scalar
+      type: System.Double
+    - id: tt
+      type: ChebyshevSharp.ChebyshevTT
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Operator *(scalar As Double, tt As ChebyshevTT) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.op_Multiply*
+  nameWithType.vb: ChebyshevTT.*(Double, ChebyshevTT)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.*(Double, ChebyshevSharp.ChebyshevTT)
+  name.vb: '*(Double, ChebyshevTT)'
+- uid: ChebyshevSharp.ChebyshevTT.op_Division(ChebyshevSharp.ChebyshevTT,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.op_Division(ChebyshevSharp.ChebyshevTT,System.Double)
+  id: op_Division(ChebyshevSharp.ChebyshevTT,System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: operator /(ChebyshevTT, double)
+  nameWithType: ChebyshevTT.operator /(ChebyshevTT, double)
+  fullName: ChebyshevSharp.ChebyshevTT.operator /(ChebyshevSharp.ChebyshevTT, double)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Division
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1606
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Scalar division: <code>tt / scalar</code>.'
+  example: []
+  syntax:
+    content: public static ChebyshevTT operator /(ChebyshevTT tt, double scalar)
+    parameters:
+    - id: tt
+      type: ChebyshevSharp.ChebyshevTT
+    - id: scalar
+      type: System.Double
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Operator /(tt As ChebyshevTT, scalar As Double) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.op_Division*
+  exceptions:
+  - type: System.DivideByZeroException
+    commentId: T:System.DivideByZeroException
+    description: If <code class="paramref">scalar</code> is zero.
+  nameWithType.vb: ChebyshevTT./(ChebyshevTT, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT./(ChebyshevSharp.ChebyshevTT, Double)
+  name.vb: /(ChebyshevTT, Double)
+- uid: ChebyshevSharp.ChebyshevTT.op_UnaryNegation(ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.op_UnaryNegation(ChebyshevSharp.ChebyshevTT)
+  id: op_UnaryNegation(ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: operator -(ChebyshevTT)
+  nameWithType: ChebyshevTT.operator -(ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.operator -(ChebyshevSharp.ChebyshevTT)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_UnaryNegation
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1614
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Unary negation: <code>-tt</code>.'
+  example: []
+  syntax:
+    content: public static ChebyshevTT operator -(ChebyshevTT tt)
+    parameters:
+    - id: tt
+      type: ChebyshevSharp.ChebyshevTT
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Operator -(tt As ChebyshevTT) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.op_UnaryNegation*
+  nameWithType.vb: ChebyshevTT.-(ChebyshevTT)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.-(ChebyshevSharp.ChebyshevTT)
+  name.vb: -(ChebyshevTT)
+- uid: ChebyshevSharp.ChebyshevTT.ScalarMulInPlace(System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.ScalarMulInPlace(System.Double)
+  id: ScalarMulInPlace(System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: ScalarMulInPlace(double)
+  nameWithType: ChebyshevTT.ScalarMulInPlace(double)
+  fullName: ChebyshevSharp.ChebyshevTT.ScalarMulInPlace(double)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ScalarMulInPlace
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1627
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Scale this TT in place by <code class="paramref">scalar</code>.
+  example: []
+  syntax:
+    content: public void ScalarMulInPlace(double scalar)
+    parameters:
+    - id: scalar
+      type: System.Double
+    content.vb: Public Sub ScalarMulInPlace(scalar As Double)
+  overload: ChebyshevSharp.ChebyshevTT.ScalarMulInPlace*
+  nameWithType.vb: ChebyshevTT.ScalarMulInPlace(Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.ScalarMulInPlace(Double)
+  name.vb: ScalarMulInPlace(Double)
+- uid: ChebyshevSharp.ChebyshevTT.ScalarDivInPlace(System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.ScalarDivInPlace(System.Double)
+  id: ScalarDivInPlace(System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: ScalarDivInPlace(double)
+  nameWithType: ChebyshevTT.ScalarDivInPlace(double)
+  fullName: ChebyshevSharp.ChebyshevTT.ScalarDivInPlace(double)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: ScalarDivInPlace
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1636
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Divide this TT in place by <code class="paramref">scalar</code>.
+  example: []
+  syntax:
+    content: public void ScalarDivInPlace(double scalar)
+    parameters:
+    - id: scalar
+      type: System.Double
+    content.vb: Public Sub ScalarDivInPlace(scalar As Double)
+  overload: ChebyshevSharp.ChebyshevTT.ScalarDivInPlace*
+  exceptions:
+  - type: System.DivideByZeroException
+    commentId: T:System.DivideByZeroException
+    description: If <code class="paramref">scalar</code> is zero.
+  nameWithType.vb: ChebyshevTT.ScalarDivInPlace(Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.ScalarDivInPlace(Double)
+  name.vb: ScalarDivInPlace(Double)
+- uid: ChebyshevSharp.ChebyshevTT.NegateInPlace
+  commentId: M:ChebyshevSharp.ChebyshevTT.NegateInPlace
+  id: NegateInPlace
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: NegateInPlace()
+  nameWithType: ChebyshevTT.NegateInPlace()
+  fullName: ChebyshevSharp.ChebyshevTT.NegateInPlace()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: NegateInPlace
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1644
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Negate this TT in place.
+  example: []
+  syntax:
+    content: public void NegateInPlace()
+    content.vb: Public Sub NegateInPlace()
+  overload: ChebyshevSharp.ChebyshevTT.NegateInPlace*
+- uid: ChebyshevSharp.ChebyshevTT.DefaultRoundTolerance
+  commentId: F:ChebyshevSharp.ChebyshevTT.DefaultRoundTolerance
+  id: DefaultRoundTolerance
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: DefaultRoundTolerance
+  nameWithType: ChebyshevTT.DefaultRoundTolerance
+  fullName: ChebyshevSharp.ChebyshevTT.DefaultRoundTolerance
+  type: Field
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: DefaultRoundTolerance
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1656
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Default tolerance for TT-SVD rounding after addition/subtraction.
+  example: []
+  syntax:
+    content: public const double DefaultRoundTolerance = 1E-12
+    return:
+      type: System.Double
+    content.vb: Public Const DefaultRoundTolerance As Double = 1E-12
+- uid: ChebyshevSharp.ChebyshevTT.op_Addition(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.op_Addition(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  id: op_Addition(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: operator +(ChebyshevTT, ChebyshevTT)
+  nameWithType: ChebyshevTT.operator +(ChebyshevTT, ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.operator +(ChebyshevSharp.ChebyshevTT, ChebyshevSharp.ChebyshevTT)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Addition
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1686
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: "Binary addition: <code>a + b</code>. Result is rounded to the larger of the two TTs' maxRank."
+  example: []
+  syntax:
+    content: public static ChebyshevTT operator +(ChebyshevTT a, ChebyshevTT b)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevTT
+    - id: b
+      type: ChebyshevSharp.ChebyshevTT
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Operator +(a As ChebyshevTT, b As ChebyshevTT) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.op_Addition*
+  nameWithType.vb: ChebyshevTT.+(ChebyshevTT, ChebyshevTT)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.+(ChebyshevSharp.ChebyshevTT, ChebyshevSharp.ChebyshevTT)
+  name.vb: +(ChebyshevTT, ChebyshevTT)
+- uid: ChebyshevSharp.ChebyshevTT.op_Subtraction(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.op_Subtraction(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  id: op_Subtraction(ChebyshevSharp.ChebyshevTT,ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: operator -(ChebyshevTT, ChebyshevTT)
+  nameWithType: ChebyshevTT.operator -(ChebyshevTT, ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.operator -(ChebyshevSharp.ChebyshevTT, ChebyshevSharp.ChebyshevTT)
+  type: Operator
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: op_Subtraction
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1700
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Binary subtraction: <code>a - b</code>.'
+  example: []
+  syntax:
+    content: public static ChebyshevTT operator -(ChebyshevTT a, ChebyshevTT b)
+    parameters:
+    - id: a
+      type: ChebyshevSharp.ChebyshevTT
+    - id: b
+      type: ChebyshevSharp.ChebyshevTT
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Shared Operator -(a As ChebyshevTT, b As ChebyshevTT) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.op_Subtraction*
+  nameWithType.vb: ChebyshevTT.-(ChebyshevTT, ChebyshevTT)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.-(ChebyshevSharp.ChebyshevTT, ChebyshevSharp.ChebyshevTT)
+  name.vb: -(ChebyshevTT, ChebyshevTT)
+- uid: ChebyshevSharp.ChebyshevTT.AddInPlace(ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.AddInPlace(ChebyshevSharp.ChebyshevTT)
+  id: AddInPlace(ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: AddInPlace(ChebyshevTT)
+  nameWithType: ChebyshevTT.AddInPlace(ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.AddInPlace(ChebyshevSharp.ChebyshevTT)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: AddInPlace
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1715
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'In-place addition: <code>this += other</code> followed by TT-SVD rounding.'
+  example: []
+  syntax:
+    content: public void AddInPlace(ChebyshevTT other)
+    parameters:
+    - id: other
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Sub AddInPlace(other As ChebyshevTT)
+  overload: ChebyshevSharp.ChebyshevTT.AddInPlace*
+- uid: ChebyshevSharp.ChebyshevTT.SubInPlace(ChebyshevSharp.ChebyshevTT)
+  commentId: M:ChebyshevSharp.ChebyshevTT.SubInPlace(ChebyshevSharp.ChebyshevTT)
+  id: SubInPlace(ChebyshevSharp.ChebyshevTT)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: SubInPlace(ChebyshevTT)
+  nameWithType: ChebyshevTT.SubInPlace(ChebyshevTT)
+  fullName: ChebyshevSharp.ChebyshevTT.SubInPlace(ChebyshevSharp.ChebyshevTT)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SubInPlace
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1727
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'In-place subtraction: <code>this -= other</code> followed by TT-SVD rounding.'
+  example: []
+  syntax:
+    content: public void SubInPlace(ChebyshevTT other)
+    parameters:
+    - id: other
+      type: ChebyshevSharp.ChebyshevTT
+    content.vb: Public Sub SubInPlace(other As ChebyshevTT)
+  overload: ChebyshevSharp.ChebyshevTT.SubInPlace*
+- uid: ChebyshevSharp.ChebyshevTT.RoundInPlace(System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.RoundInPlace(System.Double)
+  id: RoundInPlace(System.Double)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: RoundInPlace(double)
+  nameWithType: ChebyshevTT.RoundInPlace(double)
+  fullName: ChebyshevSharp.ChebyshevTT.RoundInPlace(double)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: RoundInPlace
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1740
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Round TT to lower rank in place via TT-SVD recompression.
+  example: []
+  syntax:
+    content: public void RoundInPlace(double tolerance)
+    parameters:
+    - id: tolerance
+      type: System.Double
+    content.vb: Public Sub RoundInPlace(tolerance As Double)
+  overload: ChebyshevSharp.ChebyshevTT.RoundInPlace*
+  nameWithType.vb: ChebyshevTT.RoundInPlace(Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.RoundInPlace(Double)
+  name.vb: RoundInPlace(Double)
 - uid: ChebyshevSharp.ChebyshevTT.Save(System.String)
   commentId: M:ChebyshevSharp.ChebyshevTT.Save(System.String)
   id: Save(System.String)
@@ -607,7 +1868,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Save
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 579
+    startLine: 1778
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -649,7 +1910,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Load
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 622
+    startLine: 1829
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -694,7 +1955,7 @@ items:
       repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToString
     path: ../src/ChebyshevSharp/ChebyshevTT.cs
-    startLine: 684
+    startLine: 1919
   assemblies:
   - ChebyshevSharp
   namespace: ChebyshevSharp
@@ -708,6 +1969,640 @@ items:
     content.vb: Public Overrides Function ToString() As String
   overridden: System.Object.ToString
   overload: ChebyshevSharp.ChebyshevTT.ToString*
+- uid: ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+  id: SetDescriptor(System.String)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: SetDescriptor(string)
+  nameWithType: ChebyshevTT.SetDescriptor(string)
+  fullName: ChebyshevSharp.ChebyshevTT.SetDescriptor(string)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SetDescriptor
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1967
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Set a free-form descriptor string for this tensor train.
+  example: []
+  syntax:
+    content: public void SetDescriptor(string descriptor)
+    parameters:
+    - id: descriptor
+      type: System.String
+    content.vb: Public Sub SetDescriptor(descriptor As String)
+  overload: ChebyshevSharp.ChebyshevTT.SetDescriptor*
+  nameWithType.vb: ChebyshevTT.SetDescriptor(String)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.SetDescriptor(String)
+  name.vb: SetDescriptor(String)
+- uid: ChebyshevSharp.ChebyshevTT.GetDescriptor
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetDescriptor
+  id: GetDescriptor
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetDescriptor()
+  nameWithType: ChebyshevTT.GetDescriptor()
+  fullName: ChebyshevSharp.ChebyshevTT.GetDescriptor()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDescriptor
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1970
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Get the descriptor previously set via <xref href="ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)" data-throw-if-not-resolved="false"></xref>; null if unset.
+  example: []
+  syntax:
+    content: public string? GetDescriptor()
+    return:
+      type: System.String
+    content.vb: Public Function GetDescriptor() As String
+  overload: ChebyshevSharp.ChebyshevTT.GetDescriptor*
+- uid: ChebyshevSharp.ChebyshevTT.IsConstructionFinished
+  commentId: M:ChebyshevSharp.ChebyshevTT.IsConstructionFinished
+  id: IsConstructionFinished
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: IsConstructionFinished()
+  nameWithType: ChebyshevTT.IsConstructionFinished()
+  fullName: ChebyshevSharp.ChebyshevTT.IsConstructionFinished()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: IsConstructionFinished
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1973
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: True if <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref>/<xref href="ChebyshevSharp.ChebyshevTT.Load(System.String)" data-throw-if-not-resolved="false"></xref> completed.
+  example: []
+  syntax:
+    content: public bool IsConstructionFinished()
+    return:
+      type: System.Boolean
+    content.vb: Public Function IsConstructionFinished() As Boolean
+  overload: ChebyshevSharp.ChebyshevTT.IsConstructionFinished*
+- uid: ChebyshevSharp.ChebyshevTT.GetConstructorType
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetConstructorType
+  id: GetConstructorType
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetConstructorType()
+  nameWithType: ChebyshevTT.GetConstructorType()
+  fullName: ChebyshevSharp.ChebyshevTT.GetConstructorType()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetConstructorType
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1976
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: 'Returns one of: "clone" (if cloned), "cross"/"svd"/"als" (build method used), or "function" if not yet built.'
+  example: []
+  syntax:
+    content: public string GetConstructorType()
+    return:
+      type: System.String
+    content.vb: Public Function GetConstructorType() As String
+  overload: ChebyshevSharp.ChebyshevTT.GetConstructorType*
+- uid: ChebyshevSharp.ChebyshevTT.GetUsedNs
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetUsedNs
+  id: GetUsedNs
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetUsedNs()
+  nameWithType: ChebyshevTT.GetUsedNs()
+  fullName: ChebyshevSharp.ChebyshevTT.GetUsedNs()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetUsedNs
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1979
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Per-dimension Chebyshev node counts actually used.
+  example: []
+  syntax:
+    content: public int[] GetUsedNs()
+    return:
+      type: System.Int32[]
+    content.vb: Public Function GetUsedNs() As Integer()
+  overload: ChebyshevSharp.ChebyshevTT.GetUsedNs*
+- uid: ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder
+  id: GetMaxDerivativeOrder
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetMaxDerivativeOrder()
+  nameWithType: ChebyshevTT.GetMaxDerivativeOrder()
+  fullName: ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetMaxDerivativeOrder
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1982
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Maximum derivative order this tensor train supports.
+  example: []
+  syntax:
+    content: public int GetMaxDerivativeOrder()
+    return:
+      type: System.Int32
+    content.vb: Public Function GetMaxDerivativeOrder() As Integer
+  overload: ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder*
+- uid: ChebyshevSharp.ChebyshevTT.GetAdditionalData
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetAdditionalData
+  id: GetAdditionalData
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetAdditionalData()
+  nameWithType: ChebyshevTT.GetAdditionalData()
+  fullName: ChebyshevSharp.ChebyshevTT.GetAdditionalData()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetAdditionalData
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1989
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Returns the user-supplied <code>additionalData</code> object passed to the constructor,
+
+    or null if none was provided. Stored for introspection only — TT's function signature
+
+    is <code>Func&lt;double[], double&gt;</code> (no data arg); wrap with a closure if you need data threading.
+  example: []
+  syntax:
+    content: public object? GetAdditionalData()
+    return:
+      type: System.Object
+    content.vb: Public Function GetAdditionalData() As Object
+  overload: ChebyshevSharp.ChebyshevTT.GetAdditionalData*
+- uid: ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints
+  id: GetNumEvaluationPoints
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetNumEvaluationPoints()
+  nameWithType: ChebyshevTT.GetNumEvaluationPoints()
+  fullName: ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetNumEvaluationPoints
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 1995
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Total number of evaluation points in the full Chebyshev grid (product of nNodes).
+  example: []
+  syntax:
+    content: public int GetNumEvaluationPoints()
+    return:
+      type: System.Int32
+      description: The total count of Chebyshev nodes across all dimensions.
+    content.vb: Public Function GetNumEvaluationPoints() As Integer
+  overload: ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints*
+- uid: ChebyshevSharp.ChebyshevTT.GetEvaluationPoints
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetEvaluationPoints
+  id: GetEvaluationPoints
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetEvaluationPoints()
+  nameWithType: ChebyshevTT.GetEvaluationPoints()
+  fullName: ChebyshevSharp.ChebyshevTT.GetEvaluationPoints()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetEvaluationPoints
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2006
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Flat row-major array of the full Chebyshev grid coordinates.
+
+    Generated on-demand using the domain and nNodes, independent of the sparse TT sampling.
+
+    Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+  example: []
+  syntax:
+    content: public double[] GetEvaluationPoints()
+    return:
+      type: System.Double[]
+      description: Double array of full-grid node coordinates, flattened in row-major order.
+    content.vb: Public Function GetEvaluationPoints() As Double()
+  overload: ChebyshevSharp.ChebyshevTT.GetEvaluationPoints*
+- uid: ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+  id: GetDerivativeId(System.Int32[])
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevTT.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevTT.GetDerivativeId(int[])
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: GetDerivativeId
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2061
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Register or look up a derivative-orders tuple. Returns a stable
+
+    session-local int id for the same orders. Used in conjunction with
+
+    the <code>Eval(point, derivativeId)</code> overload.
+  example: []
+  syntax:
+    content: public int GetDerivativeId(int[] orders)
+    parameters:
+    - id: orders
+      type: System.Int32[]
+      description: Derivative order per dimension.
+    return:
+      type: System.Int32
+      description: A stable int id for this orders tuple (0-based, assigned in registration order).
+    content.vb: Public Function GetDerivativeId(orders As Integer()) As Integer
+  overload: ChebyshevSharp.ChebyshevTT.GetDerivativeId*
+  nameWithType.vb: ChebyshevTT.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevTT.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+- uid: ChebyshevSharp.ChebyshevTT.Eval(System.Double[],System.Int32)
+  commentId: M:ChebyshevSharp.ChebyshevTT.Eval(System.Double[],System.Int32)
+  id: Eval(System.Double[],System.Int32)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Eval(double[], int)
+  nameWithType: ChebyshevTT.Eval(double[], int)
+  fullName: ChebyshevSharp.ChebyshevTT.Eval(double[], int)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Eval
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2077
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: Evaluate at <code class="paramref">point</code> using a previously-registered derivative id.
+  example: []
+  syntax:
+    content: public double Eval(double[] point, int derivativeId)
+    parameters:
+    - id: point
+      type: System.Double[]
+      description: Evaluation point.
+    - id: derivativeId
+      type: System.Int32
+      description: Id returned by <xref href="ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32%5b%5d)" data-throw-if-not-resolved="false"></xref>.
+    return:
+      type: System.Double
+      description: Interpolated value at the given derivative order.
+    content.vb: Public Function Eval(point As Double(), derivativeId As Integer) As Double
+  overload: ChebyshevSharp.ChebyshevTT.Eval*
+  exceptions:
+  - type: System.ArgumentOutOfRangeException
+    commentId: T:System.ArgumentOutOfRangeException
+    description: Thrown when <code class="paramref">derivativeId</code> has not been registered.
+  nameWithType.vb: ChebyshevTT.Eval(Double(), Integer)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Eval(Double(), Integer)
+  name.vb: Eval(Double(), Integer)
+- uid: ChebyshevSharp.ChebyshevTT.DimOrder
+  commentId: P:ChebyshevSharp.ChebyshevTT.DimOrder
+  id: DimOrder
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: DimOrder
+  nameWithType: ChebyshevTT.DimOrder
+  fullName: ChebyshevSharp.ChebyshevTT.DimOrder
+  type: Property
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: DimOrder
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2102
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Storage permutation: <code>DimOrder[k]</code> is the original-dimension index stored
+
+    at TT position k. Identity by default; non-identity for TTs produced by
+
+    <xref href="ChebyshevSharp.ChebyshevTT.Reorder(System.Int32%5b%5d%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.Nullable%7bSystem.Double%7d)" data-throw-if-not-resolved="false"></xref>. Returns a defensive clone;
+
+    mutating the returned array does not affect this TT.
+  example: []
+  syntax:
+    content: public int[] DimOrder { get; }
+    parameters: []
+    return:
+      type: System.Int32[]
+    content.vb: Public ReadOnly Property DimOrder As Integer()
+  overload: ChebyshevSharp.ChebyshevTT.DimOrder*
+- uid: ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+  id: Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Reorder(int[], int?, double?)
+  nameWithType: ChebyshevTT.Reorder(int[], int?, double?)
+  fullName: ChebyshevSharp.ChebyshevTT.Reorder(int[], int?, double?)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Reorder
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2115
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Realign storage to a target permutation via TT-swap (adjacent-axis SVDs in
+
+    coefficient space). Functional API; returns a new TT. Inherits all build
+
+    parameters (maxRank, tolerance, maxSweeps, descriptor, additionalData,
+
+    maxDerivativeOrder, Method) from this TT.
+  example: []
+  syntax:
+    content: public ChebyshevTT Reorder(int[] newOrder, int? maxRank = null, double? tolerance = null)
+    parameters:
+    - id: newOrder
+      type: System.Int32[]
+      description: Target permutation; must be a permutation of [0, NumDimensions-1].
+    - id: maxRank
+      type: System.Nullable{System.Int32}
+      description: "Optional override for swap-time SVD truncation. Default: this TT's maxRank."
+    - id: tolerance
+      type: System.Nullable{System.Double}
+      description: "Optional relative-tolerance cutoff. Default: this TT's tolerance."
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+      description: A new TT with <code>DimOrder == newOrder</code>.
+    content.vb: Public Function Reorder(newOrder As Integer(), maxRank As Integer? = Nothing, tolerance As Double? = Nothing) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.Reorder*
+  exceptions:
+  - type: System.ArgumentException
+    commentId: T:System.ArgumentException
+    description: If <code class="paramref">newOrder</code> is not a valid permutation.
+  nameWithType.vb: ChebyshevTT.Reorder(Integer(), Integer?, Double?)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Reorder(Integer(), Integer?, Double?)
+  name.vb: Reorder(Integer(), Integer?, Double?)
+- uid: ChebyshevSharp.ChebyshevTT.SobolIndices
+  commentId: M:ChebyshevSharp.ChebyshevTT.SobolIndices
+  id: SobolIndices
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: SobolIndices()
+  nameWithType: ChebyshevTT.SobolIndices()
+  fullName: ChebyshevSharp.ChebyshevTT.SobolIndices()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: SobolIndices
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2200
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Compute first-order + total-order variance-based sensitivity indices natively
+
+    from the TT coefficient cores. The variance is with respect to the Chebyshev
+
+    orthogonality weight on the normalized domain. O(d · n · r²) per dim,
+
+    no dense materialization.
+  remarks: >-
+    Mathematically equivalent to <xref href="ChebyshevSharp.ChebyshevApproximation.SobolIndices" data-throw-if-not-resolved="false"></xref>
+
+    applied to the dense version of the same function, but skips the O(n^d)
+
+    materialization. Under non-identity <xref href="ChebyshevSharp.ChebyshevTT.DimOrder" data-throw-if-not-resolved="false"></xref>, result keys are
+
+    translated from storage frame to user frame internally.
+
+    Python source: <code>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2823-2868</code>.
+  example: []
+  syntax:
+    content: public SobolResult SobolIndices()
+    return:
+      type: ChebyshevSharp.SobolResult
+      description: <xref href="ChebyshevSharp.SobolResult" data-throw-if-not-resolved="false"></xref> with arrays keyed by user-frame dim indices and Chebyshev-weighted total Variance.
+    content.vb: Public Function SobolIndices() As SobolResult
+  overload: ChebyshevSharp.ChebyshevTT.SobolIndices*
+  exceptions:
+  - type: System.InvalidOperationException
+    commentId: T:System.InvalidOperationException
+    description: If <xref href="ChebyshevSharp.ChebyshevTT.Build(System.Boolean%2cSystem.Nullable%7bSystem.Int32%7d%2cSystem.String)" data-throw-if-not-resolved="false"></xref> has not been called.
+- uid: ChebyshevSharp.ChebyshevTT.WithAutoOrder(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Object,System.Int32,System.String,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  commentId: M:ChebyshevSharp.ChebyshevTT.WithAutoOrder(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Object,System.Int32,System.String,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  id: WithAutoOrder(System.Func{System.Double[],System.Double},System.Int32,System.Double[][],System.Int32[],System.Int32,System.Double,System.Int32,System.Object,System.Int32,System.String,System.Nullable{System.Int32},System.IProgress{System.Int32},System.Boolean)
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: WithAutoOrder(Func<double[], double>, int, double[][], int[], int, double, int, object?, int, string, int?, IProgress<int>?, bool)
+  nameWithType: ChebyshevTT.WithAutoOrder(Func<double[], double>, int, double[][], int[], int, double, int, object?, int, string, int?, IProgress<int>?, bool)
+  fullName: ChebyshevSharp.ChebyshevTT.WithAutoOrder(System.Func<double[], double>, int, double[][], int[], int, double, int, object?, int, string, int?, System.IProgress<int>?, bool)
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: WithAutoOrder
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2254
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Build a TT trying multiple dim orderings, returning the lowest-rank result.
+
+    TT-Cross compression depends on dim order; different orderings yield different
+
+    ranks for the same function. Mirrors PyChebyshev <code>tensor_train.py:2687</code>.
+  example: []
+  syntax:
+    content: public static ChebyshevTT WithAutoOrder(Func<double[], double> function, int numDimensions, double[][] domain, int[] numNodes, int maxRank = 10, double tolerance = 1E-06, int maxSweeps = 10, object? additionalData = null, int nTrials = 5, string method = "greedy_swap", int? seed = null, IProgress<int>? progress = null, bool verbose = false)
+    parameters:
+    - id: function
+      type: System.Func{System.Double[],System.Double}
+      description: f(point) → double in the original (user) dim order.
+    - id: numDimensions
+      type: System.Int32
+      description: Number of input dimensions.
+    - id: domain
+      type: System.Double[][]
+      description: Bounds for each dimension in original order.
+    - id: numNodes
+      type: System.Int32[]
+      description: Node counts per dimension in original order.
+    - id: maxRank
+      type: System.Int32
+      description: Maximum TT rank passed to each trial. Default 10.
+    - id: tolerance
+      type: System.Double
+      description: Convergence tolerance for each trial. Default 1e-6.
+    - id: maxSweeps
+      type: System.Int32
+      description: Max TT-Cross sweeps per trial. Default 10.
+    - id: additionalData
+      type: System.Object
+      description: Stored on the result for introspection; not threaded into f.
+    - id: nTrials
+      type: System.Int32
+      description: Number of swap iterations / random samples. Default 5.
+    - id: method
+      type: System.String
+      description: "\"greedy_swap\" (default, deterministic) or \"random\"."
+    - id: seed
+      type: System.Nullable{System.Int32}
+      description: Optional seed for "random". Ignored by "greedy_swap".
+    - id: progress
+      type: System.IProgress{System.Int32}
+      description: Optional per-sweep progress reporter (forwarded to each trial's Build).
+    - id: verbose
+      type: System.Boolean
+      description: If true, print per-trial diagnostics.
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+      description: The lowest-total-rank TT among the tried permutations, with <code>DimOrder</code> set.
+    content.vb: Public Shared Function WithAutoOrder([function] As Func(Of Double(), Double), numDimensions As Integer, domain As Double()(), numNodes As Integer(), maxRank As Integer = 10, tolerance As Double = 1E-06, maxSweeps As Integer = 10, additionalData As Object = Nothing, nTrials As Integer = 5, method As String = "greedy_swap", seed As Integer? = Nothing, progress As IProgress(Of Integer) = Nothing, verbose As Boolean = False) As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.WithAutoOrder*
+  nameWithType.vb: ChebyshevTT.WithAutoOrder(Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer, Object, Integer, String, Integer?, IProgress(Of Integer), Boolean)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.WithAutoOrder(System.Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer, Object, Integer, String, Integer?, System.IProgress(Of Integer), Boolean)
+  name.vb: WithAutoOrder(Func(Of Double(), Double), Integer, Double()(), Integer(), Integer, Double, Integer, Object, Integer, String, Integer?, IProgress(Of Integer), Boolean)
+- uid: ChebyshevSharp.ChebyshevTT.Clone
+  commentId: M:ChebyshevSharp.ChebyshevTT.Clone
+  id: Clone
+  parent: ChebyshevSharp.ChebyshevTT
+  langs:
+  - csharp
+  - vb
+  name: Clone()
+  nameWithType: ChebyshevTT.Clone()
+  fullName: ChebyshevSharp.ChebyshevTT.Clone()
+  type: Method
+  source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevTT.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
+    id: Clone
+    path: ../src/ChebyshevSharp/ChebyshevTT.cs
+    startLine: 2365
+  assemblies:
+  - ChebyshevSharp
+  namespace: ChebyshevSharp
+  summary: >-
+    Returns a deep copy of this tensor train. The source function callable is
+
+    NOT duplicated — clones cannot be rebuilt without re-supplying the function.
+
+    All TT cores and state are deep-copied.
+  example: []
+  syntax:
+    content: public ChebyshevTT Clone()
+    return:
+      type: ChebyshevSharp.ChebyshevTT
+      description: A fully independent <xref href="ChebyshevSharp.ChebyshevTT" data-throw-if-not-resolved="false"></xref>.
+    content.vb: Public Function Clone() As ChebyshevTT
+  overload: ChebyshevSharp.ChebyshevTT.Clone*
 references:
 - uid: ChebyshevSharp
   commentId: N:ChebyshevSharp
@@ -945,6 +2840,104 @@ references:
   nameWithType.vb: String
   fullName.vb: String
   name.vb: String
+- uid: ChebyshevSharp.ChebyshevTT.BuildWarning*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.BuildWarning
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_BuildWarning
+  name: BuildWarning
+  nameWithType: ChebyshevTT.BuildWarning
+  fullName: ChebyshevSharp.ChebyshevTT.BuildWarning
+- uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
+  commentId: M:ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
+  name: Build(bool, int?, string)
+  nameWithType: ChebyshevTT.Build(bool, int?, string)
+  fullName: ChebyshevSharp.ChebyshevTT.Build(bool, int?, string)
+  nameWithType.vb: ChebyshevTT.Build(Boolean, Integer?, String)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Build(Boolean, Integer?, String)
+  name.vb: Build(Boolean, Integer?, String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
+    name: Build
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
+  - name: (
+  - uid: System.Boolean
+    name: bool
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
+    name: Build
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
+  - name: (
+  - uid: System.Boolean
+    name: Boolean
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Load(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevTT.Load(System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Load_System_String_
+  name: Load(string)
+  nameWithType: ChebyshevTT.Load(string)
+  fullName: ChebyshevSharp.ChebyshevTT.Load(string)
+  nameWithType.vb: ChebyshevTT.Load(String)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Load(String)
+  name.vb: Load(String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.Load(System.String)
+    name: Load
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Load_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.Load(System.String)
+    name: Load
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Load_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Method*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Method
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Method
+  name: Method
+  nameWithType: ChebyshevTT.Method
+  fullName: ChebyshevSharp.ChebyshevTT.Method
 - uid: ChebyshevSharp.ChebyshevTT.NumDimensions*
   commentId: Overload:ChebyshevSharp.ChebyshevTT.NumDimensions
   href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_NumDimensions
@@ -1036,62 +3029,6 @@ references:
   name: TotalBuildEvals
   nameWithType: ChebyshevTT.TotalBuildEvals
   fullName: ChebyshevSharp.ChebyshevTT.TotalBuildEvals
-- uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
-  commentId: M:ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
-  isExternal: true
-  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
-  name: Build(bool, int?, string)
-  nameWithType: ChebyshevTT.Build(bool, int?, string)
-  fullName: ChebyshevSharp.ChebyshevTT.Build(bool, int?, string)
-  nameWithType.vb: ChebyshevTT.Build(Boolean, Integer?, String)
-  fullName.vb: ChebyshevSharp.ChebyshevTT.Build(Boolean, Integer?, String)
-  name.vb: Build(Boolean, Integer?, String)
-  spec.csharp:
-  - uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
-    name: Build
-    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
-  - name: (
-  - uid: System.Boolean
-    name: bool
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.boolean
-  - name: ','
-  - name: " "
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  - name: ','
-  - name: " "
-  - uid: System.String
-    name: string
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.string
-  - name: )
-  spec.vb:
-  - uid: ChebyshevSharp.ChebyshevTT.Build(System.Boolean,System.Nullable{System.Int32},System.String)
-    name: Build
-    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
-  - name: (
-  - uid: System.Boolean
-    name: Boolean
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.boolean
-  - name: ','
-  - name: " "
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  - name: ','
-  - name: " "
-  - uid: System.String
-    name: String
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.string
-  - name: )
 - uid: System.InvalidOperationException
   commentId: T:System.InvalidOperationException
   isExternal: true
@@ -1122,9 +3059,27 @@ references:
   nameWithType.vb: Double
   fullName.vb: Double
   name.vb: Double
+- uid: ChebyshevSharp.ChebyshevTT.GetAdditionalData
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetAdditionalData
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetAdditionalData
+  name: GetAdditionalData()
+  nameWithType: ChebyshevTT.GetAdditionalData()
+  fullName: ChebyshevSharp.ChebyshevTT.GetAdditionalData()
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.GetAdditionalData
+    name: GetAdditionalData
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetAdditionalData
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.GetAdditionalData
+    name: GetAdditionalData
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetAdditionalData
+  - name: (
+  - name: )
 - uid: ChebyshevSharp.ChebyshevTT.#ctor*
   commentId: Overload:ChebyshevSharp.ChebyshevTT.#ctor
-  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT__ctor_System_Func_System_Double___System_Double__System_Int32_System_Double_____System_Int32___System_Int32_System_Double_System_Int32_
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT__ctor_System_Func_System_Double___System_Double__System_Int32_System_Double_____System_Int32___System_Int32_System_Double_System_Int32_System_Int32_System_Object_System_Nullable_System_Int32__System_IProgress_System_Int32__
   name: ChebyshevTT
   nameWithType: ChebyshevTT.ChebyshevTT
   fullName: ChebyshevSharp.ChebyshevTT.ChebyshevTT
@@ -1182,6 +3137,64 @@ references:
     isExternal: true
     href: https://learn.microsoft.com/dotnet/api/system.double
   - name: )
+- uid: System.Nullable{System.Int32}
+  commentId: T:System.Nullable{System.Int32}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int?
+  nameWithType: int?
+  fullName: int?
+  nameWithType.vb: Integer?
+  fullName.vb: Integer?
+  name.vb: Integer?
+  spec.csharp:
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  spec.vb:
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+- uid: System.IProgress{System.Int32}
+  commentId: T:System.IProgress{System.Int32}
+  parent: System
+  definition: System.IProgress`1
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<int>
+  nameWithType: IProgress<int>
+  fullName: System.IProgress<int>
+  nameWithType.vb: IProgress(Of Integer)
+  fullName.vb: System.IProgress(Of Integer)
+  name.vb: IProgress(Of Integer)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: )
 - uid: System.Func`2
   commentId: T:System.Func`2
   isExternal: true
@@ -1216,53 +3229,6 @@ references:
   - name: " "
   - name: TResult
   - name: )
-- uid: System.ArgumentException
-  commentId: T:System.ArgumentException
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.argumentexception
-  name: ArgumentException
-  nameWithType: ArgumentException
-  fullName: System.ArgumentException
-- uid: ChebyshevSharp.ChebyshevTT.Build*
-  commentId: Overload:ChebyshevSharp.ChebyshevTT.Build
-  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
-  name: Build
-  nameWithType: ChebyshevTT.Build
-  fullName: ChebyshevSharp.ChebyshevTT.Build
-- uid: System.Boolean
-  commentId: T:System.Boolean
-  parent: System
-  isExternal: true
-  href: https://learn.microsoft.com/dotnet/api/system.boolean
-  name: bool
-  nameWithType: bool
-  fullName: bool
-  nameWithType.vb: Boolean
-  fullName.vb: Boolean
-  name.vb: Boolean
-- uid: System.Nullable{System.Int32}
-  commentId: T:System.Nullable{System.Int32}
-  parent: System
-  definition: System.Nullable`1
-  href: https://learn.microsoft.com/dotnet/api/system.int32
-  name: int?
-  nameWithType: int?
-  fullName: int?
-  nameWithType.vb: Integer?
-  fullName.vb: Integer?
-  name.vb: Integer?
-  spec.csharp:
-  - uid: System.Int32
-    name: int
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
-  spec.vb:
-  - uid: System.Int32
-    name: Integer
-    isExternal: true
-    href: https://learn.microsoft.com/dotnet/api/system.int32
-  - name: '?'
 - uid: System.Nullable`1
   commentId: T:System.Nullable`1
   isExternal: true
@@ -1291,6 +3257,58 @@ references:
   - name: " "
   - name: T
   - name: )
+- uid: System.IProgress`1
+  commentId: T:System.IProgress`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  name: IProgress<T>
+  nameWithType: IProgress<T>
+  fullName: System.IProgress<T>
+  nameWithType.vb: IProgress(Of T)
+  fullName.vb: System.IProgress(Of T)
+  name.vb: IProgress(Of T)
+  spec.csharp:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.IProgress`1
+    name: IProgress
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.iprogress-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.ArgumentException
+  commentId: T:System.ArgumentException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentexception
+  name: ArgumentException
+  nameWithType: ArgumentException
+  fullName: System.ArgumentException
+- uid: ChebyshevSharp.ChebyshevTT.Build*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Build
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Build_System_Boolean_System_Nullable_System_Int32__System_String_
+  name: Build
+  nameWithType: ChebyshevTT.Build
+  fullName: ChebyshevSharp.ChebyshevTT.Build
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean
 - uid: ChebyshevSharp.ChebyshevTT.Eval*
   commentId: Overload:ChebyshevSharp.ChebyshevTT.Eval
   href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Eval_System_Double___
@@ -1390,6 +3408,877 @@ references:
   name: ErrorEstimate
   nameWithType: ChebyshevTT.ErrorEstimate
   fullName: ChebyshevSharp.ChebyshevTT.ErrorEstimate
+- uid: ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(ChebyshevSharp.Internal.TensorTrainKernel.TtCore)
+  commentId: M:ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(ChebyshevSharp.Internal.TensorTrainKernel.TtCore)
+  name: CoeffCoreToValueCore(TtCore)
+  nameWithType: TensorTrainKernel.CoeffCoreToValueCore(TensorTrainKernel.TtCore)
+  fullName: ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(ChebyshevSharp.Internal.TensorTrainKernel.TtCore)
+  spec.csharp:
+  - uid: ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(ChebyshevSharp.Internal.TensorTrainKernel.TtCore)
+    name: CoeffCoreToValueCore
+  - name: (
+  - uid: ChebyshevSharp.Internal.TensorTrainKernel.TtCore
+    name: TtCore
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.Internal.TensorTrainKernel.CoeffCoreToValueCore(ChebyshevSharp.Internal.TensorTrainKernel.TtCore)
+    name: CoeffCoreToValueCore
+  - name: (
+  - uid: ChebyshevSharp.Internal.TensorTrainKernel.TtCore
+    name: TtCore
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT
+  commentId: T:ChebyshevSharp.ChebyshevTT
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.ChebyshevTT.html
+  name: ChebyshevTT
+  nameWithType: ChebyshevTT
+  fullName: ChebyshevSharp.ChebyshevTT
+- uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  name: Integrate(int[], (double lo, double hi)[])
+  nameWithType: ChebyshevApproximation.Integrate(int[], (double lo, double hi)[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Integrate(int[], (double lo, double hi)[])
+  nameWithType.vb: ChebyshevApproximation.Integrate(Integer(), (lo As Double, hi As Double)())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Integrate(Integer(), (lo As Double, hi As Double)())
+  name.vb: Integrate(Integer(), (lo As Double, hi As Double)())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+    name: Integrate
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Integrate(System.Int32[],System.ValueTuple{System.Double,System.Double}[])
+    name: Integrate
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Integrate*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Integrate
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Integrate_System_Int32___System_ValueTuple_System_Double_System_Double____
+  name: Integrate
+  nameWithType: ChebyshevTT.Integrate
+  fullName: ChebyshevSharp.ChebyshevTT.Integrate
+- uid: System.ValueTuple{System.Double,System.Double}[]
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double lo, double hi)[]
+  nameWithType: (double lo, double hi)[]
+  fullName: (double lo, double hi)[]
+  nameWithType.vb: (lo As Double, hi As Double)()
+  fullName.vb: (lo As Double, hi As Double)()
+  name.vb: (lo As Double, hi As Double)()
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  - name: '['
+  - name: ']'
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Roots(int?, Dictionary<int, double>)
+  nameWithType: ChebyshevApproximation.Roots(int?, Dictionary<int, double>)
+  fullName: ChebyshevSharp.ChebyshevApproximation.Roots(int?, System.Collections.Generic.Dictionary<int, double>)
+  nameWithType.vb: ChebyshevApproximation.Roots(Integer?, Dictionary(Of Integer, Double))
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Roots(Integer?, System.Collections.Generic.Dictionary(Of Integer, Double))
+  name.vb: Roots(Integer?, Dictionary(Of Integer, Double))
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Roots
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Roots(System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.Int32,System.Double})
+    name: Roots
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.DimOrder
+  commentId: P:ChebyshevSharp.ChebyshevTT.DimOrder
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_DimOrder
+  name: DimOrder
+  nameWithType: ChebyshevTT.DimOrder
+  fullName: ChebyshevSharp.ChebyshevTT.DimOrder
+- uid: ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+  commentId: M:ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Slice_System_Int32_System_Double_
+  name: Slice(int, double)
+  nameWithType: ChebyshevTT.Slice(int, double)
+  fullName: ChebyshevSharp.ChebyshevTT.Slice(int, double)
+  nameWithType.vb: ChebyshevTT.Slice(Integer, Double)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Slice(Integer, Double)
+  name.vb: Slice(Integer, Double)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+    name: Slice
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Slice_System_Int32_System_Double_
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.Slice(System.Int32,System.Double)
+    name: Slice
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Slice_System_Int32_System_Double_
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.ToDense
+  commentId: M:ChebyshevSharp.ChebyshevTT.ToDense
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_ToDense
+  name: ToDense()
+  nameWithType: ChebyshevTT.ToDense()
+  fullName: ChebyshevSharp.ChebyshevTT.ToDense()
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.ToDense
+    name: ToDense
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_ToDense
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.ToDense
+    name: ToDense
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_ToDense
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Roots*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Roots
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Roots_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Roots
+  nameWithType: ChebyshevTT.Roots
+  fullName: ChebyshevSharp.ChebyshevTT.Roots
+- uid: System.Collections.Generic.Dictionary{System.Int32,System.Double}
+  commentId: T:System.Collections.Generic.Dictionary{System.Int32,System.Double}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.Dictionary`2
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<int, double>
+  nameWithType: Dictionary<int, double>
+  fullName: System.Collections.Generic.Dictionary<int, double>
+  nameWithType.vb: Dictionary(Of Integer, Double)
+  fullName.vb: System.Collections.Generic.Dictionary(Of Integer, Double)
+  name.vb: Dictionary(Of Integer, Double)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.Collections.Generic.Dictionary`2
+  commentId: T:System.Collections.Generic.Dictionary`2
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  name: Dictionary<TKey, TValue>
+  nameWithType: Dictionary<TKey, TValue>
+  fullName: System.Collections.Generic.Dictionary<TKey, TValue>
+  nameWithType.vb: Dictionary(Of TKey, TValue)
+  fullName.vb: System.Collections.Generic.Dictionary(Of TKey, TValue)
+  name.vb: Dictionary(Of TKey, TValue)
+  spec.csharp:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: <
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.Dictionary`2
+    name: Dictionary
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2
+  - name: (
+  - name: Of
+  - name: " "
+  - name: TKey
+  - name: ','
+  - name: " "
+  - name: TValue
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: ChebyshevSharp.ChebyshevTT.Minimize*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Minimize
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Minimize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Minimize
+  nameWithType: ChebyshevTT.Minimize
+  fullName: ChebyshevSharp.ChebyshevTT.Minimize
+- uid: System.ValueTuple{System.Double,System.Double}
+  commentId: T:System.ValueTuple{System.Double,System.Double}
+  parent: System
+  definition: System.ValueTuple`2
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double lo, double hi)
+  nameWithType: (double lo, double hi)
+  fullName: (double lo, double hi)
+  nameWithType.vb: (lo As Double, hi As Double)
+  fullName.vb: (lo As Double, hi As Double)
+  name.vb: (lo As Double, hi As Double)
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: )
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double,System.Double}.lo
+    name: lo
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.lo
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double,System.Double}.hi
+    name: hi
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double,system.double-.hi
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: )
+- uid: System.ValueTuple`2
+  commentId: T:System.ValueTuple`2
+  name: (T1, T2)
+  nameWithType: (T1, T2)
+  fullName: (T1, T2)
+  spec.csharp:
+  - name: (
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+  spec.vb:
+  - name: (
+  - name: T1
+  - name: ','
+  - name: " "
+  - name: T2
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Maximize*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Maximize
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Maximize_System_Nullable_System_Int32__System_Collections_Generic_Dictionary_System_Int32_System_Double__
+  name: Maximize
+  nameWithType: ChebyshevTT.Maximize
+  fullName: ChebyshevSharp.ChebyshevTT.Maximize
+- uid: System.ArgumentOutOfRangeException
+  commentId: T:System.ArgumentOutOfRangeException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentoutofrangeexception
+  name: ArgumentOutOfRangeException
+  nameWithType: ArgumentOutOfRangeException
+  fullName: System.ArgumentOutOfRangeException
+- uid: ChebyshevSharp.ChebyshevTT.OrthLeft*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.OrthLeft
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_OrthLeft_System_Int32_
+  name: OrthLeft
+  nameWithType: ChebyshevTT.OrthLeft
+  fullName: ChebyshevSharp.ChebyshevTT.OrthLeft
+- uid: ChebyshevSharp.ChebyshevTT.OrthRight*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.OrthRight
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_OrthRight_System_Int32_
+  name: OrthRight
+  nameWithType: ChebyshevTT.OrthRight
+  fullName: ChebyshevSharp.ChebyshevTT.OrthRight
+- uid: ChebyshevSharp.ChebyshevTT.NumDimensions
+  commentId: P:ChebyshevSharp.ChebyshevTT.NumDimensions
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_NumDimensions
+  name: NumDimensions
+  nameWithType: ChebyshevTT.NumDimensions
+  fullName: ChebyshevSharp.ChebyshevTT.NumDimensions
+- uid: ChebyshevSharp.ChebyshevTT.Domain
+  commentId: P:ChebyshevSharp.ChebyshevTT.Domain
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Domain
+  name: Domain
+  nameWithType: ChebyshevTT.Domain
+  fullName: ChebyshevSharp.ChebyshevTT.Domain
+- uid: ChebyshevSharp.ChebyshevTT.NNodes
+  commentId: P:ChebyshevSharp.ChebyshevTT.NNodes
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_NNodes
+  name: NNodes
+  nameWithType: ChebyshevTT.NNodes
+  fullName: ChebyshevSharp.ChebyshevTT.NNodes
+- uid: System.ArgumentNullException
+  commentId: T:System.ArgumentNullException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.argumentnullexception
+  name: ArgumentNullException
+  nameWithType: ArgumentNullException
+  fullName: System.ArgumentNullException
+- uid: ChebyshevSharp.ChebyshevTT.InnerProduct*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.InnerProduct
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_InnerProduct_ChebyshevSharp_ChebyshevTT_
+  name: InnerProduct
+  nameWithType: ChebyshevTT.InnerProduct
+  fullName: ChebyshevSharp.ChebyshevTT.InnerProduct
+- uid: ChebyshevSharp.ChebyshevTT.RunCompletion*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.RunCompletion
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_RunCompletion_System_Double_System_Int32_System_Boolean_
+  name: RunCompletion
+  nameWithType: ChebyshevTT.RunCompletion
+  fullName: ChebyshevSharp.ChebyshevTT.RunCompletion
+- uid: ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Nodes_System_Int32_System_Double_____System_Int32___
+  name: Nodes(int, double[][], int[])
+  nameWithType: ChebyshevApproximation.Nodes(int, double[][], int[])
+  fullName: ChebyshevSharp.ChebyshevApproximation.Nodes(int, double[][], int[])
+  nameWithType.vb: ChebyshevApproximation.Nodes(Integer, Double()(), Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevApproximation.Nodes(Integer, Double()(), Integer())
+  name.vb: Nodes(Integer, Double()(), Integer())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+    name: Nodes
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Nodes_System_Int32_System_Double_____System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.Nodes(System.Int32,System.Double[][],System.Int32[])
+    name: Nodes
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_Nodes_System_Int32_System_Double_____System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Nodes*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Nodes
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Nodes_System_Int32_System_Double_____System_Int32___
+  name: Nodes
+  nameWithType: ChebyshevTT.Nodes
+  fullName: ChebyshevSharp.ChebyshevTT.Nodes
+- uid: System.ValueTuple{System.Double[][],System.Int32[]}
+  commentId: T:System.ValueTuple{System.Double[][],System.Int32[]}
+  parent: System
+  definition: System.ValueTuple`2
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: (double[][] NodesPerDim, int[] Shape)
+  nameWithType: (double[][] NodesPerDim, int[] Shape)
+  fullName: (double[][] NodesPerDim, int[] Shape)
+  nameWithType.vb: (NodesPerDim As Double()(), Shape As Integer())
+  fullName.vb: (NodesPerDim As Double()(), Shape As Integer())
+  name.vb: (NodesPerDim As Double()(), Shape As Integer())
+  spec.csharp:
+  - name: (
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '['
+  - name: ']'
+  - name: '['
+  - name: ']'
+  - name: " "
+  - uid: System.ValueTuple{System.Double[][],System.Int32[]}.NodesPerDim
+    name: NodesPerDim
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double[][],system.int32[]-.nodesperdim
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: " "
+  - uid: System.ValueTuple{System.Double[][],System.Int32[]}.Shape
+    name: Shape
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double[][],system.int32[]-.shape
+  - name: )
+  spec.vb:
+  - name: (
+  - uid: System.ValueTuple{System.Double[][],System.Int32[]}.NodesPerDim
+    name: NodesPerDim
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double[][],system.int32[]-.nodesperdim
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: (
+  - name: )
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.ValueTuple{System.Double[][],System.Int32[]}.Shape
+    name: Shape
+    href: https://learn.microsoft.com/dotnet/api/system.valuetuple-system.double[][],system.int32[]-.shape
+  - name: " "
+  - name: As
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.FromValues*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.FromValues
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_FromValues_System_Double___System_Int32_System_Double_____System_Int32___System_Int32_System_Double_
+  name: FromValues
+  nameWithType: ChebyshevTT.FromValues
+  fullName: ChebyshevSharp.ChebyshevTT.FromValues
+- uid: System.OverflowException
+  commentId: T:System.OverflowException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.overflowexception
+  name: OverflowException
+  nameWithType: OverflowException
+  fullName: System.OverflowException
+- uid: ChebyshevSharp.ChebyshevTT.ToDense*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.ToDense
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_ToDense
+  name: ToDense
+  nameWithType: ChebyshevTT.ToDense
+  fullName: ChebyshevSharp.ChebyshevTT.ToDense
+- uid: ChebyshevSharp.ChebyshevTT.Extrude*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Extrude
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Extrude_System_Int32_System_ValueTuple_System_Double_System_Double__System_Int32_
+  name: Extrude
+  nameWithType: ChebyshevTT.Extrude
+  fullName: ChebyshevSharp.ChebyshevTT.Extrude
+- uid: ChebyshevSharp.ChebyshevTT.Slice*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Slice
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Slice_System_Int32_System_Double_
+  name: Slice
+  nameWithType: ChebyshevTT.Slice
+  fullName: ChebyshevSharp.ChebyshevTT.Slice
+- uid: ChebyshevSharp.ChebyshevTT.op_Multiply*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.op_Multiply
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Multiply_ChebyshevSharp_ChebyshevTT_System_Double_
+  name: operator *
+  nameWithType: ChebyshevTT.operator *
+  fullName: ChebyshevSharp.ChebyshevTT.operator *
+  nameWithType.vb: ChebyshevTT.*
+  fullName.vb: ChebyshevSharp.ChebyshevTT.*
+  name.vb: '*'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevTT.op_Multiply*
+    name: '*'
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Multiply_ChebyshevSharp_ChebyshevTT_System_Double_
+- uid: System.DivideByZeroException
+  commentId: T:System.DivideByZeroException
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.dividebyzeroexception
+  name: DivideByZeroException
+  nameWithType: DivideByZeroException
+  fullName: System.DivideByZeroException
+- uid: ChebyshevSharp.ChebyshevTT.op_Division*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.op_Division
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Division_ChebyshevSharp_ChebyshevTT_System_Double_
+  name: operator /
+  nameWithType: ChebyshevTT.operator /
+  fullName: ChebyshevSharp.ChebyshevTT.operator /
+  nameWithType.vb: ChebyshevTT./
+  fullName.vb: ChebyshevSharp.ChebyshevTT./
+  name.vb: /
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevTT.op_Division*
+    name: /
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Division_ChebyshevSharp_ChebyshevTT_System_Double_
+- uid: ChebyshevSharp.ChebyshevTT.op_UnaryNegation*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.op_UnaryNegation
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_UnaryNegation_ChebyshevSharp_ChebyshevTT_
+  name: operator -
+  nameWithType: ChebyshevTT.operator -
+  fullName: ChebyshevSharp.ChebyshevTT.operator -
+  nameWithType.vb: ChebyshevTT.-
+  fullName.vb: ChebyshevSharp.ChebyshevTT.-
+  name.vb: '-'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevTT.op_UnaryNegation*
+    name: '-'
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_UnaryNegation_ChebyshevSharp_ChebyshevTT_
+- uid: ChebyshevSharp.ChebyshevTT.ScalarMulInPlace*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.ScalarMulInPlace
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_ScalarMulInPlace_System_Double_
+  name: ScalarMulInPlace
+  nameWithType: ChebyshevTT.ScalarMulInPlace
+  fullName: ChebyshevSharp.ChebyshevTT.ScalarMulInPlace
+- uid: ChebyshevSharp.ChebyshevTT.ScalarDivInPlace*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.ScalarDivInPlace
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_ScalarDivInPlace_System_Double_
+  name: ScalarDivInPlace
+  nameWithType: ChebyshevTT.ScalarDivInPlace
+  fullName: ChebyshevSharp.ChebyshevTT.ScalarDivInPlace
+- uid: ChebyshevSharp.ChebyshevTT.NegateInPlace*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.NegateInPlace
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_NegateInPlace
+  name: NegateInPlace
+  nameWithType: ChebyshevTT.NegateInPlace
+  fullName: ChebyshevSharp.ChebyshevTT.NegateInPlace
+- uid: ChebyshevSharp.ChebyshevTT.op_Addition*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.op_Addition
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Addition_ChebyshevSharp_ChebyshevTT_ChebyshevSharp_ChebyshevTT_
+  name: operator +
+  nameWithType: ChebyshevTT.operator +
+  fullName: ChebyshevSharp.ChebyshevTT.operator +
+  nameWithType.vb: ChebyshevTT.+
+  fullName.vb: ChebyshevSharp.ChebyshevTT.+
+  name.vb: +
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevTT.op_Addition*
+    name: +
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Addition_ChebyshevSharp_ChebyshevTT_ChebyshevSharp_ChebyshevTT_
+- uid: ChebyshevSharp.ChebyshevTT.op_Subtraction*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.op_Subtraction
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Subtraction_ChebyshevSharp_ChebyshevTT_ChebyshevSharp_ChebyshevTT_
+  name: operator -
+  nameWithType: ChebyshevTT.operator -
+  fullName: ChebyshevSharp.ChebyshevTT.operator -
+  nameWithType.vb: ChebyshevTT.-
+  fullName.vb: ChebyshevSharp.ChebyshevTT.-
+  name.vb: '-'
+  spec.csharp:
+  - name: operator
+  - name: " "
+  - uid: ChebyshevSharp.ChebyshevTT.op_Subtraction*
+    name: '-'
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_op_Subtraction_ChebyshevSharp_ChebyshevTT_ChebyshevSharp_ChebyshevTT_
+- uid: ChebyshevSharp.ChebyshevTT.AddInPlace*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.AddInPlace
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_AddInPlace_ChebyshevSharp_ChebyshevTT_
+  name: AddInPlace
+  nameWithType: ChebyshevTT.AddInPlace
+  fullName: ChebyshevSharp.ChebyshevTT.AddInPlace
+- uid: ChebyshevSharp.ChebyshevTT.SubInPlace*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.SubInPlace
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_SubInPlace_ChebyshevSharp_ChebyshevTT_
+  name: SubInPlace
+  nameWithType: ChebyshevTT.SubInPlace
+  fullName: ChebyshevSharp.ChebyshevTT.SubInPlace
+- uid: ChebyshevSharp.ChebyshevTT.RoundInPlace*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.RoundInPlace
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_RoundInPlace_System_Double_
+  name: RoundInPlace
+  nameWithType: ChebyshevTT.RoundInPlace
+  fullName: ChebyshevSharp.ChebyshevTT.RoundInPlace
 - uid: ChebyshevSharp.ChebyshevTT.Save*
   commentId: Overload:ChebyshevSharp.ChebyshevTT.Save
   href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Save_System_String_
@@ -1402,13 +4291,6 @@ references:
   name: Load
   nameWithType: ChebyshevTT.Load
   fullName: ChebyshevSharp.ChebyshevTT.Load
-- uid: ChebyshevSharp.ChebyshevTT
-  commentId: T:ChebyshevSharp.ChebyshevTT
-  parent: ChebyshevSharp
-  href: ChebyshevSharp.ChebyshevTT.html
-  name: ChebyshevTT
-  nameWithType: ChebyshevTT
-  fullName: ChebyshevSharp.ChebyshevTT
 - uid: System.Object.ToString
   commentId: M:System.Object.ToString
   parent: System.Object
@@ -1439,3 +4321,267 @@ references:
   name: ToString
   nameWithType: ChebyshevTT.ToString
   fullName: ChebyshevSharp.ChebyshevTT.ToString
+- uid: ChebyshevSharp.ChebyshevTT.SetDescriptor*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.SetDescriptor
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_SetDescriptor_System_String_
+  name: SetDescriptor
+  nameWithType: ChebyshevTT.SetDescriptor
+  fullName: ChebyshevSharp.ChebyshevTT.SetDescriptor
+- uid: ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+  commentId: M:ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_SetDescriptor_System_String_
+  name: SetDescriptor(string)
+  nameWithType: ChebyshevTT.SetDescriptor(string)
+  fullName: ChebyshevSharp.ChebyshevTT.SetDescriptor(string)
+  nameWithType.vb: ChebyshevTT.SetDescriptor(String)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.SetDescriptor(String)
+  name.vb: SetDescriptor(String)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+    name: SetDescriptor
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_SetDescriptor_System_String_
+  - name: (
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.SetDescriptor(System.String)
+    name: SetDescriptor
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_SetDescriptor_System_String_
+  - name: (
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.GetDescriptor*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetDescriptor
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetDescriptor
+  name: GetDescriptor
+  nameWithType: ChebyshevTT.GetDescriptor
+  fullName: ChebyshevSharp.ChebyshevTT.GetDescriptor
+- uid: ChebyshevSharp.ChebyshevTT.IsConstructionFinished*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.IsConstructionFinished
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_IsConstructionFinished
+  name: IsConstructionFinished
+  nameWithType: ChebyshevTT.IsConstructionFinished
+  fullName: ChebyshevSharp.ChebyshevTT.IsConstructionFinished
+- uid: ChebyshevSharp.ChebyshevTT.GetConstructorType*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetConstructorType
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetConstructorType
+  name: GetConstructorType
+  nameWithType: ChebyshevTT.GetConstructorType
+  fullName: ChebyshevSharp.ChebyshevTT.GetConstructorType
+- uid: ChebyshevSharp.ChebyshevTT.GetUsedNs*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetUsedNs
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetUsedNs
+  name: GetUsedNs
+  nameWithType: ChebyshevTT.GetUsedNs
+  fullName: ChebyshevSharp.ChebyshevTT.GetUsedNs
+- uid: ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetMaxDerivativeOrder
+  name: GetMaxDerivativeOrder
+  nameWithType: ChebyshevTT.GetMaxDerivativeOrder
+  fullName: ChebyshevSharp.ChebyshevTT.GetMaxDerivativeOrder
+- uid: ChebyshevSharp.ChebyshevTT.GetAdditionalData*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetAdditionalData
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetAdditionalData
+  name: GetAdditionalData
+  nameWithType: ChebyshevTT.GetAdditionalData
+  fullName: ChebyshevSharp.ChebyshevTT.GetAdditionalData
+- uid: ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetNumEvaluationPoints
+  name: GetNumEvaluationPoints
+  nameWithType: ChebyshevTT.GetNumEvaluationPoints
+  fullName: ChebyshevSharp.ChebyshevTT.GetNumEvaluationPoints
+- uid: ChebyshevSharp.ChebyshevTT.GetEvaluationPoints*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetEvaluationPoints
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetEvaluationPoints
+  name: GetEvaluationPoints
+  nameWithType: ChebyshevTT.GetEvaluationPoints
+  fullName: ChebyshevSharp.ChebyshevTT.GetEvaluationPoints
+- uid: ChebyshevSharp.ChebyshevTT.GetDerivativeId*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.GetDerivativeId
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetDerivativeId_System_Int32___
+  name: GetDerivativeId
+  nameWithType: ChebyshevTT.GetDerivativeId
+  fullName: ChebyshevSharp.ChebyshevTT.GetDerivativeId
+- uid: ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+  commentId: M:ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetDerivativeId_System_Int32___
+  name: GetDerivativeId(int[])
+  nameWithType: ChebyshevTT.GetDerivativeId(int[])
+  fullName: ChebyshevSharp.ChebyshevTT.GetDerivativeId(int[])
+  nameWithType.vb: ChebyshevTT.GetDerivativeId(Integer())
+  fullName.vb: ChebyshevSharp.ChebyshevTT.GetDerivativeId(Integer())
+  name.vb: GetDerivativeId(Integer())
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+    name: GetDerivativeId
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetDerivativeId_System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.GetDerivativeId(System.Int32[])
+    name: GetDerivativeId
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_GetDerivativeId_System_Int32___
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+  commentId: M:ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+  isExternal: true
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Reorder_System_Int32___System_Nullable_System_Int32__System_Nullable_System_Double__
+  name: Reorder(int[], int?, double?)
+  nameWithType: ChebyshevTT.Reorder(int[], int?, double?)
+  fullName: ChebyshevSharp.ChebyshevTT.Reorder(int[], int?, double?)
+  nameWithType.vb: ChebyshevTT.Reorder(Integer(), Integer?, Double?)
+  fullName.vb: ChebyshevSharp.ChebyshevTT.Reorder(Integer(), Integer?, Double?)
+  name.vb: Reorder(Integer(), Integer?, Double?)
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+    name: Reorder
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Reorder_System_Int32___System_Nullable_System_Int32__System_Nullable_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '['
+  - name: ']'
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: int
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '?'
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevTT.Reorder(System.Int32[],System.Nullable{System.Int32},System.Nullable{System.Double})
+    name: Reorder
+    href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Reorder_System_Int32___System_Nullable_System_Int32__System_Nullable_System_Double__
+  - name: (
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: (
+  - name: )
+  - name: ','
+  - name: " "
+  - uid: System.Int32
+    name: Integer
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int32
+  - name: '?'
+  - name: ','
+  - name: " "
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '?'
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.DimOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.DimOrder
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_DimOrder
+  name: DimOrder
+  nameWithType: ChebyshevTT.DimOrder
+  fullName: ChebyshevSharp.ChebyshevTT.DimOrder
+- uid: ChebyshevSharp.ChebyshevTT.Reorder*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Reorder
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Reorder_System_Int32___System_Nullable_System_Int32__System_Nullable_System_Double__
+  name: Reorder
+  nameWithType: ChebyshevTT.Reorder
+  fullName: ChebyshevSharp.ChebyshevTT.Reorder
+- uid: System.Nullable{System.Double}
+  commentId: T:System.Nullable{System.Double}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.double
+  name: double?
+  nameWithType: double?
+  fullName: double?
+  nameWithType.vb: Double?
+  fullName.vb: Double?
+  name.vb: Double?
+  spec.csharp:
+  - uid: System.Double
+    name: double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '?'
+  spec.vb:
+  - uid: System.Double
+    name: Double
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.double
+  - name: '?'
+- uid: ChebyshevSharp.SobolResult
+  commentId: T:ChebyshevSharp.SobolResult
+  parent: ChebyshevSharp
+  href: ChebyshevSharp.SobolResult.html
+  name: SobolResult
+  nameWithType: SobolResult
+  fullName: ChebyshevSharp.SobolResult
+- uid: ChebyshevSharp.ChebyshevApproximation.SobolIndices
+  commentId: M:ChebyshevSharp.ChebyshevApproximation.SobolIndices
+  href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_SobolIndices
+  name: SobolIndices()
+  nameWithType: ChebyshevApproximation.SobolIndices()
+  fullName: ChebyshevSharp.ChebyshevApproximation.SobolIndices()
+  spec.csharp:
+  - uid: ChebyshevSharp.ChebyshevApproximation.SobolIndices
+    name: SobolIndices
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_SobolIndices
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: ChebyshevSharp.ChebyshevApproximation.SobolIndices
+    name: SobolIndices
+    href: ChebyshevSharp.ChebyshevApproximation.html#ChebyshevSharp_ChebyshevApproximation_SobolIndices
+  - name: (
+  - name: )
+- uid: ChebyshevSharp.ChebyshevTT.SobolIndices*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.SobolIndices
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_SobolIndices
+  name: SobolIndices
+  nameWithType: ChebyshevTT.SobolIndices
+  fullName: ChebyshevSharp.ChebyshevTT.SobolIndices
+- uid: ChebyshevSharp.ChebyshevTT.WithAutoOrder*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.WithAutoOrder
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_WithAutoOrder_System_Func_System_Double___System_Double__System_Int32_System_Double_____System_Int32___System_Int32_System_Double_System_Int32_System_Object_System_Int32_System_String_System_Nullable_System_Int32__System_IProgress_System_Int32__System_Boolean_
+  name: WithAutoOrder
+  nameWithType: ChebyshevTT.WithAutoOrder
+  fullName: ChebyshevSharp.ChebyshevTT.WithAutoOrder
+- uid: ChebyshevSharp.ChebyshevTT.Clone*
+  commentId: Overload:ChebyshevSharp.ChebyshevTT.Clone
+  href: ChebyshevSharp.ChebyshevTT.html#ChebyshevSharp_ChebyshevTT_Clone
+  name: Clone
+  nameWithType: ChebyshevTT.Clone
+  fullName: ChebyshevSharp.ChebyshevTT.Clone

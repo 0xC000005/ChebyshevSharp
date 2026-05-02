@@ -1745,11 +1745,12 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Compute first- and total-order Sobol sensitivity indices directly from this
-    /// approximation's spectral Chebyshev coefficients. No Monte Carlo, no extra
-    /// function evaluations.
+    /// Compute first- and total-order variance-based sensitivity indices directly
+    /// from this approximation's spectral Chebyshev coefficients. The variance is
+    /// with respect to the Chebyshev orthogonality weight on the normalized domain,
+    /// not a Monte Carlo estimate under a uniform input distribution.
     /// </summary>
-    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, and total Variance.</returns>
+    /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, and Chebyshev-weighted total Variance.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public SobolResult SobolIndices()
     {

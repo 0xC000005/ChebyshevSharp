@@ -108,8 +108,8 @@ public class TestApproxSobolIndices
     [Fact]
     public void Test_constant_function_zero_variance()
     {
-        // f(x, y) = 5 — constant; variance lands at the floor of DCT-II rounding noise (~1e-29).
-        // The implementation's early-return on variance < 1e-20 produces exactly-zero index arrays.
+        // f(x, y) = 5 — constant. DCT-II may leave ~1e-29 noise, which is
+        // below the relative floor scale * 1e-28 and therefore reports zero indices.
         static double F(double[] p, object? _) => 5.0;
         var ap = new ChebyshevApproximation(F, 2,
             new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
@@ -121,6 +121,40 @@ public class TestApproxSobolIndices
             $"Constant function should have near-zero variance, got {s.Variance}");
         Assert.Equal(0.0, s.FirstOrder[0]);
         Assert.Equal(0.0, s.TotalOrder[1]);
+    }
+
+    [Fact]
+    public void Test_zero_function_zero_variance()
+    {
+        static double F(double[] p, object? _) => 0.0;
+        var ap = new ChebyshevApproximation(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 });
+        ap.Build(verbose: false);
+
+        var s = ap.SobolIndices();
+        Assert.Equal(0.0, s.Variance);
+        Assert.Equal(0.0, s.FirstOrder[0]);
+        Assert.Equal(0.0, s.TotalOrder[1]);
+    }
+
+    [Fact]
+    public void Test_large_constant_plus_tiny_signal_recovers_dim()
+    {
+        // A fixed absolute variance cutoff can incorrectly suppress valid
+        // low-amplitude sensitivity when a large constant offset is present.
+        static double F(double[] p, object? _) => 1.0 + 1e-12 * p[0];
+        var ap = new ChebyshevApproximation(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 });
+        ap.Build(verbose: false);
+
+        var s = ap.SobolIndices();
+        Assert.True(s.Variance > 1e-25,
+            $"Variance={s.Variance} should preserve the tiny nonconstant signal");
+        TestFixtures.AssertClose(1.0, s.FirstOrder[0], rtol: 1e-6, atol: 1e-6);
+        Assert.True(s.TotalOrder[1] < 1e-5,
+            $"TotalOrder[1]={s.TotalOrder[1]} should remain at numerical noise level");
     }
 
     [Fact]

@@ -56,7 +56,7 @@ For a function analytic in a [Bernstein ellipse](concepts.md#bernstein-ellipse) 
 The practical rule: **if $|c_{n-1}|$ is small, both the truncation and aliasing errors are small, and the interpolant is well-converged.**
 
 > **Warning: Heuristic, not a formal bound.**
-> This estimate is an empirically reliable proxy, not a rigorous upper bound. Ruiz & Zeron (2021, Section 3.4) report that they have never encountered a real-world case where small trailing coefficients failed to indicate convergence. However, pathological functions (e.g., those with singularities just outside the Bernstein ellipse) could have slowly decaying coefficients that make the estimate optimistic. Always validate against known solutions when possible.
+> This estimate is an empirically reliable proxy, not a rigorous upper bound. Ruiz & Zeron (2022, Section 3.4) report that they have never encountered a real-world case where small trailing coefficients failed to indicate convergence. However, pathological functions (e.g., those with singularities just outside the Bernstein ellipse) could have slowly decaying coefficients that make the estimate optimistic. Always validate against known solutions when possible.
 
 ### Computing Coefficients via DCT-II
 
@@ -185,5 +185,5 @@ Console.WriteLine($"TT error estimate: {tt.ErrorEstimate():E2}");
 
 - Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501--517.
 - Good, I. J. (1961). "The Colleague Matrix, a Chebyshev Analogue of the Companion Matrix." *The Quarterly Journal of Mathematics* 12(1):61--68.
-- Ruiz, G. & Zeron, M. (2021). *Machine Learning for Risk Calculations.* Wiley Finance. Section 3.4.
+- Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Section 3.4.
 - Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM. Chapters 3--4.

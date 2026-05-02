@@ -372,5 +372,6 @@ See [Citations](citations.md) for DOI links and citation-style guidance.
 1. Oseledets, I. V. (2011). "Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 33(5):2295--2317.
 2. Oseledets, I. V. & Tyrtyshnikov, E. E. (2010). "TT-cross approximation for multidimensional arrays." *Linear Algebra and its Applications* 432(1):70--88.
 3. Goreinov, S. A., Tyrtyshnikov, E. E. & Zamarashkin, N. L. (1997). "A theory of pseudoskeleton approximations." *Linear Algebra and its Applications* 261:1--21.
-4. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Chapters 4--5.
-5. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
+4. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Chapter 6.
+5. Savostyanov, D. V. & Oseledets, I. V. (2011). "Fast adaptive interpolation of multi-dimensional arrays in tensor train format." *7th International Workshop on Multidimensional Systems*, pp. 1--8.
+6. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
