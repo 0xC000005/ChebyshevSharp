@@ -34,6 +34,9 @@ jobs:
       - name: Build docs
         run: docfx docs/docfx.json
 
+      - name: Remove build manifest
+        run: rm -f docs/_site/manifest.json
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:

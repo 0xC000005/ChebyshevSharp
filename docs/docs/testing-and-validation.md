@@ -51,4 +51,4 @@ sources before release:
   the public GitHub Pages site can lag an open PR.
 - Verify DOI-backed references against Crossref metadata, not only HTTP status.
 - Verify book citations against publisher, author, library, or ISBN pages.
-- Record the commands and evidence in the release plan or PR notes.
+- Record the commands and evidence in the PR notes.

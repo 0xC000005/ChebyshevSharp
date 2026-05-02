@@ -112,7 +112,7 @@ Phase 7 coverage gap fillers: 10 tests in `Phase7CoverageGapTests.cs` (defensive
 
 Phase 6 fan-out: 17 tests in `BuildPerfTests.cs` (nWorkers normalization + parallel parity + progress reporting), 12 tests in `SobolIndicesTests.cs` (variance decomposition), 10 tests in `AutoKnotsTests.cs` (knot discovery), 18 tests in `TtAutoOrderTests.cs` (heuristic dim reordering + reorder + JSON migration), 11 tests in `TtDimOrderTests.cs` (full _dimOrder threading surface + binary algebra type checking + identity shortcut); 4 regression tests for hardened integration bounds + other edge cases.
 
-See [the Phase 6 implementation plan](https://github.com/0xC000005/ChebyshevSharp/blob/main/docs/superpowers/plans/2026-04-29-phase6-perf-and-adaptive.md) for the full diff.
+See [PR #21](https://github.com/0xC000005/ChebyshevSharp/pull/21) for the full diff.
 
 ## [0.9.0] - 2026-04-28
 
@@ -133,7 +133,7 @@ After v0.9.0, all four ChebyshevSharp classes support integration — matching P
 
 Phase 5 fan-out: 17 tests in `SliderIntegrateTests.cs` (full + partial + validation + ergonomics), 22 tests in `TtIntegrateTests.cs` (full + partial + validation + cross-class build-mode preservation), 5 helper tests appended to `CalculusTests.cs`.
 
-See [PR #20](https://github.com/0xC000005/ChebyshevSharp/pulls) for the full diff and the [design spec](https://github.com/0xC000005/ChebyshevSharp/blob/main/docs/superpowers/specs/2026-04-28-phase5-integrate-everywhere-design.md).
+See [PR #20](https://github.com/0xC000005/ChebyshevSharp/pull/20) for the full diff.
 
 ## [0.8.0] - 2026-04-28 — Ergonomics polish (PyChebyshev v0.15+v0.16 fill-in)
 
@@ -186,8 +186,7 @@ See [PR #20](https://github.com/0xC000005/ChebyshevSharp/pulls) for the full dif
 ### Test count: 812 → 884 (+72)
 
 Phase 4 fan-out across 8 new test files plus appended cross-class tests. See
-[PR](https://github.com/0xC000005/ChebyshevSharp) for the full diff and the
-[design spec](https://github.com/0xC000005/ChebyshevSharp/blob/main/docs/superpowers/specs/2026-04-28-phase4-ergonomics-design.md).
+[PR #19](https://github.com/0xC000005/ChebyshevSharp/pull/19) for the full diff.
 
 Phase 5 (integrate everywhere — Slider/TT integration on calculus,
 PyChebyshev parity bump to v0.17.0) is next.

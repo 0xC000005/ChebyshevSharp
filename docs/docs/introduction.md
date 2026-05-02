@@ -86,7 +86,7 @@ ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyCheb
 
 ## References
 
-See [Citations](citations.md) for DOI links and citation-style guidance.
+See [Citations](citations.md) for the references used by this page.
 
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
 2. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
