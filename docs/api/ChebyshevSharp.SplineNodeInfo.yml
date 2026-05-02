@@ -16,8 +16,12 @@ items:
   fullName: ChebyshevSharp.SplineNodeInfo
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SplineNodeInfo
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2412
   assemblies:
   - ChebyshevSharp
@@ -49,8 +53,12 @@ items:
   fullName: ChebyshevSharp.SplineNodeInfo.Pieces
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Pieces
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2415
   assemblies:
   - ChebyshevSharp
@@ -76,8 +84,12 @@ items:
   fullName: ChebyshevSharp.SplineNodeInfo.NumPieces
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumPieces
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2417
   assemblies:
   - ChebyshevSharp
@@ -103,8 +115,12 @@ items:
   fullName: ChebyshevSharp.SplineNodeInfo.PieceShape
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: PieceShape
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2419
   assemblies:
   - ChebyshevSharp

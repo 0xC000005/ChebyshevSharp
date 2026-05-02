@@ -17,8 +17,12 @@ items:
   fullName: ChebyshevSharp.Domain
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/Domain.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Domain
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    path: ../src/ChebyshevSharp/Domain.cs
     startLine: 9
   assemblies:
   - ChebyshevSharp
@@ -58,8 +62,12 @@ items:
   fullName: ChebyshevSharp.Domain.Domain(double[][])
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/Domain.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    path: ../src/ChebyshevSharp/Domain.cs
     startLine: 9
   assemblies:
   - ChebyshevSharp
@@ -96,8 +104,12 @@ items:
   fullName: ChebyshevSharp.Domain.Bounds
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/Domain.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Bounds
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    path: ../src/ChebyshevSharp/Domain.cs
     startLine: 9
   assemblies:
   - ChebyshevSharp
@@ -123,8 +135,12 @@ items:
   fullName: ChebyshevSharp.Domain.implicit operator ChebyshevSharp.Domain(double[][])
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/Domain.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Implicit
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    path: ../src/ChebyshevSharp/Domain.cs
     startLine: 12
   assemblies:
   - ChebyshevSharp
@@ -155,8 +171,12 @@ items:
   fullName: ChebyshevSharp.Domain.implicit operator double[][](ChebyshevSharp.Domain)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/Domain.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Implicit
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/Domain.cs
+    path: ../src/ChebyshevSharp/Domain.cs
     startLine: 15
   assemblies:
   - ChebyshevSharp

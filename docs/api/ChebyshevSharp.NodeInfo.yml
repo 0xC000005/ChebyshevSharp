@@ -16,8 +16,12 @@ items:
   fullName: ChebyshevSharp.NodeInfo
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NodeInfo
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1794
   assemblies:
   - ChebyshevSharp
@@ -49,8 +53,12 @@ items:
   fullName: ChebyshevSharp.NodeInfo.NodesPerDim
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NodesPerDim
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1797
   assemblies:
   - ChebyshevSharp
@@ -76,8 +84,12 @@ items:
   fullName: ChebyshevSharp.NodeInfo.FullGrid
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: FullGrid
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1800
   assemblies:
   - ChebyshevSharp
@@ -103,8 +115,12 @@ items:
   fullName: ChebyshevSharp.NodeInfo.Shape
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Shape
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1803
   assemblies:
   - ChebyshevSharp

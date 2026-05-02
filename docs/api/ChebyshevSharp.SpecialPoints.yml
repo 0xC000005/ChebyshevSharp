@@ -17,8 +17,12 @@ items:
   fullName: ChebyshevSharp.SpecialPoints
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/SpecialPoints.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SpecialPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SpecialPoints.cs
+    path: ../src/ChebyshevSharp/SpecialPoints.cs
     startLine: 9
   assemblies:
   - ChebyshevSharp
@@ -58,8 +62,12 @@ items:
   fullName: ChebyshevSharp.SpecialPoints.SpecialPoints(double[][])
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/SpecialPoints.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SpecialPoints.cs
+    path: ../src/ChebyshevSharp/SpecialPoints.cs
     startLine: 9
   assemblies:
   - ChebyshevSharp
@@ -96,8 +104,12 @@ items:
   fullName: ChebyshevSharp.SpecialPoints.Points
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/SpecialPoints.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Points
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SpecialPoints.cs
+    path: ../src/ChebyshevSharp/SpecialPoints.cs
     startLine: 9
   assemblies:
   - ChebyshevSharp
@@ -123,8 +135,12 @@ items:
   fullName: ChebyshevSharp.SpecialPoints.implicit operator ChebyshevSharp.SpecialPoints(double[][])
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/SpecialPoints.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Implicit
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SpecialPoints.cs
+    path: ../src/ChebyshevSharp/SpecialPoints.cs
     startLine: 12
   assemblies:
   - ChebyshevSharp
@@ -155,8 +171,12 @@ items:
   fullName: ChebyshevSharp.SpecialPoints.implicit operator double[][](ChebyshevSharp.SpecialPoints)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/SpecialPoints.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Implicit
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SpecialPoints.cs
+    path: ../src/ChebyshevSharp/SpecialPoints.cs
     startLine: 15
   assemblies:
   - ChebyshevSharp

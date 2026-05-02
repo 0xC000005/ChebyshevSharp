@@ -108,7 +108,8 @@ public class TestApproxSobolIndices
     [Fact]
     public void Test_constant_function_zero_variance()
     {
-        // f(x, y) = 5 — constant; variance lands at the floor of DCT-II rounding noise (~1e-29).
+        // f(x, y) = 5 — constant. DCT-II may leave ~1e-29 noise, which is
+        // below the relative floor scale * 1e-28 and therefore reports zero indices.
         static double F(double[] p, object? _) => 5.0;
         var ap = new ChebyshevApproximation(F, 2,
             new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
@@ -118,6 +119,21 @@ public class TestApproxSobolIndices
         var s = ap.SobolIndices();
         Assert.True(s.Variance < 1e-20,
             $"Constant function should have near-zero variance, got {s.Variance}");
+        Assert.Equal(0.0, s.FirstOrder[0]);
+        Assert.Equal(0.0, s.TotalOrder[1]);
+    }
+
+    [Fact]
+    public void Test_zero_function_zero_variance()
+    {
+        static double F(double[] p, object? _) => 0.0;
+        var ap = new ChebyshevApproximation(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8 });
+        ap.Build(verbose: false);
+
+        var s = ap.SobolIndices();
+        Assert.Equal(0.0, s.Variance);
         Assert.Equal(0.0, s.FirstOrder[0]);
         Assert.Equal(0.0, s.TotalOrder[1]);
     }

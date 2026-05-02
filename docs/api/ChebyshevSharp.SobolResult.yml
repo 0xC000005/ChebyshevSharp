@@ -17,8 +17,12 @@ items:
   fullName: ChebyshevSharp.SobolResult
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/SobolResult.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SobolResult
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    path: ../src/ChebyshevSharp/SobolResult.cs
     startLine: 14
   assemblies:
   - ChebyshevSharp
@@ -56,8 +60,12 @@ items:
   fullName: ChebyshevSharp.SobolResult.SobolResult(double[], double[], double)
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/SobolResult.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    path: ../src/ChebyshevSharp/SobolResult.cs
     startLine: 14
   assemblies:
   - ChebyshevSharp
@@ -103,8 +111,12 @@ items:
   fullName: ChebyshevSharp.SobolResult.FirstOrder
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/SobolResult.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: FirstOrder
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    path: ../src/ChebyshevSharp/SobolResult.cs
     startLine: 14
   assemblies:
   - ChebyshevSharp
@@ -130,8 +142,12 @@ items:
   fullName: ChebyshevSharp.SobolResult.TotalOrder
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/SobolResult.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TotalOrder
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    path: ../src/ChebyshevSharp/SobolResult.cs
     startLine: 14
   assemblies:
   - ChebyshevSharp
@@ -157,8 +173,12 @@ items:
   fullName: ChebyshevSharp.SobolResult.Variance
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/SobolResult.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Variance
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/SobolResult.cs
+    path: ../src/ChebyshevSharp/SobolResult.cs
     startLine: 14
   assemblies:
   - ChebyshevSharp

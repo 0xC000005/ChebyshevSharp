@@ -70,8 +70,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ChebyshevSpline
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 19
   assemblies:
   - ChebyshevSharp
@@ -117,8 +121,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Function
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Function
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 22
   assemblies:
   - ChebyshevSharp
@@ -144,8 +152,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.NumDimensions
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumDimensions
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 25
   assemblies:
   - ChebyshevSharp
@@ -171,8 +183,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Domain
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Domain
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 28
   assemblies:
   - ChebyshevSharp
@@ -198,8 +214,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.NNodes
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NNodes
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 31
   assemblies:
   - ChebyshevSharp
@@ -225,8 +245,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.MaxDerivativeOrder
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: MaxDerivativeOrder
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 34
   assemblies:
   - ChebyshevSharp
@@ -252,8 +276,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Knots
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Knots
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 37
   assemblies:
   - ChebyshevSharp
@@ -279,8 +307,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Built
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Built
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 49
   assemblies:
   - ChebyshevSharp
@@ -306,8 +338,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.BuildTime
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: BuildTime
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 52
   assemblies:
   - ChebyshevSharp
@@ -333,8 +369,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ErrorThreshold
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorThreshold
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 55
   assemblies:
   - ChebyshevSharp
@@ -360,8 +400,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.MaxN
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: MaxN
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 58
   assemblies:
   - ChebyshevSharp
@@ -387,8 +431,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int[], double[][], int, object?, bool, int?, System.IProgress<int>?)
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 90
   assemblies:
   - ChebyshevSharp
@@ -446,8 +494,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int?[]?, double[][]?, double?, int, int, object?, bool, int?, System.IProgress<int>?)
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 149
   assemblies:
   - ChebyshevSharp
@@ -511,8 +563,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ChebyshevSpline(System.Func<double[], object?, double>, int, double[][], int[][], double[][], int, object?, bool, int?, System.IProgress<int>?)
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 232
   assemblies:
   - ChebyshevSharp
@@ -570,8 +626,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetErrorThreshold()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetErrorThreshold
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 289
   assemblies:
   - ChebyshevSharp
@@ -596,8 +656,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Build(bool)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Build
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 361
   assemblies:
   - ChebyshevSharp
@@ -627,8 +691,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Eval(double[], int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 540
   assemblies:
   - ChebyshevSharp
@@ -664,8 +732,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.EvalMulti(double[], int[][])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalMulti
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 555
   assemblies:
   - ChebyshevSharp
@@ -701,8 +773,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.EvalBatch(double[][], int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: EvalBatch
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 571
   assemblies:
   - ChebyshevSharp
@@ -738,8 +814,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ErrorEstimate()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorEstimate
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 620
   assemblies:
   - ChebyshevSharp
@@ -767,8 +847,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.NumPieces
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumPieces
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 641
   assemblies:
   - ChebyshevSharp
@@ -794,8 +878,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.TotalBuildEvals
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TotalBuildEvals
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 653
   assemblies:
   - ChebyshevSharp
@@ -821,8 +909,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.WithSpecialPoints(System.Func<double[], object?, double>, int, double[][], double[][], int[][]?, int[]?, double?, int, int)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: WithSpecialPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 702
   assemblies:
   - ChebyshevSharp
@@ -902,8 +994,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Save(string, string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Save
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 760
   assemblies:
   - ChebyshevSharp
@@ -936,8 +1032,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.PeekFormatVersion(string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: PeekFormatVersion
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 848
   assemblies:
   - ChebyshevSharp
@@ -982,8 +1082,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Load(string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Load
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 857
   assemblies:
   - ChebyshevSharp
@@ -1019,8 +1123,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Nodes(int, double[][], int[], double[][])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Nodes
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 972
   assemblies:
   - ChebyshevSharp
@@ -1062,8 +1170,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.FromValues(double[][], int, double[][], int[], double[][], int)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: FromValues
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1032
   assemblies:
   - ChebyshevSharp
@@ -1111,8 +1223,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Extrude
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1143
   assemblies:
   - ChebyshevSharp
@@ -1145,8 +1261,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Slice(params (int dimIndex, double value)[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Slice
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1197
   assemblies:
   - ChebyshevSharp
@@ -1179,8 +1299,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Integrate(int[]?, (double lo, double hi)[]?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Integrate
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1322
   assemblies:
   - ChebyshevSharp
@@ -1216,8 +1340,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Roots(int?, System.Collections.Generic.Dictionary<int, double>?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Roots
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1573
   assemblies:
   - ChebyshevSharp
@@ -1253,8 +1381,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Minimize(int?, System.Collections.Generic.Dictionary<int, double>?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Minimize
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1618
   assemblies:
   - ChebyshevSharp
@@ -1290,8 +1422,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Maximize(int?, System.Collections.Generic.Dictionary<int, double>?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Maximize
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1651
   assemblies:
   - ChebyshevSharp
@@ -1327,8 +1463,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.operator +(ChebyshevSharp.ChebyshevSpline, ChebyshevSharp.ChebyshevSpline)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Addition
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1713
   assemblies:
   - ChebyshevSharp
@@ -1361,8 +1501,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.operator -(ChebyshevSharp.ChebyshevSpline, ChebyshevSharp.ChebyshevSpline)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Subtraction
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1728
   assemblies:
   - ChebyshevSharp
@@ -1395,8 +1539,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.operator *(ChebyshevSharp.ChebyshevSpline, double)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1743
   assemblies:
   - ChebyshevSharp
@@ -1429,8 +1577,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.operator *(double, ChebyshevSharp.ChebyshevSpline)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1757
   assemblies:
   - ChebyshevSharp
@@ -1463,8 +1615,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.operator /(ChebyshevSharp.ChebyshevSpline, double)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Division
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1763
   assemblies:
   - ChebyshevSharp
@@ -1497,8 +1653,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.operator -(ChebyshevSharp.ChebyshevSpline)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_UnaryNegation
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1769
   assemblies:
   - ChebyshevSharp
@@ -1529,8 +1689,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ToReprString()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToReprString
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1779
   assemblies:
   - ChebyshevSharp
@@ -1555,8 +1719,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.ToString()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToString
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1789
   assemblies:
   - ChebyshevSharp
@@ -1583,8 +1751,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.SetDescriptor(string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SetDescriptor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1897
   assemblies:
   - ChebyshevSharp
@@ -1613,8 +1785,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetDescriptor()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetDescriptor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1900
   assemblies:
   - ChebyshevSharp
@@ -1639,8 +1815,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.IsConstructionFinished()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: IsConstructionFinished
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1903
   assemblies:
   - ChebyshevSharp
@@ -1665,8 +1845,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetConstructorType()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetConstructorType
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1906
   assemblies:
   - ChebyshevSharp
@@ -1691,8 +1875,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetUsedNs()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetUsedNs
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1909
   assemblies:
   - ChebyshevSharp
@@ -1717,8 +1905,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetMaxDerivativeOrder()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetMaxDerivativeOrder
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1912
   assemblies:
   - ChebyshevSharp
@@ -1743,8 +1935,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetAdditionalData()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetAdditionalData
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1919
   assemblies:
   - ChebyshevSharp
@@ -1774,8 +1970,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetNumEvaluationPoints()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetNumEvaluationPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1925
   assemblies:
   - ChebyshevSharp
@@ -1801,8 +2001,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetEvaluationPoints()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetEvaluationPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1941
   assemblies:
   - ChebyshevSharp
@@ -1831,8 +2035,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetSpecialPoints()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetSpecialPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1969
   assemblies:
   - ChebyshevSharp
@@ -1858,8 +2066,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.SobolIndices()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SobolIndices
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 1987
   assemblies:
   - ChebyshevSharp
@@ -1898,8 +2110,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.SetOriginalFunctionValues(double[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SetOriginalFunctionValues
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2035
   assemblies:
   - ChebyshevSharp
@@ -1940,8 +2156,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.GetDerivativeId(int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetDerivativeId
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2111
   assemblies:
   - ChebyshevSharp
@@ -1979,8 +2199,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Eval(double[], int)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2127
   assemblies:
   - ChebyshevSharp
@@ -2020,8 +2244,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.Clone()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Clone
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2149
   assemblies:
   - ChebyshevSharp
@@ -2052,8 +2280,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevSpline.AutoKnots(System.Func<double[], object?, double>, int, double[][], int[], int, object?, string?, double, int, int, int?, System.IProgress<int>?, bool)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevSpline.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: AutoKnots
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevSpline.cs
+    path: ../src/ChebyshevSharp/ChebyshevSpline.cs
     startLine: 2209
   assemblies:
   - ChebyshevSharp

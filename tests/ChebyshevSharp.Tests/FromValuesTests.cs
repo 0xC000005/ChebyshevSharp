@@ -67,8 +67,10 @@ public class TestNodesApprox
             new[] { new[] { -1.0, 1.0 } },
             new[] { 4 });
 
-        double interpretedAsTypeI = cheb.VectorizedEval(new[] { 0.0 }, new[] { 0 });
-        Assert.True(Math.Abs(interpretedAsTypeI) > 1e-2,
+        double x = 0.5;
+        double interpretedAsTypeI = cheb.VectorizedEval(new[] { x }, new[] { 0 });
+        double expected = x * x;
+        Assert.True(Math.Abs(interpretedAsTypeI - expected) > 0.1,
             $"Lobatto-sampled x^2 values should not be treated as Type-I samples; got {interpretedAsTypeI}");
     }
 

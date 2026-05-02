@@ -74,8 +74,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation
   type: Class
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ChebyshevApproximation
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 11
   assemblies:
   - ChebyshevSharp
@@ -109,8 +113,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Function
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Function
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 14
   assemblies:
   - ChebyshevSharp
@@ -136,8 +144,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.NumDimensions
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NumDimensions
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 17
   assemblies:
   - ChebyshevSharp
@@ -163,8 +175,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Domain
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Domain
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 20
   assemblies:
   - ChebyshevSharp
@@ -190,8 +206,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.NNodes
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NNodes
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 23
   assemblies:
   - ChebyshevSharp
@@ -217,8 +237,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.MaxDerivativeOrder
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: MaxDerivativeOrder
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 26
   assemblies:
   - ChebyshevSharp
@@ -244,8 +268,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.NodeArrays
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NodeArrays
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 29
   assemblies:
   - ChebyshevSharp
@@ -271,8 +299,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.TensorValues
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: TensorValues
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 32
   assemblies:
   - ChebyshevSharp
@@ -298,8 +330,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Weights
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Weights
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 35
   assemblies:
   - ChebyshevSharp
@@ -325,8 +361,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.DiffMatrices
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: DiffMatrices
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 38
   assemblies:
   - ChebyshevSharp
@@ -352,8 +392,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.BuildTime
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: BuildTime
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 44
   assemblies:
   - ChebyshevSharp
@@ -379,8 +423,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.NEvaluations
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: NEvaluations
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 47
   assemblies:
   - ChebyshevSharp
@@ -406,8 +454,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ErrorThreshold
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorThreshold
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 50
   assemblies:
   - ChebyshevSharp
@@ -433,8 +485,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.MaxN
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: MaxN
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 53
   assemblies:
   - ChebyshevSharp
@@ -460,8 +516,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.BuildWarning
   type: Property
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: BuildWarning
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 56
   assemblies:
   - ChebyshevSharp
@@ -487,8 +547,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevApproximation(System.Func<double[], object?, double>, int, double[][], int[], int, object?, bool, int?, System.IProgress<int>?)
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 96
   assemblies:
   - ChebyshevSharp
@@ -550,8 +614,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevApproximation(System.Func<double[], object?, double>, int, double[][], int?[]?, double?, int, int, object?, int?, System.IProgress<int>?)
   type: Constructor
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: .ctor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 153
   assemblies:
   - ChebyshevSharp
@@ -616,8 +684,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Build(bool)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Build
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 220
   assemblies:
   - ChebyshevSharp
@@ -652,8 +724,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Eval(double[], int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 306
   assemblies:
   - ChebyshevSharp
@@ -692,8 +768,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Eval(double[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 378
   assemblies:
   - ChebyshevSharp
@@ -729,8 +809,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEval(double[], int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: VectorizedEval
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 393
   assemblies:
   - ChebyshevSharp
@@ -769,8 +853,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalBatch(double[][], int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: VectorizedEvalBatch
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 471
   assemblies:
   - ChebyshevSharp
@@ -811,8 +899,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.VectorizedEvalMulti(double[], int[][])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: VectorizedEvalMulti
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 568
   assemblies:
   - ChebyshevSharp
@@ -848,8 +940,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ErrorEstimatePerDim()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorEstimatePerDim
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 667
   assemblies:
   - ChebyshevSharp
@@ -880,8 +976,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ErrorEstimate()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ErrorEstimate
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 700
   assemblies:
   - ChebyshevSharp
@@ -910,8 +1010,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetErrorThreshold()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetErrorThreshold
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 710
   assemblies:
   - ChebyshevSharp
@@ -936,8 +1040,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetOptimalN1(System.Func<double[], object?, double>, (double lo, double hi), double, int)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetOptimalN1
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 722
   assemblies:
   - ChebyshevSharp
@@ -984,8 +1092,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ChebyshevCoefficients1D(double[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ChebyshevCoefficients1D
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 739
   assemblies:
   - ChebyshevSharp
@@ -1019,8 +1131,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Save(string, string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Save
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 754
   assemblies:
   - ChebyshevSharp
@@ -1053,8 +1169,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.PeekFormatVersion(string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: PeekFormatVersion
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 822
   assemblies:
   - ChebyshevSharp
@@ -1099,8 +1219,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Load(string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Load
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 831
   assemblies:
   - ChebyshevSharp
@@ -1136,8 +1260,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Nodes(int, double[][], int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Nodes
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 926
   assemblies:
   - ChebyshevSharp
@@ -1176,8 +1304,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.FromValues(double[], int, double[][], int[], int)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: FromValues
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 970
   assemblies:
   - ChebyshevSharp
@@ -1216,8 +1348,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Extrude(params (int dimIndex, double[] bounds, int nNodes)[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Extrude
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1074
   assemblies:
   - ChebyshevSharp
@@ -1248,8 +1384,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Slice(params (int dimIndex, double value)[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Slice
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1130
   assemblies:
   - ChebyshevSharp
@@ -1280,8 +1420,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Integrate(int[]?, (double lo, double hi)[]?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Integrate
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1201
   assemblies:
   - ChebyshevSharp
@@ -1317,8 +1461,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Roots(int?, System.Collections.Generic.Dictionary<int, double>?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Roots
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1293
   assemblies:
   - ChebyshevSharp
@@ -1351,8 +1499,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Minimize(int?, System.Collections.Generic.Dictionary<int, double>?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Minimize
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1307
   assemblies:
   - ChebyshevSharp
@@ -1385,8 +1537,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Maximize(int?, System.Collections.Generic.Dictionary<int, double>?)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Maximize
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1323
   assemblies:
   - ChebyshevSharp
@@ -1419,8 +1575,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.operator +(ChebyshevSharp.ChebyshevApproximation, ChebyshevSharp.ChebyshevApproximation)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Addition
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1341
   assemblies:
   - ChebyshevSharp
@@ -1453,8 +1613,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.operator -(ChebyshevSharp.ChebyshevApproximation, ChebyshevSharp.ChebyshevApproximation)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Subtraction
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1353
   assemblies:
   - ChebyshevSharp
@@ -1487,8 +1651,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.operator *(ChebyshevSharp.ChebyshevApproximation, double)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1365
   assemblies:
   - ChebyshevSharp
@@ -1521,8 +1689,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.operator *(double, ChebyshevSharp.ChebyshevApproximation)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Multiply
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1374
   assemblies:
   - ChebyshevSharp
@@ -1555,8 +1727,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.operator /(ChebyshevSharp.ChebyshevApproximation, double)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_Division
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1380
   assemblies:
   - ChebyshevSharp
@@ -1589,8 +1765,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.operator -(ChebyshevSharp.ChebyshevApproximation)
   type: Operator
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: op_UnaryNegation
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1386
   assemblies:
   - ChebyshevSharp
@@ -1621,8 +1801,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ToString()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToString
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1396
   assemblies:
   - ChebyshevSharp
@@ -1649,8 +1833,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.ToReprString()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: ToReprString
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1433
   assemblies:
   - ChebyshevSharp
@@ -1675,8 +1863,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.SetDescriptor(string)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SetDescriptor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1541
   assemblies:
   - ChebyshevSharp
@@ -1705,8 +1897,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetDescriptor()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetDescriptor
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1544
   assemblies:
   - ChebyshevSharp
@@ -1731,8 +1927,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.IsConstructionFinished()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: IsConstructionFinished
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1547
   assemblies:
   - ChebyshevSharp
@@ -1757,8 +1957,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetConstructorType()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetConstructorType
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1550
   assemblies:
   - ChebyshevSharp
@@ -1783,8 +1987,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetUsedNs()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetUsedNs
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1553
   assemblies:
   - ChebyshevSharp
@@ -1809,8 +2017,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetMaxDerivativeOrder()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetMaxDerivativeOrder
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1556
   assemblies:
   - ChebyshevSharp
@@ -1835,8 +2047,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetAdditionalData()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetAdditionalData
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1563
   assemblies:
   - ChebyshevSharp
@@ -1866,8 +2082,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetNumEvaluationPoints()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetNumEvaluationPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1572
   assemblies:
   - ChebyshevSharp
@@ -1893,8 +2113,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetEvaluationPoints()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetEvaluationPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1585
   assemblies:
   - ChebyshevSharp
@@ -1923,8 +2147,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetSpecialPoints()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetSpecialPoints
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1620
   assemblies:
   - ChebyshevSharp
@@ -1950,8 +2178,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.SetOriginalFunctionValues(double[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SetOriginalFunctionValues
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1629
   assemblies:
   - ChebyshevSharp
@@ -1990,8 +2222,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.GetDerivativeId(int[])
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: GetDerivativeId
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1672
   assemblies:
   - ChebyshevSharp
@@ -2029,8 +2265,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Eval(double[], int)
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Eval
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1688
   assemblies:
   - ChebyshevSharp
@@ -2070,8 +2310,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.Clone()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: Clone
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1711
   assemblies:
   - ChebyshevSharp
@@ -2104,8 +2348,12 @@ items:
   fullName: ChebyshevSharp.ChebyshevApproximation.SobolIndices()
   type: Method
   source:
+    remote:
+      path: src/ChebyshevSharp/ChebyshevApproximation.cs
+      branch: main
+      repo: https://github.com/0xC000005/ChebyshevSharp.git
     id: SobolIndices
-    path: /home/max/Documents/ChebyshevSharp/.worktrees/release-v0.12.0/src/ChebyshevSharp/ChebyshevApproximation.cs
+    path: ../src/ChebyshevSharp/ChebyshevApproximation.cs
     startLine: 1754
   assemblies:
   - ChebyshevSharp

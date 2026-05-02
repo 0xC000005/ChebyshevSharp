@@ -222,4 +222,26 @@ public class TtSobolIndicesTests
         Assert.True(result.FirstOrder[0] > 0.95,
             $"FirstOrder[0]={result.FirstOrder[0]} should be near 1.0 for f = 1 + 1e-12*x");
     }
+
+    [Fact]
+    public void Test_cross_large_constant_plus_resolvable_small_signal_recovers_dim()
+    {
+        // Keep coverage on the TT-Cross build path with a signal large enough for
+        // deterministic cross sampling, while the SVD test above covers the 1e-12 case.
+        var tt = new ChebyshevTT((p) => 1.0 + 1e-6 * p[0], 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            maxRank: 4,
+            tolerance: 1e-12);
+        tt.Build(verbose: false, method: "cross", seed: 42);
+
+        var result = tt.SobolIndices();
+
+        Assert.True(result.Variance > 1e-14,
+            $"Variance={result.Variance} should be positive for cross-resolvable small signal");
+        Assert.True(result.FirstOrder[0] > 0.95,
+            $"FirstOrder[0]={result.FirstOrder[0]} should be near 1.0 for f = 1 + 1e-6*x");
+        Assert.True(result.TotalOrder[1] < 1e-5,
+            $"TotalOrder[1]={result.TotalOrder[1]} should remain at numerical noise level");
+    }
 }

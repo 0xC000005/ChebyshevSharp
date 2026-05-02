@@ -26,7 +26,6 @@ internal static class Sensitivity
     {
         if (variance <= 0.0) return true;
         double scale = Math.Abs(totalWeightedSquared);
-        if (scale == 0.0) return false;
         return variance <= scale * RelativeVarianceNoiseFloor;
     }
 
