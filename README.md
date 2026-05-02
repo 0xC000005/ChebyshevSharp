@@ -13,6 +13,15 @@ Multi-dimensional Chebyshev tensor interpolation with analytical derivatives for
 
 ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyChebyshev), providing fast polynomial evaluation of smooth multi-dimensional functions via barycentric interpolation with pre-computed weights. On low-dimensional problems (1-3D), C# is **17-42x faster** than the Python reference; see [Performance](https://0xc000005.github.io/ChebyshevSharp/docs/performance.html).
 
+## Project Links
+
+- [Documentation](https://0xc000005.github.io/ChebyshevSharp/)
+- [API Reference](https://0xc000005.github.io/ChebyshevSharp/api/ChebyshevSharp.html)
+- [NuGet Package](https://www.nuget.org/packages/ChebyshevSharp)
+- [Changelog](docs/docs/changelog.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+
 ## Features
 
 | Feature | Description |
@@ -141,8 +150,20 @@ Full documentation is available at **[0xc000005.github.io/ChebyshevSharp](https:
 - [Serialization](https://0xc000005.github.io/ChebyshevSharp/docs/serialization.html)
 - [Performance](https://0xc000005.github.io/ChebyshevSharp/docs/performance.html)
 - [Testing & Validation](https://0xc000005.github.io/ChebyshevSharp/docs/testing-and-validation.html)
+- [Support & Reporting](https://0xc000005.github.io/ChebyshevSharp/docs/support.html)
 - [Citations](https://0xc000005.github.io/ChebyshevSharp/docs/citations.html)
 - [API Reference](https://0xc000005.github.io/ChebyshevSharp/api/ChebyshevSharp.html)
+
+## Support and Reporting
+
+- Questions and usage problems: start a GitHub Discussion with a small runnable
+  example.
+- Bugs: use the bug report template and include OS, .NET SDK version,
+  ChebyshevSharp version, expected behavior, and actual behavior.
+- Numerical accuracy concerns: use the numerical accuracy template and include
+  the function, domain, node counts, construction method, tolerance, and a
+  reference value or independent check.
+- Security issues: do not open a public issue; follow [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
@@ -150,6 +171,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, required
 checks, Codecov policy, Stryker.NET mutation-testing expectations, and PR
 checklist. For a shorter site version, see
 [Contributing](https://0xc000005.github.io/ChebyshevSharp/docs/contributing.html).
+
+This project follows [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Keep issue and PR
+discussions focused, reproducible, and respectful.
 
 ## License
 

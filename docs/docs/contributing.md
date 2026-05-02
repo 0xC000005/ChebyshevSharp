@@ -15,6 +15,21 @@ behavior explicit, tested, and documented.
   truncation.
 - Keep PRs focused; split unrelated docs, performance, and API changes.
 
+## Issues
+
+Search existing issues, pull requests, and discussions before opening a new one.
+Usage questions belong in GitHub Discussions. Bug reports should include a
+minimal runnable example, ChebyshevSharp version, .NET SDK version, OS, expected
+behavior, and actual behavior.
+
+Numerical accuracy reports should include the function, domain, node counts,
+construction method, tolerance, and an independent reference value. State whether
+the behavior matches or differs from PyChebyshev when that comparison is
+available.
+
+Security issues should follow the repository `SECURITY.md` file, not public
+issues.
+
 ## Required Checks
 
 Run these before opening a PR:
@@ -52,5 +67,9 @@ unreachable, or intentionally deferred.
 Link the relevant issue, summarize the behavior change, list validation commands,
 and update docs/changelog for public behavior. Include benchmark evidence for
 performance claims.
+
+Keep pull requests focused. For numerical changes, describe the algorithmic
+risk, the reference implementation or paper used, and the regression tests that
+cover the change. Docs-only changes normally do not require a version bump.
 
 The repository root `CONTRIBUTING.md` contains the full contributor guide.

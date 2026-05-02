@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible ChebyshevSharp bug.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please include the smallest runnable example that reproduces the issue.
+  - type: input
+    id: version
+    attributes:
+      label: ChebyshevSharp version
+      placeholder: "0.12.0"
+    validations:
+      required: true
+  - type: input
+    id: dotnet
+    attributes:
+      label: .NET SDK/runtime version
+      placeholder: "dotnet --info"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and architecture
+      placeholder: "Ubuntu 24.04 x64, Windows 11 x64, macOS arm64"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include code, domain, node counts, build method, and any input data needed.
+      render: csharp
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include exception text and stack trace if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Workarounds, regression range, related issues, or comparison with PyChebyshev.

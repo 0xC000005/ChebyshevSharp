@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest a ChebyshevSharp feature or API improvement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do that ChebyshevSharp does not support well?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API, behavior, or documentation you want.
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Documentation or examples
+        - Existing API improvement
+        - New public API
+        - Performance
+        - PyChebyshev parity
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References or prior art
+      description: Link PyChebyshev, NumPy, MoCaX, papers, examples, or related libraries when relevant.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or why existing classes are not enough.
