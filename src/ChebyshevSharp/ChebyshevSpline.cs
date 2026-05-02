@@ -120,8 +120,10 @@ public class ChebyshevSpline
         Shape = Intervals.Select(iv => iv.Length).ToArray();
 
         // Allocate flat piece storage
-        int totalPieces = 1;
-        foreach (int s in Shape) totalPieces *= s;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(Shape, "spline pieces"),
+            "ChebyshevSpline constructor",
+            Shape);
         Pieces = new ChebyshevApproximation?[totalPieces];
 
         Built = false;
@@ -203,8 +205,10 @@ public class ChebyshevSpline
         Intervals = ComputeIntervals(numDimensions, domain, knots);
         Shape = Intervals.Select(iv => iv.Length).ToArray();
 
-        int totalPieces = 1;
-        foreach (int s in Shape) totalPieces *= s;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(Shape, nameof(ChebyshevSpline)),
+            nameof(ChebyshevSpline),
+            Shape);
         Pieces = new ChebyshevApproximation?[totalPieces];
 
         Built = false;
@@ -271,8 +275,10 @@ public class ChebyshevSpline
         // full per-piece data lives in NestedNNodes.
         NNodes = nNodesNested.Select(row => row[0]).ToArray();
 
-        int totalPieces = 1;
-        foreach (int s in Shape) totalPieces *= s;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(Shape, nameof(ChebyshevSpline)),
+            nameof(ChebyshevSpline),
+            Shape);
         Pieces = new ChebyshevApproximation?[totalPieces];
 
         Built = false;
@@ -364,14 +370,14 @@ public class ChebyshevSpline
         _cachedErrorEstimate = null;
 
         int totalPieces = NumPieces;
-        int perPieceEvals = 1;
-        for (int d = 0; d < NumDimensions; d++)
-            perPieceEvals *= NNodes[d];
+        string totalEvalsText = NNodes.Any(n => n <= 0)
+            ? "adaptive"
+            : $"{TotalBuildEvals:N0}";
 
         if (verbose)
             Console.WriteLine(
                 $"Building {NumDimensions}D Chebyshev Spline " +
-                $"({totalPieces} pieces, {totalPieces * perPieceEvals:N0} total evaluations)...");
+                $"({totalPieces} pieces, {totalEvalsText} total evaluations)...");
 
         int flatIdx = 0;
         int progressOffset = 0;
@@ -402,7 +408,10 @@ public class ChebyshevSpline
                     maxDerivativeOrder: MaxDerivativeOrder,
                     additionalData: _additionalData,
                     nWorkers: _nWorkers, progress: pieceProgress);
-                progressOffset += pieceN.Aggregate(1, (acc, n) => acc * n);
+                progressOffset = checked(progressOffset + TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(pieceN, nameof(Build)),
+                    nameof(Build),
+                    pieceN));
             }
             else if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
             {
@@ -427,12 +436,18 @@ public class ChebyshevSpline
                     maxDerivativeOrder: MaxDerivativeOrder,
                     additionalData: _additionalData,
                     nWorkers: _nWorkers, progress: pieceProgress);
-                progressOffset += NNodes.Aggregate(1, (acc, n) => acc * n);
+                progressOffset = checked(progressOffset + TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(NNodes, nameof(Build)),
+                    nameof(Build),
+                    NNodes));
             }
             piece.Build(verbose: false);
             // For auto-N path, update offset after Build (N is now known)
             if (OriginalNNodes.Length > 0 && (OriginalNNodes.Any(n => n == null) || ErrorThreshold != null))
-                progressOffset += piece.NNodes.Aggregate(1, (acc, n) => acc * n);
+                progressOffset = checked(progressOffset + TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(piece.NNodes, nameof(Build)),
+                    nameof(Build),
+                    piece.NNodes));
             Pieces[flatIdx] = piece;
 
             if (verbose)
@@ -628,9 +643,10 @@ public class ChebyshevSpline
     {
         get
         {
-            int total = 1;
-            foreach (int s in Shape) total *= s;
-            return total;
+            return TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(Shape, nameof(NumPieces)),
+                nameof(NumPieces),
+                Shape);
         }
     }
 
@@ -639,10 +655,18 @@ public class ChebyshevSpline
     {
         get
         {
-            int perPiece = 1;
-            for (int d = 0; d < NumDimensions; d++)
-                perPiece *= NNodes[d];
-            return NumPieces * perPiece;
+            if (NNodes.Any(n => n <= 0))
+            {
+                if (Pieces == null || Pieces.All(p => p == null)) return 0;
+                long sum = 0;
+                foreach (var piece in Pieces)
+                    if (piece != null) sum = checked(sum + piece.GetNumEvaluationPoints());
+                return TensorShape.RequireArrayLength(sum, nameof(TotalBuildEvals));
+            }
+
+            long perPiece = TensorShape.CheckedProduct(NNodes, nameof(TotalBuildEvals));
+            long total = checked(NumPieces * perPiece);
+            return TensorShape.RequireArrayLength(total, nameof(TotalBuildEvals));
         }
     }
 
@@ -983,8 +1007,10 @@ public class ChebyshevSpline
             });
         }
 
-        int totalPieces = 1;
-        foreach (int s in shape) totalPieces *= s;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(shape, nameof(FromValues)),
+            nameof(FromValues),
+            shape);
 
         return new SplineNodeInfo
         {
@@ -1024,17 +1050,20 @@ public class ChebyshevSpline
         var intervals = ComputeIntervals(numDimensions, domain, knots);
         int[] shape = intervals.Select(iv => iv.Length).ToArray();
 
-        int totalPieces = 1;
-        foreach (int s in shape) totalPieces *= s;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(shape, nameof(FromValues)),
+            nameof(FromValues),
+            shape);
 
         if (pieceValues.Length != totalPieces)
             throw new ArgumentException(
                 $"Expected {totalPieces} piece_values, got {pieceValues.Length}");
 
         // Validate per-piece shapes
-        int expectedSize = 1;
-        for (int d = 0; d < numDimensions; d++)
-            expectedSize *= nNodes[d];
+        int expectedSize = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(nNodes, nameof(FromValues)),
+            nameof(FromValues),
+            nNodes);
 
         for (int i = 0; i < pieceValues.Length; i++)
         {
@@ -1218,9 +1247,10 @@ public class ChebyshevSpline
             var newShape = currentShape.ToList();
             newShape.RemoveAt(dimIdx);
 
-            int newTotal = 1;
-            foreach (int s in newShape) newTotal *= s;
-            if (newTotal == 0) newTotal = 1;
+            int newTotal = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(newShape, nameof(Slice)),
+                nameof(Slice),
+                newShape);
             var newPieces = new ChebyshevApproximation?[newTotal];
 
             if (newShape.Count > 0)
@@ -1398,9 +1428,10 @@ public class ChebyshevSpline
             var newShape = currentShape.ToList();
             newShape.RemoveAt(d);
 
-            int newTotal = 1;
-            foreach (int s in newShape) newTotal *= s;
-            if (newTotal == 0) newTotal = 1;
+            int newTotal = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(newShape, nameof(Integrate)),
+                nameof(Integrate),
+                newShape);
 
             var newPieces = new ChebyshevApproximation?[newTotal];
 
@@ -1817,8 +1848,10 @@ public class ChebyshevSpline
             yield break;
         }
 
-        int total = 1;
-        foreach (int s in shape) total *= s;
+        int total = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(shape, nameof(NdIndex)),
+            nameof(NdIndex),
+            shape);
 
         for (int flat = 0; flat < total; flat++)
         {
@@ -1839,6 +1872,10 @@ public class ChebyshevSpline
     /// </summary>
     internal static int RavelMultiIndex(int[] multiIdx, int[] shape)
     {
+        _ = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(shape, nameof(RavelMultiIndex)),
+            nameof(RavelMultiIndex),
+            shape);
         int flat = 0;
         int stride = 1;
         for (int d = shape.Length - 1; d >= 0; d--)
@@ -1888,13 +1925,13 @@ public class ChebyshevSpline
     /// <returns>The sum of GetNumEvaluationPoints() from each piece.</returns>
     public int GetNumEvaluationPoints()
     {
-        int total = 0;
+        long total = 0;
         if (Pieces == null) return 0;
         foreach (var piece in Pieces)
         {
-            if (piece != null) total += piece.GetNumEvaluationPoints();
+            if (piece != null) total = checked(total + piece.GetNumEvaluationPoints());
         }
-        return total;
+        return TensorShape.RequireArrayLength(total, nameof(GetNumEvaluationPoints));
     }
 
     /// <summary>
@@ -1907,7 +1944,11 @@ public class ChebyshevSpline
         if (_evaluationPointsCache != null) return _evaluationPointsCache;
 
         int total = GetNumEvaluationPoints();
-        var points = new double[total * NumDimensions];
+        int coordinateCount = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { total, NumDimensions }, nameof(GetEvaluationPoints)),
+            nameof(GetEvaluationPoints),
+            new[] { total, NumDimensions });
+        var points = new double[coordinateCount];
         int offset = 0;
 
         foreach (var piece in Pieces!)
@@ -1994,23 +2035,28 @@ public class ChebyshevSpline
     /// <exception cref="ArgumentException">Thrown when values length does not match the expected total across all pieces.</exception>
     public void SetOriginalFunctionValues(double[] values)
     {
-        int totalPieces = 1;
-        foreach (int s in Shape) totalPieces *= s;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(Shape, nameof(SetOriginalFunctionValues)),
+            nameof(SetOriginalFunctionValues),
+            Shape);
 
         var pieceSizes = new int[totalPieces];
-        int totalExpected = 0;
+        long totalExpected = 0;
         for (int p = 0; p < totalPieces; p++)
         {
-            int n = 1;
             var (_, pieceNNodes) = ComputePieceDomainAndN(p);
-            foreach (int nn in pieceNNodes) n *= nn;
+            int n = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(pieceNNodes, nameof(SetOriginalFunctionValues)),
+                nameof(SetOriginalFunctionValues),
+                pieceNNodes);
             pieceSizes[p] = n;
-            totalExpected += n;
+            totalExpected = checked(totalExpected + n);
         }
+        int requiredValues = TensorShape.RequireArrayLength(totalExpected, nameof(SetOriginalFunctionValues));
 
-        if (values.Length != totalExpected)
+        if (values.Length != requiredValues)
             throw new ArgumentException(
-                $"values has {values.Length} entries, expected {totalExpected} across all pieces");
+                $"values has {values.Length} entries, expected {requiredValues} across all pieces");
 
         Pieces = new ChebyshevApproximation?[totalPieces];
         int offset = 0;

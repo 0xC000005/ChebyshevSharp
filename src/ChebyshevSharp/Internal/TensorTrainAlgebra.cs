@@ -33,7 +33,11 @@ internal static class TensorTrainAlgebra
             int rAr = A.RRight, rBr = B.RRight;
 
             // newM[a, b] = sum_{i, j, p} M[i, j] * A[i, p, a] * B[j, p, b]
-            var newM = new double[rAr * rBr];
+            int newMLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { rAr, rBr }, nameof(InnerProductCores)),
+                nameof(InnerProductCores),
+                new[] { rAr, rBr });
+            var newM = new double[newMLength];
             for (int a = 0; a < rAr; a++)
                 for (int b = 0; b < rBr; b++)
                 {
@@ -196,7 +200,11 @@ internal static class TensorTrainAlgebra
         {
             int rL = result[k].RLeft, n = result[k].NNodes, rR = result[k].RRight;
             // Reshape (rL, n*rR), QR of transpose
-            var Mt = new double[n * rR, rL];
+            int rows = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { n, rR }, nameof(RoundCores)),
+                nameof(RoundCores),
+                new[] { n, rR });
+            var Mt = new double[rows, rL];
             for (int i = 0; i < rL; i++)
                 for (int j = 0; j < n; j++)
                     for (int p = 0; p < rR; p++)
@@ -306,7 +314,11 @@ internal static class TensorTrainAlgebra
 
         // Form joint M[rL, nA, nB, rR] = Σ_rM A · B
         // M is stored row-major: M[l, a, b, r] at index ((l * nA + a) * nB + b) * rR + r
-        var M = new double[rL * nA * nB * rR];
+        int jointLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { rL, nA, nB, rR }, nameof(TtSwapAdjacent)),
+            nameof(TtSwapAdjacent),
+            new[] { rL, nA, nB, rR });
+        var M = new double[jointLength];
         for (int l = 0; l < rL; l++)
             for (int a = 0; a < nA; a++)
                 for (int b = 0; b < nB; b++)
@@ -319,7 +331,11 @@ internal static class TensorTrainAlgebra
                     }
 
         // Transpose middle axes: Mt[l, b, a, r] = M[l, a, b, r]
-        var Mt = new double[rL * nB * nA * rR];
+        int transposedLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { rL, nB, nA, rR }, nameof(TtSwapAdjacent)),
+            nameof(TtSwapAdjacent),
+            new[] { rL, nB, nA, rR });
+        var Mt = new double[transposedLength];
         for (int l = 0; l < rL; l++)
             for (int a = 0; a < nA; a++)
                 for (int b = 0; b < nB; b++)
@@ -328,8 +344,14 @@ internal static class TensorTrainAlgebra
                             M[((l * nA + a) * nB + b) * rR + r];
 
         // Reshape to matrix: rows = (rL × nB), cols = (nA × rR)
-        int rows = rL * nB;
-        int cols = nA * rR;
+        int rows = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { rL, nB }, nameof(TtSwapAdjacent)),
+            nameof(TtSwapAdjacent),
+            new[] { rL, nB });
+        int cols = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { nA, rR }, nameof(TtSwapAdjacent)),
+            nameof(TtSwapAdjacent),
+            new[] { nA, rR });
         var matData = new double[rows, cols];
         for (int row = 0; row < rows; row++)
             for (int col = 0; col < cols; col++)
@@ -356,12 +378,20 @@ internal static class TensorTrainAlgebra
         }
 
         // Repack: A' = U * S, shape (rL, nB, keep); B' = Vh, shape (keep, nA, rR).
-        var aNewData = new double[rL * nB * keep];
+        int aNewLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { rL, nB, keep }, nameof(TtSwapAdjacent)),
+            nameof(TtSwapAdjacent),
+            new[] { rL, nB, keep });
+        var aNewData = new double[aNewLength];
         for (int row = 0; row < rows; row++)
             for (int k = 0; k < keep; k++)
                 aNewData[row * keep + k] = U[row, k] * S[k];
 
-        var bNewData = new double[keep * nA * rR];
+        int bNewLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { keep, nA, rR }, nameof(TtSwapAdjacent)),
+            nameof(TtSwapAdjacent),
+            new[] { keep, nA, rR });
+        var bNewData = new double[bNewLength];
         for (int k = 0; k < keep; k++)
             for (int col = 0; col < cols; col++)
                 bNewData[k * cols + col] = Vh[k, col];

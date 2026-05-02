@@ -181,7 +181,11 @@ internal static class BarycentricKernel
     /// </summary>
     internal static unsafe double[] MatmulLastAxisMatrixFlat(double[] data, int leadSize, int lastDim, double[] rhsFlat, int rhsCols)
     {
-        double[] result = new double[leadSize * rhsCols];
+        int resultLength = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { leadSize, rhsCols }, nameof(MatmulLastAxisMatrixFlat)),
+            nameof(MatmulLastAxisMatrixFlat),
+            new[] { leadSize, rhsCols });
+        double[] result = new double[resultLength];
         fixed (double* pA = data, pB = rhsFlat, pC = result)
         {
             Blas.Dgemm((uint)CBLAS_ORDER.CblasRowMajor, (uint)CBLAS_TRANSPOSE.CblasNoTrans, (uint)CBLAS_TRANSPOSE.CblasNoTrans,
@@ -206,14 +210,18 @@ internal static class BarycentricKernel
         int n_axis = shape[axis];
 
         // Compute trailSize = product of dimensions after axis
-        int trailSize = 1;
-        for (int i = axis + 1; i < ndim; i++)
-            trailSize *= shape[i];
+        int[] trailingShape = shape.Skip(axis + 1).ToArray();
+        int trailSize = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(trailingShape, nameof(MatmulAlongAxis)),
+            nameof(MatmulAlongAxis),
+            trailingShape);
 
         // Compute leadSize = product of dimensions before axis
-        int leadSize = 1;
-        for (int i = 0; i < axis; i++)
-            leadSize *= shape[i];
+        int[] leadingShape = shape.Take(axis).ToArray();
+        int leadSize = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(leadingShape, nameof(MatmulAlongAxis)),
+            nameof(MatmulAlongAxis),
+            leadingShape);
 
         double[] result = new double[data.Length];
 
@@ -253,9 +261,10 @@ internal static class BarycentricKernel
             if (i != axis) newShape[j++] = shape[i];
         }
 
-        int totalNew = 1;
-        for (int i = 0; i < newShape.Length; i++)
-            totalNew *= newShape[i];
+        int totalNew = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(newShape, nameof(TakeAlongAxis)),
+            nameof(TakeAlongAxis),
+            newShape);
 
         double[] result = new double[totalNew];
 
@@ -263,7 +272,13 @@ internal static class BarycentricKernel
         int[] strides = new int[ndim];
         strides[ndim - 1] = 1;
         for (int i = ndim - 2; i >= 0; i--)
-            strides[i] = strides[i + 1] * shape[i + 1];
+        {
+            int[] trailingShape = shape.Skip(i + 1).ToArray();
+            strides[i] = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(trailingShape, nameof(TakeAlongAxis)),
+                nameof(TakeAlongAxis),
+                trailingShape);
+        }
 
         // For each element in the result, compute the corresponding index in the source
         int[] newStrides = new int[newShape.Length];
@@ -271,7 +286,13 @@ internal static class BarycentricKernel
         {
             newStrides[newShape.Length - 1] = 1;
             for (int i = newShape.Length - 2; i >= 0; i--)
-                newStrides[i] = newStrides[i + 1] * newShape[i + 1];
+            {
+                int[] trailingShape = newShape.Skip(i + 1).ToArray();
+                newStrides[i] = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(trailingShape, nameof(TakeAlongAxis)),
+                    nameof(TakeAlongAxis),
+                    trailingShape);
+            }
         }
 
         for (int flatIdx = 0; flatIdx < totalNew; flatIdx++)
@@ -315,9 +336,10 @@ internal static class BarycentricKernel
             if (i != axis) newShape[j++] = shape[i];
         }
 
-        int totalNew = 1;
-        for (int i = 0; i < newShape.Length; i++)
-            totalNew *= newShape[i];
+        int totalNew = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(newShape, nameof(TensordotVector)),
+            nameof(TensordotVector),
+            newShape);
 
         double[] result = new double[totalNew];
 
@@ -325,7 +347,13 @@ internal static class BarycentricKernel
         int[] strides = new int[ndim];
         strides[ndim - 1] = 1;
         for (int i = ndim - 2; i >= 0; i--)
-            strides[i] = strides[i + 1] * shape[i + 1];
+        {
+            int[] trailingShape = shape.Skip(i + 1).ToArray();
+            strides[i] = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(trailingShape, nameof(TensordotVector)),
+                nameof(TensordotVector),
+                trailingShape);
+        }
 
         // Compute strides for the result
         int[] newStrides = new int[newShape.Length];
@@ -333,7 +361,13 @@ internal static class BarycentricKernel
         {
             newStrides[newShape.Length - 1] = 1;
             for (int i = newShape.Length - 2; i >= 0; i--)
-                newStrides[i] = newStrides[i + 1] * newShape[i + 1];
+            {
+                int[] trailingShape = newShape.Skip(i + 1).ToArray();
+                newStrides[i] = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(trailingShape, nameof(TensordotVector)),
+                    nameof(TensordotVector),
+                    trailingShape);
+            }
         }
 
         int axisStride = strides[axis];

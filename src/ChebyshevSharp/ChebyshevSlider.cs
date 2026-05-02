@@ -165,8 +165,7 @@ public class ChebyshevSlider
         PivotValue = Function(PivotPoint, _additionalData);
 
         int totalEvals = TotalBuildEvals;
-        int fullTensor = 1;
-        foreach (int n in NNodes) fullTensor *= n;
+        long fullTensor = TensorShape.CheckedProduct(NNodes, nameof(Build));
 
         if (verbose)
         {
@@ -215,13 +214,18 @@ public class ChebyshevSlider
                 additionalData: _additionalData,
                 nWorkers: _nWorkers, progress: slideProgress);
             slide.Build(verbose: false);
-            progressOffset += slideNNodes.Aggregate(1, (acc, n) => acc * n);
+            progressOffset = checked(progressOffset + TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(slideNNodes, nameof(Build)),
+                nameof(Build),
+                slideNNodes));
             Slides[slideIdx] = slide;
 
             if (verbose)
             {
-                int slideEvals = 1;
-                foreach (int n in slideNNodes) slideEvals *= n;
+                int slideEvals = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(slideNNodes, nameof(Build)),
+                    nameof(Build),
+                    slideNNodes);
                 Console.WriteLine(
                     $"  Slide {slideIdx + 1}/{Partition.Length}: " +
                     $"dims [{string.Join(", ", group)}], {slideEvals:N0} evals");
@@ -627,15 +631,17 @@ public class ChebyshevSlider
     {
         get
         {
-            int total = 0;
+            long total = 0;
             foreach (var group in Partition)
             {
-                int prod = 1;
-                foreach (int d in group)
-                    prod *= NNodes[d];
-                total += prod;
+                int[] slideShape = group.Select(d => NNodes[d]).ToArray();
+                int slideEvals = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(slideShape, nameof(TotalBuildEvals)),
+                    nameof(TotalBuildEvals),
+                    slideShape);
+                total = checked(total + slideEvals);
             }
-            return total;
+            return TensorShape.RequireArrayLength(total, nameof(TotalBuildEvals));
         }
     }
 
@@ -1230,8 +1236,7 @@ public class ChebyshevSlider
     {
         string status = Built ? "built" : "not built";
         int totalSlideEvals = TotalBuildEvals;
-        int fullTensorEvals = 1;
-        foreach (int n in NNodes) fullTensorEvals *= n;
+        long fullTensorEvals = TensorShape.CheckedProduct(NNodes, nameof(ToString));
 
         const int maxDisplay = 6;
 
@@ -1299,9 +1304,9 @@ public class ChebyshevSlider
             for (int i = 0; i < Partition.Length; i++)
             {
                 var group = Partition[i];
-                int slideEvals = 1;
-                foreach (int d in group)
-                    slideEvals *= NNodes[d];
+                int slideEvals = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(group.Select(d => NNodes[d]), nameof(ToString)),
+                    nameof(ToString));
                 lines.Add(
                     $"    [{i}] dims [{string.Join(", ", group)}]: " +
                     $"{slideEvals:N0} evals, " +
@@ -1348,9 +1353,9 @@ public class ChebyshevSlider
     public int GetNumEvaluationPoints()
     {
         if (Slides == null) return 0;
-        int total = 0;
-        foreach (var slide in Slides) total += slide.GetNumEvaluationPoints();
-        return total;
+        long total = 0;
+        foreach (var slide in Slides) total = checked(total + slide.GetNumEvaluationPoints());
+        return TensorShape.RequireArrayLength(total, nameof(GetNumEvaluationPoints));
     }
 
     /// <summary>
@@ -1364,7 +1369,11 @@ public class ChebyshevSlider
         if (_evaluationPointsCache != null) return _evaluationPointsCache;
 
         int total = GetNumEvaluationPoints();
-        var points = new double[total * NumDimensions];
+        int coordinateCount = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { total, NumDimensions }, nameof(GetEvaluationPoints)),
+            nameof(GetEvaluationPoints),
+            new[] { total, NumDimensions });
+        var points = new double[coordinateCount];
         int offset = 0;
 
         for (int slideIdx = 0; slideIdx < Slides!.Length; slideIdx++)

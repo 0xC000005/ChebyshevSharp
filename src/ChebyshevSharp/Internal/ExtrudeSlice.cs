@@ -61,8 +61,10 @@ internal static class ExtrudeSlice
         var newShape = new List<int>(shape);
         newShape.Insert(axis, nNew);
 
-        int newTotal = 1;
-        foreach (int s in newShape) newTotal *= s;
+        int newTotal = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(newShape, nameof(ExtrudeTensor)),
+            nameof(ExtrudeTensor),
+            newShape);
 
         double[] result = new double[newTotal];
 
@@ -142,7 +144,10 @@ internal static class ExtrudeSlice
         if (shape.Length == 0) return strides;
         strides[shape.Length - 1] = 1;
         for (int i = shape.Length - 2; i >= 0; i--)
-            strides[i] = strides[i + 1] * shape[i + 1];
+            strides[i] = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(shape.Skip(i + 1), nameof(ComputeStrides)),
+                nameof(ComputeStrides),
+                shape.Skip(i + 1));
         return strides;
     }
 }

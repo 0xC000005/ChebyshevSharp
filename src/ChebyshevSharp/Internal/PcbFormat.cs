@@ -166,8 +166,10 @@ internal static class PcbFormat
         for (int i = 0; i < d; i++) w.Write(domain[i][1]);
         for (int i = 0; i < d; i++) w.Write((uint)nNodes[i]);
 
-        int total = 1;
-        for (int i = 0; i < d; i++) total *= nNodes[i];
+        int total = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(nNodes, nameof(WriteApproximationBody)),
+            nameof(WriteApproximationBody),
+            nNodes);
         if (tensorValues.Length != total)
             throw new ArgumentException(
                 $"tensorValues.Length={tensorValues.Length} does not match prod(nNodes)={total}");
@@ -257,16 +259,21 @@ internal static class PcbFormat
             for (int j = 0; j < knotsPerDim[i].Length; j++)
                 w.Write(knotsPerDim[i][j]);
 
-        int expectedPieces = 1;
-        for (int i = 0; i < d; i++) expectedPieces *= (knotsPerDim[i].Length + 1);
+        int[] pieceShape = knotsPerDim.Select(k => k.Length + 1).ToArray();
+        int expectedPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(pieceShape, nameof(WriteSplineBody)),
+            nameof(WriteSplineBody),
+            pieceShape);
         if (pieceTensorValues.Length != expectedPieces)
             throw new ArgumentException(
                 $"pieceTensorValues.Length={pieceTensorValues.Length} does not match " +
                 $"prod(num_knots[i]+1)={expectedPieces}");
 
         w.Write((uint)expectedPieces);
-        int perPieceFloats = 1;
-        for (int i = 0; i < d; i++) perPieceFloats *= nNodes[i];
+        int perPieceFloats = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(nNodes, nameof(WriteSplineBody)),
+            nameof(WriteSplineBody),
+            nNodes);
         foreach (var piece in pieceTensorValues)
         {
             if (piece.Length != perPieceFloats)

@@ -30,7 +30,11 @@ internal static class TensorTrainKernel
             RLeft = rLeft;
             NNodes = nNodes;
             RRight = rRight;
-            Data = new double[rLeft * nNodes * rRight];
+            int length = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { rLeft, nNodes, rRight }, nameof(TtCore)),
+                nameof(TtCore),
+                new[] { rLeft, nNodes, rRight });
+            Data = new double[length];
         }
 
         public TtCore(int rLeft, int nNodes, int rRight, double[] data)
@@ -49,7 +53,7 @@ internal static class TensorTrainKernel
         }
 
         /// <summary>Total number of elements.</summary>
-        public int Size => RLeft * NNodes * RRight;
+        public int Size => Data.Length;
 
         /// <summary>Create a deep copy.</summary>
         public TtCore Copy()
@@ -413,9 +417,13 @@ internal static class TensorTrainKernel
                 int rr = right.GetLength(0);
                 int nk = n[k];
                 int cap = rankCaps[k + 1];
+                int leftRows = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(new[] { rl, nk }, nameof(TtCross)),
+                    nameof(TtCross),
+                    new[] { rl, nk });
 
                 // Build cross matrix C of shape (rl * nk, rr)
-                double[,] C = new double[rl * nk, rr];
+                double[,] C = new double[leftRows, rr];
                 int[] idxBuf = new int[d];
                 for (int a = 0; a < rl; a++)
                     for (int i = 0; i < nk; i++)
@@ -441,18 +449,18 @@ internal static class TensorTrainKernel
                         if (S[i] > threshold) effective++;
                 }
                 int rank = Math.Max(1, Math.Min(cap, Math.Min(effective, svd.U.ColumnCount)));
-                var U = new double[rl * nk, rank];
-                for (int ii = 0; ii < rl * nk; ii++)
+                var U = new double[leftRows, rank];
+                for (int ii = 0; ii < leftRows; ii++)
                     for (int jj = 0; jj < rank; jj++)
                         U[ii, jj] = svd.U[ii, jj];
 
                 // Maxvol pivot selection
                 int[] pivots;
-                if (rl * nk > rank)
+                if (leftRows > rank)
                     pivots = Maxvol(U);
                 else
                 {
-                    pivots = new int[rl * nk];
+                    pivots = new int[leftRows];
                     for (int i = 0; i < pivots.Length; i++) pivots[i] = i;
                 }
                 if (pivots.Length > rank)
@@ -571,9 +579,13 @@ internal static class TensorTrainKernel
                 int rr = right.GetLength(0);
                 int nk = n[k];
                 int cap = rankCaps[k];
+                int rightCols = TensorShape.RequireArrayLength(
+                    TensorShape.CheckedProduct(new[] { nk, rr }, nameof(TtCross)),
+                    nameof(TtCross),
+                    new[] { nk, rr });
 
                 // Build cross matrix C of shape (rl, nk * rr)
-                double[,] C = new double[rl, nk * rr];
+                double[,] C = new double[rl, rightCols];
                 int[] idxBuf = new int[d];
                 for (int a = 0; a < rl; a++)
                     for (int i = 0; i < nk; i++)
@@ -586,9 +598,9 @@ internal static class TensorTrainKernel
                         }
 
                 // Transpose: Ct = C^T of shape (nk * rr, rl)
-                double[,] Ct = new double[nk * rr, rl];
+                double[,] Ct = new double[rightCols, rl];
                 for (int ii = 0; ii < rl; ii++)
-                    for (int jj = 0; jj < nk * rr; jj++)
+                    for (int jj = 0; jj < rightCols; jj++)
                         Ct[jj, ii] = C[ii, jj];
 
                 var matCt = DenseMatrix.OfArray(Ct);
@@ -603,17 +615,17 @@ internal static class TensorTrainKernel
                         if (S[i] > threshold) effective++;
                 }
                 int rank = Math.Max(1, Math.Min(cap, Math.Min(effective, svd.U.ColumnCount)));
-                var U = new double[nk * rr, rank];
-                for (int ii = 0; ii < nk * rr; ii++)
+                var U = new double[rightCols, rank];
+                for (int ii = 0; ii < rightCols; ii++)
                     for (int jj = 0; jj < rank; jj++)
                         U[ii, jj] = svd.U[ii, jj];
 
                 int[] pivots;
-                if (nk * rr > rank)
+                if (rightCols > rank)
                     pivots = Maxvol(U);
                 else
                 {
-                    pivots = new int[nk * rr];
+                    pivots = new int[rightCols];
                     for (int i = 0; i < pivots.Length; i++) pivots[i] = i;
                 }
                 if (pivots.Length > rank)
@@ -828,8 +840,11 @@ internal static class TensorTrainKernel
 
         for (int k = 0; k < d - 1; k++)
         {
-            int rows = rPrev * n[k];
-            int cols = remainingSize / (rPrev * n[k]);
+            int rows = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { rPrev, n[k] }, nameof(TtSvd)),
+                nameof(TtSvd),
+                new[] { rPrev, n[k] });
+            int cols = remainingSize / rows;
             // Clamp to avoid degenerate case
             if (cols < 1) cols = 1;
 
@@ -862,7 +877,11 @@ internal static class TensorTrainKernel
             // C = diag(S[:rank]) @ Vt[:rank, :]
             int newRows = rank;
             int newCols = cols;
-            C = new double[newRows * newCols];
+            int newLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { newRows, newCols }, nameof(TtSvd)),
+                nameof(TtSvd),
+                new[] { newRows, newCols });
+            C = new double[newLength];
             for (int i = 0; i < newRows; i++)
             {
                 double si = S[i];
@@ -1029,7 +1048,11 @@ internal static class TensorTrainKernel
     {
         int r0 = coreK.RLeft, n = coreK.NNodes, r1 = coreK.RRight;
         // Unfold (r0, n, r1) → (r0*n, r1) row-major
-        var matrix = new double[r0 * n, r1];
+        int rows = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { r0, n }, nameof(OrthLeftCore)),
+            nameof(OrthLeftCore),
+            new[] { r0, n });
+        var matrix = new double[rows, r1];
         for (int i = 0; i < r0; i++)
             for (int j = 0; j < n; j++)
                 for (int k = 0; k < r1; k++)
@@ -1074,7 +1097,11 @@ internal static class TensorTrainKernel
         int rPrev = coreK.RLeft, n = coreK.NNodes, rNext = coreK.RRight;
         // Unfold core_k as (r_prev, n*r_next), then QR of its transpose gives
         // Qt of shape (n*r_next, k_rank), Rt of shape (k_rank, r_prev).
-        var Mt = new double[n * rNext, rPrev];
+        int rows = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(new[] { n, rNext }, nameof(OrthRightCore)),
+            nameof(OrthRightCore),
+            new[] { n, rNext });
+        var Mt = new double[rows, rPrev];
         for (int i = 0; i < rPrev; i++)
             for (int j = 0; j < n; j++)
                 for (int k = 0; k < rNext; k++)
@@ -1159,8 +1186,15 @@ internal static class TensorTrainKernel
             var c = cores[k];
             int rL = c.RLeft, n = c.NNodes, rR = c.RRight;
             // newAcc[(prevProd * n + j), b] = sum_a acc[prevProd, a] * c[a, j, b]
-            int newProd = prodN * n;
-            var newAcc = new double[newProd * rR];
+            int newProd = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { prodN, n }, nameof(ReconstructDense)),
+                nameof(ReconstructDense),
+                new[] { prodN, n });
+            int newLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(new[] { newProd, rR }, nameof(ReconstructDense)),
+                nameof(ReconstructDense),
+                new[] { newProd, rR });
+            var newAcc = new double[newLength];
             for (int p = 0; p < prodN; p++)
                 for (int j = 0; j < n; j++)
                     for (int b = 0; b < rR; b++)
@@ -1194,9 +1228,10 @@ internal static class TensorTrainKernel
         double[]? precomputedB = null)
     {
         int d = cores.Length;
-        long totalPoints = 1;
-        for (int i = 0; i < d; i++) totalPoints *= nNodes[i];
-        int total = checked((int)totalPoints);
+        int total = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(nNodes, nameof(AlsFixedRankSweep)),
+            nameof(AlsFixedRankSweep),
+            nNodes);
 
         // Use precomputed b if provided; otherwise materialise target values.
         double[] b;
@@ -1233,13 +1268,24 @@ internal static class TensorTrainKernel
                     if (k < d - 1) OrthRightSweep(cores, k);
 
                     int rL = cores[k].RLeft, nK = cores[k].NNodes, rR = cores[k].RRight;
-                    int unknowns = rL * nK * rR;
+                    int unknowns = TensorShape.RequireArrayLength(
+                        TensorShape.CheckedProduct(new[] { rL, nK, rR }, nameof(AlsFixedRankSweep)),
+                        nameof(AlsFixedRankSweep),
+                        new[] { rL, nK, rR });
 
                     // Build A: (total, unknowns).
                     // L_rows[flat, alpha] = product of cores [0..k-1] at idx
                     // R_rows[flat, beta]  = product of cores [k+1..d-1] at idx
-                    double[] Lrows = new double[total * rL];
-                    double[] Rrows = new double[total * rR];
+                    int lRowsLength = TensorShape.RequireArrayLength(
+                        TensorShape.CheckedProduct(new[] { total, rL }, nameof(AlsFixedRankSweep)),
+                        nameof(AlsFixedRankSweep),
+                        new[] { total, rL });
+                    int rRowsLength = TensorShape.RequireArrayLength(
+                        TensorShape.CheckedProduct(new[] { total, rR }, nameof(AlsFixedRankSweep)),
+                        nameof(AlsFixedRankSweep),
+                        new[] { total, rR });
+                    double[] Lrows = new double[lRowsLength];
+                    double[] Rrows = new double[rRowsLength];
                     int[] iks = new int[total];
 
                     for (int flat = 0; flat < total; flat++)
