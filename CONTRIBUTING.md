@@ -13,6 +13,25 @@ easier to review and safer to release.
 - Add examples, XML comments, and docs for user-facing behavior changes.
 - Keep performance work measurable with benchmarks or before/after numbers.
 
+## Before Opening an Issue
+
+Search existing issues, pull requests, and discussions first. If the behavior is
+a usage question, start with the docs pages linked from the README and open a
+GitHub Discussion with the smallest code snippet that shows where you are stuck.
+
+For bug reports, include:
+
+- ChebyshevSharp version and .NET SDK version.
+- Operating system and CPU architecture.
+- A minimal runnable example with domain, node counts, and build method.
+- Expected behavior, actual behavior, and any exception text.
+
+For numerical accuracy reports, also include the reference value, how it was
+computed, and whether the problem reproduces with PyChebyshev or another
+independent implementation.
+
+Security reports should not be filed publicly. Follow `SECURITY.md`.
+
 ## Local Validation
 
 Run the focused tests while iterating, then run the standard suite before opening
@@ -69,6 +88,21 @@ note.
 - Add or update tests that fail before the fix and pass after it.
 - Update docs, examples, and changelog for public API or numerical behavior.
 - Include benchmark results when performance claims are part of the PR.
+
+## Pull Request Scope and Review
+
+Prefer focused pull requests. Split unrelated code, docs, benchmark, and release
+changes unless they must ship together. Large numerical changes should explain
+the affected algorithm, the reference behavior, and the regression tests that
+cover the risk.
+
+When receiving review feedback, respond with either a code change, a clarifying
+question, or a short explanation of why the existing behavior is intentional.
+Keep the thread tied to the technical point under discussion.
+
+Docs-only changes normally do not require a version bump or NuGet release. Bump
+the package version only when installable package contents, public behavior, or
+NuGet-visible metadata must change immediately.
 
 ## Documentation Style
 

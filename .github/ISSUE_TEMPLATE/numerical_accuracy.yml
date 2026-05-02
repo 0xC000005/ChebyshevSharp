@@ -1,0 +1,62 @@
+name: Numerical accuracy report
+description: Report unexpected approximation, derivative, integral, or sensitivity behavior.
+title: "[Accuracy]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Numerical reports need enough detail to reproduce and compare against an independent reference.
+  - type: input
+    id: version
+    attributes:
+      label: ChebyshevSharp version
+      placeholder: "0.12.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: class
+    attributes:
+      label: Affected class
+      options:
+        - ChebyshevApproximation
+        - ChebyshevSpline
+        - ChebyshevSlider
+        - ChebyshevTT
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Function, domain, and construction settings
+      description: Include function definition, domain, node counts, method, rank/tolerance, and seed if applicable.
+      render: csharp
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed numerical result
+      description: Include value, derivative, integral, root, optimization, or Sobol result.
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference result and source
+      description: State how the expected value was computed, including PyChebyshev, NumPy, MoCaX, analytic formula, or high-precision calculation.
+    validations:
+      required: true
+  - type: textarea
+    id: tolerance
+    attributes:
+      label: Error tolerance and scale
+      description: Absolute/relative error, expected scale, and why the discrepancy is too large.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Plots, coefficient decay, seeds, or whether dense and TT paths disagree.

@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and usage help
+    url: https://github.com/0xC000005/ChebyshevSharp/discussions
+    about: Ask usage questions and discuss examples before filing a bug.
+  - name: Documentation
+    url: https://0xc000005.github.io/ChebyshevSharp/
+    about: Read tutorials, how-to guides, concepts, and API reference.
+  - name: Security reports
+    url: https://github.com/0xC000005/ChebyshevSharp/security/policy
+    about: Read the private reporting instructions before disclosing security issues.
