@@ -121,7 +121,7 @@ double[] results = cheb.VectorizedEvalMulti(
 | `ChebyshevTT` | Tensor Train build/eval, finite-difference derivatives, integration, roots, optimization, algebra, slicing/extrusion, reordering, and guarded dense materialization |
 | Validation | xUnit regression suite, deterministic FsCheck properties, Codecov patch gate, package validation, DocFX build, and scheduled/manual mutation testing |
 
-See [skip_csharp.txt](skip_csharp.txt) for detailed feature parity with PyChebyshev.
+See the [changelog](docs/docs/changelog.md) for per-release feature parity with PyChebyshev.
 
 ## Documentation
 
