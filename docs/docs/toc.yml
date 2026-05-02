@@ -1,53 +1,59 @@
-# Core
-- name: Introduction
-  href: introduction.md
-- name: Getting Started
-  href: getting-started.md
-- name: Mathematical Concepts
-  href: concepts.md
+- name: Tutorials
+  items:
+    - name: Introduction
+      href: introduction.md
+    - name: Getting Started
+      href: getting-started.md
+    - name: Which Class Should I Use?
+      href: which-class.md
 
-# Classes
-- name: Piecewise Chebyshev (Splines)
-  href: spline.md
-- name: Sliding Technique
-  href: slider.md
-- name: Tensor Train
-  href: tensor-train.md
+- name: How-To Guides
+  items:
+    - name: Piecewise Chebyshev (Splines)
+      href: spline.md
+    - name: Sliding Technique
+      href: slider.md
+    - name: Tensor Train
+      href: tensor-train.md
+    - name: Computing Greeks
+      href: greeks.md
+    - name: Chebyshev Algebra
+      href: algebra.md
+    - name: Extrusion & Slicing
+      href: extrude-slice.md
+    - name: Pre-computed Values
+      href: from-values.md
+    - name: Error-Driven Construction
+      href: error-driven-construction.md
+    - name: Special Points
+      href: special-points.md
+    - name: Calculus
+      href: calculus.md
+    - name: Serialization & Construction
+      href: serialization.md
+    - name: Parallel Build & Progress
+      href: parallel-build.md
+    - name: Adaptive Refinement
+      href: adaptive-refinement.md
 
-# Operations
-- name: Advanced Usage
-  href: advanced-usage.md
-- name: Computing Greeks
-  href: greeks.md
-- name: Chebyshev Algebra
-  href: algebra.md
-- name: Extrusion & Slicing
-  href: extrude-slice.md
-- name: Pre-computed Values
-  href: from-values.md
-- name: Error-Driven Construction
-  href: error-driven-construction.md
-- name: Special Points
-  href: special-points.md
-- name: Calculus
-  href: calculus.md
-- name: Error Estimation
-  href: error-estimation.md
+- name: Concepts
+  items:
+    - name: Mathematical Concepts
+      href: concepts.md
+    - name: Error Estimation
+      href: error-estimation.md
+    - name: Performance
+      href: performance.md
+    - name: Citations
+      href: citations.md
 
-# Deployment
-- name: Serialization & Construction
-  href: serialization.md
-- name: Portable Binary Format (.pcb)
-  href: binary-format.md
-- name: Ergonomics
-  href: ergonomics.md
-- name: Performance
-  href: performance.md
-- name: Parallel Build & Progress
-  href: parallel-build.md
-- name: Adaptive Refinement
-  href: adaptive-refinement.md
-- name: Testing & Validation
-  href: testing-and-validation.md
-- name: Changelog
-  href: changelog.md
+- name: Reference
+  items:
+    - name: Ergonomics
+      href: ergonomics.md
+    - name: Portable Binary Format (.pcb)
+      href: binary-format.md
+    - name: Testing & Validation
+      href: testing-and-validation.md
+    - name: Changelog
+      href: changelog.md

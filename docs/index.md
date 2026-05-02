@@ -50,6 +50,17 @@ double value = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 0 });
 double dfdx = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 ```
 
+## Where to Go Next
+
+| Need | Start here |
+|------|------------|
+| First working interpolant | [Getting Started](docs/getting-started.md) |
+| Choose between dense, spline, slider, and TT | [Which Class Should I Use?](docs/which-class.md) |
+| Understand convergence and derivatives | [Mathematical Concepts](docs/concepts.md) |
+| Build high-dimensional coupled approximations | [Tensor Train Interpolation](docs/tensor-train.md) |
+| Validate changes locally | [Testing & Validation](docs/testing-and-validation.md) |
+| Check algorithm sources | [Citations](docs/citations.md) |
+
 ## API Reference
 
 See the [API documentation](api/ChebyshevSharp.yml) for full class and method reference, auto-generated from XML documentation comments.

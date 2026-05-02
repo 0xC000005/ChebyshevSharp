@@ -6,6 +6,8 @@ Run the standard validation suite before opening a PR:
 dotnet format --verify-no-changes --verbosity minimal
 dotnet build --verbosity minimal
 dotnet test --verbosity minimal
+dotnet run --project examples/QuickStart/QuickStart.csproj
+dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 ```
 
 Property tests live in `tests/ChebyshevSharp.Tests/PropertyTests.cs` and run with the normal xUnit suite. They use deterministic FsCheck seeds and small grids so failures are reproducible and fast to debug.
