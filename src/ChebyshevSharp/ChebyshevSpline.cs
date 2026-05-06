@@ -542,6 +542,8 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
         CheckKnotBoundary(point, derivativeOrder);
         var (_, piece) = FindPiece(point);
         return piece.VectorizedEval(point, derivativeOrder);
@@ -557,6 +559,8 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         foreach (var dord in derivativeOrders)
             CheckKnotBoundary(point, dord);
         var (_, piece) = FindPiece(point);
@@ -573,6 +577,8 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalBatch().");
+        EvaluationArguments.ValidatePoints(points, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         int N = points.Length;
         double[] results = new double[N];
@@ -2111,6 +2117,7 @@ public class ChebyshevSpline
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;

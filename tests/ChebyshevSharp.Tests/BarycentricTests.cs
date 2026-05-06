@@ -692,7 +692,7 @@ public class TestNullSafety
     public void Test_null_derivative_order_in_eval()
     {
         var cheb = TestFixtures.ChebSin3D;
-        Assert.ThrowsAny<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             cheb.VectorizedEval([0.1, 0.3, 1.7], null!));
     }
 
@@ -703,7 +703,7 @@ public class TestNullSafety
     public void Test_null_point_in_eval()
     {
         var cheb = TestFixtures.ChebSin3D;
-        Assert.ThrowsAny<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             cheb.VectorizedEval(null!, [0, 0, 0]));
     }
 }
@@ -744,17 +744,15 @@ public class TestBoundaryValidation
     }
 
     /// <summary>
-    /// VectorizedEval with negative derivative order silently behaves like
-    /// derivative order 0, because the implementation guards with
-    /// <c>if (deriv &gt; 0)</c>. This test documents that behavior.
+    /// VectorizedEval with negative derivative order should reject the invalid
+    /// public argument instead of treating it like derivative order 0.
     /// </summary>
     [Fact]
-    public void Test_negative_derivative_order_behaves_like_zero()
+    public void Test_negative_derivative_order_throws()
     {
         var cheb = TestFixtures.ChebSin3D;
-        double valueWithNeg = cheb.VectorizedEval([0.1, 0.3, 1.7], [-1, 0, 0]);
-        double valueWithZero = cheb.VectorizedEval([0.1, 0.3, 1.7], [0, 0, 0]);
-        Assert.Equal(valueWithZero, valueWithNeg);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.VectorizedEval([0.1, 0.3, 1.7], [-1, 0, 0]));
     }
 
     /// <summary>

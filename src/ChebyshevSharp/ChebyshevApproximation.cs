@@ -316,6 +316,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Current working data and its shape
         double[] current = TensorValues;
@@ -389,6 +391,7 @@ public class ChebyshevApproximation
         if (TensorValues == null)
             throw new InvalidOperationException(
                 "Cannot evaluate an unbuilt interpolant. Call Build() or SetOriginalFunctionValues() first.");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
         return Eval(point, new int[NumDimensions]);
     }
 
@@ -403,6 +406,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         double[] current = TensorValues;
 
@@ -481,6 +486,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoints(points, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Hoist: apply all derivative-matrix matmuls once — they are point-independent.
         // Process from last dimension to first to match VectorizedEval ordering.
@@ -578,6 +585,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
 
         // Pre-compute dimension info (shared across all derivative orders)
         var dimInfo = new (bool isExact, int exactIdx, double[]? wNorm)[NumDimensions];
@@ -1718,6 +1727,7 @@ public class ChebyshevApproximation
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;
