@@ -107,9 +107,9 @@ public class ChebyshevTT
     /// <param name="numDimensions">Number of input dimensions.</param>
     /// <param name="domain">Bounds [lo, hi] for each dimension.</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
-    /// <param name="maxRank">Maximum TT rank. Default is 10.</param>
-    /// <param name="tolerance">Convergence tolerance for TT-Cross. Default is 1e-6.</param>
-    /// <param name="maxSweeps">Maximum number of TT-Cross sweeps. Default is 10.</param>
+    /// <param name="maxRank">Maximum positive TT rank. Default is 10.</param>
+    /// <param name="tolerance">Finite positive convergence tolerance for TT-Cross/ALS. Default is 1e-6.</param>
+    /// <param name="maxSweeps">Maximum positive number of TT-Cross sweeps. Default is 10.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support. Default is 2.</param>
     /// <param name="additionalData">Optional user data object stored for introspection via <see cref="GetAdditionalData"/>. NOT threaded through build calls (TT function signature has no data arg).</param>
     /// <param name="nWorkers">Accepted for API symmetry with the other classes but
@@ -136,6 +136,9 @@ public class ChebyshevTT
         if (nNodes.Length != numDimensions)
             throw new ArgumentException(
                 $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ValidatePositiveRank(maxRank, nameof(maxRank));
+        ValidatePositiveFiniteTolerance(tolerance, nameof(tolerance));
+        ValidatePositiveInteger(maxSweeps, nameof(maxSweeps));
 
         _function = function;
         _numDimensions = numDimensions;
@@ -289,6 +292,36 @@ public class ChebyshevTT
     {
         if (!_built)
             throw new InvalidOperationException("Call Build() before using this method.");
+    }
+
+    private static void ValidatePositiveRank(int maxRank, string paramName)
+    {
+        if (maxRank <= 0)
+            throw new ArgumentOutOfRangeException(paramName, maxRank, $"{paramName} must be positive.");
+    }
+
+    private static void ValidatePositiveInteger(int value, string paramName)
+    {
+        if (value <= 0)
+            throw new ArgumentOutOfRangeException(paramName, value, $"{paramName} must be positive.");
+    }
+
+    private static void ValidatePositiveFiniteTolerance(double tolerance, string paramName)
+    {
+        if (!double.IsFinite(tolerance) || tolerance <= 0.0)
+            throw new ArgumentOutOfRangeException(
+                paramName,
+                tolerance,
+                $"{paramName} must be finite and positive.");
+    }
+
+    private static void ValidateNonNegativeFiniteTolerance(double tolerance, string paramName)
+    {
+        if (!double.IsFinite(tolerance) || tolerance < 0.0)
+            throw new ArgumentOutOfRangeException(
+                paramName,
+                tolerance,
+                $"{paramName} must be finite and non-negative.");
     }
 
     /// <summary>Returns true if _dimOrder is the identity permutation [0, 1, ..., d-1].</summary>
@@ -1240,6 +1273,8 @@ public class ChebyshevTT
     public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
     {
         CheckBuilt();
+        ValidatePositiveFiniteTolerance(tolerance, nameof(tolerance));
+        ValidatePositiveInteger(maxIter, nameof(maxIter));
         if (_function == null)
             throw new InvalidOperationException(
                 "RunCompletion requires Function to be callable; the TT was loaded from a source without the original function.");
@@ -1315,8 +1350,8 @@ public class ChebyshevTT
     /// <param name="numDimensions">Number of dimensions.</param>
     /// <param name="domain">Bounds [lo, hi] per dimension.</param>
     /// <param name="nNodes">Number of nodes per dimension.</param>
-    /// <param name="maxRank">Maximum TT rank (default 10).</param>
-    /// <param name="tolerance">SVD truncation tolerance (default 1e-6).</param>
+    /// <param name="maxRank">Maximum positive TT rank (default 10).</param>
+    /// <param name="tolerance">Finite non-negative SVD truncation tolerance (default 1e-6).</param>
     /// <exception cref="ArgumentException">If tensorValues length doesn't match Π nNodes, or contains NaN/Infinity.</exception>
     public static ChebyshevTT FromValues(
         double[] tensorValues,
@@ -1332,6 +1367,8 @@ public class ChebyshevTT
         if (nNodes.Length != numDimensions)
             throw new ArgumentException(
                 $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ValidatePositiveRank(maxRank, nameof(maxRank));
+        ValidateNonNegativeFiniteTolerance(tolerance, nameof(tolerance));
         long expected = TensorShape.CheckedProduct(nNodes, nameof(FromValues));
         if (tensorValues.LongLength != expected)
             throw new ArgumentException(
@@ -2119,6 +2156,8 @@ public class ChebyshevTT
         ValidatePermutation(newOrder, _numDimensions);
         int rank = maxRank ?? _maxRank;
         double tol = tolerance ?? _tolerance;
+        ValidatePositiveRank(rank, nameof(maxRank));
+        ValidateNonNegativeFiniteTolerance(tol, nameof(tolerance));
 
         // Short-circuit: reorder to current dim_order is just a clone (matches Python tensor_train.py:2397).
         if (newOrder.SequenceEqual(_dimOrder))
@@ -2242,9 +2281,9 @@ public class ChebyshevTT
     /// <param name="numDimensions">Number of input dimensions.</param>
     /// <param name="domain">Bounds for each dimension in original order.</param>
     /// <param name="numNodes">Node counts per dimension in original order.</param>
-    /// <param name="maxRank">Maximum TT rank passed to each trial. Default 10.</param>
-    /// <param name="tolerance">Convergence tolerance for each trial. Default 1e-6.</param>
-    /// <param name="maxSweeps">Max TT-Cross sweeps per trial. Default 10.</param>
+    /// <param name="maxRank">Maximum positive TT rank passed to each trial. Default 10.</param>
+    /// <param name="tolerance">Finite positive convergence tolerance for each trial. Default 1e-6.</param>
+    /// <param name="maxSweeps">Maximum positive TT-Cross sweeps per trial. Default 10.</param>
     /// <param name="additionalData">Stored on the result for introspection; not threaded into f.</param>
     /// <param name="nTrials">Number of swap iterations / random samples. Default 5.</param>
     /// <param name="method">"greedy_swap" (default, deterministic) or "random".</param>
