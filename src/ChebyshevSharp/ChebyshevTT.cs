@@ -60,10 +60,10 @@ public class ChebyshevTT
     public int NumDimensions => _numDimensions;
 
     /// <summary>Bounds [(lo, hi), ...] for each dimension.</summary>
-    public double[][] Domain => _domain;
+    public double[][] Domain => _domain.Select(d => (double[])d.Clone()).ToArray();
 
     /// <summary>Number of Chebyshev nodes per dimension.</summary>
-    public int[] NNodes => _nNodes;
+    public int[] NNodes => (int[])_nNodes.Clone();
 
     /// <summary>Maximum TT rank.</summary>
     public int MaxRank => _maxRank;
