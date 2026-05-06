@@ -654,7 +654,7 @@ public class TestNullSafety
     public void Test_null_point_in_eval()
     {
         var cheb = TestFixtures.ChebSin3D;
-        Assert.ThrowsAny<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             cheb.VectorizedEval(null!, [0, 0, 0]));
     }
 }

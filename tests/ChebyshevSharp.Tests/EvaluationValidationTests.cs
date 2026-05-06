@@ -1,0 +1,162 @@
+using Xunit;
+
+namespace ChebyshevSharp.Tests;
+
+public class EvaluationValidationTests
+{
+    private static ChebyshevApproximation BuildApproximation()
+    {
+        var approx = new ChebyshevApproximation(
+            (p, _) => p[0] + p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 });
+        approx.Build(verbose: false);
+        return approx;
+    }
+
+    private static ChebyshevSpline BuildSpline()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => p[0] * p[0] + p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 },
+            knots: new[] { new[] { 0.0 }, Array.Empty<double>() });
+        spline.Build(verbose: false);
+        return spline;
+    }
+
+    private static ChebyshevSlider BuildSlider()
+    {
+        var slider = new ChebyshevSlider(
+            (p, _) => p[0] + p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 },
+            partition: new[] { new[] { 0 }, new[] { 1 } },
+            pivotPoint: new[] { 0.0, 0.0 });
+        slider.Build(verbose: false);
+        return slider;
+    }
+
+    private static ChebyshevTT BuildTensorTrain()
+    {
+        var tt = new ChebyshevTT(
+            p => p[0] + p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 });
+        tt.Build(verbose: false, seed: 42);
+        return tt;
+    }
+
+    [Fact]
+    public void Approximation_eval_rejects_non_finite_point()
+    {
+        var approx = BuildApproximation();
+
+        Assert.Throws<ArgumentException>(() =>
+            approx.Eval(new[] { double.NaN, 0.0 }, new[] { 0, 0 }));
+        Assert.Throws<ArgumentException>(() =>
+            approx.VectorizedEval(new[] { 0.0, double.PositiveInfinity }, new[] { 0, 0 }));
+        Assert.Throws<ArgumentException>(() =>
+            approx.VectorizedEvalMulti(new[] { 0.0, double.NegativeInfinity }, new[] { new[] { 0, 0 } }));
+    }
+
+    [Fact]
+    public void Approximation_batch_eval_rejects_non_finite_point()
+    {
+        var approx = BuildApproximation();
+
+        Assert.Throws<ArgumentException>(() =>
+            approx.VectorizedEvalBatch(
+                new[] { new[] { 0.0, 0.0 }, new[] { double.NaN, 0.0 } },
+                new[] { 0, 0 }));
+    }
+
+    [Fact]
+    public void Approximation_eval_rejects_null_or_wrong_shape_points()
+    {
+        var approx = BuildApproximation();
+
+        Assert.Throws<ArgumentNullException>(() =>
+            approx.Eval(null!, new[] { 0, 0 }));
+        Assert.Throws<ArgumentException>(() =>
+            approx.VectorizedEval(new[] { 0.0 }, new[] { 0, 0 }));
+        Assert.Throws<ArgumentNullException>(() =>
+            approx.VectorizedEvalBatch(null!, new[] { 0, 0 }));
+        Assert.Throws<ArgumentException>(() =>
+            approx.VectorizedEvalBatch(new double[][] { null! }, new[] { 0, 0 }));
+    }
+
+    [Fact]
+    public void Spline_eval_rejects_non_finite_point_before_piece_routing()
+    {
+        var spline = BuildSpline();
+
+        Assert.Throws<ArgumentException>(() =>
+            spline.Eval(new[] { double.NaN, 0.0 }, new[] { 0, 0 }));
+        Assert.Throws<ArgumentException>(() =>
+            spline.EvalMulti(new[] { 0.0, double.PositiveInfinity }, new[] { new[] { 0, 0 } }));
+    }
+
+    [Fact]
+    public void Spline_batch_eval_rejects_non_finite_point_before_piece_routing()
+    {
+        var spline = BuildSpline();
+
+        Assert.Throws<ArgumentException>(() =>
+            spline.EvalBatch(
+                new[] { new[] { 0.0, 0.0 }, new[] { double.NegativeInfinity, 0.0 } },
+                new[] { 0, 0 }));
+    }
+
+    [Fact]
+    public void Slider_eval_rejects_non_finite_point()
+    {
+        var slider = BuildSlider();
+
+        Assert.Throws<ArgumentException>(() =>
+            slider.Eval(new[] { double.NaN, 0.0 }, new[] { 0, 0 }));
+        Assert.Throws<ArgumentException>(() =>
+            slider.EvalMulti(new[] { 0.0, double.PositiveInfinity }, new[] { new[] { 0, 0 } }));
+    }
+
+    [Fact]
+    public void TensorTrain_eval_rejects_non_finite_point()
+    {
+        var tt = BuildTensorTrain();
+
+        Assert.Throws<ArgumentException>(() =>
+            tt.Eval(new[] { double.NaN, 0.0 }));
+        Assert.Throws<ArgumentException>(() =>
+            tt.EvalMulti(new[] { 0.0, double.PositiveInfinity }, new[] { new[] { 0, 0 } }));
+    }
+
+    [Fact]
+    public void TensorTrain_batch_eval_rejects_non_finite_point()
+    {
+        var tt = BuildTensorTrain();
+        var points = new double[,] { { 0.0, 0.0 }, { double.NegativeInfinity, 0.0 } };
+
+        Assert.Throws<ArgumentException>(() => tt.EvalBatch(points));
+    }
+
+    [Fact]
+    public void TensorTrain_batch_eval_rejects_wrong_column_count()
+    {
+        var tt = BuildTensorTrain();
+        var points = new double[,] { { 0.0 } };
+
+        Assert.Throws<ArgumentException>(() => tt.EvalBatch(points));
+    }
+
+    [Fact]
+    public void TensorTrain_batch_eval_rejects_null_matrix()
+    {
+        var tt = BuildTensorTrain();
+
+        Assert.Throws<ArgumentNullException>(() => tt.EvalBatch(null!));
+    }
+}

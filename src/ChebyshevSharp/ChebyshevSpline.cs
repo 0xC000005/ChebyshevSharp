@@ -542,6 +542,7 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
         CheckKnotBoundary(point, derivativeOrder);
         var (_, piece) = FindPiece(point);
         return piece.VectorizedEval(point, derivativeOrder);
@@ -557,6 +558,7 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
         foreach (var dord in derivativeOrders)
             CheckKnotBoundary(point, dord);
         var (_, piece) = FindPiece(point);
@@ -573,6 +575,7 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalBatch().");
+        EvaluationArguments.ValidatePointBatch(points, NumDimensions);
 
         int N = points.Length;
         double[] results = new double[N];

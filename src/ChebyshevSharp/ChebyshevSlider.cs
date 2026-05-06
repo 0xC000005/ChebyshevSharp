@@ -259,6 +259,7 @@ public class ChebyshevSlider
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
 
         bool isDerivative = false;
         for (int i = 0; i < derivativeOrder.Length; i++)

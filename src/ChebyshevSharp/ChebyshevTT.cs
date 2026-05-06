@@ -313,6 +313,7 @@ public class ChebyshevTT
     public double Eval(double[] point)
     {
         CheckBuilt();
+        EvaluationArguments.ValidatePoint(point, _numDimensions);
         // Remap user coordinates to internal TT storage order when a non-identity
         // dim_order was set by Reorder() or WithAutoOrder(). Identity order is a no-op.
         if (!IsIdentityDimOrder())
@@ -396,6 +397,7 @@ public class ChebyshevTT
     public double[] EvalBatch(double[,] points)
     {
         CheckBuilt();
+        EvaluationArguments.ValidatePointBatch(points, _numDimensions);
 
         // Remap columns from user's original dim order to internal storage order.
         if (!IsIdentityDimOrder())
@@ -496,6 +498,7 @@ public class ChebyshevTT
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
         CheckBuilt();
+        EvaluationArguments.ValidatePoint(point, _numDimensions);
 
         // v0.21.1: race-safe via EvalStorageFrame helper that always operates in
         // storage frame. Public EvalMulti permutes user-frame inputs once into
