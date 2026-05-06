@@ -28,6 +28,25 @@ internal static class EvaluationArguments
         }
     }
 
+    internal static void ValidatePointBatch(double[,] points, int numDimensions, string paramName = "points")
+    {
+        ArgumentNullException.ThrowIfNull(points, paramName);
+        if (points.GetLength(1) != numDimensions)
+            throw new ArgumentException(
+                $"{paramName} must have {numDimensions} columns; got {points.GetLength(1)}",
+                paramName);
+
+        int rows = points.GetLength(0);
+        for (int i = 0; i < rows; i++)
+        {
+            for (int d = 0; d < numDimensions; d++)
+            {
+                if (!double.IsFinite(points[i, d]))
+                    throw new ArgumentException($"{paramName}[{i},{d}] must be finite", paramName);
+            }
+        }
+    }
+
     internal static void ValidateDerivativeOrder(
         int[] derivativeOrder,
         int numDimensions,

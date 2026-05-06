@@ -488,6 +488,7 @@ public class ChebyshevTT
     public double[] EvalBatch(double[,] points)
     {
         CheckBuilt();
+        EvaluationArguments.ValidatePointBatch(points, _numDimensions);
 
         // Remap columns from user's original dim order to internal storage order.
         if (!IsIdentityDimOrder())
