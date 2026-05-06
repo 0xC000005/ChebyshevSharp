@@ -223,7 +223,7 @@ public class ChebyshevTT
     /// <param name="verbose">If true, print build progress.</param>
     /// <param name="seed">Random seed for TT-Cross/ALS initialization. Ignored for method="svd".</param>
     /// <param name="method">"cross" (default), "svd", or "als".</param>
-    /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als".</exception>
+    /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als", or if the function returns NaN or Infinity at a sampled grid point.</exception>
     public void Build(bool verbose = true, int? seed = null, string method = "cross")
     {
         if (method != "cross" && method != "svd" && method != "als")
@@ -250,24 +250,25 @@ public class ChebyshevTT
         // Step 2: Build value cores
         TensorTrainKernel.TtCore[] valueCores;
         int nEvals;
+        Func<double[], double> finiteFunction = point => EvaluateFiniteFunction(point, nameof(Build));
 
         if (method == "cross")
         {
             if (verbose) Console.WriteLine("  Running TT-Cross...");
             (valueCores, nEvals) = TensorTrainKernel.TtCross(
-                _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
+                finiteFunction, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
         }
         else if (method == "svd")
         {
             (valueCores, nEvals) = TensorTrainKernel.TtSvd(
-                _function!, grids, _maxRank, _tolerance, verbose);
+                finiteFunction, grids, _maxRank, _tolerance, verbose);
         }
         else  // method == "als"
         {
             if (verbose) Console.WriteLine("  Running TT-ALS...");
             bool hitCap;
             (valueCores, nEvals, hitCap) = TensorTrainKernel.AlsAdaptiveRank(
-                _function!, grids, _maxRank, _tolerance, seed, verbose);
+                finiteFunction, grids, _maxRank, _tolerance, seed, verbose);
             if (hitCap)
                 BuildWarning =
                     $"maxRank={_maxRank} reached before ALS tolerance={_tolerance:e2} satisfied. " +
@@ -315,6 +316,19 @@ public class ChebyshevTT
                 "Use sparse TT evaluation for high-dimensional tensors.");
         }
         return (int)total;
+    }
+
+    private double EvaluateFiniteFunction(double[] point, string caller)
+    {
+        double value = _function!(point);
+        if (!double.IsFinite(value))
+        {
+            throw new ArgumentException(
+                $"{caller} function returned a non-finite value at a Chebyshev grid point. " +
+                "ChebyshevTT build and completion require finite function values.",
+                "function");
+        }
+        return value;
     }
 
     private void CheckBuilt()
@@ -1272,6 +1286,7 @@ public class ChebyshevTT
     /// <param name="maxIter">Maximum number of outer ALS sweeps.</param>
     /// <param name="verbose">Print per-sweep residuals.</param>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called or if <c>Function</c> is null (loaded TT).</exception>
+    /// <exception cref="ArgumentException">If the function returns NaN or Infinity at a sampled grid point.</exception>
     public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
     {
         CheckBuilt();
@@ -1298,7 +1313,7 @@ public class ChebyshevTT
             {
                 var pt = new double[_numDimensions];
                 for (int i = 0; i < _numDimensions; i++) pt[i] = grids[i][idx[i]];
-                v = _function(pt);
+                v = EvaluateFiniteFunction(pt, nameof(RunCompletion));
                 cache[key] = v;
             }
             return v;
