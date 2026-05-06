@@ -198,6 +198,17 @@ public class SplinePublicStateOwnershipTests
     }
 
     [Fact]
+    public void Roots_handles_empty_internal_knot_storage()
+    {
+        var spline = BuildSpline();
+        spline.KnotsStorage = Array.Empty<double[]>();
+
+        Exception? exception = Record.Exception(() => spline.Roots());
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
     public void Roots_scans_knoted_spline_without_mutating_knot_storage()
     {
         var spline = BuildSpline();
