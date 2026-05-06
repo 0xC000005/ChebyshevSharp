@@ -1275,7 +1275,7 @@ public class ChebyshevApproximation
         if (newNdim == 0)
             return tensor[0];
 
-        return new ChebyshevApproximation
+        var result = new ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
@@ -1290,6 +1290,8 @@ public class ChebyshevApproximation
             NEvaluations = 0,
             _cachedErrorEstimate = null,
         };
+        result.PrecomputeTransposedDiffMatrices();
+        return result;
     }
 
     /// <summary>
@@ -1498,7 +1500,7 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Pre-compute transposed diff matrices as flat arrays for BLAS GEMM.
-    /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice.
+    /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice, and Integrate.
     /// </summary>
     internal void PrecomputeTransposedDiffMatrices()
     {

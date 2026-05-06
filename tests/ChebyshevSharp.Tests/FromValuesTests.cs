@@ -344,6 +344,23 @@ public class TestFromValuesApprox
     }
 
     [Fact]
+    public void Integrate_Partial_ResultSupportsVectorizedDerivatives()
+    {
+        static double F(double[] x, object? _) => x[0] * x[0] + x[1];
+
+        var cheb = new ChebyshevApproximation(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { 0.0, 2.0 } },
+            new[] { 7, 6 });
+        cheb.Build(verbose: false);
+
+        var reduced = (ChebyshevApproximation)cheb.Integrate(dims: new[] { 1 });
+
+        double actual = reduced.VectorizedEval(new[] { 0.25 }, new[] { 1 });
+
+        TestFixtures.AssertClose(1.0, actual, atol: 1e-10);
+    }
+
+    [Fact]
     public void Integrate_SubInterval()
     {
         double F(double[] x, object? _) => Math.Sin(x[0]);
