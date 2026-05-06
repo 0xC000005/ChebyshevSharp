@@ -1826,7 +1826,8 @@ public class ChebyshevTT
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored TT interpolant.</returns>
-    /// <exception cref="InvalidOperationException">If the file does not contain a valid ChebyshevTT.</exception>
+    /// <exception cref="InvalidOperationException">If the file cannot be deserialized as a ChebyshevTT state.</exception>
+    /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevTT state.</exception>
     public static ChebyshevTT Load(string path)
     {
         string json = File.ReadAllText(path);
@@ -1835,6 +1836,7 @@ public class ChebyshevTT
 
         int jsonVersion = state.JsonVersion ?? 1;
         int[] dimOrder = state.DimOrder ?? Enumerable.Range(0, state.NumDimensions).ToArray();
+        ValidateSerializedState(state, dimOrder);
 
         var cores = new TensorTrainKernel.TtCore[state.NumDimensions];
         for (int i = 0; i < state.NumDimensions; i++)
@@ -1901,6 +1903,154 @@ public class ChebyshevTT
             throw new InvalidOperationException(
                 $"Expected a ChebyshevTT file, got a different type.");
         return Load(path);
+    }
+
+    private static void ValidateSerializedState(TTSerializationState state, int[] dimOrder)
+    {
+        int d = state.NumDimensions;
+        if (d <= 0)
+            throw new InvalidDataException($"NumDimensions must be positive, got {d}.");
+
+        ValidateDomain(state.Domain, d);
+        ValidatePositiveVector(state.NNodes, d, nameof(TTSerializationState.NNodes));
+
+        if (state.MaxRank <= 0)
+            throw new InvalidDataException($"MaxRank must be positive, got {state.MaxRank}.");
+        if (!double.IsFinite(state.Tolerance) || state.Tolerance < 0.0)
+            throw new InvalidDataException($"Tolerance must be finite and non-negative, got {state.Tolerance}.");
+        if (state.MaxSweeps < 0)
+            throw new InvalidDataException($"MaxSweeps must be non-negative, got {state.MaxSweeps}.");
+        if (!double.IsFinite(state.BuildTime) || state.BuildTime < 0.0)
+            throw new InvalidDataException($"BuildTime must be finite and non-negative, got {state.BuildTime}.");
+        if (state.TotalBuildEvals < 0)
+            throw new InvalidDataException($"TotalBuildEvals must be non-negative, got {state.TotalBuildEvals}.");
+        if (state.MaxDerivativeOrder is < 0)
+            throw new InvalidDataException($"MaxDerivativeOrder must be non-negative, got {state.MaxDerivativeOrder}.");
+
+        ValidatePositiveVector(state.TtRanks, d + 1, nameof(TTSerializationState.TtRanks));
+        if (state.TtRanks[0] != 1 || state.TtRanks[^1] != 1)
+            throw new InvalidDataException(
+                $"TtRanks endpoints must be 1, got [{string.Join(",", state.TtRanks)}].");
+
+        ValidateDimOrder(dimOrder, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+
+        if (state.Cores is null)
+            throw new InvalidDataException("Cores must be present.");
+        if (state.Cores.Length != d)
+            throw new InvalidDataException($"Cores has length {state.Cores.Length}, expected {d}.");
+
+        for (int i = 0; i < d; i++)
+        {
+            CoreData core = state.Cores[i]
+                ?? throw new InvalidDataException($"Cores[{i}] must be present.");
+
+            if (core.RLeft <= 0 || core.NNodes <= 0 || core.RRight <= 0)
+                throw new InvalidDataException(
+                    $"Cores[{i}] dimensions must be positive, got ({core.RLeft}, {core.NNodes}, {core.RRight}).");
+            if (core.RLeft != state.TtRanks[i] || core.RRight != state.TtRanks[i + 1])
+                throw new InvalidDataException(
+                    $"Cores[{i}] rank shape ({core.RLeft}, {core.RRight}) does not match " +
+                    $"TtRanks[{i}:{i + 2}] = ({state.TtRanks[i]}, {state.TtRanks[i + 1]}).");
+            if (core.NNodes != state.NNodes[i])
+                throw new InvalidDataException(
+                    $"Cores[{i}].NNodes={core.NNodes} does not match NNodes[{i}]={state.NNodes[i]}.");
+            if (core.Data is null)
+                throw new InvalidDataException($"Cores[{i}].Data must be present.");
+
+            int expected = CheckedArrayLengthForInvalidData(
+                new[] { core.RLeft, core.NNodes, core.RRight },
+                $"Cores[{i}].Data");
+            if (core.Data.Length != expected)
+                throw new InvalidDataException(
+                    $"Cores[{i}].Data has length {core.Data.Length}, expected {expected}.");
+
+            for (int j = 0; j < core.Data.Length; j++)
+                if (!double.IsFinite(core.Data[j]))
+                    throw new InvalidDataException($"Cores[{i}].Data[{j}] must be finite.");
+        }
+    }
+
+    private static void ValidateDomain(double[][]? domain, int numDimensions)
+    {
+        if (domain is null)
+            throw new InvalidDataException("Domain must be present.");
+        if (domain.Length != numDimensions)
+            throw new InvalidDataException($"Domain has length {domain.Length}, expected {numDimensions}.");
+
+        for (int i = 0; i < numDimensions; i++)
+        {
+            double[] bounds = domain[i]
+                ?? throw new InvalidDataException($"Domain[{i}] must be present.");
+            if (bounds.Length != 2)
+                throw new InvalidDataException($"Domain[{i}] must contain exactly two bounds.");
+
+            double lo = bounds[0];
+            double hi = bounds[1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi))
+                throw new InvalidDataException($"Domain[{i}] bounds must be finite.");
+            if (lo >= hi)
+                throw new InvalidDataException($"Domain[{i}] lower bound must be less than upper bound.");
+        }
+    }
+
+    private static void ValidatePositiveVector(int[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (values[i] <= 0)
+                throw new InvalidDataException($"{name}[{i}] must be positive, got {values[i]}.");
+    }
+
+    private static void ValidateDimOrder(int[] dimOrder, int numDimensions)
+    {
+        if (dimOrder.Length != numDimensions)
+            throw new InvalidDataException($"DimOrder has length {dimOrder.Length}, expected {numDimensions}.");
+
+        var seen = new bool[numDimensions];
+        for (int i = 0; i < dimOrder.Length; i++)
+        {
+            int value = dimOrder[i];
+            if (value < 0 || value >= numDimensions || seen[value])
+                throw new InvalidDataException(
+                    $"DimOrder must be a permutation of [0,{numDimensions - 1}], got [{string.Join(",", dimOrder)}].");
+            seen[value] = true;
+        }
+    }
+
+    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    {
+        if (registeredDerivativeOrders is null) return;
+
+        for (int i = 0; i < registeredDerivativeOrders.Length; i++)
+        {
+            int[] orders = registeredDerivativeOrders[i]
+                ?? throw new InvalidDataException($"RegisteredDerivativeOrders[{i}] must be present.");
+            if (orders.Length != numDimensions)
+                throw new InvalidDataException(
+                    $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
+            for (int j = 0; j < orders.Length; j++)
+                if (orders[j] < 0)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+        }
+    }
+
+    private static int CheckedArrayLengthForInvalidData(int[] shape, string name)
+    {
+        try
+        {
+            long product = TensorShape.CheckedProduct(shape, name);
+            return TensorShape.RequireArrayLength(product, name, shape);
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidDataException($"{name} shape [{string.Join(",", shape)}] is invalid.", ex);
+        }
     }
 
     private static string GetLibraryVersion()
