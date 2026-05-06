@@ -479,6 +479,40 @@ public class TestCompatibility
         var ex = Assert.Throws<InvalidOperationException>(() => { var _ = a + b; });
         Assert.Contains("not built", ex.Message);
     }
+
+    [Fact]
+    public void UnbuiltScalarOperatorsRaiseInvalidOperation()
+    {
+        double F(double[] x, object? _) => Math.Sin(x[0]);
+        var a = new ChebyshevApproximation(F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 11 });
+
+        Assert.Throws<InvalidOperationException>(() => { var _ = a * 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = 2.0 * a; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = a / 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = -a; });
+    }
+
+    [Fact]
+    public void ArithmeticResultGridArraysAreNotAliasedWithSource()
+    {
+        double F(double[] x, object? _) => Math.Sin(x[0]) + Math.Cos(x[1]);
+        var source = new ChebyshevApproximation(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -2.0, 2.0 } }, new[] { 7, 5 });
+        source.Build(verbose: false);
+
+        var result = source * 2.0;
+
+        Assert.False(ReferenceEquals(source.NodeArrays, result.NodeArrays));
+        Assert.False(ReferenceEquals(source.NodeArrays[0], result.NodeArrays[0]));
+        Assert.False(ReferenceEquals(source.Weights, result.Weights));
+        Assert.False(ReferenceEquals(source.Weights![0], result.Weights![0]));
+        Assert.False(ReferenceEquals(source.DiffMatrices, result.DiffMatrices));
+        Assert.False(ReferenceEquals(source.DiffMatrices![0], result.DiffMatrices![0]));
+
+        double originalNode = source.NodeArrays[0][0];
+        result.NodeArrays[0][0] = originalNode + 123.0;
+        Assert.Equal(originalNode, source.NodeArrays[0][0]);
+    }
 }
 
 // ================================================================

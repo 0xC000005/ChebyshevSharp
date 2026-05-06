@@ -1054,10 +1054,10 @@ public class ChebyshevApproximation
             Domain = source.Domain.Select(d => (double[])d.Clone()).ToArray(),
             NNodes = (int[])source.NNodes.Clone(),
             MaxDerivativeOrder = source.MaxDerivativeOrder,
-            NodeArrays = source.NodeArrays,
-            Weights = source.Weights,
-            DiffMatrices = source.DiffMatrices,
-            DiffMatricesTFlat = source.DiffMatricesTFlat,
+            NodeArrays = Internal.CloneHelpers.DeepCopy(source.NodeArrays)!,
+            Weights = Internal.CloneHelpers.DeepCopy(source.Weights),
+            DiffMatrices = Internal.CloneHelpers.DeepCopy(source.DiffMatrices),
+            DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(source.DiffMatricesTFlat),
             TensorValues = tensorValues,
             BuildTime = 0.0,
             NEvaluations = 0,
@@ -1365,6 +1365,9 @@ public class ChebyshevApproximation
     /// <summary>Multiply interpolant by a scalar.</summary>
     public static ChebyshevApproximation operator *(ChebyshevApproximation a, double scalar)
     {
+        if (a.TensorValues == null)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+
         double[] newValues = new double[a.TensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
             newValues[i] = a.TensorValues[i] * scalar;
