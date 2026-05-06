@@ -100,6 +100,10 @@ public class ChebyshevSpline
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateKnots(numDimensions, domain, knots);
+        ValidateFlatNNodes(numDimensions, nNodes);
+
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
@@ -109,8 +113,6 @@ public class ChebyshevSpline
         _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
         _progress = progress;
 
-        // Validate and store knots
-        ValidateKnots(numDimensions, domain, knots);
         Knots = knots.Select(k => (double[])k.Clone()).ToArray();
 
         // Compute per-dimension intervals
@@ -161,6 +163,9 @@ public class ChebyshevSpline
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateDomain(numDimensions, domain);
+
         if (maxN < 3)
             throw new ArgumentException(
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}.");
@@ -179,6 +184,7 @@ public class ChebyshevSpline
         else
         {
             resolvedOriginal = (int?[])nNodes.Clone();
+            ValidateOptionalNNodes(numDimensions, resolvedOriginal);
             if (resolvedOriginal.Any(n => n == null) && errorThreshold == null)
                 throw new ArgumentException(
                     "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
@@ -242,16 +248,9 @@ public class ChebyshevSpline
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
-        if (nNodesNested.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodesNested must have {numDimensions} entries (one list per dim), got {nNodesNested.Length}");
-        for (int d = 0; d < numDimensions; d++)
-        {
-            int expected = knots[d].Length + 1;
-            if (nNodesNested[d].Length != expected)
-                throw new ArgumentException(
-                    $"nNodesNested[{d}] must have {expected} entries (one per piece), got {nNodesNested[d].Length}");
-        }
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateKnots(numDimensions, domain, knots);
+        ValidateNestedNNodes(numDimensions, nNodesNested, knots);
 
         Function = function;
         NumDimensions = numDimensions;
@@ -265,7 +264,6 @@ public class ChebyshevSpline
         OriginalNNodes = Array.Empty<int?>();
         NestedNNodes = nNodesNested.Select(row => (int[])row.Clone()).ToArray();
 
-        ValidateKnots(numDimensions, domain, knots);
         Knots = knots.Select(k => (double[])k.Clone()).ToArray();
 
         Intervals = ComputeIntervals(numDimensions, domain, knots);
@@ -298,16 +296,24 @@ public class ChebyshevSpline
 
     internal static void ValidateKnots(int numDimensions, double[][] domain, double[][] knots)
     {
+        ValidateDomain(numDimensions, domain);
+        ArgumentNullException.ThrowIfNull(knots);
+
         if (knots.Length != numDimensions)
             throw new ArgumentException(
                 $"knots length {knots.Length} != numDimensions {numDimensions}");
 
         for (int d = 0; d < numDimensions; d++)
         {
+            if (knots[d] == null)
+                throw new ArgumentException($"knots[{d}] must not be null", nameof(knots));
+
             double lo = domain[d][0], hi = domain[d][1];
             for (int i = 0; i < knots[d].Length; i++)
             {
                 double k = knots[d][i];
+                if (!double.IsFinite(k))
+                    throw new ArgumentException($"Knot {i} for dimension {d} must be finite");
                 if (!(lo < k && k < hi))
                     throw new ArgumentException(
                         $"Knot {k} for dimension {d} is not strictly inside domain [{lo}, {hi}]");
@@ -323,6 +329,88 @@ public class ChebyshevSpline
             // Check unique
             if (knots[d].Distinct().Count() != knots[d].Length)
                 throw new ArgumentException($"Knots for dimension {d} contain duplicates");
+        }
+    }
+
+    private static void ValidateDomain(int numDimensions, double[][] domain)
+    {
+        if (numDimensions <= 0)
+            throw new ArgumentException(
+                $"numDimensions must be positive, got {numDimensions}", nameof(numDimensions));
+
+        ArgumentNullException.ThrowIfNull(domain);
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain length {domain.Length} != numDimensions {numDimensions}", nameof(domain));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] == null)
+                throw new ArgumentException($"domain[{d}] must not be null", nameof(domain));
+            if (domain[d].Length != 2)
+                throw new ArgumentException(
+                    $"domain[{d}] must have exactly 2 entries [lo, hi], got {domain[d].Length}",
+                    nameof(domain));
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi))
+                throw new ArgumentException($"domain[{d}] bounds must be finite", nameof(domain));
+            if (lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}]: lo={lo} must be strictly less than hi={hi}",
+                    nameof(domain));
+        }
+    }
+
+    private static void ValidateFlatNNodes(int numDimensions, int[] nNodes)
+    {
+        ArgumentNullException.ThrowIfNull(nNodes);
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes length {nNodes.Length} != numDimensions {numDimensions}", nameof(nNodes));
+
+        for (int d = 0; d < numDimensions; d++)
+            if (nNodes[d] <= 0)
+                throw new ArgumentException($"nNodes[{d}] must be positive, got {nNodes[d]}", nameof(nNodes));
+    }
+
+    private static void ValidateOptionalNNodes(int numDimensions, int?[] nNodes)
+    {
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes length {nNodes.Length} != numDimensions {numDimensions}", nameof(nNodes));
+
+        for (int d = 0; d < numDimensions; d++)
+            if (nNodes[d] <= 0)
+                throw new ArgumentException($"nNodes[{d}] must be positive when provided, got {nNodes[d]}",
+                    nameof(nNodes));
+    }
+
+    private static void ValidateNestedNNodes(int numDimensions, int[][] nNodesNested, double[][] knots)
+    {
+        ArgumentNullException.ThrowIfNull(nNodesNested);
+        if (nNodesNested.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodesNested must have {numDimensions} entries (one list per dim), got {nNodesNested.Length}",
+                nameof(nNodesNested));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (nNodesNested[d] == null)
+                throw new ArgumentException($"nNodesNested[{d}] must not be null", nameof(nNodesNested));
+
+            int expected = knots[d].Length + 1;
+            if (nNodesNested[d].Length != expected)
+                throw new ArgumentException(
+                    $"nNodesNested[{d}] must have {expected} entries (one per piece), got {nNodesNested[d].Length}",
+                    nameof(nNodesNested));
+
+            for (int i = 0; i < nNodesNested[d].Length; i++)
+                if (nNodesNested[d][i] <= 0)
+                    throw new ArgumentException(
+                        $"nNodesNested[{d}][{i}] must be positive, got {nNodesNested[d][i]}",
+                        nameof(nNodesNested));
         }
     }
 
@@ -735,6 +823,8 @@ public class ChebyshevSpline
         int maxN = 64,
         int maxDerivativeOrder = 2)
     {
+        ArgumentNullException.ThrowIfNull(specialPoints);
+
         if (specialPoints.Length != numDimensions)
             throw new ArgumentException(
                 $"specialPoints must have {numDimensions} entries, got {specialPoints.Length}");
@@ -1295,14 +1385,7 @@ public class ChebyshevSpline
         int numDimensions, double[][] domain, int[] nNodes, double[][] knots)
     {
         ValidateKnots(numDimensions, domain, knots);
-
-        // Validate domain
-        for (int d = 0; d < numDimensions; d++)
-        {
-            if (domain[d][0] >= domain[d][1])
-                throw new ArgumentException(
-                    $"domain[{d}]: lo={domain[d][0]} must be strictly less than hi={domain[d][1]}");
-        }
+        ValidateFlatNNodes(numDimensions, nNodes);
 
         var intervals = ComputeIntervals(numDimensions, domain, knots);
         int[] shape = intervals.Select(iv => iv.Length).ToArray();
@@ -1359,14 +1442,9 @@ public class ChebyshevSpline
         double[][] knots,
         int maxDerivativeOrder = 2)
     {
+        ArgumentNullException.ThrowIfNull(pieceValues);
         ValidateKnots(numDimensions, domain, knots);
-
-        for (int d = 0; d < numDimensions; d++)
-        {
-            if (domain[d][0] >= domain[d][1])
-                throw new ArgumentException(
-                    $"domain[{d}]: lo={domain[d][0]} must be strictly less than hi={domain[d][1]}");
-        }
+        ValidateFlatNNodes(numDimensions, nNodes);
 
         var intervals = ComputeIntervals(numDimensions, domain, knots);
         int[] shape = intervals.Select(iv => iv.Length).ToArray();
