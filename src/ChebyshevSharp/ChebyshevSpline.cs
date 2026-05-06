@@ -2195,7 +2195,7 @@ public class ChebyshevSpline
     /// <param name="maxOrderDerivative">Max derivative order. Default 2.</param>
     /// <param name="additionalData">Optional user data threaded through f calls.</param>
     /// <param name="descriptor">Optional free-form descriptor.</param>
-    /// <param name="thresholdFactor">Spike threshold = thresholdFactor × mean(|d²f|). Default 5.0.</param>
+    /// <param name="thresholdFactor">Finite positive spike threshold factor; threshold = thresholdFactor × mean(|d²f|). Default 5.0.</param>
     /// <param name="maxKnotsPerDim">Cap on knots per dimension. Default 5. Zero means no auto-knots.</param>
     /// <param name="nScanPoints">Number of scan points per dim. Default 200; must be at least 3.</param>
     /// <param name="nWorkers">See <see cref="ChebyshevSpline"/> ctor.</param>
@@ -2222,8 +2222,8 @@ public class ChebyshevSpline
         IProgress<int>? progress = null,
         bool verbose = false)
     {
-        if (thresholdFactor <= 0)
-            throw new ArgumentException("thresholdFactor must be > 0", nameof(thresholdFactor));
+        if (!double.IsFinite(thresholdFactor) || thresholdFactor <= 0)
+            throw new ArgumentException("thresholdFactor must be finite and > 0", nameof(thresholdFactor));
         if (maxKnotsPerDim < 0)
             throw new ArgumentException("maxKnotsPerDim must be >= 0", nameof(maxKnotsPerDim));
         if (nScanPoints < 3)
