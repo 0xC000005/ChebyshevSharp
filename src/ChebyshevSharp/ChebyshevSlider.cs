@@ -1196,6 +1196,9 @@ public class ChebyshevSlider
     /// <summary>Scalar multiplication.</summary>
     public static ChebyshevSlider operator *(ChebyshevSlider a, double scalar)
     {
+        if (!a.Built)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
         {
