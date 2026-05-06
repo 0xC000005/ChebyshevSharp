@@ -770,10 +770,7 @@ public class ChebyshevSpline
                 SaveJson(path);
                 break;
             case "binary":
-                if (NestedNNodes != null)
-                    throw new NotSupportedException(
-                        "binary format requires flat n_nodes (shared across pieces); " +
-                        "use format='json' for nested-n_nodes splines");
+                EnsureBinarySerializable();
                 SaveBinary(path);
                 break;
             default:
@@ -826,6 +823,16 @@ public class ChebyshevSpline
         var options = new JsonSerializerOptions { WriteIndented = false };
         string json = JsonSerializer.Serialize(state, options);
         File.WriteAllText(path, json);
+    }
+
+    private void EnsureBinarySerializable()
+    {
+        bool hasSharedPositiveNodes = NNodes.Length == NumDimensions && NNodes.All(n => n > 0);
+        bool allPiecesShareNodes = Pieces.All(p => p != null && p.NNodes.SequenceEqual(NNodes));
+        if (NestedNNodes != null || !hasSharedPositiveNodes || !allPiecesShareNodes)
+            throw new NotSupportedException(
+                "binary format requires shared positive n_nodes across pieces; " +
+                "use format='json' for adaptive or nested-n_nodes splines");
     }
 
     private void SaveBinary(string path)

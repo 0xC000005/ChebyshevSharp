@@ -605,6 +605,29 @@ public class SplineBinaryTests
     }
 
     [Fact]
+    public void Test_save_binary_throws_for_adaptive_nNodes()
+    {
+        var spline = new ChebyshevSpline(
+            (p, _) => Math.Abs(p[0]), 1,
+            new[] { new[] { -1.0, 1.0 } },
+            nNodes: new int?[] { null },
+            knots: new[] { new[] { 0.0 } },
+            errorThreshold: 1e-6);
+        spline.Build(verbose: false);
+
+        string path = TempPcb();
+        try
+        {
+            var ex = Assert.Throws<NotSupportedException>(() =>
+                spline.Save(path, format: "binary"));
+            Assert.Contains("shared", ex.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("json", ex.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.False(File.Exists(path));
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
+
+    [Fact]
     public void Test_save_binary_unbuilt_throws()
     {
         var spline = new ChebyshevSpline(
