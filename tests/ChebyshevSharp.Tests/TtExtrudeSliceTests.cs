@@ -143,6 +143,20 @@ public class ExtrudeTests
     }
 
     [Fact]
+    public void Test_extrude_validates_finite_domain()
+    {
+        var tt = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
+        tt.Build(verbose: false);
+        var loEx = Assert.Throws<ArgumentException>(() =>
+            tt.Extrude(dim: 1, newDomain: (double.NaN, 1.0), newN: 4));
+        Assert.Contains("finite", loEx.Message);
+
+        var hiEx = Assert.Throws<ArgumentException>(() =>
+            tt.Extrude(dim: 1, newDomain: (0.0, double.PositiveInfinity), newN: 4));
+        Assert.Contains("finite", hiEx.Message);
+    }
+
+    [Fact]
     public void Test_extrude_validates_nn_minimum()
     {
         var tt = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
@@ -220,6 +234,16 @@ public class SliceTests
         var tt = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
         tt.Build(verbose: false);
         Assert.Throws<ArgumentOutOfRangeException>(() => tt.Slice(dim: 0, value: 5.0));
+    }
+
+    [Fact]
+    public void Test_slice_validates_finite_value()
+    {
+        var tt = new ChebyshevTT(p => p[0], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 4, 4 });
+        tt.Build(verbose: false);
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => tt.Slice(dim: 0, value: double.NaN));
+        Assert.Contains("finite", ex.Message);
     }
 
     [Fact]

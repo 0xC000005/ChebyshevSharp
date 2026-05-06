@@ -203,16 +203,18 @@ double[] results = spline.EvalMulti(
 
 ### Derivatives at knot boundaries
 
-Derivatives are **not defined** at knot boundaries. At a kink, the left and right polynomial pieces have different derivative values. Requesting a derivative at a knot raises `ArgumentException`:
+Derivatives are **not defined** at knot boundaries. At a piece boundary, adjacent polynomial pieces can have different derivative values, even for derivatives taken with respect to another dimension. Requesting any nonzero derivative at a knot raises `ArgumentException`:
 
 ```csharp
 // This throws ArgumentException:
-// "Derivative w.r.t. dimension 0 is not defined at knot x[0]=100"
+// "Requested derivative is not defined at knot x[0]=100"
 spline.Eval(new[] { 100.0, 0.5 }, new[] { 1, 0 });
 
 // Function values are fine at knots:
 spline.Eval(new[] { 100.0, 0.5 }, new[] { 0, 0 });  // OK
 ```
+
+When a function value is evaluated exactly at an interior knot, the spline uses the piece whose left edge is that knot. This matches the `side="right"` routing used by the PyChebyshev reference implementation and makes jump values right-continuous by convention.
 
 > **Tip:** If you need a derivative near a knot, evaluate slightly to one side: `spline.Eval(new[] { 100.001, 0.5 }, new[] { 1, 0 })` gives the right-side derivative.
 
@@ -275,7 +277,7 @@ double[] roots = spline2d.Roots(
 );
 ```
 
-Roots at knot boundaries where two pieces meet are deduplicated to avoid reporting the same root twice.
+Roots at knot boundaries where two pieces meet are deduplicated to avoid reporting the same root twice. If the left and right piece limits have opposite signs at a knot, `Roots()` reports the knot as a zero crossing even when neither individual piece has an interior root. This follows the piecewise rootfinding convention used by Chebfun for sign-changing jumps.
 
 ### Minimization and Maximization
 
@@ -356,7 +358,7 @@ Fix one or more dimensions at specific values, reducing dimensionality:
 var spline1d = spline2d.Slice((1, 0.5));
 ```
 
-Slicing selects the piece containing the slice value along the sliced dimension, then performs barycentric interpolation within that piece. Only pieces at the correct interval index survive; the rest are discarded.
+Slicing selects the piece containing the slice value along the sliced dimension, then performs barycentric interpolation within that piece. A slice exactly at an interior knot uses the right piece, matching value evaluation. Only pieces at the correct interval index survive; the rest are discarded.
 
 ## Serialization
 
@@ -449,3 +451,4 @@ Do **not** use `ChebyshevSpline` when:
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM. Chapters 8--9.
 2. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Section 3.8.
 3. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
+4. Trefethen, L. N. (2009, revised 2019). "Rootfinding and Minima and Maxima." *Chebfun Guide*. https://www.chebfun.org/docs/guide/guide03.html

@@ -159,6 +159,73 @@ public class TestNodesApprox
                 2, new[] { new[] { -1.0, 1.0 }, new[] { 0.0, 1.0 } }, new[] { 5 }));
         Assert.Contains("numDimensions", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Nodes_InvalidDomainRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { 1.0, 1.0 } }, new[] { 5 }));
+        Assert.Contains("lo=", ex.Message);
+        Assert.Contains("strictly less than hi", ex.Message);
+    }
+
+    [Fact]
+    public void Nodes_NonFiniteDomainRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { double.NaN, 1.0 } }, new[] { 5 }));
+        Assert.Contains("finite", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Nodes_NonPositiveNumDimensionsRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(0, Array.Empty<double[]>(), Array.Empty<int>()));
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Nodes_NonPositiveNodeCountRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { -1.0, 1.0 } }, new[] { 0 }));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Nodes_NullDomainRaises()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevApproximation.Nodes(1, null!, new[] { 5 }));
+        Assert.Equal("domain", ex.ParamName);
+    }
+
+    [Fact]
+    public void Nodes_NullNodeCountsRaises()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { -1.0, 1.0 } }, null!));
+        Assert.Equal("nNodes", ex.ParamName);
+    }
+
+    [Fact]
+    public void Nodes_NullDomainEntryRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new double[][] { null! }, new[] { 5 }));
+        Assert.Contains("domain[0]", ex.Message);
+    }
+
+    [Fact]
+    public void Nodes_DomainEntryWrongLengthRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { -1.0, 0.0, 1.0 } }, new[] { 5 }));
+        Assert.Contains("domain[0]", ex.Message);
+        Assert.Contains("two bounds", ex.Message);
+    }
 }
 
 // ======================================================================
@@ -274,6 +341,23 @@ public class TestFromValuesApprox
         Assert.Equal(
             ra.VectorizedEval(pt, new[] { 0 }),
             rb.VectorizedEval(pt, new[] { 0 }));
+    }
+
+    [Fact]
+    public void Integrate_Partial_ResultSupportsVectorizedDerivatives()
+    {
+        static double F(double[] x, object? _) => x[0] * x[0] + x[1];
+
+        var cheb = new ChebyshevApproximation(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { 0.0, 2.0 } },
+            new[] { 7, 6 });
+        cheb.Build(verbose: false);
+
+        var reduced = (ChebyshevApproximation)cheb.Integrate(dims: new[] { 1 });
+
+        double actual = reduced.VectorizedEval(new[] { 0.25 }, new[] { 1 });
+
+        TestFixtures.AssertClose(1.0, actual, atol: 1e-10);
     }
 
     [Fact]

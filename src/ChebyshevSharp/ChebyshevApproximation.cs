@@ -105,6 +105,8 @@ public class ChebyshevApproximation
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ValidateFixedGridArguments(nameof(ChebyshevApproximation), numDimensions, domain, nNodes);
+
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
@@ -139,7 +141,7 @@ public class ChebyshevApproximation
     /// <param name="numDimensions">Number of input dimensions.</param>
     /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension; null entries signal auto-N for that dim. Pass null to make every dim auto-N (requires errorThreshold).</param>
-    /// <param name="errorThreshold">Target supremum-norm error. Required if any nNodes entry is null.</param>
+    /// <param name="errorThreshold">Finite positive target supremum-norm error. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
@@ -167,6 +169,9 @@ public class ChebyshevApproximation
             throw new ArgumentException(
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}. " +
                 "For a grid smaller than 3 per dimension, pass nNodes explicitly.");
+        AdaptiveBuild.ValidateErrorThreshold(errorThreshold);
+
+        ValidateDomainArguments(nameof(ChebyshevApproximation), numDimensions, domain);
 
         // Normalize nNodes: null array means "all dims auto-N"
         int?[] resolved;
@@ -180,6 +185,9 @@ public class ChebyshevApproximation
         else
         {
             resolved = (int?[])nNodes.Clone();
+            if (resolved.Length != numDimensions)
+                throw new ArgumentException(
+                    $"len(nNodes)={resolved.Length} must equal numDimensions={numDimensions}");
             if (resolved.Any(n => n == null) && errorThreshold == null)
                 throw new ArgumentException(
                     "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
@@ -200,6 +208,7 @@ public class ChebyshevApproximation
         if (resolved.All(n => n != null))
         {
             NNodes = resolved.Select(n => n!.Value).ToArray();
+            ValidateNodeCounts(nameof(ChebyshevApproximation), NNodes);
             NodeArrays = new double[numDimensions][];
             for (int d = 0; d < numDimensions; d++)
                 NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], NNodes[d]);
@@ -268,8 +277,10 @@ public class ChebyshevApproximation
                 pt[d] = NodeArrays[d][indices[d]];
             points[flat] = pt;
         }
-        TensorValues = Internal.ParallelBuild.EvaluateInParallel(
+        var tensorValues = Internal.ParallelBuild.EvaluateInParallel(
             Function!, points, _additionalData, _nWorkers, _progress);
+        ValidateFiniteBuildValues(tensorValues);
+        TensorValues = tensorValues;
         NEvaluations = total;
 
         // Step 2: Pre-compute barycentric weights
@@ -297,6 +308,21 @@ public class ChebyshevApproximation
         _isConstructionFinished = true;
     }
 
+    private static void ValidateFiniteBuildValues(double[] values)
+    {
+        int badCount = 0;
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                badCount++;
+        }
+
+        if (badCount > 0)
+            throw new ArgumentException(
+                $"function returned non-finite values at {badCount} grid point(s); " +
+                "build cannot proceed with NaN/Infinity in TensorValues");
+    }
+
     /// <summary>
     /// Evaluate using dimensional decomposition with barycentric interpolation.
     /// Loop-based implementation matching Python eval().
@@ -308,6 +334,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Current working data and its shape
         double[] current = TensorValues;
@@ -381,6 +409,7 @@ public class ChebyshevApproximation
         if (TensorValues == null)
             throw new InvalidOperationException(
                 "Cannot evaluate an unbuilt interpolant. Call Build() or SetOriginalFunctionValues() first.");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
         return Eval(point, new int[NumDimensions]);
     }
 
@@ -395,6 +424,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         double[] current = TensorValues;
 
@@ -473,6 +504,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoints(points, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Hoist: apply all derivative-matrix matmuls once — they are point-independent.
         // Process from last dimension to first to match VectorizedEval ordering.
@@ -570,6 +603,8 @@ public class ChebyshevApproximation
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
 
         // Pre-compute dimension info (shared across all derivative orders)
         var dimInfo = new (bool isExact, int exactIdx, double[]? wNorm)[NumDimensions];
@@ -717,7 +752,7 @@ public class ChebyshevApproximation
     /// </summary>
     /// <param name="function">Function to approximate; signature f(point[1], data) -&gt; double.</param>
     /// <param name="domain">(lo, hi) bounds for the single dimension.</param>
-    /// <param name="errorThreshold">Target supremum-norm error.</param>
+    /// <param name="errorThreshold">Finite positive target supremum-norm error.</param>
     /// <param name="maxN">Cap on the returned N. Default 64. If the doubling loop cannot achieve <paramref name="errorThreshold"/> within this cap, returns <paramref name="maxN"/> with BuildWarning set on the temporary internal interpolant.</param>
     /// <returns>Resolved N on the single dimension.</returns>
     public static int GetOptimalN1(
@@ -859,6 +894,8 @@ public class ChebyshevApproximation
         var state = JsonSerializer.Deserialize<SerializationState>(json)
             ?? throw new InvalidOperationException("Failed to deserialize");
 
+        ValidateJsonState(state);
+
         var obj = new ChebyshevApproximation
         {
             Function = null,
@@ -913,6 +950,109 @@ public class ChebyshevApproximation
         return obj;
     }
 
+    private static void ValidateJsonState(SerializationState state)
+    {
+        int ndim = state.NumDimensions;
+        if (ndim < 1)
+            throw MalformedJson($"NumDimensions must be >= 1, got {ndim}");
+
+        RequireLength(state.Domain, ndim, nameof(SerializationState.Domain));
+        RequireLength(state.NNodes, ndim, nameof(SerializationState.NNodes));
+        RequireLength(state.NodeArrays, ndim, nameof(SerializationState.NodeArrays));
+        RequireLength(state.Weights, ndim, nameof(SerializationState.Weights));
+        RequireLength(state.DiffMatrices, ndim, nameof(SerializationState.DiffMatrices));
+
+        int total = 1;
+        for (int d = 0; d < ndim; d++)
+        {
+            double[] domain = state.Domain[d]
+                ?? throw MalformedJson($"Domain[{d}] must not be null");
+            if (domain.Length != 2)
+                throw MalformedJson($"Domain[{d}] must have length 2, got {domain.Length}");
+            if (!double.IsFinite(domain[0]) || !double.IsFinite(domain[1]) || domain[0] >= domain[1])
+                throw MalformedJson($"Domain[{d}] must contain finite bounds with lo < hi");
+
+            int n = state.NNodes[d];
+            if (n < 1)
+                throw MalformedJson($"NNodes[{d}] must be >= 1, got {n}");
+            total = CheckedJsonProduct(total, n, "prod(NNodes)");
+
+            RequireFiniteLength(state.NodeArrays[d], n, $"NodeArrays[{d}]");
+            RequireFiniteLength(state.Weights[d], n, $"Weights[{d}]");
+            RequireFiniteLength(
+                state.DiffMatrices[d],
+                CheckedJsonProduct(n, n, $"DiffMatrices[{d}] size"),
+                $"DiffMatrices[{d}]");
+        }
+
+        RequireFiniteLength(state.TensorValues, total, nameof(SerializationState.TensorValues));
+
+        if (state.OriginalNNodes != null)
+        {
+            if (state.OriginalNNodes.Length != 0)
+                RequireLength(state.OriginalNNodes, ndim, nameof(SerializationState.OriginalNNodes));
+            for (int d = 0; d < state.OriginalNNodes.Length; d++)
+            {
+                int? n = state.OriginalNNodes[d];
+                if (n.HasValue && n.Value < 1)
+                    throw MalformedJson($"OriginalNNodes[{d}] must be null or >= 1, got {n.Value}");
+            }
+        }
+
+        if (state.SpecialPoints != null)
+        {
+            RequireLength(state.SpecialPoints, ndim, nameof(SerializationState.SpecialPoints));
+            for (int d = 0; d < state.SpecialPoints.Length; d++)
+                RequireFiniteArray(state.SpecialPoints[d], $"SpecialPoints[{d}]");
+        }
+
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            for (int i = 0; i < state.RegisteredDerivativeOrders.Length; i++)
+                RequireLength(
+                    state.RegisteredDerivativeOrders[i],
+                    ndim,
+                    $"{nameof(SerializationState.RegisteredDerivativeOrders)}[{i}]");
+        }
+    }
+
+    private static void RequireLength<T>(T[]? values, int expected, string name)
+    {
+        if (values == null)
+            throw MalformedJson($"{name} must not be null");
+        if (values.Length != expected)
+            throw MalformedJson($"{name} length {values.Length} does not match NumDimensions {expected}");
+    }
+
+    private static void RequireFiniteLength(double[]? values, int expected, string name)
+    {
+        RequireLength(values, expected, name);
+        RequireFiniteArray(values!, name);
+    }
+
+    private static void RequireFiniteArray(double[]? values, string name)
+    {
+        if (values == null)
+            throw MalformedJson($"{name} must not be null");
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw MalformedJson($"{name}[{i}] must be finite");
+        }
+    }
+
+    private static int CheckedJsonProduct(int a, int b, string name)
+    {
+        try { return checked(a * b); }
+        catch (OverflowException)
+        {
+            throw MalformedJson($"{name} overflows int");
+        }
+    }
+
+    private static InvalidDataException MalformedJson(string message)
+        => new($"Malformed ChebyshevApproximation JSON: {message}");
+
     // ------------------------------------------------------------------
     // Static factories
     // ------------------------------------------------------------------
@@ -926,10 +1066,7 @@ public class ChebyshevApproximation
     /// <returns>Dictionary with "NodesPerDim", "FullGrid", and "Shape".</returns>
     public static NodeInfo Nodes(int numDimensions, double[][] domain, int[] nNodes)
     {
-        if (domain.Length != numDimensions || nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"len(domain)={domain.Length} and len(nNodes)={nNodes.Length} " +
-                $"must both equal numDimensions={numDimensions}");
+        ValidateFixedGridArguments(nameof(Nodes), numDimensions, domain, nNodes);
 
         int totalPoints = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(nNodes, nameof(Nodes)),
@@ -976,10 +1113,7 @@ public class ChebyshevApproximation
         int maxDerivativeOrder = 2)
     {
         // Validation
-        if (domain.Length != numDimensions || nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"len(domain)={domain.Length} and len(nNodes)={nNodes.Length} " +
-                $"must both equal numDimensions={numDimensions}");
+        ValidateFixedGridArguments(nameof(FromValues), numDimensions, domain, nNodes);
 
         int expectedTotal = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(nNodes, nameof(FromValues)),
@@ -995,13 +1129,6 @@ public class ChebyshevApproximation
         {
             if (double.IsNaN(tensorValues[i]) || double.IsInfinity(tensorValues[i]))
                 throw new ArgumentException("tensor_values contains NaN or Inf");
-        }
-
-        for (int d = 0; d < numDimensions; d++)
-        {
-            if (domain[d][0] >= domain[d][1])
-                throw new ArgumentException(
-                    $"domain[{d}]: lo={domain[d][0]} must be strictly less than hi={domain[d][1]}");
         }
 
         var obj = new ChebyshevApproximation
@@ -1054,10 +1181,10 @@ public class ChebyshevApproximation
             Domain = source.Domain.Select(d => (double[])d.Clone()).ToArray(),
             NNodes = (int[])source.NNodes.Clone(),
             MaxDerivativeOrder = source.MaxDerivativeOrder,
-            NodeArrays = source.NodeArrays,
-            Weights = source.Weights,
-            DiffMatrices = source.DiffMatrices,
-            DiffMatricesTFlat = source.DiffMatricesTFlat,
+            NodeArrays = Internal.CloneHelpers.DeepCopy(source.NodeArrays)!,
+            Weights = Internal.CloneHelpers.DeepCopy(source.Weights),
+            DiffMatrices = Internal.CloneHelpers.DeepCopy(source.DiffMatrices),
+            DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(source.DiffMatricesTFlat),
             TensorValues = tensorValues,
             BuildTime = 0.0,
             NEvaluations = 0,
@@ -1271,7 +1398,7 @@ public class ChebyshevApproximation
         if (newNdim == 0)
             return tensor[0];
 
-        return new ChebyshevApproximation
+        var result = new ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
@@ -1286,6 +1413,8 @@ public class ChebyshevApproximation
             NEvaluations = 0,
             _cachedErrorEstimate = null,
         };
+        result.PrecomputeTransposedDiffMatrices();
+        return result;
     }
 
     /// <summary>
@@ -1365,6 +1494,9 @@ public class ChebyshevApproximation
     /// <summary>Multiply interpolant by a scalar.</summary>
     public static ChebyshevApproximation operator *(ChebyshevApproximation a, double scalar)
     {
+        if (a.TensorValues == null)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+
         double[] newValues = new double[a.TensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
             newValues[i] = a.TensorValues[i] * scalar;
@@ -1441,9 +1573,60 @@ public class ChebyshevApproximation
     // Private helpers
     // ------------------------------------------------------------------
 
+    private static void ValidateFixedGridArguments(
+        string caller,
+        int numDimensions,
+        double[][] domain,
+        int[] nNodes)
+    {
+        ValidateDomainArguments(caller, numDimensions, domain);
+        ArgumentNullException.ThrowIfNull(nNodes);
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"len(nNodes)={nNodes.Length} must equal numDimensions={numDimensions}");
+        ValidateNodeCounts(caller, nNodes);
+    }
+
+    private static void ValidateDomainArguments(string caller, int numDimensions, double[][] domain)
+    {
+        if (numDimensions <= 0)
+            throw new ArgumentException($"{caller} requires numDimensions to be positive, got {numDimensions}");
+
+        ArgumentNullException.ThrowIfNull(domain);
+
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"len(domain)={domain.Length} must equal numDimensions={numDimensions}");
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] is null)
+                throw new ArgumentException($"domain[{d}] must contain exactly two bounds [lo, hi]", nameof(domain));
+
+            if (domain[d].Length != 2)
+                throw new ArgumentException($"domain[{d}] must contain exactly two bounds [lo, hi]");
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi) || lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}]: lo={lo} must be strictly less than hi={hi}; both bounds must be finite");
+        }
+    }
+
+    private static void ValidateNodeCounts(string caller, int[] nNodes)
+    {
+        for (int d = 0; d < nNodes.Length; d++)
+        {
+            if (nNodes[d] <= 0)
+                throw new ArgumentException(
+                    $"{caller} requires nNodes[{d}] to be positive, got {nNodes[d]}");
+        }
+    }
+
     /// <summary>
     /// Pre-compute transposed diff matrices as flat arrays for BLAS GEMM.
-    /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice.
+    /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice, and Integrate.
     /// </summary>
     internal void PrecomputeTransposedDiffMatrices()
     {
@@ -1626,9 +1809,16 @@ public class ChebyshevApproximation
     /// the <see cref="FromValues"/> factory.
     /// </summary>
     /// <param name="values">Flat C-order tensor of length nNodes[0]*nNodes[1]*...</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when values length does not match the expected product of nNodes.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the interpolant is already constructed.</exception>
     public void SetOriginalFunctionValues(double[] values)
     {
+        ArgumentNullException.ThrowIfNull(values);
+        if (_isConstructionFinished || TensorValues != null)
+            throw new InvalidOperationException(
+                "interpolant is already constructed; SetOriginalFunctionValues is for unconstructed deferred objects");
+
         int expected = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(NNodes, nameof(SetOriginalFunctionValues)),
             nameof(SetOriginalFunctionValues),
@@ -1636,6 +1826,11 @@ public class ChebyshevApproximation
         if (values.Length != expected)
             throw new ArgumentException(
                 $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", NNodes)}]");
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw new ArgumentException("values contains NaN or Inf", nameof(values));
+        }
 
         // Materialize NodeArrays now if deferred (NodeArrays is empty when deferBuild was true).
         if (NodeArrays.Length == 0)
@@ -1672,6 +1867,7 @@ public class ChebyshevApproximation
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;

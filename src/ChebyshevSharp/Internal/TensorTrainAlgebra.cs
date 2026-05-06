@@ -210,13 +210,13 @@ internal static class TensorTrainAlgebra
                     for (int p = 0; p < rR; p++)
                         Mt[j * rR + p, i] = result[k][i, j, p];
             var Mtm = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(Mt);
-            var qr = Mtm.QR(MathNet.Numerics.LinearAlgebra.Factorization.QRMethod.Thin);
-            int newRL = qr.Q.ColumnCount;
+            var (Q, R) = MatrixFactorization.ReducedQr(Mtm);
+            int newRL = Q.ColumnCount;
             var newCk = new TensorTrainKernel.TtCore(newRL, n, rR);
             for (int a = 0; a < newRL; a++)
                 for (int j = 0; j < n; j++)
                     for (int p = 0; p < rR; p++)
-                        newCk[a, j, p] = qr.Q[j * rR + p, a];
+                        newCk[a, j, p] = Q[j * rR + p, a];
             // Push R^T into the previous core's right rank.
             var prev = result[k - 1];
             int rLp = prev.RLeft, nP = prev.NNodes;
@@ -227,7 +227,7 @@ internal static class TensorTrainAlgebra
                     {
                         double s = 0;
                         for (int sIdx = 0; sIdx < rL; sIdx++)
-                            s += prev[i, j, sIdx] * qr.R[r, sIdx];
+                            s += prev[i, j, sIdx] * R[r, sIdx];
                         newPrev[i, j, r] = s;
                     }
             result[k] = newCk;

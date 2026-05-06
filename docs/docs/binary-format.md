@@ -145,6 +145,9 @@ If you need any of those preserved, use JSON.
 
 ## Security
 
-The binary reader does no executable deserialization. It can be used to load
-files from untrusted sources — it will reject malformed files with
-`InvalidDataException`.
+The binary reader does no executable deserialization and reads only primitive
+numbers into ChebyshevSharp data structures. Still treat `.pcb` files from
+untrusted sources as untrusted input: validate provenance when possible and
+load them in an environment with appropriate memory and file-size limits.
+Malformed files are rejected with `InvalidDataException` or standard I/O
+exceptions, but the format is not a security sandbox.
