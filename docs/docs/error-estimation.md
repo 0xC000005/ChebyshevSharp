@@ -49,7 +49,7 @@ The interpolation error $f(x) - p_n(x)$ comes from two sources: (1) the omitted 
 
 For a function analytic in a [Bernstein ellipse](concepts.md#bernstein-ellipse) with parameter $\rho > 1$, the Chebyshev coefficients satisfy $|c_k| = O(\rho^{-k})$. This means each successive coefficient is roughly $\rho$ times smaller than the previous one. The last included coefficient $|c_{n-1}|$ is therefore:
 
-1. **An upper bound on the omitted tail.** Since $|c_k| \leq M \rho^{-k}$ and the tail sum $\sum_{k=n}^{\infty} |c_k|$ is a geometric series with ratio $\rho^{-1} < 1$, we have $\sum_{k=n}^{\infty} |c_k| \lesssim |c_{n-1}| / (\rho - 1)$. When $\rho$ is even moderately large (say, $\rho > 2$), the omitted tail is comparable in magnitude to $|c_{n-1}|$ itself.
+1. **A scale estimate for the omitted tail.** Since $|c_k| \leq M \rho^{-k}$ and the tail sum $\sum_{k=n}^{\infty} |c_k|$ is a geometric series with ratio $\rho^{-1} < 1$, we have $\sum_{k=n}^{\infty} |c_k| \lesssim |c_{n-1}| / (\rho - 1)$. When $\rho$ is even moderately large (say, $\rho > 2$), the omitted tail is comparable in magnitude to $|c_{n-1}|$ itself.
 
 2. **A proxy for aliasing error.** The aliased contributions (omitted terms folding onto lower coefficients) are bounded by the same geometric decay, so they are also $O(|c_{n-1}|)$ for well-resolved functions.
 
@@ -57,6 +57,13 @@ The practical rule: **if $|c_{n-1}|$ is small, both the truncation and aliasing 
 
 > **Warning: Heuristic, not a formal bound.**
 > This estimate is an empirically reliable proxy, not a rigorous upper bound. Ruiz & Zeron (2022, Section 3.4) report that they have never encountered a real-world case where small trailing coefficients failed to indicate convergence. However, pathological functions (e.g., those with singularities just outside the Bernstein ellipse) could have slowly decaying coefficients that make the estimate optimistic. Always validate against known solutions when possible.
+
+For automatic node selection, ChebyshevSharp does not rely on this coefficient
+proxy alone. Before accepting a candidate auto-N grid, it also evaluates the
+original function on denser off-grid Type-I probe nodes along each auto-sized
+dimension and compares those values against the interpolant. This validation
+step is designed to catch aliasing cases where a high-frequency component makes
+the last sampled coefficient accidentally small.
 
 ### Computing Coefficients via DCT-II
 
@@ -171,6 +178,12 @@ Console.WriteLine($"TT error estimate: {tt.ErrorEstimate():E2}");
 ```
 
 > **Note:** The TT error estimate measures coefficient truncation within each core but does not capture the TT rank truncation error (the error from approximating a high-rank tensor with a low-rank TT). For TT-Cross, the rank is adaptively chosen, so the rank truncation error is typically small relative to the coefficient truncation error.
+
+> **Validation tip:** Treat the TT estimate as a diagnostic, not proof of
+> accuracy. It can also be optimistic if the node grid aliases unresolved
+> high-frequency structure, and it is separate from TT-Cross convergence
+> checks. For production TT models, validate on held-out points from the
+> original function.
 
 ## Class Support
 
