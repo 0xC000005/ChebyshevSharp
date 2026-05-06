@@ -249,6 +249,21 @@ public class ScalarAlgebraTests
         var result = tt * 2.0;
         Assert.Throws<InvalidOperationException>((Action)(() => result.RunCompletion()));
     }
+
+    [Fact]
+    public void Test_unbuilt_scalar_operations_raise_invalid_operation()
+    {
+        var tt = new ChebyshevTT(p => p[0] + p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 });
+
+        Assert.Throws<InvalidOperationException>(() => { var _ = tt * 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = 2.0 * tt; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = tt / 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = -tt; });
+        Assert.Throws<InvalidOperationException>(() => tt.ScalarMulInPlace(2.0));
+        Assert.Throws<InvalidOperationException>(() => tt.ScalarDivInPlace(2.0));
+        Assert.Throws<InvalidOperationException>(() => tt.NegateInPlace());
+    }
 }
 
 public class ScalarInPlaceTests
