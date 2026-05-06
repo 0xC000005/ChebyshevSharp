@@ -2,6 +2,89 @@ using ChebyshevSharp.Tests.Helpers;
 
 namespace ChebyshevSharp.Tests;
 
+public class TestFejerMomentWeights
+{
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    [InlineData(8)]
+    public void Fejer1Weights_MatchChebyshevMoments(int n)
+    {
+        double[] nodes = TypeINodes(n);
+        double[] weights = ChebyshevSharp.Internal.Calculus.ComputeFejer1Weights(n);
+
+        for (int k = 0; k < n; k++)
+        {
+            double actual = 0.0;
+            for (int i = 0; i < n; i++)
+                actual += weights[i] * ChebyshevT(k, nodes[i]);
+
+            double expected = ChebyshevIntegral(k, -1.0, 1.0);
+            TestFixtures.AssertClose(expected, actual, rtol: 1e-12, atol: 1e-12);
+        }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    [InlineData(9)]
+    public void SubIntervalWeights_MatchChebyshevMoments(int n)
+    {
+        const double lo = -0.4;
+        const double hi = 0.65;
+        double[] nodes = TypeINodes(n);
+        double[] weights = ChebyshevSharp.Internal.Calculus.ComputeSubIntervalWeights(n, lo, hi);
+
+        for (int k = 0; k < n; k++)
+        {
+            double actual = 0.0;
+            for (int i = 0; i < n; i++)
+                actual += weights[i] * ChebyshevT(k, nodes[i]);
+
+            double expected = ChebyshevIntegral(k, lo, hi);
+            TestFixtures.AssertClose(expected, actual, rtol: 1e-12, atol: 1e-12);
+        }
+    }
+
+    private static double[] TypeINodes(int n)
+    {
+        double[] nodes = new double[n];
+        for (int k = 0; k < n; k++)
+            nodes[k] = Math.Cos(Math.PI * (2 * k + 1) / (2.0 * n));
+        Array.Sort(nodes);
+        return nodes;
+    }
+
+    private static double ChebyshevT(int k, double x)
+    {
+        if (k == 0) return 1.0;
+        if (k == 1) return x;
+
+        double t0 = 1.0;
+        double t1 = x;
+        for (int j = 2; j <= k; j++)
+        {
+            double tj = 2.0 * x * t1 - t0;
+            t0 = t1;
+            t1 = tj;
+        }
+
+        return t1;
+    }
+
+    private static double ChebyshevIntegral(int k, double lo, double hi)
+    {
+        if (k == 0) return hi - lo;
+        if (k == 1) return (hi * hi - lo * lo) / 2.0;
+
+        return 0.5 * (
+            (ChebyshevT(k + 1, hi) - ChebyshevT(k + 1, lo)) / (k + 1)
+            - (ChebyshevT(k - 1, hi) - ChebyshevT(k - 1, lo)) / (k - 1));
+    }
+}
+
 // ======================================================================
 // TestIntegrateApprox
 // ======================================================================
