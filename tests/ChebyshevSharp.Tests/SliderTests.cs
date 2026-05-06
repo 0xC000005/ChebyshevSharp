@@ -935,6 +935,52 @@ public class TestSliderValidationCSharp
     }
 
     [Fact]
+    public void TestBuildRejectsNonFinitePivotValue()
+    {
+        static double F(double[] x, object? _)
+        {
+            bool atPivot = x.All(v => Math.Abs(v) < 1e-14);
+            return atPivot ? double.NaN : x.Sum();
+        }
+
+        var slider = new ChebyshevSlider(
+            F, 2,
+            [[-1.0, 1.0], [-1.0, 1.0]],
+            [4, 4],
+            partition: [[0], [1]],
+            pivotPoint: [0.0, 0.0]);
+
+        var ex = Assert.Throws<ArgumentException>(() => slider.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(slider.Built);
+        Assert.False(slider.IsConstructionFinished());
+        Assert.Equal(0.0, slider.PivotValue);
+    }
+
+    [Fact]
+    public void TestBuildRejectsInfinitePivotValue()
+    {
+        static double F(double[] x, object? _)
+        {
+            bool atPivot = x.All(v => Math.Abs(v) < 1e-14);
+            return atPivot ? double.PositiveInfinity : x.Sum();
+        }
+
+        var slider = new ChebyshevSlider(
+            F, 2,
+            [[-1.0, 1.0], [-1.0, 1.0]],
+            [4, 4],
+            partition: [[0], [1]],
+            pivotPoint: [0.0, 0.0]);
+
+        var ex = Assert.Throws<ArgumentException>(() => slider.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(slider.Built);
+        Assert.False(slider.IsConstructionFinished());
+        Assert.Equal(0.0, slider.PivotValue);
+    }
+
+    [Fact]
     public void TestExtrudeBeforeBuildRaises()
     {
         var slider = new ChebyshevSlider(

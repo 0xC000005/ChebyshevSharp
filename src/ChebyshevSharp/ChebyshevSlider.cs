@@ -162,7 +162,9 @@ public class ChebyshevSlider
         _cachedErrorEstimate = null;
 
         // Evaluate pivot value
-        PivotValue = Function(PivotPoint, _additionalData);
+        double pivotValue = Function(PivotPoint, _additionalData);
+        ValidateFinitePivotValue(pivotValue);
+        PivotValue = pivotValue;
 
         int totalEvals = TotalBuildEvals;
         long fullTensor = TensorShape.CheckedProduct(NNodes, nameof(Build));
@@ -240,6 +242,14 @@ public class ChebyshevSlider
 
         Built = true;
         _isConstructionFinished = true;
+    }
+
+    private static void ValidateFinitePivotValue(double value)
+    {
+        if (!double.IsFinite(value))
+            throw new ArgumentException(
+                "function returned a non-finite value at the slider pivot point; " +
+                "build cannot proceed with NaN/Infinity in PivotValue");
     }
 
     // ------------------------------------------------------------------
