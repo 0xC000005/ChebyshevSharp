@@ -1173,6 +1173,20 @@ public class TestSplineEmptyKnotsEquivalence
 /// </summary>
 public class TestSplinePieceRouting
 {
+    private static ChebyshevSpline BuildDiscontinuousSpline()
+    {
+        static double Step(double[] x, object? _) => x[0] < 0.0 ? -2.0 : 3.0;
+
+        var sp = new ChebyshevSpline(
+            Step,
+            1,
+            [[-1.0, 1.0]],
+            [7],
+            [[0.0]]);
+        sp.Build(verbose: false);
+        return sp;
+    }
+
     [Fact]
     public void Test_point_slightly_below_knot_routes_left()
     {
@@ -1194,6 +1208,20 @@ public class TestSplinePieceRouting
         // And close to each other (continuity)
         Assert.True(Math.Abs(valLeft - valRight) < 1e-8,
             $"Values across knot should be close: {valLeft} vs {valRight}");
+    }
+
+    [Fact]
+    public void Test_exact_knot_value_uses_right_piece_convention()
+    {
+        var sp = BuildDiscontinuousSpline();
+
+        double scalar = sp.Eval([0.0], [0]);
+        double multi = sp.EvalMulti([0.0], [[0]])[0];
+        double batch = sp.EvalBatch([[0.0]], [0])[0];
+
+        Assert.Equal(3.0, scalar, precision: 12);
+        Assert.Equal(3.0, multi, precision: 12);
+        Assert.Equal(3.0, batch, precision: 12);
     }
 }
 

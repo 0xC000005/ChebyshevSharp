@@ -214,6 +214,8 @@ spline.Eval(new[] { 100.0, 0.5 }, new[] { 1, 0 });
 spline.Eval(new[] { 100.0, 0.5 }, new[] { 0, 0 });  // OK
 ```
 
+When a function value is evaluated exactly at an interior knot, the spline uses the piece whose left edge is that knot. This matches the `side="right"` routing used by the PyChebyshev reference implementation and makes jump values right-continuous by convention.
+
 > **Tip:** If you need a derivative near a knot, evaluate slightly to one side: `spline.Eval(new[] { 100.001, 0.5 }, new[] { 1, 0 })` gives the right-side derivative.
 
 ## Error Estimation
@@ -356,7 +358,7 @@ Fix one or more dimensions at specific values, reducing dimensionality:
 var spline1d = spline2d.Slice((1, 0.5));
 ```
 
-Slicing selects the piece containing the slice value along the sliced dimension, then performs barycentric interpolation within that piece. Only pieces at the correct interval index survive; the rest are discarded.
+Slicing selects the piece containing the slice value along the sliced dimension, then performs barycentric interpolation within that piece. A slice exactly at an interior knot uses the right piece, matching value evaluation. Only pieces at the correct interval index survive; the rest are discarded.
 
 ## Serialization
 
