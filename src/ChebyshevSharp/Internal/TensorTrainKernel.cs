@@ -1059,9 +1059,7 @@ internal static class TensorTrainKernel
                     matrix[i * n + j, k] = coreK[i, j, k];
 
         var M = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(matrix);
-        var qr = M.QR(MathNet.Numerics.LinearAlgebra.Factorization.QRMethod.Thin);
-        var Q = qr.Q;     // shape (r0*n, qCols), qCols = min(r0*n, r1)
-        var R = qr.R;     // shape (qCols, r1)
+        var (Q, R) = MatrixFactorization.ReducedQr(M);
         int qCols = Q.ColumnCount;
 
         // Pack new core_k as TtCore(r0, n, qCols)
@@ -1108,9 +1106,7 @@ internal static class TensorTrainKernel
                     Mt[j * rNext + k, i] = coreK[i, j, k];
 
         var Mtm = MathNet.Numerics.LinearAlgebra.Double.DenseMatrix.OfArray(Mt);
-        var qr = Mtm.QR(MathNet.Numerics.LinearAlgebra.Factorization.QRMethod.Thin);
-        var Qt = qr.Q;   // (n*r_next, kRank)
-        var Rt = qr.R;   // (kRank, r_prev)
+        var (Qt, Rt) = MatrixFactorization.ReducedQr(Mtm);
         int kRank = Qt.ColumnCount;
 
         // newCk = Qt.T.reshape(kRank, n, r_next)
