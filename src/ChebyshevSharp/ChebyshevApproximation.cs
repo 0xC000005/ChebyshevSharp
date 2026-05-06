@@ -1189,6 +1189,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
     }
 
@@ -1247,6 +1248,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
         result.PrecomputeTransposedDiffMatrices();
         return result;
@@ -1311,6 +1313,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
         result.PrecomputeTransposedDiffMatrices();
         return result;
@@ -1412,6 +1415,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
         result.PrecomputeTransposedDiffMatrices();
         return result;
