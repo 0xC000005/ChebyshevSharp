@@ -802,6 +802,7 @@ public class ChebyshevSlider
             DimToSlide = new Dictionary<int, int>(source.DimToSlide),
             Built = true,
             BuildTime = 0.0,
+            _isConstructionFinished = true,
         };
     }
 
@@ -843,27 +844,15 @@ public class ChebyshevSlider
             }
 
             // Create new 1D constant slide
-            var newNodes = BarycentricKernel.MakeNodesForDim(lo, hi, n);
-            var newWeights = BarycentricKernel.ComputeBarycentricWeights(newNodes);
-            var newDiffMat = BarycentricKernel.ComputeDifferentiationMatrix(newNodes, newWeights);
             var newTensor = new double[n];
             Array.Fill(newTensor, PivotValue);
 
-            var newSlide = new ChebyshevApproximation
-            {
-                Function = null,
-                NumDimensions = 1,
-                Domain = new[] { new[] { lo, hi } },
-                NNodes = new[] { n },
-                MaxDerivativeOrder = MaxDerivativeOrder,
-                NodeArrays = new[] { newNodes },
-                Weights = new[] { newWeights },
-                DiffMatrices = new[] { newDiffMat },
-                TensorValues = newTensor,
-                BuildTime = 0.0,
-                NEvaluations = 0,
-            };
-            newSlide.PrecomputeTransposedDiffMatrices();
+            var newSlide = ChebyshevApproximation.FromValues(
+                newTensor,
+                numDimensions: 1,
+                domain: new[] { new[] { lo, hi } },
+                nNodes: new[] { n },
+                maxDerivativeOrder: MaxDerivativeOrder);
 
             // Add new group and slide
             partition.Add(new List<int> { dimIdx });
@@ -891,6 +880,7 @@ public class ChebyshevSlider
             PivotValue = PivotValue,
             DimToSlide = BuildDimToSlide(newPartition),
             Built = true,
+            _isConstructionFinished = true,
         };
     }
 
@@ -999,6 +989,7 @@ public class ChebyshevSlider
             PivotValue = pivotValue,
             DimToSlide = BuildDimToSlide(newPartition),
             Built = true,
+            _isConstructionFinished = true,
         };
     }
 

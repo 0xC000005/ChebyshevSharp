@@ -34,6 +34,33 @@ public class SliderErgonomicsTests
     }
 
     [Fact]
+    public void IsConstructionFinished_true_after_arithmetic_result()
+    {
+        var slider = BuildSimple();
+        var result = slider + slider;
+        Assert.True(result.IsConstructionFinished());
+        Assert.All(result.Slides, slide => Assert.True(slide.IsConstructionFinished()));
+    }
+
+    [Fact]
+    public void IsConstructionFinished_true_after_Extrude_result()
+    {
+        var slider = BuildSimple();
+        var result = slider.Extrude((3, new[] { -1.0, 1.0 }, 5));
+        Assert.True(result.IsConstructionFinished());
+        Assert.All(result.Slides, slide => Assert.True(slide.IsConstructionFinished()));
+    }
+
+    [Fact]
+    public void IsConstructionFinished_true_after_Slice_result()
+    {
+        var slider = BuildSimple();
+        var result = slider.Slice((0, 0.25));
+        Assert.True(result.IsConstructionFinished());
+        Assert.All(result.Slides, slide => Assert.True(slide.IsConstructionFinished()));
+    }
+
+    [Fact]
     public void GetConstructorType_returns_function_for_Build_path()
     {
         var slider = BuildSimple();

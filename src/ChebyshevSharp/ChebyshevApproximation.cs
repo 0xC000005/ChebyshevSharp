@@ -1062,6 +1062,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
     }
 
@@ -1120,6 +1121,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
         result.PrecomputeTransposedDiffMatrices();
         return result;
@@ -1184,6 +1186,7 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
         result.PrecomputeTransposedDiffMatrices();
         return result;
@@ -1271,7 +1274,7 @@ public class ChebyshevApproximation
         if (newNdim == 0)
             return tensor[0];
 
-        return new ChebyshevApproximation
+        var result = new ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
@@ -1285,7 +1288,10 @@ public class ChebyshevApproximation
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
+            _isConstructionFinished = true,
         };
+        result.PrecomputeTransposedDiffMatrices();
+        return result;
     }
 
     /// <summary>
