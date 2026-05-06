@@ -406,6 +406,29 @@ public class TensorTrainAlgebraKernelTests
         AssertDenseClose(before, ToDense(cores), 1e-10);
     }
 
+    [Fact]
+    public void Test_als_fixed_rank_handles_underdetermined_local_solve()
+    {
+        var cores = new[]
+        {
+            Core(1, 2, 3, (l, j, r) => 0.2 + 0.3 * j - 0.1 * r),
+            Core(3, 2, 1, (l, j, r) => -0.4 + 0.2 * l + 0.5 * j),
+        };
+        int[] nNodes = { 2, 2 };
+        double[] target = { 0.0, 1.0, -1.0, 0.5 };
+
+        TensorTrainKernel.AlsFixedRankSweep(
+            cores,
+            idx => target[idx[0] * nNodes[1] + idx[1]],
+            nNodes,
+            tolerance: 1e-12,
+            maxIter: 1,
+            precomputedB: target);
+
+        foreach (double value in ToDense(cores))
+            Assert.True(double.IsFinite(value));
+    }
+
     private static TensorTrainKernel.TtCore Core(
         int rLeft,
         int nNodes,
