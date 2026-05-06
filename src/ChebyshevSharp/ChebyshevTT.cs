@@ -192,10 +192,12 @@ public class ChebyshevTT
     /// <param name="seed">Random seed for TT-Cross/ALS initialization. Ignored for method="svd".</param>
     /// <param name="method">"cross" (default), "svd", or "als".</param>
     /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als".</exception>
+    /// <exception cref="InvalidOperationException">If this TT was loaded or created from values without the original function.</exception>
     public void Build(bool verbose = true, int? seed = null, string method = "cross")
     {
         if (method != "cross" && method != "svd" && method != "als")
             throw new ArgumentException($"method must be 'cross', 'svd', or 'als', got '{method}'");
+        var function = GetRequiredFunction(nameof(Build));
         Method = method;
         BuildWarning = null;
 
@@ -223,19 +225,19 @@ public class ChebyshevTT
         {
             if (verbose) Console.WriteLine("  Running TT-Cross...");
             (valueCores, nEvals) = TensorTrainKernel.TtCross(
-                _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
+                function, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
         }
         else if (method == "svd")
         {
             (valueCores, nEvals) = TensorTrainKernel.TtSvd(
-                _function!, grids, _maxRank, _tolerance, verbose);
+                function, grids, _maxRank, _tolerance, verbose);
         }
         else  // method == "als"
         {
             if (verbose) Console.WriteLine("  Running TT-ALS...");
             bool hitCap;
             (valueCores, nEvals, hitCap) = TensorTrainKernel.AlsAdaptiveRank(
-                _function!, grids, _maxRank, _tolerance, seed, verbose);
+                function, grids, _maxRank, _tolerance, seed, verbose);
             if (hitCap)
                 BuildWarning =
                     $"maxRank={_maxRank} reached before ALS tolerance={_tolerance:e2} satisfied. " +
@@ -283,6 +285,16 @@ public class ChebyshevTT
                 "Use sparse TT evaluation for high-dimensional tensors.");
         }
         return (int)total;
+    }
+
+    private Func<double[], double> GetRequiredFunction(string caller)
+    {
+        if (_function == null)
+        {
+            throw new InvalidOperationException(
+                $"{caller} requires Function to be callable; this TT was loaded or created from values without the original function.");
+        }
+        return _function;
     }
 
     private void CheckBuilt()
@@ -1240,9 +1252,7 @@ public class ChebyshevTT
     public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
     {
         CheckBuilt();
-        if (_function == null)
-            throw new InvalidOperationException(
-                "RunCompletion requires Function to be callable; the TT was loaded from a source without the original function.");
+        var function = GetRequiredFunction(nameof(RunCompletion));
 
         // Convert coefficient cores back to value cores at Chebyshev Type I nodes.
         var valueCores = new TensorTrainKernel.TtCore[_numDimensions];
@@ -1263,7 +1273,7 @@ public class ChebyshevTT
             {
                 var pt = new double[_numDimensions];
                 for (int i = 0; i < _numDimensions; i++) pt[i] = grids[i][idx[i]];
-                v = _function(pt);
+                v = function(pt);
                 cache[key] = v;
             }
             return v;
