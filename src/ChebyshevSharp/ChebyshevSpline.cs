@@ -351,6 +351,13 @@ public class ChebyshevSpline
         return intervals;
     }
 
+    private static int[][]? CloneNestedNNodes(int[][]? nestedNNodes)
+    {
+        return nestedNNodes == null
+            ? null
+            : nestedNNodes.Select(row => (int[])row.Clone()).ToArray();
+    }
+
     // ------------------------------------------------------------------
     // Build
     // ------------------------------------------------------------------
@@ -655,6 +662,20 @@ public class ChebyshevSpline
     {
         get
         {
+            if (NestedNNodes != null)
+            {
+                long nestedTotal = 0;
+                foreach (var multiIdx in NdIndex(Shape))
+                {
+                    var pieceNNodes = new int[NumDimensions];
+                    for (int d = 0; d < NumDimensions; d++)
+                        pieceNNodes[d] = NestedNNodes[d][multiIdx[d]];
+                    nestedTotal = checked(nestedTotal +
+                        TensorShape.CheckedProduct(pieceNNodes, nameof(TotalBuildEvals)));
+                }
+                return TensorShape.RequireArrayLength(nestedTotal, nameof(TotalBuildEvals));
+            }
+
             if (NNodes.Any(n => n <= 0))
             {
                 if (Pieces == null || Pieces.All(p => p == null)) return 0;
@@ -1123,11 +1144,15 @@ public class ChebyshevSpline
             NNodes = (int[])source.NNodes.Clone(),
             MaxDerivativeOrder = source.MaxDerivativeOrder,
             Knots = source.Knots.Select(k => (double[])k.Clone()).ToArray(),
-            Intervals = source.Intervals,
-            Shape = source.Shape,
+            Intervals = source.Intervals.Select(iv => ((double, double)[])iv.Clone()).ToArray(),
+            Shape = (int[])source.Shape.Clone(),
             Pieces = pieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = (int?[])source.OriginalNNodes.Clone(),
+            ErrorThreshold = source.ErrorThreshold,
+            MaxN = source.MaxN,
+            NestedNNodes = CloneNestedNNodes(source.NestedNNodes),
             _cachedErrorEstimate = null,
         };
     }
@@ -1153,6 +1178,10 @@ public class ChebyshevSpline
         var shape = Shape.ToList();
         var domain = Domain.Select(d => (double[])d.Clone()).ToList();
         var nNodes = NNodes.ToList();
+        var nestedNNodes = NestedNNodes?.Select(row => row.ToList()).ToList();
+        List<int?>? originalNNodes = OriginalNNodes.Length == NumDimensions
+            ? OriginalNNodes.ToList()
+            : null;
 
         foreach (var (dimIdx, bounds, n) in sorted)
         {
@@ -1161,6 +1190,8 @@ public class ChebyshevSpline
             shape.Insert(dimIdx, 1);
             domain.Insert(dimIdx, (double[])bounds.Clone());
             nNodes.Insert(dimIdx, n);
+            nestedNNodes?.Insert(dimIdx, new List<int> { n });
+            originalNNodes?.Insert(dimIdx, n);
         }
 
         // Extrude each piece
@@ -1186,6 +1217,10 @@ public class ChebyshevSpline
             Pieces = pieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = originalNNodes?.ToArray() ?? Array.Empty<int?>(),
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = nestedNNodes?.Select(row => row.ToArray()).ToArray(),
             _cachedErrorEstimate = null,
         };
     }
@@ -1217,6 +1252,10 @@ public class ChebyshevSpline
         var shape = Shape.ToList();
         var domain = Domain.Select(d => (double[])d.Clone()).ToList();
         var nNodes = NNodes.ToList();
+        var nestedNNodes = NestedNNodes?.Select(row => row.ToList()).ToList();
+        List<int?>? originalNNodes = OriginalNNodes.Length == NumDimensions
+            ? OriginalNNodes.ToList()
+            : null;
 
         // Work with pieces as a multi-dimensional index structure
         // Use the shape to track which pieces survive
@@ -1291,6 +1330,8 @@ public class ChebyshevSpline
             shape.RemoveAt(dimIdx);
             domain.RemoveAt(dimIdx);
             nNodes.RemoveAt(dimIdx);
+            nestedNNodes?.RemoveAt(dimIdx);
+            originalNNodes?.RemoveAt(dimIdx);
         }
 
         return new ChebyshevSpline
@@ -1306,6 +1347,10 @@ public class ChebyshevSpline
             Pieces = currentPieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = originalNNodes?.ToArray() ?? Array.Empty<int?>(),
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = nestedNNodes?.Select(row => row.ToArray()).ToArray(),
             _cachedErrorEstimate = null,
         };
     }
@@ -1418,6 +1463,10 @@ public class ChebyshevSpline
         var currentIntervals = Intervals.Select(iv => ((double, double)[])iv.Clone()).ToList();
         var currentDomain = Domain.Select(d => (double[])d.Clone()).ToList();
         var currentNNodes = NNodes.ToList();
+        var currentNestedNNodes = NestedNNodes?.Select(row => row.ToList()).ToList();
+        List<int?>? currentOriginalNNodes = OriginalNNodes.Length == NumDimensions
+            ? OriginalNNodes.ToList()
+            : null;
 
         foreach (int d in sortedDims.OrderByDescending(x => x))
         {
@@ -1542,6 +1591,8 @@ public class ChebyshevSpline
             currentIntervals.RemoveAt(d);
             currentDomain.RemoveAt(d);
             currentNNodes.RemoveAt(d);
+            currentNestedNNodes?.RemoveAt(d);
+            currentOriginalNNodes?.RemoveAt(d);
         }
 
         // If 0D result, should not happen (handled in full-integration branch)
@@ -1561,6 +1612,10 @@ public class ChebyshevSpline
             Pieces = currentPieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = currentOriginalNNodes?.ToArray() ?? Array.Empty<int?>(),
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = currentNestedNNodes?.Select(row => row.ToArray()).ToArray(),
             _cachedErrorEstimate = null,
         };
     }
@@ -1707,6 +1762,19 @@ public class ChebyshevSpline
         {
             if (!Knots[d].SequenceEqual(other.Knots[d]))
                 throw new ArgumentException($"Knot mismatch at dimension {d}");
+        }
+
+        if (Pieces.Length != other.Pieces.Length)
+            throw new ArgumentException(
+                $"Piece count mismatch: {Pieces.Length} vs {other.Pieces.Length}");
+        for (int i = 0; i < Pieces.Length; i++)
+        {
+            var leftNodes = Pieces[i]!.NNodes;
+            var rightNodes = other.Pieces[i]!.NNodes;
+            if (!leftNodes.SequenceEqual(rightNodes))
+                throw new ArgumentException(
+                    $"Piece {i} node count mismatch: " +
+                    $"[{string.Join(", ", leftNodes)}] vs [{string.Join(", ", rightNodes)}]");
         }
     }
 
