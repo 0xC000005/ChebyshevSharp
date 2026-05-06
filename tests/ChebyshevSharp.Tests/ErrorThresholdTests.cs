@@ -78,6 +78,19 @@ public class ConstructorValidation
         var cheb = new ChebyshevApproximation(Sin2D, 2, UnitSq, nNodes: null, errorThreshold: 1e-6, maxN: 3);
         Assert.Equal(3, cheb.MaxN);
     }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-1e-6)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Test_error_threshold_must_be_finite_and_positive(double badThreshold)
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(Sin2D, 2, UnitSq, nNodes: null, errorThreshold: badThreshold));
+        Assert.Contains("errorThreshold must be finite and > 0", ex.Message);
+    }
 }
 
 public class DoublingLoopTests
@@ -380,6 +393,36 @@ public class SplineErrorThresholdTests
         Assert.Empty(spl.Knots[1]);
         spl.Build(verbose: false);
         Assert.Single(spl.Pieces);
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-1e-6)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Test_spline_error_threshold_must_be_finite_and_positive(double badThreshold)
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevSpline(
+                Sin2D, 2, new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+                nNodes: null, knots: null, errorThreshold: badThreshold));
+        Assert.Contains("errorThreshold must be finite and > 0", ex.Message);
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void Test_with_special_points_error_threshold_must_be_finite_and_positive(double badThreshold)
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevSpline.WithSpecialPoints(
+                (x, _) => Math.Abs(x[0]),
+                1, new[] { new[] { -1.0, 1.0 } },
+                specialPoints: new[] { new[] { 0.0 } },
+                errorThreshold: badThreshold));
+        Assert.Contains("errorThreshold must be finite and > 0", ex.Message);
     }
 }
 

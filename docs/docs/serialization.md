@@ -11,7 +11,7 @@ ChebyshevSharp provides multiple ways to create and persist interpolants beyond 
 A built interpolant can be saved to disk and restored later without the original function:
 
 ```csharp
-// Save to file
+// Save to JSON
 cheb.Save("interpolant.json");
 
 // Load from file (no function reference needed)
@@ -19,11 +19,20 @@ var restored = ChebyshevApproximation.Load("interpolant.json");
 double value = restored.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 0 });
 ```
 
-The serialization format is JSON. All pre-computed data is saved: nodes, barycentric weights, differentiation matrices, tensor values, domain bounds, and node counts. The loaded interpolant is fully functional for evaluation, derivatives, integration, root-finding, and all other operations.
+JSON is the default format. It saves the pre-computed data needed for full-fidelity .NET round trips: nodes, barycentric weights, differentiation matrices, tensor values, domain bounds, node counts, and build metadata where supported. The loaded interpolant is fully functional for evaluation, derivatives, integration, root-finding, and all other operations.
 
 Loaded interpolants cannot call `Build()` since they do not retain the original function reference. Pre-transposed differentiation matrices (`DiffMatricesTFlat`) are recomputed on load from the stored differentiation matrices.
 
-**Format note:** ChebyshevSharp uses its own JSON format, not Python pickle. Files saved by PyChebyshev cannot be loaded by ChebyshevSharp and vice versa. To transfer between languages, use `FromValues` with exported Type I node positions and function values.
+ChebyshevSharp also supports a portable binary format for dense approximations and compatible splines:
+
+```csharp
+cheb.Save("model.pcb", format: "binary");
+var portable = ChebyshevApproximation.Load("model.pcb");
+```
+
+`Load()` auto-detects JSON versus `.pcb` by checking the binary magic header. Use JSON for .NET-only round trips and rich metadata. Use `.pcb` for cross-language consumers or long-term archival; it is byte-compatible with PyChebyshev's portable binary format but stores only the grid, domain, and tensor values needed to reconstruct the interpolant. See [Portable Binary Format (.pcb)](binary-format.md) for format details and restrictions.
+
+**Format note:** ChebyshevSharp's JSON format is not Python pickle, and it is not the same as PyChebyshev's JSON/pickle serialization. Use `.pcb` where supported for cross-language binary transfer, or use `FromValues` with exported Type I node positions and function values when binary coverage does not fit your model.
 
 `ChebyshevSpline` also supports `Save` and `Load` with the same JSON format. The serialized file includes all pieces and knot positions. `Nodes()` and `FromValues()` are available for `ChebyshevSpline` as well. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 

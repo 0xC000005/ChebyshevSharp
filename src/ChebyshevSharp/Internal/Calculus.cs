@@ -104,6 +104,8 @@ internal static class Calculus
         for (int i = 0; i < bounds.Length; i++)
         {
             var bd = bounds[i];
+            if (!double.IsFinite(bd.lo) || !double.IsFinite(bd.hi))
+                throw new ArgumentException($"bounds ({bd.lo}, {bd.hi}) for dim {dims[i]} must be finite");
             if (bd.lo > bd.hi)
                 throw new ArgumentException($"bounds lo={bd.lo} > hi={bd.hi} for dim {dims[i]}");
 
@@ -284,6 +286,10 @@ internal static class Calculus
         var sliceParams = new List<(int, double)>();
         foreach (var kvp in fixedDims)
         {
+            if (!double.IsFinite(kvp.Value))
+                throw new ArgumentException(
+                    $"Fixed value {kvp.Value} for dim {kvp.Key} must be finite");
+
             double lo = domain[kvp.Key][0];
             double hi = domain[kvp.Key][1];
             if (kvp.Value < lo || kvp.Value > hi)

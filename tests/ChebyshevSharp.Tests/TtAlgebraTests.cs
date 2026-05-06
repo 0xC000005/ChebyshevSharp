@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using ChebyshevSharp;
+using ChebyshevSharp.Internal;
 using ChebyshevSharp.Tests.Helpers;
 
 namespace ChebyshevSharp.Tests;
@@ -249,6 +250,21 @@ public class ScalarAlgebraTests
         var result = tt * 2.0;
         Assert.Throws<InvalidOperationException>((Action)(() => result.RunCompletion()));
     }
+
+    [Fact]
+    public void Test_unbuilt_scalar_operations_raise_invalid_operation()
+    {
+        var tt = new ChebyshevTT(p => p[0] + p[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 5, 5 });
+
+        Assert.Throws<InvalidOperationException>(() => { var _ = tt * 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = 2.0 * tt; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = tt / 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = -tt; });
+        Assert.Throws<InvalidOperationException>(() => tt.ScalarMulInPlace(2.0));
+        Assert.Throws<InvalidOperationException>(() => tt.ScalarDivInPlace(2.0));
+        Assert.Throws<InvalidOperationException>(() => tt.NegateInPlace());
+    }
 }
 
 public class ScalarInPlaceTests
@@ -335,5 +351,134 @@ public class TtAlgebraCoverageTests
         tt2D.Build(verbose: false, seed: 1);
         tt3D.Build(verbose: false, seed: 2);
         Assert.Throws<ArgumentException>(() => tt2D + tt3D);
+    }
+}
+
+public class TensorTrainAlgebraKernelTests
+{
+    [Fact]
+    public void Test_internal_algebra_matches_dense_contraction()
+    {
+        var a = new[]
+        {
+            Core(1, 2, 2, (l, j, r) => 0.3 + j - 0.4 * r),
+            Core(2, 3, 2, (l, j, r) => 0.1 * (1 + l) - 0.2 * j + 0.35 * r),
+            Core(2, 2, 1, (l, j, r) => -0.5 + 0.25 * l + 0.75 * j),
+        };
+        var b = new[]
+        {
+            Core(1, 2, 1, (l, j, r) => -0.2 + 0.6 * j),
+            Core(1, 3, 3, (l, j, r) => 0.4 - 0.15 * j + 0.2 * r),
+            Core(3, 2, 1, (l, j, r) => 0.7 - 0.1 * l - 0.3 * j),
+        };
+
+        double[] denseA = ToDense(a);
+        double[] denseB = ToDense(b);
+        double[] denseSum = denseA.Zip(denseB, (x, y) => x + y).ToArray();
+
+        var sum = TensorTrainAlgebra.AddCores(a, b);
+        AssertDenseClose(denseSum, ToDense(sum), 1e-12);
+
+        var scaled = TensorTrainAlgebra.ScalarMulCores(a, -2.0);
+        AssertDenseClose(denseA.Select(x => -2.0 * x).ToArray(), ToDense(scaled), 1e-12);
+        scaled[0].Data[0] += 123.0;
+        AssertDenseClose(denseA, ToDense(a), 1e-12);
+
+        double expectedInner = denseA.Zip(denseB, (x, y) => x * y).Sum();
+        TestFixtures.AssertClose(expectedInner, TensorTrainAlgebra.InnerProductCores(a, b), atol: 1e-12);
+
+        var rounded = TensorTrainAlgebra.RoundCores(sum, maxRank: 10, tolerance: 0.0);
+        AssertDenseClose(denseSum, ToDense(rounded), 1e-10);
+    }
+
+    [Fact]
+    public void Test_orth_right_sweep_handles_wide_transposed_unfolding()
+    {
+        var cores = new[]
+        {
+            Core(1, 2, 5, (l, j, r) => 0.2 + 0.1 * j - 0.05 * r),
+            Core(5, 2, 1, (l, j, r) => -0.3 + 0.2 * l + 0.4 * j),
+        };
+        double[] before = ToDense(cores);
+
+        TensorTrainKernel.OrthRightSweep(cores, position: 0);
+
+        AssertDenseClose(before, ToDense(cores), 1e-10);
+    }
+
+    [Fact]
+    public void Test_als_fixed_rank_handles_underdetermined_local_solve()
+    {
+        var cores = new[]
+        {
+            Core(1, 2, 3, (l, j, r) => 0.2 + 0.3 * j - 0.1 * r),
+            Core(3, 2, 1, (l, j, r) => -0.4 + 0.2 * l + 0.5 * j),
+        };
+        int[] nNodes = { 2, 2 };
+        double[] target = { 0.0, 1.0, -1.0, 0.5 };
+
+        TensorTrainKernel.AlsFixedRankSweep(
+            cores,
+            idx => target[idx[0] * nNodes[1] + idx[1]],
+            nNodes,
+            tolerance: 1e-12,
+            maxIter: 1,
+            precomputedB: target);
+
+        foreach (double value in ToDense(cores))
+            Assert.True(double.IsFinite(value));
+    }
+
+    private static TensorTrainKernel.TtCore Core(
+        int rLeft,
+        int nNodes,
+        int rRight,
+        Func<int, int, int, double> value)
+    {
+        var core = new TensorTrainKernel.TtCore(rLeft, nNodes, rRight);
+        for (int l = 0; l < rLeft; l++)
+            for (int j = 0; j < nNodes; j++)
+                for (int r = 0; r < rRight; r++)
+                    core[l, j, r] = value(l, j, r);
+        return core;
+    }
+
+    private static double[] ToDense(TensorTrainKernel.TtCore[] cores)
+    {
+        int[] shape = cores.Select(c => c.NNodes).ToArray();
+        int total = shape.Aggregate(1, (acc, n) => acc * n);
+        var dense = new double[total];
+        var index = new int[shape.Length];
+
+        for (int flat = 0; flat < total; flat++)
+        {
+            int rem = flat;
+            for (int d = shape.Length - 1; d >= 0; d--)
+            {
+                index[d] = rem % shape[d];
+                rem /= shape[d];
+            }
+
+            double[] state = { 1.0 };
+            for (int d = 0; d < cores.Length; d++)
+            {
+                var core = cores[d];
+                var next = new double[core.RRight];
+                for (int l = 0; l < core.RLeft; l++)
+                    for (int r = 0; r < core.RRight; r++)
+                        next[r] += state[l] * core[l, index[d], r];
+                state = next;
+            }
+            dense[flat] = state[0];
+        }
+
+        return dense;
+    }
+
+    private static void AssertDenseClose(double[] expected, double[] actual, double atol)
+    {
+        Assert.Equal(expected.Length, actual.Length);
+        for (int i = 0; i < expected.Length; i++)
+            TestFixtures.AssertClose(expected[i], actual[i], atol: atol);
     }
 }

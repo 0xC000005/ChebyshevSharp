@@ -20,6 +20,8 @@ internal static class ExtrudeSlice
                 throw new ArgumentException($"dim_index {dimIdx} out of range [0, {newNdim - 1}]");
             if (!seen.Add(dimIdx))
                 throw new ArgumentException($"Duplicate dim_index {dimIdx}");
+            if (!double.IsFinite(bounds[0]) || !double.IsFinite(bounds[1]))
+                throw new ArgumentException($"Domain bounds must be finite, got [{bounds[0]}, {bounds[1]}]");
             if (bounds[0] >= bounds[1])
                 throw new ArgumentException($"Domain bounds must satisfy lo < hi, got [{bounds[0]}, {bounds[1]}]");
             if (n < 2)
@@ -45,6 +47,8 @@ internal static class ExtrudeSlice
                 throw new ArgumentException($"dim_index {dimIdx} out of range [0, {ndim - 1}]");
             if (!seen.Add(dimIdx))
                 throw new ArgumentException($"Duplicate dim_index {dimIdx}");
+            if (!double.IsFinite(value))
+                throw new ArgumentException($"Slice value {value} for dim {dimIdx} must be finite");
         }
 
         return param.OrderByDescending(p => p.dimIndex).ToArray();

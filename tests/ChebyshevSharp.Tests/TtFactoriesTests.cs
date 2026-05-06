@@ -145,6 +145,75 @@ public class FromValuesTests
 public class TtFactoryValidationTests
 {
     [Fact]
+    public void Test_constructor_validates_null_function()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            new ChebyshevTT(
+                null!,
+                1,
+                new[] { new[] { -1.0, 1.0 } },
+                new[] { 5 }));
+        Assert.Contains("function", ex.Message);
+    }
+
+    [Fact]
+    public void Test_constructor_validates_malformed_grid_arguments()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            new ChebyshevTT(
+                x => x[0],
+                1,
+                null!,
+                new[] { 5 }));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            new ChebyshevTT(
+                x => x[0],
+                1,
+                new[] { new[] { -1.0, 1.0 } },
+                null!));
+
+        var nullEntry = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevTT(
+                x => x[0],
+                1,
+                new double[][] { null! },
+                new[] { 5 }));
+        Assert.Contains("domain[0]", nullEntry.Message);
+
+        var badBounds = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevTT(
+                x => x[0],
+                1,
+                new[] { new[] { 1.0, 1.0 } },
+                new[] { 5 }));
+        Assert.Contains("domain[0]", badBounds.Message);
+
+        var badCount = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevTT(
+                x => x[0],
+                1,
+                new[] { new[] { -1.0, 1.0 } },
+                new[] { 0 }));
+        Assert.Contains("nNodes[0]", badCount.Message);
+    }
+
+    [Fact]
+    public void Test_constructor_clones_grid_arguments()
+    {
+        double[][] domain = { new[] { -1.0, 1.0 } };
+        int[] nNodes = { 5 };
+
+        var tt = new ChebyshevTT(x => x[0], 1, domain, nNodes);
+
+        domain[0][0] = 123.0;
+        nNodes[0] = 99;
+
+        Assert.Equal(-1.0, tt.Domain[0][0]);
+        Assert.Equal(5, tt.NNodes[0]);
+    }
+
+    [Fact]
     public void Test_nodes_validates_domain_length()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
@@ -160,6 +229,36 @@ public class TtFactoryValidationTests
                 new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
                 new[] { 5 }));
         Assert.Contains("nNodes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_nodes_validates_malformed_grid_arguments()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.Nodes(1, null!, new[] { 5 }));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.Nodes(1, new[] { new[] { -1.0, 1.0 } }, null!));
+
+        var nullEntry = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(1, new double[][] { null! }, new[] { 5 }));
+        Assert.Contains("domain[0]", nullEntry.Message);
+
+        var malformedEntry = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(1, new[] { new[] { -1.0 } }, new[] { 5 }));
+        Assert.Contains("domain[0]", malformedEntry.Message);
+
+        var nonFiniteBounds = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(1, new[] { new[] { double.NaN, 1.0 } }, new[] { 5 }));
+        Assert.Contains("domain[0]", nonFiniteBounds.Message);
+
+        var reversedBounds = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(1, new[] { new[] { 2.0, -2.0 } }, new[] { 5 }));
+        Assert.Contains("domain[0]", reversedBounds.Message);
+
+        var badCount = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(1, new[] { new[] { -1.0, 1.0 } }, new[] { -1 }));
+        Assert.Contains("nNodes[0]", badCount.Message);
     }
 
     [Fact]
@@ -180,5 +279,30 @@ public class TtFactoryValidationTests
                 new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
                 new[] { 5 }));
         Assert.Contains("nNodes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_from_values_validates_malformed_grid_arguments()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.FromValues(null!, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 5 }));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.FromValues(new double[5], 1, null!, new[] { 5 }));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.FromValues(new double[5], 1, new[] { new[] { -1.0, 1.0 } }, null!));
+
+        var nullEntry = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.FromValues(new double[5], 1, new double[][] { null! }, new[] { 5 }));
+        Assert.Contains("domain[0]", nullEntry.Message);
+
+        var badBounds = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.FromValues(new double[5], 1, new[] { new[] { double.NegativeInfinity, 1.0 } }, new[] { 5 }));
+        Assert.Contains("domain[0]", badBounds.Message);
+
+        var badCount = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.FromValues(Array.Empty<double>(), 1, new[] { new[] { -1.0, 1.0 } }, new[] { 0 }));
+        Assert.Contains("nNodes[0]", badCount.Message);
     }
 }
