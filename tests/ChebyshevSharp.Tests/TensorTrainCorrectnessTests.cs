@@ -442,7 +442,7 @@ public class TensorTrainCorrectnessTests
     // ------------------------------------------------------------------
 
     [Fact]
-    public void Build_On_Loaded_Object_Raises_NullRef()
+    public void Build_On_Loaded_Object_Raises_InvalidOperation()
     {
         var tt = TestFixtures.TtSin3DSvd;
         string path = Path.GetTempFileName();
@@ -451,8 +451,8 @@ public class TensorTrainCorrectnessTests
             tt.Save(path);
             var loaded = ChebyshevTT.Load(path);
 
-            // Loaded object has no function — Build should fail
-            Assert.ThrowsAny<Exception>(() => loaded.Build(verbose: false));
+            var ex = Assert.Throws<InvalidOperationException>(() => loaded.Build(verbose: false));
+            Assert.Contains("Function", ex.Message);
         }
         finally
         {

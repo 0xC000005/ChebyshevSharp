@@ -224,10 +224,12 @@ public class ChebyshevTT
     /// <param name="seed">Random seed for TT-Cross/ALS initialization. Ignored for method="svd".</param>
     /// <param name="method">"cross" (default), "svd", or "als".</param>
     /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als", or if the function returns NaN or Infinity at a sampled grid point.</exception>
+    /// <exception cref="InvalidOperationException">If this TT was loaded or created from values without the original function.</exception>
     public void Build(bool verbose = true, int? seed = null, string method = "cross")
     {
         if (method != "cross" && method != "svd" && method != "als")
             throw new ArgumentException($"method must be 'cross', 'svd', or 'als', got '{method}'");
+        var function = GetRequiredFunction(nameof(Build));
         Method = method;
         BuildWarning = null;
 
@@ -250,7 +252,7 @@ public class ChebyshevTT
         // Step 2: Build value cores
         TensorTrainKernel.TtCore[] valueCores;
         int nEvals;
-        Func<double[], double> finiteFunction = point => EvaluateFiniteFunction(point, nameof(Build));
+        Func<double[], double> finiteFunction = point => EvaluateFiniteFunction(function, point, nameof(Build));
 
         if (method == "cross")
         {
@@ -318,9 +320,19 @@ public class ChebyshevTT
         return (int)total;
     }
 
-    private double EvaluateFiniteFunction(double[] point, string caller)
+    private Func<double[], double> GetRequiredFunction(string caller)
     {
-        double value = _function!(point);
+        if (_function == null)
+        {
+            throw new InvalidOperationException(
+                $"{caller} requires Function to be callable; this TT was loaded or created from values without the original function.");
+        }
+        return _function;
+    }
+
+    private static double EvaluateFiniteFunction(Func<double[], double> function, double[] point, string caller)
+    {
+        double value = function(point);
         if (!double.IsFinite(value))
         {
             throw new ArgumentException(
@@ -1290,9 +1302,7 @@ public class ChebyshevTT
     public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
     {
         CheckBuilt();
-        if (_function == null)
-            throw new InvalidOperationException(
-                "RunCompletion requires Function to be callable; the TT was loaded from a source without the original function.");
+        var function = GetRequiredFunction(nameof(RunCompletion));
 
         // Convert coefficient cores back to value cores at Chebyshev Type I nodes.
         var valueCores = new TensorTrainKernel.TtCore[_numDimensions];
@@ -1313,7 +1323,7 @@ public class ChebyshevTT
             {
                 var pt = new double[_numDimensions];
                 for (int i = 0; i < _numDimensions; i++) pt[i] = grids[i][idx[i]];
-                v = EvaluateFiniteFunction(pt, nameof(RunCompletion));
+                v = EvaluateFiniteFunction(function, pt, nameof(RunCompletion));
                 cache[key] = v;
             }
             return v;
