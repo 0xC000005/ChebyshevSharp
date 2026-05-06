@@ -224,6 +224,55 @@ public class TestEvalMethods
 }
 
 // ---------------------------------------------------------------------------
+// Barycentric differentiation exactness
+// ---------------------------------------------------------------------------
+
+public class TestBarycentricDifferentiationExactness
+{
+    [Theory]
+    [InlineData(5)]
+    [InlineData(7)]
+    [InlineData(12)]
+    public void PolynomialDerivativesAreExactOnNonUnitDomain(int n)
+    {
+        static double Polynomial(double x) =>
+            1.25 - 2.0 * x + 0.75 * x * x - 0.5 * x * x * x + 0.125 * Math.Pow(x, 4);
+        static double FirstDerivative(double x) =>
+            -2.0 + 1.5 * x - 1.5 * x * x + 0.5 * x * x * x;
+        static double SecondDerivative(double x) =>
+            1.5 - 3.0 * x + 1.5 * x * x;
+
+        var cheb = new ChebyshevApproximation(
+            (point, _) => Polynomial(point[0]),
+            1,
+            [new[] { -2.0, 3.0 }],
+            [n],
+            maxDerivativeOrder: 2);
+        cheb.Build(verbose: false);
+
+        double[] points =
+        [
+            -1.75,
+            -0.25,
+            0.0,
+            cheb.NodeArrays[0][n / 2],
+            2.4
+        ];
+
+        foreach (double x in points)
+        {
+            TestFixtures.AssertClose(Polynomial(x), cheb.VectorizedEval([x], [0]), rtol: 1e-10, atol: 1e-11);
+            TestFixtures.AssertClose(FirstDerivative(x), cheb.VectorizedEval([x], [1]), rtol: 1e-10, atol: 1e-10);
+            TestFixtures.AssertClose(SecondDerivative(x), cheb.VectorizedEval([x], [2]), rtol: 1e-9, atol: 1e-9);
+
+            TestFixtures.AssertClose(Polynomial(x), cheb.Eval([x], [0]), rtol: 1e-10, atol: 1e-11);
+            TestFixtures.AssertClose(FirstDerivative(x), cheb.Eval([x], [1]), rtol: 1e-10, atol: 1e-10);
+            TestFixtures.AssertClose(SecondDerivative(x), cheb.Eval([x], [2]), rtol: 1e-9, atol: 1e-9);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Serialization
 // ---------------------------------------------------------------------------
 
