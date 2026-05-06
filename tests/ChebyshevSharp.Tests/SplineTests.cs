@@ -803,6 +803,16 @@ public class TestSplineBatchEvalDerivatives
                 $"Point {pts[i][0]}: expected {expected[i]}, got {results[i]}");
         }
     }
+
+    [Fact]
+    public void BatchDerivativeAtKnot_Raises()
+    {
+        var sp = SplineFixtures.SplineAbs1D;
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.EvalBatch([[0.0], [0.5]], [1]));
+        Assert.Contains("not defined", ex.Message);
+    }
 }
 
 // ======================================================================

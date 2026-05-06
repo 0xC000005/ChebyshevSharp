@@ -581,6 +581,7 @@ public class ChebyshevSpline
         int[] flatIndices = new int[N];
         for (int i = 0; i < N; i++)
         {
+            CheckKnotBoundary(points[i], derivativeOrder);
             var (flatIdx, _) = FindPiece(points[i]);
             flatIndices[i] = flatIdx;
         }
