@@ -277,7 +277,7 @@ double[] roots = spline2d.Roots(
 );
 ```
 
-Roots at knot boundaries where two pieces meet are deduplicated to avoid reporting the same root twice.
+Roots at knot boundaries where two pieces meet are deduplicated to avoid reporting the same root twice. If the left and right piece limits have opposite signs at a knot, `Roots()` reports the knot as a zero crossing even when neither individual piece has an interior root. This follows the piecewise rootfinding convention used by Chebfun for sign-changing jumps.
 
 ### Minimization and Maximization
 
@@ -451,3 +451,4 @@ Do **not** use `ChebyshevSpline` when:
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM. Chapters 8--9.
 2. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Section 3.8.
 3. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
+4. Trefethen, L. N. (2009, revised 2019). "Rootfinding and Minima and Maxima." *Chebfun Guide*. https://www.chebfun.org/docs/guide/guide03.html

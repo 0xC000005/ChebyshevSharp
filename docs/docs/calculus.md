@@ -89,7 +89,7 @@ Roots are returned as an array of values within the domain bounds, sorted in asc
 
 This finds all roots simultaneously (no initial guess needed) and is numerically stable for polynomials of moderate degree (up to ~100 nodes).
 
-For `ChebyshevSpline`, roots are found per-piece and merged with deduplication near knot boundaries. See [Piecewise Chebyshev Interpolation](spline.md) for details.
+For `ChebyshevSpline`, roots are found per-piece and merged with deduplication near knot boundaries. A knot where adjacent pieces have opposite signs is also reported as a zero crossing, matching the piecewise rootfinding convention used by Chebfun. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
 ## Minimization and Maximization
 
@@ -134,6 +134,7 @@ For `ChebyshevSlider` and `ChebyshevTT`, roots and optimization reduce the reque
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
 2. Good, I. J. (1961). "The Colleague Matrix, a Chebyshev Analogue of the Companion Matrix." *The Quarterly Journal of Mathematics* 12(1):61-68.
 3. Waldvogel, J. (2006). "Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules." *BIT Numerical Mathematics* 46(1):195-202.
+4. Trefethen, L. N. (2009, revised 2019). "Rootfinding and Minima and Maxima." *Chebfun Guide*. https://www.chebfun.org/docs/guide/guide03.html
 
 ## Slider Integration (v0.9.0)
 
