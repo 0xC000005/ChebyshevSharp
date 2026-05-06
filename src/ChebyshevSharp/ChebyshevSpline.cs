@@ -1589,6 +1589,8 @@ public class ChebyshevSpline
             allRoots.AddRange(pieceRoots);
         }
 
+        AddKnotJumpRoots(sliced, allRoots);
+
         if (allRoots.Count == 0)
             return Array.Empty<double>();
 
@@ -1608,6 +1610,30 @@ public class ChebyshevSpline
         }
 
         return allRoots.ToArray();
+    }
+
+    private static void AddKnotJumpRoots(ChebyshevSpline sliced, List<double> roots)
+    {
+        if (sliced.NumDimensions != 1 || sliced.Knots.Length == 0 || sliced.Knots[0].Length == 0)
+            return;
+
+        for (int i = 0; i < sliced.Knots[0].Length; i++)
+        {
+            double knot = sliced.Knots[0][i];
+            var leftPiece = sliced.Pieces[i]!;
+            var rightPiece = sliced.Pieces[i + 1]!;
+            double leftLimit = leftPiece.Eval(new[] { knot });
+            double rightLimit = rightPiece.Eval(new[] { knot });
+
+            if (IsZeroCrossingAtJump(leftLimit, rightLimit))
+                roots.Add(knot);
+        }
+    }
+
+    private static bool IsZeroCrossingAtJump(double leftLimit, double rightLimit)
+    {
+        return leftLimit < 0.0 && rightLimit > 0.0
+            || leftLimit > 0.0 && rightLimit < 0.0;
     }
 
     /// <summary>

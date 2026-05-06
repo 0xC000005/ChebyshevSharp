@@ -739,6 +739,52 @@ public class TestRootsSpline
     }
 
     [Fact]
+    public void Test_spline_roots_sign_changing_jump_at_knot()
+    {
+        // A sign-changing jump is a zero crossing of the piecewise spline
+        // even though neither one-sided piece has an interior polynomial root.
+        static double f(double[] x, object? _) => x[0] < 0.0 ? -1.0 : 1.0;
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        double[] roots = sp.Roots();
+
+        Assert.Single(roots);
+        TestFixtures.AssertClose(0.0, roots[0], rtol: 0, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spline_roots_right_piece_zero_at_knot()
+    {
+        static double f(double[] x, object? _) => x[0] < 0.0 ? 1.0 : x[0];
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        double[] roots = sp.Roots();
+
+        Assert.Single(roots);
+        TestFixtures.AssertClose(0.0, roots[0], rtol: 0, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spline_roots_same_sign_jump_does_not_create_root()
+    {
+        static double f(double[] x, object? _) => x[0] < 0.0 ? 1.0 : 2.0;
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        double[] roots = sp.Roots();
+
+        Assert.Empty(roots);
+    }
+
+    [Fact]
     public void Test_spline_roots_multi_piece()
     {
         // Roots spanning multiple pieces: sin(x) on [-4,4] with knots at -2 and 2.
