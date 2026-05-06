@@ -94,6 +94,9 @@ public class ChebyshevSlider
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateConstructionArguments(numDimensions, domain, nNodes, partition, pivotPoint);
+
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
@@ -104,9 +107,6 @@ public class ChebyshevSlider
         _progress = progress;
         Partition = partition.Select(g => (int[])g.Clone()).ToArray();
         PivotPoint = (double[])pivotPoint.Clone();
-
-        // Validate partition covers all dims exactly once
-        ValidatePartition(Partition, numDimensions);
 
         // Build dim → slide mapping
         DimToSlide = BuildDimToSlide(Partition);
@@ -119,11 +119,92 @@ public class ChebyshevSlider
     // Validation helpers
     // ------------------------------------------------------------------
 
+    private static void ValidateConstructionArguments(
+        int numDimensions,
+        double[][] domain,
+        int[] nNodes,
+        int[][] partition,
+        double[] pivotPoint)
+    {
+        if (numDimensions <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(numDimensions),
+                numDimensions,
+                "numDimensions must be positive.");
+
+        ArgumentNullException.ThrowIfNull(domain);
+        ArgumentNullException.ThrowIfNull(nNodes);
+        ArgumentNullException.ThrowIfNull(partition);
+        ArgumentNullException.ThrowIfNull(pivotPoint);
+
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}.",
+                nameof(domain));
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}.",
+                nameof(nNodes));
+        if (pivotPoint.Length != numDimensions)
+            throw new ArgumentException(
+                $"pivotPoint has {pivotPoint.Length} entries but numDimensions={numDimensions}.",
+                nameof(pivotPoint));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] == null)
+                throw new ArgumentException($"domain[{d}] must not be null.", nameof(domain));
+            if (domain[d].Length != 2)
+                throw new ArgumentException(
+                    $"domain[{d}] must contain exactly two bounds.",
+                    nameof(domain));
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi) || lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}] must contain finite ordered bounds lo < hi, got [{lo}, {hi}].",
+                    nameof(domain));
+
+            if (nNodes[d] <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(nNodes),
+                    nNodes[d],
+                    $"nNodes[{d}] must be positive.");
+
+            double pivot = pivotPoint[d];
+            if (!double.IsFinite(pivot))
+                throw new ArgumentException(
+                    $"pivotPoint[{d}] must be finite.",
+                    nameof(pivotPoint));
+            if (pivot < lo || pivot > hi)
+                throw new ArgumentOutOfRangeException(
+                    nameof(pivotPoint),
+                    pivot,
+                    $"pivotPoint[{d}] must be inside domain [{lo}, {hi}].");
+        }
+
+        ValidatePartition(partition, numDimensions);
+    }
+
     internal static void ValidatePartition(int[][] partition, int numDimensions)
     {
+        ArgumentNullException.ThrowIfNull(partition);
+
         var allDims = new List<int>();
-        foreach (var group in partition)
+        for (int groupIdx = 0; groupIdx < partition.Length; groupIdx++)
+        {
+            var group = partition[groupIdx];
+            if (group == null)
+                throw new ArgumentException(
+                    $"partition[{groupIdx}] must not be null.",
+                    nameof(partition));
+            if (group.Length == 0)
+                throw new ArgumentException(
+                    $"partition[{groupIdx}] must not be empty.",
+                    nameof(partition));
             allDims.AddRange(group);
+        }
         allDims.Sort();
 
         var expected = Enumerable.Range(0, numDimensions).ToList();
