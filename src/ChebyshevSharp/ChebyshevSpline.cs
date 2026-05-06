@@ -861,6 +861,7 @@ public class ChebyshevSpline
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored spline.</returns>
+    /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevSpline state.</exception>
     public static ChebyshevSpline Load(string path)
     {
         if (Internal.PcbFormat.IsBinary(path))
@@ -894,6 +895,8 @@ public class ChebyshevSpline
         if (state.Type != "ChebyshevSpline")
             throw new InvalidOperationException(
                 $"Expected type ChebyshevSpline, got {state.Type}");
+
+        ValidateSerializedState(state);
 
         var pieces = state.PieceStates.Select(ps =>
         {
@@ -962,6 +965,293 @@ public class ChebyshevSpline
             }
         }
         return spline;
+    }
+
+    private static void ValidateSerializedState(SplineSerializationState state)
+    {
+        int d = state.NumDimensions;
+        if (d <= 0)
+            throw new InvalidDataException($"NumDimensions must be positive, got {d}.");
+
+        ValidateDomain(state.Domain, d, nameof(SplineSerializationState.Domain));
+        ValidateOriginalNNodes(state.OriginalNNodes, d);
+        ValidateTopLevelNNodes(state.NNodes, d, state.OriginalNNodes, state.ErrorThreshold);
+        ValidateKnotsForLoad(state.Knots, d, state.Domain);
+
+        if (state.MaxDerivativeOrder is < 0)
+            throw new InvalidDataException($"MaxDerivativeOrder must be non-negative, got {state.MaxDerivativeOrder}.");
+        if (!double.IsFinite(state.BuildTime) || state.BuildTime < 0.0)
+            throw new InvalidDataException($"BuildTime must be finite and non-negative, got {state.BuildTime}.");
+        if (state.ErrorThreshold is { } threshold &&
+            (!double.IsFinite(threshold) || threshold < 0.0))
+            throw new InvalidDataException($"ErrorThreshold must be finite and non-negative, got {threshold}.");
+        if (state.MaxN is <= 0)
+            throw new InvalidDataException($"MaxN must be positive, got {state.MaxN}.");
+
+        ValidateShape(state.Shape, state.Knots, d);
+        ValidateNestedNNodes(state.NestedNNodes, state.Shape, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+
+        int expectedPieces = CheckedArrayLengthForInvalidData(state.Shape, nameof(SplineSerializationState.PieceStates));
+        if (state.PieceStates is null)
+            throw new InvalidDataException("PieceStates must be present.");
+        if (state.PieceStates.Length != expectedPieces)
+            throw new InvalidDataException(
+                $"PieceStates has length {state.PieceStates.Length}, expected {expectedPieces}.");
+
+        var intervals = ComputeIntervals(d, state.Domain, state.Knots);
+        for (int i = 0; i < state.PieceStates.Length; i++)
+            ValidatePieceState(state.PieceStates[i], i, d, state.Shape, intervals);
+    }
+
+    private static void ValidatePieceState(
+        PieceState? piece,
+        int pieceIndex,
+        int numDimensions,
+        int[] shape,
+        (double lo, double hi)[][] intervals)
+    {
+        if (piece is null)
+            throw new InvalidDataException($"PieceStates[{pieceIndex}] must be present.");
+        if (piece.NumDimensions != numDimensions)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].NumDimensions={piece.NumDimensions}, expected {numDimensions}.");
+        if (piece.MaxDerivativeOrder is < 0)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].MaxDerivativeOrder must be non-negative, got {piece.MaxDerivativeOrder}.");
+        if (!double.IsFinite(piece.BuildTime) || piece.BuildTime < 0.0)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].BuildTime must be finite and non-negative, got {piece.BuildTime}.");
+        if (piece.NEvaluations < 0)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].NEvaluations must be non-negative, got {piece.NEvaluations}.");
+
+        ValidateDomain(piece.Domain, numDimensions, $"PieceStates[{pieceIndex}].Domain");
+        ValidatePositiveVector(piece.NNodes, numDimensions, $"PieceStates[{pieceIndex}].NNodes");
+        ValidateApproxVectorArray(piece.NodeArrays, piece.NNodes, $"PieceStates[{pieceIndex}].NodeArrays");
+        ValidateApproxVectorArray(piece.Weights, piece.NNodes, $"PieceStates[{pieceIndex}].Weights");
+        ValidateDiffMatrices(piece.DiffMatrices, piece.NNodes, pieceIndex);
+
+        int expectedTensorLength = CheckedArrayLengthForInvalidData(
+            piece.NNodes,
+            $"PieceStates[{pieceIndex}].TensorValues");
+        ValidateFiniteVector(
+            piece.TensorValues,
+            expectedTensorLength,
+            $"PieceStates[{pieceIndex}].TensorValues");
+
+        int[] multiIndex = FlatToMultiIndex(pieceIndex, shape);
+        for (int dim = 0; dim < numDimensions; dim++)
+        {
+            var expectedDomain = intervals[dim][multiIndex[dim]];
+            if (piece.Domain[dim][0] != expectedDomain.lo || piece.Domain[dim][1] != expectedDomain.hi)
+                throw new InvalidDataException(
+                    $"PieceStates[{pieceIndex}].Domain[{dim}] does not match spline interval.");
+        }
+    }
+
+    private static void ValidateShape(int[]? shape, double[][] knots, int numDimensions)
+    {
+        if (shape is null)
+            throw new InvalidDataException("Shape must be present.");
+        if (shape.Length != numDimensions)
+            throw new InvalidDataException($"Shape has length {shape.Length}, expected {numDimensions}.");
+
+        for (int dim = 0; dim < numDimensions; dim++)
+        {
+            int expected = knots[dim].Length + 1;
+            if (shape[dim] != expected)
+                throw new InvalidDataException($"Shape[{dim}]={shape[dim]}, expected {expected}.");
+        }
+    }
+
+    private static void ValidateKnotsForLoad(double[][]? knots, int numDimensions, double[][] domain)
+    {
+        if (knots is null)
+            throw new InvalidDataException("Knots must be present.");
+        if (knots.Length != numDimensions)
+            throw new InvalidDataException($"Knots has length {knots.Length}, expected {numDimensions}.");
+
+        for (int dim = 0; dim < numDimensions; dim++)
+        {
+            double[] dimKnots = knots[dim]
+                ?? throw new InvalidDataException($"Knots[{dim}] must be present.");
+            double lo = domain[dim][0];
+            double hi = domain[dim][1];
+            double previous = double.NegativeInfinity;
+            for (int i = 0; i < dimKnots.Length; i++)
+            {
+                double knot = dimKnots[i];
+                if (!double.IsFinite(knot))
+                    throw new InvalidDataException($"Knots[{dim}][{i}] must be finite.");
+                if (!(lo < knot && knot < hi))
+                    throw new InvalidDataException(
+                        $"Knots[{dim}][{i}]={knot} must be strictly inside domain [{lo}, {hi}].");
+                if (i > 0 && knot <= previous)
+                    throw new InvalidDataException($"Knots[{dim}] must be strictly increasing.");
+                previous = knot;
+            }
+        }
+    }
+
+    private static void ValidateDomain(double[][]? domain, int numDimensions, string name)
+    {
+        if (domain is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (domain.Length != numDimensions)
+            throw new InvalidDataException($"{name} has length {domain.Length}, expected {numDimensions}.");
+
+        for (int i = 0; i < numDimensions; i++)
+        {
+            double[] bounds = domain[i]
+                ?? throw new InvalidDataException($"{name}[{i}] must be present.");
+            if (bounds.Length != 2)
+                throw new InvalidDataException($"{name}[{i}] must contain exactly two bounds.");
+            if (!double.IsFinite(bounds[0]) || !double.IsFinite(bounds[1]))
+                throw new InvalidDataException($"{name}[{i}] bounds must be finite.");
+            if (bounds[0] >= bounds[1])
+                throw new InvalidDataException($"{name}[{i}] lower bound must be less than upper bound.");
+        }
+    }
+
+    private static void ValidatePositiveVector(int[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (values[i] <= 0)
+                throw new InvalidDataException($"{name}[{i}] must be positive, got {values[i]}.");
+    }
+
+    private static void ValidateTopLevelNNodes(
+        int[]? nNodes,
+        int expectedLength,
+        int?[]? originalNNodes,
+        double? errorThreshold)
+    {
+        if (nNodes is null)
+            throw new InvalidDataException($"{nameof(SplineSerializationState.NNodes)} must be present.");
+        if (nNodes.Length != expectedLength)
+            throw new InvalidDataException(
+                $"{nameof(SplineSerializationState.NNodes)} has length {nNodes.Length}, expected {expectedLength}.");
+
+        bool autoMode = errorThreshold != null &&
+            originalNNodes != null &&
+            originalNNodes.Length == expectedLength;
+
+        for (int i = 0; i < nNodes.Length; i++)
+        {
+            if (nNodes[i] > 0) continue;
+            if (nNodes[i] == 0 && autoMode && originalNNodes![i] is null) continue;
+            throw new InvalidDataException(
+                $"{nameof(SplineSerializationState.NNodes)}[{i}] must be positive, got {nNodes[i]}.");
+        }
+    }
+
+    private static void ValidateFiniteVector(double[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (!double.IsFinite(values[i]))
+                throw new InvalidDataException($"{name}[{i}] must be finite.");
+    }
+
+    private static void ValidateApproxVectorArray(double[][]? arrays, int[] nNodes, string name)
+    {
+        if (arrays is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (arrays.Length != nNodes.Length)
+            throw new InvalidDataException($"{name} has length {arrays.Length}, expected {nNodes.Length}.");
+
+        for (int i = 0; i < arrays.Length; i++)
+            ValidateFiniteVector(arrays[i], nNodes[i], $"{name}[{i}]");
+    }
+
+    private static void ValidateDiffMatrices(double[][]? matrices, int[] nNodes, int pieceIndex)
+    {
+        string name = $"PieceStates[{pieceIndex}].DiffMatrices";
+        if (matrices is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (matrices.Length != nNodes.Length)
+            throw new InvalidDataException($"{name} has length {matrices.Length}, expected {nNodes.Length}.");
+
+        for (int i = 0; i < nNodes.Length; i++)
+        {
+            int expectedLength = CheckedArrayLengthForInvalidData(new[] { nNodes[i], nNodes[i] }, $"{name}[{i}]");
+            ValidateFiniteVector(matrices[i], expectedLength, $"{name}[{i}]");
+        }
+    }
+
+    private static void ValidateOriginalNNodes(int?[]? originalNNodes, int numDimensions)
+    {
+        if (originalNNodes is null) return;
+        if (originalNNodes.Length != 0 && originalNNodes.Length != numDimensions)
+            throw new InvalidDataException(
+                $"OriginalNNodes has length {originalNNodes.Length}, expected 0 or {numDimensions}.");
+
+        for (int i = 0; i < originalNNodes.Length; i++)
+            if (originalNNodes[i] is <= 0)
+                throw new InvalidDataException($"OriginalNNodes[{i}] must be positive or null.");
+    }
+
+    private static void ValidateNestedNNodes(int[][]? nestedNNodes, int[] shape, int numDimensions)
+    {
+        if (nestedNNodes is null) return;
+        if (nestedNNodes.Length != numDimensions)
+            throw new InvalidDataException($"NestedNNodes has length {nestedNNodes.Length}, expected {numDimensions}.");
+
+        for (int dim = 0; dim < numDimensions; dim++)
+            ValidatePositiveVector(nestedNNodes[dim], shape[dim], $"NestedNNodes[{dim}]");
+    }
+
+    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    {
+        if (registeredDerivativeOrders is null) return;
+
+        for (int i = 0; i < registeredDerivativeOrders.Length; i++)
+        {
+            int[] orders = registeredDerivativeOrders[i]
+                ?? throw new InvalidDataException($"RegisteredDerivativeOrders[{i}] must be present.");
+            if (orders.Length != numDimensions)
+                throw new InvalidDataException(
+                    $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
+            for (int j = 0; j < orders.Length; j++)
+                if (orders[j] < 0)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+        }
+    }
+
+    private static int[] FlatToMultiIndex(int flatIndex, int[] shape)
+    {
+        var multi = new int[shape.Length];
+        int rem = flatIndex;
+        for (int dim = shape.Length - 1; dim >= 0; dim--)
+        {
+            multi[dim] = rem % shape[dim];
+            rem /= shape[dim];
+        }
+        return multi;
+    }
+
+    private static int CheckedArrayLengthForInvalidData(int[] shape, string name)
+    {
+        try
+        {
+            long product = TensorShape.CheckedProduct(shape, name);
+            return TensorShape.RequireArrayLength(product, name, shape);
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidDataException($"{name} shape [{string.Join(",", shape)}] is invalid.", ex);
+        }
     }
 
     // ------------------------------------------------------------------
