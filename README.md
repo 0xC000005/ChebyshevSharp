@@ -18,9 +18,9 @@ ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyCheb
 - [Documentation](https://0xc000005.github.io/ChebyshevSharp/)
 - [API Reference](https://0xc000005.github.io/ChebyshevSharp/api/ChebyshevSharp.html)
 - [NuGet Package](https://www.nuget.org/packages/ChebyshevSharp)
-- [Changelog](docs/docs/changelog.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security Policy](SECURITY.md)
+- [Changelog](https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html)
+- [Contributing](https://github.com/0xC000005/ChebyshevSharp/blob/main/CONTRIBUTING.md)
+- [Security Policy](https://github.com/0xC000005/ChebyshevSharp/security/policy)
 
 ## Features
 
@@ -130,7 +130,7 @@ double[] results = cheb.VectorizedEvalMulti(
 | `ChebyshevTT` | Tensor Train build/eval, finite-difference derivatives, integration, roots, optimization, algebra, slicing/extrusion, reordering, and guarded dense materialization |
 | Validation | xUnit regression suite, deterministic FsCheck properties, Codecov patch gate, package validation, DocFX build, and scheduled/manual mutation testing |
 
-See the [changelog](docs/docs/changelog.md) for per-release feature parity with PyChebyshev.
+See the [changelog](https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html) for per-release feature parity with PyChebyshev.
 
 ## Documentation
 
@@ -163,16 +163,17 @@ Full documentation is available at **[0xc000005.github.io/ChebyshevSharp](https:
 - Numerical accuracy concerns: use the numerical accuracy template and include
   the function, domain, node counts, construction method, tolerance, and a
   reference value or independent check.
-- Security issues: do not open a public issue; follow [SECURITY.md](SECURITY.md).
+- Security issues: do not open a public issue; follow the
+  [security policy](https://github.com/0xC000005/ChebyshevSharp/security/policy).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, required
+See [CONTRIBUTING.md](https://github.com/0xC000005/ChebyshevSharp/blob/main/CONTRIBUTING.md) for the development workflow, required
 checks, Codecov policy, Stryker.NET mutation-testing expectations, and PR
 checklist. For a shorter site version, see
 [Contributing](https://0xc000005.github.io/ChebyshevSharp/docs/contributing.html).
 
-This project follows [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Keep issue and PR
+This project follows [CODE_OF_CONDUCT.md](https://github.com/0xC000005/ChebyshevSharp/blob/main/CODE_OF_CONDUCT.md). Keep issue and PR
 discussions focused, reproducible, and respectful.
 
 ## License

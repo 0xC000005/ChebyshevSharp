@@ -9,9 +9,9 @@
     <PackageId>ChebyshevSharp</PackageId>
     <Version>0.12.0</Version>
     <PyChebyshevParity>0.21.1</PyChebyshevParity>
-    <InformationalVersion>0.12.0+pychebyshev.0.21.1</InformationalVersion>
+    <InformationalVersion>$(Version)+pychebyshev.$(PyChebyshevParity)</InformationalVersion>
     <Authors>Max</Authors>
-    <Description>ChebyshevSharp 0.12.0 — multi-dimensional Chebyshev tensor interpolation for .NET with dense, spline, sliding, and Tensor Train approximations. Feature parity with PyChebyshev v0.21.1, including high-dimensional tensor-size guards, CI/package validation gates, property and mutation testing, runnable examples, and reorganized documentation.</Description>
+    <Description>ChebyshevSharp $(Version) — multi-dimensional Chebyshev tensor interpolation for .NET with dense, spline, sliding, and Tensor Train approximations. Feature parity with PyChebyshev v$(PyChebyshevParity), including high-dimensional tensor-size guards, CI/package validation gates, property and mutation testing, runnable examples, and reorganized documentation.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/0xC000005/ChebyshevSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/0xC000005/ChebyshevSharp</RepositoryUrl>
@@ -21,6 +21,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnablePackageValidation>true</EnablePackageValidation>
     <PackageValidationBaselineVersion>0.11.1</PackageValidationBaselineVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PathMap>$(MSBuildProjectDirectory)=/_/src/ChebyshevSharp</PathMap>
   </PropertyGroup>
 
   <ItemGroup>
