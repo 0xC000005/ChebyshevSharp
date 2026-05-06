@@ -1211,6 +1211,37 @@ public class TestCalculusValidation
 public class TestExtrudeSliceValidation
 {
     [Fact]
+    public void Extrude_NonFiniteBounds_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+        cheb.Build(verbose: false);
+
+        var loEx = Assert.Throws<ArgumentException>(() =>
+            cheb.Extrude((1, new[] { double.NaN, 1.0 }, 5)));
+        Assert.Contains("finite", loEx.Message);
+
+        var hiEx = Assert.Throws<ArgumentException>(() =>
+            cheb.Extrude((1, new[] { 0.0, double.PositiveInfinity }, 5)));
+        Assert.Contains("finite", hiEx.Message);
+    }
+
+    [Fact]
+    public void Slice_NonFiniteValue_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 });
+        cheb.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Slice((1, double.NaN)));
+        Assert.Contains("finite", ex.Message);
+    }
+
+    [Fact]
     public void Extrude_BoundsLoGeHi_Raises()
     {
         var cheb = new ChebyshevApproximation(
@@ -1258,6 +1289,21 @@ public class TestExtrudeSliceValidation
 /// </summary>
 public class TestSplineSliceMultiPiece
 {
+    [Fact]
+    public void Slice_NonFiniteValue_Raises()
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]) + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.Slice((1, double.NaN)));
+        Assert.Contains("finite", ex.Message);
+    }
+
     [Fact]
     public void Slice_2D_Spline_AllDimsHaveKnots()
     {

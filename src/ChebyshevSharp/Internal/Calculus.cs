@@ -104,6 +104,8 @@ internal static class Calculus
         for (int i = 0; i < bounds.Length; i++)
         {
             var bd = bounds[i];
+            if (!double.IsFinite(bd.lo) || !double.IsFinite(bd.hi))
+                throw new ArgumentException($"bounds ({bd.lo}, {bd.hi}) for dim {dims[i]} must be finite");
             if (bd.lo > bd.hi)
                 throw new ArgumentException($"bounds lo={bd.lo} > hi={bd.hi} for dim {dims[i]}");
 

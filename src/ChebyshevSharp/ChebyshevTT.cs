@@ -1466,6 +1466,10 @@ public class ChebyshevTT
     public ChebyshevTT Extrude(int dim, (double Lo, double Hi) newDomain, int newN)
     {
         CheckBuilt();
+        if (!double.IsFinite(newDomain.Lo) || !double.IsFinite(newDomain.Hi))
+            throw new ArgumentException(
+                $"newDomain bounds must be finite; got ({newDomain.Lo}, {newDomain.Hi})",
+                nameof(newDomain));
         if (newDomain.Lo >= newDomain.Hi)
             throw new ArgumentException(
                 $"newDomain bounds must satisfy lo < hi; got ({newDomain.Lo}, {newDomain.Hi})",
@@ -1535,6 +1539,9 @@ public class ChebyshevTT
         int storagePos = !IsIdentityDimOrder() ? Array.IndexOf(_dimOrder, dim) : dim;
 
         double lo = _domain[storagePos][0], hi = _domain[storagePos][1];
+        if (!double.IsFinite(value))
+            throw new ArgumentOutOfRangeException(nameof(value),
+                $"Slice value {value} for dim {dim} must be finite");
         if (value < lo || value > hi)
             throw new ArgumentOutOfRangeException(nameof(value),
                 $"Slice value {value} for dim {dim} is outside domain [{lo}, {hi}]");

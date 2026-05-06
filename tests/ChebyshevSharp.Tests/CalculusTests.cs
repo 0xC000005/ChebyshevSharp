@@ -645,6 +645,18 @@ public class TestSubIntervalIntegrateApprox
     }
 
     [Fact]
+    public void Test_bounds_non_finite_raises()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var cheb = new ChebyshevApproximation(f, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 5 });
+        cheb.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Integrate(bounds: new[] { (double.NaN, 0.5) }));
+        Assert.Contains("finite", ex.Message);
+    }
+
+    [Fact]
     public void Test_bounds_lo_gt_hi_raises()
     {
         // bounds lo > hi raises ArgumentException with "lo=".
@@ -1117,6 +1129,20 @@ public class TestSubIntervalIntegrateSpline
         var result = (double)sp.Integrate(bounds: new[] { (0.0, 0.5) });
         double expected = 0.125; // int_0^0.5 x dx = 0.5^2/2
         TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_bounds_non_finite_raises()
+    {
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.Integrate(bounds: new[] { (0.0, double.NaN) }));
+        Assert.Contains("finite", ex.Message);
     }
 }
 
