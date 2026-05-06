@@ -62,6 +62,22 @@ internal static class PcbFormat
         }
     }
 
+    private static double ReadFiniteDouble(BinaryReader r, string fieldName)
+    {
+        double value = r.ReadDouble();
+        if (!double.IsFinite(value))
+            throw new InvalidDataException(
+                $"{fieldName} must be finite, got {value}");
+        return value;
+    }
+
+    private static void ValidateDomainBounds(double lo, double hi, int dim)
+    {
+        if (lo >= hi)
+            throw new InvalidDataException(
+                $"domain[{dim}]: lo ({lo}) must be < hi ({hi})");
+    }
+
     public static void WriteHeader(BinaryWriter w, int classTag)
     {
         w.Write(Magic);
@@ -194,16 +210,14 @@ internal static class PcbFormat
         int d = ToCheckedInt(d32, "num_dimensions");
 
         double[] lo = new double[d];
-        for (int i = 0; i < d; i++) lo[i] = r.ReadDouble();
+        for (int i = 0; i < d; i++) lo[i] = ReadFiniteDouble(r, $"lo[{i}]");
         double[] hi = new double[d];
-        for (int i = 0; i < d; i++) hi[i] = r.ReadDouble();
+        for (int i = 0; i < d; i++) hi[i] = ReadFiniteDouble(r, $"hi[{i}]");
 
         var domain = new double[d][];
         for (int i = 0; i < d; i++)
         {
-            if (lo[i] >= hi[i])
-                throw new InvalidDataException(
-                    $"domain[{i}]: lo ({lo[i]}) must be < hi ({hi[i]})");
+            ValidateDomainBounds(lo[i], hi[i], i);
             domain[i] = new[] { lo[i], hi[i] };
         }
 
@@ -219,7 +233,8 @@ internal static class PcbFormat
         }
 
         double[] tensor = new double[total];
-        for (int i = 0; i < total; i++) tensor[i] = r.ReadDouble();
+        for (int i = 0; i < total; i++)
+            tensor[i] = ReadFiniteDouble(r, $"tensor_values[{i}]");
         return (domain, nNodes, tensor);
     }
 
@@ -300,14 +315,13 @@ internal static class PcbFormat
         int d = ToCheckedInt(d32, "num_dimensions");
 
         double[] lo = new double[d];
-        for (int i = 0; i < d; i++) lo[i] = r.ReadDouble();
+        for (int i = 0; i < d; i++) lo[i] = ReadFiniteDouble(r, $"lo[{i}]");
         double[] hi = new double[d];
-        for (int i = 0; i < d; i++) hi[i] = r.ReadDouble();
+        for (int i = 0; i < d; i++) hi[i] = ReadFiniteDouble(r, $"hi[{i}]");
         var domain = new double[d][];
         for (int i = 0; i < d; i++)
         {
-            if (lo[i] >= hi[i])
-                throw new InvalidDataException($"domain[{i}]: lo ({lo[i]}) must be < hi ({hi[i]})");
+            ValidateDomainBounds(lo[i], hi[i], i);
             domain[i] = new[] { lo[i], hi[i] };
         }
 
@@ -335,7 +349,15 @@ internal static class PcbFormat
         for (int i = 0; i < d; i++)
         {
             knots[i] = new double[numKnots[i]];
-            for (int j = 0; j < numKnots[i]; j++) knots[i][j] = r.ReadDouble();
+            for (int j = 0; j < numKnots[i]; j++)
+            {
+                double knot = ReadFiniteDouble(r, $"knots[{i}][{j}]");
+                if (!(lo[i] < knot && knot < hi[i]))
+                    throw new InvalidDataException(
+                        $"knots[{i}][{j}]={knot} must be strictly inside " +
+                        $"domain[{i}] [{lo[i]}, {hi[i]}]");
+                knots[i][j] = knot;
+            }
             for (int j = 1; j < numKnots[i]; j++)
             {
                 if (knots[i][j - 1] >= knots[i][j])
@@ -353,7 +375,8 @@ internal static class PcbFormat
         for (int p = 0; p < expectedPieces; p++)
         {
             pieces[p] = new double[perPieceFloats];
-            for (int j = 0; j < perPieceFloats; j++) pieces[p][j] = r.ReadDouble();
+            for (int j = 0; j < perPieceFloats; j++)
+                pieces[p][j] = ReadFiniteDouble(r, $"piece_tensors[{p}][{j}]");
         }
 
         return (domain, nNodes, knots, pieces);
