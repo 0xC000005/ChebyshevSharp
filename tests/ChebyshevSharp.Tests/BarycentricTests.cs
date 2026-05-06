@@ -2,6 +2,52 @@ using ChebyshevSharp.Tests.Helpers;
 
 namespace ChebyshevSharp.Tests;
 
+public class TestBuildFiniteValues
+{
+    [Fact]
+    public void Build_rejects_nan_function_value()
+    {
+        static double F(double[] x, object? _) => x[0] > 0.0 ? double.NaN : x[0];
+
+        var cheb = new ChebyshevApproximation(
+            F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+
+        var ex = Assert.Throws<ArgumentException>(() => cheb.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(cheb.IsConstructionFinished());
+        Assert.Null(cheb.TensorValues);
+    }
+
+    [Fact]
+    public void Build_rejects_infinite_function_value()
+    {
+        static double F(double[] x, object? _) => x[0] > 0.9 ? double.PositiveInfinity : x[0];
+
+        var cheb = new ChebyshevApproximation(
+            F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+
+        var ex = Assert.Throws<ArgumentException>(() => cheb.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(cheb.IsConstructionFinished());
+        Assert.Null(cheb.TensorValues);
+    }
+
+    [Fact]
+    public void Spline_build_rejects_non_finite_piece_value()
+    {
+        static double F(double[] x, object? _) => x[0] > 0.5 ? double.NaN : x[0];
+
+        var spline = new ChebyshevSpline(
+            F, 1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: new[] { 6 },
+            knots: new[] { new[] { 0.0 } });
+
+        var ex = Assert.Throws<ArgumentException>(() => spline.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(spline.Built);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // 3D sin tests
 // ---------------------------------------------------------------------------

@@ -277,8 +277,10 @@ public class ChebyshevApproximation
                 pt[d] = NodeArrays[d][indices[d]];
             points[flat] = pt;
         }
-        TensorValues = Internal.ParallelBuild.EvaluateInParallel(
+        var tensorValues = Internal.ParallelBuild.EvaluateInParallel(
             Function!, points, _additionalData, _nWorkers, _progress);
+        ValidateFiniteBuildValues(tensorValues);
+        TensorValues = tensorValues;
         NEvaluations = total;
 
         // Step 2: Pre-compute barycentric weights
@@ -304,6 +306,21 @@ public class ChebyshevApproximation
         }
 
         _isConstructionFinished = true;
+    }
+
+    private static void ValidateFiniteBuildValues(double[] values)
+    {
+        int badCount = 0;
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                badCount++;
+        }
+
+        if (badCount > 0)
+            throw new ArgumentException(
+                $"function returned non-finite values at {badCount} grid point(s); " +
+                "build cannot proceed with NaN/Infinity in TensorValues");
     }
 
     /// <summary>
