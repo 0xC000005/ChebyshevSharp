@@ -421,6 +421,38 @@ public class TestFromValuesSpline
 /// </summary>
 public class TestDctIIviaFFT
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(31)]
+    [InlineData(32)]
+    [InlineData(33)]
+    [InlineData(34)]
+    [InlineData(50)]
+    [InlineData(63)]
+    [InlineData(64)]
+    [InlineData(65)]
+    public void ChebyshevCoefficients1D_MatchesDirectDctIIFormula(int n)
+    {
+        double[] values = new double[n];
+        for (int i = 0; i < n; i++)
+        {
+            double t = i + 1.0;
+            values[i] = Math.Sin(0.37 * t)
+                + 0.25 * Math.Cos(1.91 * t)
+                + (i % 2 == 0 ? 0.1 : -0.2) * t / n;
+        }
+
+        double[] expected = DirectTypeIRootCoefficients(values);
+        double[] actual = ChebyshevApproximation.ChebyshevCoefficients1D(values);
+
+        Assert.Equal(expected.Length, actual.Length);
+        for (int k = 0; k < n; k++)
+        {
+            TestFixtures.AssertClose(expected[k], actual[k], rtol: 5e-12, atol: 5e-12);
+        }
+    }
+
     [Fact]
     public void ErrorEstimate_LargeOrder_1D()
     {
@@ -488,6 +520,27 @@ public class TestDctIIviaFFT
 
         double err = cheb.ErrorEstimate();
         Assert.True(err < 1e-14, $"Error estimate {err:E2} too large for 50 nodes on sin(x)");
+    }
+
+    private static double[] DirectTypeIRootCoefficients(double[] values)
+    {
+        int n = values.Length;
+        double[] coeffs = new double[n];
+
+        for (int k = 0; k < n; k++)
+        {
+            double sum = 0.0;
+            for (int j = 0; j < n; j++)
+            {
+                double reversedValue = values[n - 1 - j];
+                sum += reversedValue * Math.Cos(Math.PI * k * (2 * j + 1) / (2.0 * n));
+            }
+
+            coeffs[k] = sum * 2.0 / n;
+        }
+
+        coeffs[0] /= 2.0;
+        return coeffs;
     }
 }
 
