@@ -284,6 +284,10 @@ internal static class Calculus
         var sliceParams = new List<(int, double)>();
         foreach (var kvp in fixedDims)
         {
+            if (!double.IsFinite(kvp.Value))
+                throw new ArgumentException(
+                    $"Fixed value {kvp.Value} for dim {kvp.Key} must be finite");
+
             double lo = domain[kvp.Key][0];
             double hi = domain[kvp.Key][1];
             if (kvp.Value < lo || kvp.Value > hi)
