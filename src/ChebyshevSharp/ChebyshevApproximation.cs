@@ -105,6 +105,8 @@ public class ChebyshevApproximation
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ValidateFixedGridArguments(nameof(ChebyshevApproximation), numDimensions, domain, nNodes);
+
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
@@ -168,6 +170,8 @@ public class ChebyshevApproximation
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}. " +
                 "For a grid smaller than 3 per dimension, pass nNodes explicitly.");
 
+        ValidateDomainArguments(nameof(ChebyshevApproximation), numDimensions, domain);
+
         // Normalize nNodes: null array means "all dims auto-N"
         int?[] resolved;
         if (nNodes == null)
@@ -180,6 +184,9 @@ public class ChebyshevApproximation
         else
         {
             resolved = (int?[])nNodes.Clone();
+            if (resolved.Length != numDimensions)
+                throw new ArgumentException(
+                    $"len(nNodes)={resolved.Length} must equal numDimensions={numDimensions}");
             if (resolved.Any(n => n == null) && errorThreshold == null)
                 throw new ArgumentException(
                     "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
@@ -200,6 +207,7 @@ public class ChebyshevApproximation
         if (resolved.All(n => n != null))
         {
             NNodes = resolved.Select(n => n!.Value).ToArray();
+            ValidateNodeCounts(nameof(ChebyshevApproximation), NNodes);
             NodeArrays = new double[numDimensions][];
             for (int d = 0; d < numDimensions; d++)
                 NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], NNodes[d]);
@@ -926,10 +934,7 @@ public class ChebyshevApproximation
     /// <returns>Dictionary with "NodesPerDim", "FullGrid", and "Shape".</returns>
     public static NodeInfo Nodes(int numDimensions, double[][] domain, int[] nNodes)
     {
-        if (domain.Length != numDimensions || nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"len(domain)={domain.Length} and len(nNodes)={nNodes.Length} " +
-                $"must both equal numDimensions={numDimensions}");
+        ValidateFixedGridArguments(nameof(Nodes), numDimensions, domain, nNodes);
 
         int totalPoints = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(nNodes, nameof(Nodes)),
@@ -976,10 +981,7 @@ public class ChebyshevApproximation
         int maxDerivativeOrder = 2)
     {
         // Validation
-        if (domain.Length != numDimensions || nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"len(domain)={domain.Length} and len(nNodes)={nNodes.Length} " +
-                $"must both equal numDimensions={numDimensions}");
+        ValidateFixedGridArguments(nameof(FromValues), numDimensions, domain, nNodes);
 
         int expectedTotal = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(nNodes, nameof(FromValues)),
@@ -995,13 +997,6 @@ public class ChebyshevApproximation
         {
             if (double.IsNaN(tensorValues[i]) || double.IsInfinity(tensorValues[i]))
                 throw new ArgumentException("tensor_values contains NaN or Inf");
-        }
-
-        for (int d = 0; d < numDimensions; d++)
-        {
-            if (domain[d][0] >= domain[d][1])
-                throw new ArgumentException(
-                    $"domain[{d}]: lo={domain[d][0]} must be strictly less than hi={domain[d][1]}");
         }
 
         var obj = new ChebyshevApproximation
@@ -1440,6 +1435,57 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
     // Private helpers
     // ------------------------------------------------------------------
+
+    private static void ValidateFixedGridArguments(
+        string caller,
+        int numDimensions,
+        double[][] domain,
+        int[] nNodes)
+    {
+        ValidateDomainArguments(caller, numDimensions, domain);
+        ArgumentNullException.ThrowIfNull(nNodes);
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"len(nNodes)={nNodes.Length} must equal numDimensions={numDimensions}");
+        ValidateNodeCounts(caller, nNodes);
+    }
+
+    private static void ValidateDomainArguments(string caller, int numDimensions, double[][] domain)
+    {
+        if (numDimensions <= 0)
+            throw new ArgumentException($"{caller} requires numDimensions to be positive, got {numDimensions}");
+
+        ArgumentNullException.ThrowIfNull(domain);
+
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"len(domain)={domain.Length} must equal numDimensions={numDimensions}");
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] is null)
+                throw new ArgumentException($"domain[{d}] must contain exactly two bounds [lo, hi]", nameof(domain));
+
+            if (domain[d].Length != 2)
+                throw new ArgumentException($"domain[{d}] must contain exactly two bounds [lo, hi]");
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi) || lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}]: lo={lo} must be strictly less than hi={hi}; both bounds must be finite");
+        }
+    }
+
+    private static void ValidateNodeCounts(string caller, int[] nNodes)
+    {
+        for (int d = 0; d < nNodes.Length; d++)
+        {
+            if (nNodes[d] <= 0)
+                throw new ArgumentException(
+                    $"{caller} requires nNodes[{d}] to be positive, got {nNodes[d]}");
+        }
+    }
 
     /// <summary>
     /// Pre-compute transposed diff matrices as flat arrays for BLAS GEMM.

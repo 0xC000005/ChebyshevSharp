@@ -159,6 +159,48 @@ public class TestNodesApprox
                 2, new[] { new[] { -1.0, 1.0 }, new[] { 0.0, 1.0 } }, new[] { 5 }));
         Assert.Contains("numDimensions", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Nodes_InvalidDomainRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { 1.0, 1.0 } }, new[] { 5 }));
+        Assert.Contains("lo=", ex.Message);
+        Assert.Contains("strictly less than hi", ex.Message);
+    }
+
+    [Fact]
+    public void Nodes_NonPositiveNodeCountRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { -1.0, 1.0 } }, new[] { 0 }));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Nodes_NullDomainRaises()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevApproximation.Nodes(1, null!, new[] { 5 }));
+        Assert.Equal("domain", ex.ParamName);
+    }
+
+    [Fact]
+    public void Nodes_NullNodeCountsRaises()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevApproximation.Nodes(1, new[] { new[] { -1.0, 1.0 } }, null!));
+        Assert.Equal("nNodes", ex.ParamName);
+    }
+
+    [Fact]
+    public void Nodes_NullDomainEntryRaises()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevApproximation.Nodes(1, new double[][] { null! }, new[] { 5 }));
+        Assert.Contains("domain[0]", ex.Message);
+    }
 }
 
 // ======================================================================
