@@ -100,6 +100,10 @@ public class ChebyshevSpline
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateKnots(numDimensions, domain, knots);
+        ValidateFlatNNodes(numDimensions, nNodes);
+
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
@@ -109,8 +113,6 @@ public class ChebyshevSpline
         _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
         _progress = progress;
 
-        // Validate and store knots
-        ValidateKnots(numDimensions, domain, knots);
         Knots = knots.Select(k => (double[])k.Clone()).ToArray();
 
         // Compute per-dimension intervals
@@ -139,7 +141,7 @@ public class ChebyshevSpline
     /// <param name="domain">Bounds per dimension.</param>
     /// <param name="nNodes">Number of nodes per dimension; null entries signal auto-N. Pass null to make every dim auto-N (requires errorThreshold).</param>
     /// <param name="knots">Interior knots per dimension. Null defaults to empty arrays (single piece per dim).</param>
-    /// <param name="errorThreshold">Target supremum-norm error per piece. Required if any nNodes entry is null.</param>
+    /// <param name="errorThreshold">Finite positive target supremum-norm error per piece. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
@@ -161,9 +163,13 @@ public class ChebyshevSpline
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateDomain(numDimensions, domain);
+
         if (maxN < 3)
             throw new ArgumentException(
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}.");
+        AdaptiveBuild.ValidateErrorThreshold(errorThreshold);
 
         knots ??= Enumerable.Range(0, numDimensions).Select(_ => Array.Empty<double>()).ToArray();
 
@@ -179,6 +185,7 @@ public class ChebyshevSpline
         else
         {
             resolvedOriginal = (int?[])nNodes.Clone();
+            ValidateOptionalNNodes(numDimensions, resolvedOriginal);
             if (resolvedOriginal.Any(n => n == null) && errorThreshold == null)
                 throw new ArgumentException(
                     "Null entries in nNodes require errorThreshold to be set (auto-N mode).");
@@ -242,16 +249,9 @@ public class ChebyshevSpline
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
-        if (nNodesNested.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodesNested must have {numDimensions} entries (one list per dim), got {nNodesNested.Length}");
-        for (int d = 0; d < numDimensions; d++)
-        {
-            int expected = knots[d].Length + 1;
-            if (nNodesNested[d].Length != expected)
-                throw new ArgumentException(
-                    $"nNodesNested[{d}] must have {expected} entries (one per piece), got {nNodesNested[d].Length}");
-        }
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateKnots(numDimensions, domain, knots);
+        ValidateNestedNNodes(numDimensions, nNodesNested, knots);
 
         Function = function;
         NumDimensions = numDimensions;
@@ -265,7 +265,6 @@ public class ChebyshevSpline
         OriginalNNodes = Array.Empty<int?>();
         NestedNNodes = nNodesNested.Select(row => (int[])row.Clone()).ToArray();
 
-        ValidateKnots(numDimensions, domain, knots);
         Knots = knots.Select(k => (double[])k.Clone()).ToArray();
 
         Intervals = ComputeIntervals(numDimensions, domain, knots);
@@ -298,16 +297,24 @@ public class ChebyshevSpline
 
     internal static void ValidateKnots(int numDimensions, double[][] domain, double[][] knots)
     {
+        ValidateDomain(numDimensions, domain);
+        ArgumentNullException.ThrowIfNull(knots);
+
         if (knots.Length != numDimensions)
             throw new ArgumentException(
                 $"knots length {knots.Length} != numDimensions {numDimensions}");
 
         for (int d = 0; d < numDimensions; d++)
         {
+            if (knots[d] == null)
+                throw new ArgumentException($"knots[{d}] must not be null", nameof(knots));
+
             double lo = domain[d][0], hi = domain[d][1];
             for (int i = 0; i < knots[d].Length; i++)
             {
                 double k = knots[d][i];
+                if (!double.IsFinite(k))
+                    throw new ArgumentException($"Knot {i} for dimension {d} must be finite");
                 if (!(lo < k && k < hi))
                     throw new ArgumentException(
                         $"Knot {k} for dimension {d} is not strictly inside domain [{lo}, {hi}]");
@@ -323,6 +330,88 @@ public class ChebyshevSpline
             // Check unique
             if (knots[d].Distinct().Count() != knots[d].Length)
                 throw new ArgumentException($"Knots for dimension {d} contain duplicates");
+        }
+    }
+
+    private static void ValidateDomain(int numDimensions, double[][] domain)
+    {
+        if (numDimensions <= 0)
+            throw new ArgumentException(
+                $"numDimensions must be positive, got {numDimensions}", nameof(numDimensions));
+
+        ArgumentNullException.ThrowIfNull(domain);
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain length {domain.Length} != numDimensions {numDimensions}", nameof(domain));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] == null)
+                throw new ArgumentException($"domain[{d}] must not be null", nameof(domain));
+            if (domain[d].Length != 2)
+                throw new ArgumentException(
+                    $"domain[{d}] must have exactly 2 entries [lo, hi], got {domain[d].Length}",
+                    nameof(domain));
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi))
+                throw new ArgumentException($"domain[{d}] bounds must be finite", nameof(domain));
+            if (lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}]: lo={lo} must be strictly less than hi={hi}",
+                    nameof(domain));
+        }
+    }
+
+    private static void ValidateFlatNNodes(int numDimensions, int[] nNodes)
+    {
+        ArgumentNullException.ThrowIfNull(nNodes);
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes length {nNodes.Length} != numDimensions {numDimensions}", nameof(nNodes));
+
+        for (int d = 0; d < numDimensions; d++)
+            if (nNodes[d] <= 0)
+                throw new ArgumentException($"nNodes[{d}] must be positive, got {nNodes[d]}", nameof(nNodes));
+    }
+
+    private static void ValidateOptionalNNodes(int numDimensions, int?[] nNodes)
+    {
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes length {nNodes.Length} != numDimensions {numDimensions}", nameof(nNodes));
+
+        for (int d = 0; d < numDimensions; d++)
+            if (nNodes[d] <= 0)
+                throw new ArgumentException($"nNodes[{d}] must be positive when provided, got {nNodes[d]}",
+                    nameof(nNodes));
+    }
+
+    private static void ValidateNestedNNodes(int numDimensions, int[][] nNodesNested, double[][] knots)
+    {
+        ArgumentNullException.ThrowIfNull(nNodesNested);
+        if (nNodesNested.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodesNested must have {numDimensions} entries (one list per dim), got {nNodesNested.Length}",
+                nameof(nNodesNested));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (nNodesNested[d] == null)
+                throw new ArgumentException($"nNodesNested[{d}] must not be null", nameof(nNodesNested));
+
+            int expected = knots[d].Length + 1;
+            if (nNodesNested[d].Length != expected)
+                throw new ArgumentException(
+                    $"nNodesNested[{d}] must have {expected} entries (one per piece), got {nNodesNested[d].Length}",
+                    nameof(nNodesNested));
+
+            for (int i = 0; i < nNodesNested[d].Length; i++)
+                if (nNodesNested[d][i] <= 0)
+                    throw new ArgumentException(
+                        $"nNodesNested[{d}][{i}] must be positive, got {nNodesNested[d][i]}",
+                        nameof(nNodesNested));
         }
     }
 
@@ -349,6 +438,13 @@ public class ChebyshevSpline
             intervals[d] = dimIntervals;
         }
         return intervals;
+    }
+
+    private static int[][]? CloneNestedNNodes(int[][]? nestedNNodes)
+    {
+        return nestedNNodes == null
+            ? null
+            : nestedNNodes.Select(row => (int[])row.Clone()).ToArray();
     }
 
     // ------------------------------------------------------------------
@@ -514,16 +610,12 @@ public class ChebyshevSpline
 
         for (int d = 0; d < NumDimensions; d++)
         {
-            if (derivativeOrder[d] > 0)
+            for (int k = 0; k < Knots[d].Length; k++)
             {
-                for (int k = 0; k < Knots[d].Length; k++)
-                {
-                    if (Math.Abs(point[d] - Knots[d][k]) < 1e-14)
-                        throw new ArgumentException(
-                            $"Derivative w.r.t. dimension {d} is not defined " +
-                            $"at knot x[{d}]={Knots[d][k]}. The left and right " +
-                            $"derivatives may differ at this point.");
-                }
+                if (Math.Abs(point[d] - Knots[d][k]) < 1e-14)
+                    throw new ArgumentException(
+                        $"Requested derivative is not defined at knot x[{d}]={Knots[d][k]}. " +
+                        "The adjacent polynomial pieces may have different derivative values at this point.");
             }
         }
     }
@@ -543,6 +635,7 @@ public class ChebyshevSpline
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
         EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
         CheckKnotBoundary(point, derivativeOrder);
         var (_, piece) = FindPiece(point);
         return piece.VectorizedEval(point, derivativeOrder);
@@ -559,6 +652,7 @@ public class ChebyshevSpline
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
         EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         foreach (var dord in derivativeOrders)
             CheckKnotBoundary(point, dord);
         var (_, piece) = FindPiece(point);
@@ -575,7 +669,8 @@ public class ChebyshevSpline
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalBatch().");
-        EvaluationArguments.ValidatePointBatch(points, NumDimensions);
+        EvaluationArguments.ValidatePoints(points, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         int N = points.Length;
         double[] results = new double[N];
@@ -584,6 +679,7 @@ public class ChebyshevSpline
         int[] flatIndices = new int[N];
         for (int i = 0; i < N; i++)
         {
+            CheckKnotBoundary(points[i], derivativeOrder);
             var (flatIdx, _) = FindPiece(points[i]);
             flatIndices[i] = flatIdx;
         }
@@ -658,6 +754,20 @@ public class ChebyshevSpline
     {
         get
         {
+            if (NestedNNodes != null)
+            {
+                long nestedTotal = 0;
+                foreach (var multiIdx in NdIndex(Shape))
+                {
+                    var pieceNNodes = new int[NumDimensions];
+                    for (int d = 0; d < NumDimensions; d++)
+                        pieceNNodes[d] = NestedNNodes[d][multiIdx[d]];
+                    nestedTotal = checked(nestedTotal +
+                        TensorShape.CheckedProduct(pieceNNodes, nameof(TotalBuildEvals)));
+                }
+                return TensorShape.RequireArrayLength(nestedTotal, nameof(TotalBuildEvals));
+            }
+
             if (NNodes.Any(n => n <= 0))
             {
                 if (Pieces == null || Pieces.All(p => p == null)) return 0;
@@ -698,7 +808,7 @@ public class ChebyshevSpline
     /// Mutually exclusive with <paramref name="errorThreshold"/>.</param>
     /// <param name="nNodes">Flat per-dim node counts (shared across pieces).
     /// Mutually exclusive with <paramref name="nNodesNested"/> and <paramref name="errorThreshold"/>.</param>
-    /// <param name="errorThreshold">Target error per piece.
+    /// <param name="errorThreshold">Finite positive target error per piece.
     /// Mutually exclusive with <paramref name="nNodes"/>/<paramref name="nNodesNested"/>.</param>
     /// <param name="maxN">Cap on doubling-loop nodes per dimension (default 64).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
@@ -714,6 +824,8 @@ public class ChebyshevSpline
         int maxN = 64,
         int maxDerivativeOrder = 2)
     {
+        ArgumentNullException.ThrowIfNull(specialPoints);
+
         if (specialPoints.Length != numDimensions)
             throw new ArgumentException(
                 $"specialPoints must have {numDimensions} entries, got {specialPoints.Length}");
@@ -773,10 +885,7 @@ public class ChebyshevSpline
                 SaveJson(path);
                 break;
             case "binary":
-                if (NestedNNodes != null)
-                    throw new NotSupportedException(
-                        "binary format requires flat n_nodes (shared across pieces); " +
-                        "use format='json' for nested-n_nodes splines");
+                EnsureBinarySerializable();
                 SaveBinary(path);
                 break;
             default:
@@ -831,6 +940,16 @@ public class ChebyshevSpline
         File.WriteAllText(path, json);
     }
 
+    private void EnsureBinarySerializable()
+    {
+        bool hasSharedPositiveNodes = NNodes.Length == NumDimensions && NNodes.All(n => n > 0);
+        bool allPiecesShareNodes = Pieces.All(p => p != null && p.NNodes.SequenceEqual(NNodes));
+        if (NestedNNodes != null || !hasSharedPositiveNodes || !allPiecesShareNodes)
+            throw new NotSupportedException(
+                "binary format requires shared positive n_nodes across pieces; " +
+                "use format='json' for adaptive or nested-n_nodes splines");
+    }
+
     private void SaveBinary(string path)
     {
         using var fs = File.Create(path);
@@ -858,6 +977,7 @@ public class ChebyshevSpline
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored spline.</returns>
+    /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevSpline state.</exception>
     public static ChebyshevSpline Load(string path)
     {
         if (Internal.PcbFormat.IsBinary(path))
@@ -891,6 +1011,8 @@ public class ChebyshevSpline
         if (state.Type != "ChebyshevSpline")
             throw new InvalidOperationException(
                 $"Expected type ChebyshevSpline, got {state.Type}");
+
+        ValidateSerializedState(state);
 
         var pieces = state.PieceStates.Select(ps =>
         {
@@ -961,6 +1083,293 @@ public class ChebyshevSpline
         return spline;
     }
 
+    private static void ValidateSerializedState(SplineSerializationState state)
+    {
+        int d = state.NumDimensions;
+        if (d <= 0)
+            throw new InvalidDataException($"NumDimensions must be positive, got {d}.");
+
+        ValidateDomain(state.Domain, d, nameof(SplineSerializationState.Domain));
+        ValidateOriginalNNodes(state.OriginalNNodes, d);
+        ValidateTopLevelNNodes(state.NNodes, d, state.OriginalNNodes, state.ErrorThreshold);
+        ValidateKnotsForLoad(state.Knots, d, state.Domain);
+
+        if (state.MaxDerivativeOrder is < 0)
+            throw new InvalidDataException($"MaxDerivativeOrder must be non-negative, got {state.MaxDerivativeOrder}.");
+        if (!double.IsFinite(state.BuildTime) || state.BuildTime < 0.0)
+            throw new InvalidDataException($"BuildTime must be finite and non-negative, got {state.BuildTime}.");
+        if (state.ErrorThreshold is { } threshold &&
+            (!double.IsFinite(threshold) || threshold < 0.0))
+            throw new InvalidDataException($"ErrorThreshold must be finite and non-negative, got {threshold}.");
+        if (state.MaxN is <= 0)
+            throw new InvalidDataException($"MaxN must be positive, got {state.MaxN}.");
+
+        ValidateShape(state.Shape, state.Knots, d);
+        ValidateNestedNNodes(state.NestedNNodes, state.Shape, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+
+        int expectedPieces = CheckedArrayLengthForInvalidData(state.Shape, nameof(SplineSerializationState.PieceStates));
+        if (state.PieceStates is null)
+            throw new InvalidDataException("PieceStates must be present.");
+        if (state.PieceStates.Length != expectedPieces)
+            throw new InvalidDataException(
+                $"PieceStates has length {state.PieceStates.Length}, expected {expectedPieces}.");
+
+        var intervals = ComputeIntervals(d, state.Domain, state.Knots);
+        for (int i = 0; i < state.PieceStates.Length; i++)
+            ValidatePieceState(state.PieceStates[i], i, d, state.Shape, intervals);
+    }
+
+    private static void ValidatePieceState(
+        PieceState? piece,
+        int pieceIndex,
+        int numDimensions,
+        int[] shape,
+        (double lo, double hi)[][] intervals)
+    {
+        if (piece is null)
+            throw new InvalidDataException($"PieceStates[{pieceIndex}] must be present.");
+        if (piece.NumDimensions != numDimensions)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].NumDimensions={piece.NumDimensions}, expected {numDimensions}.");
+        if (piece.MaxDerivativeOrder is < 0)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].MaxDerivativeOrder must be non-negative, got {piece.MaxDerivativeOrder}.");
+        if (!double.IsFinite(piece.BuildTime) || piece.BuildTime < 0.0)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].BuildTime must be finite and non-negative, got {piece.BuildTime}.");
+        if (piece.NEvaluations < 0)
+            throw new InvalidDataException(
+                $"PieceStates[{pieceIndex}].NEvaluations must be non-negative, got {piece.NEvaluations}.");
+
+        ValidateDomain(piece.Domain, numDimensions, $"PieceStates[{pieceIndex}].Domain");
+        ValidatePositiveVector(piece.NNodes, numDimensions, $"PieceStates[{pieceIndex}].NNodes");
+        ValidateApproxVectorArray(piece.NodeArrays, piece.NNodes, $"PieceStates[{pieceIndex}].NodeArrays");
+        ValidateApproxVectorArray(piece.Weights, piece.NNodes, $"PieceStates[{pieceIndex}].Weights");
+        ValidateDiffMatrices(piece.DiffMatrices, piece.NNodes, pieceIndex);
+
+        int expectedTensorLength = CheckedArrayLengthForInvalidData(
+            piece.NNodes,
+            $"PieceStates[{pieceIndex}].TensorValues");
+        ValidateFiniteVector(
+            piece.TensorValues,
+            expectedTensorLength,
+            $"PieceStates[{pieceIndex}].TensorValues");
+
+        int[] multiIndex = FlatToMultiIndex(pieceIndex, shape);
+        for (int dim = 0; dim < numDimensions; dim++)
+        {
+            var expectedDomain = intervals[dim][multiIndex[dim]];
+            if (piece.Domain[dim][0] != expectedDomain.lo || piece.Domain[dim][1] != expectedDomain.hi)
+                throw new InvalidDataException(
+                    $"PieceStates[{pieceIndex}].Domain[{dim}] does not match spline interval.");
+        }
+    }
+
+    private static void ValidateShape(int[]? shape, double[][] knots, int numDimensions)
+    {
+        if (shape is null)
+            throw new InvalidDataException("Shape must be present.");
+        if (shape.Length != numDimensions)
+            throw new InvalidDataException($"Shape has length {shape.Length}, expected {numDimensions}.");
+
+        for (int dim = 0; dim < numDimensions; dim++)
+        {
+            int expected = knots[dim].Length + 1;
+            if (shape[dim] != expected)
+                throw new InvalidDataException($"Shape[{dim}]={shape[dim]}, expected {expected}.");
+        }
+    }
+
+    private static void ValidateKnotsForLoad(double[][]? knots, int numDimensions, double[][] domain)
+    {
+        if (knots is null)
+            throw new InvalidDataException("Knots must be present.");
+        if (knots.Length != numDimensions)
+            throw new InvalidDataException($"Knots has length {knots.Length}, expected {numDimensions}.");
+
+        for (int dim = 0; dim < numDimensions; dim++)
+        {
+            double[] dimKnots = knots[dim]
+                ?? throw new InvalidDataException($"Knots[{dim}] must be present.");
+            double lo = domain[dim][0];
+            double hi = domain[dim][1];
+            double previous = double.NegativeInfinity;
+            for (int i = 0; i < dimKnots.Length; i++)
+            {
+                double knot = dimKnots[i];
+                if (!double.IsFinite(knot))
+                    throw new InvalidDataException($"Knots[{dim}][{i}] must be finite.");
+                if (!(lo < knot && knot < hi))
+                    throw new InvalidDataException(
+                        $"Knots[{dim}][{i}]={knot} must be strictly inside domain [{lo}, {hi}].");
+                if (i > 0 && knot <= previous)
+                    throw new InvalidDataException($"Knots[{dim}] must be strictly increasing.");
+                previous = knot;
+            }
+        }
+    }
+
+    private static void ValidateDomain(double[][]? domain, int numDimensions, string name)
+    {
+        if (domain is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (domain.Length != numDimensions)
+            throw new InvalidDataException($"{name} has length {domain.Length}, expected {numDimensions}.");
+
+        for (int i = 0; i < numDimensions; i++)
+        {
+            double[] bounds = domain[i]
+                ?? throw new InvalidDataException($"{name}[{i}] must be present.");
+            if (bounds.Length != 2)
+                throw new InvalidDataException($"{name}[{i}] must contain exactly two bounds.");
+            if (!double.IsFinite(bounds[0]) || !double.IsFinite(bounds[1]))
+                throw new InvalidDataException($"{name}[{i}] bounds must be finite.");
+            if (bounds[0] >= bounds[1])
+                throw new InvalidDataException($"{name}[{i}] lower bound must be less than upper bound.");
+        }
+    }
+
+    private static void ValidatePositiveVector(int[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (values[i] <= 0)
+                throw new InvalidDataException($"{name}[{i}] must be positive, got {values[i]}.");
+    }
+
+    private static void ValidateTopLevelNNodes(
+        int[]? nNodes,
+        int expectedLength,
+        int?[]? originalNNodes,
+        double? errorThreshold)
+    {
+        if (nNodes is null)
+            throw new InvalidDataException($"{nameof(SplineSerializationState.NNodes)} must be present.");
+        if (nNodes.Length != expectedLength)
+            throw new InvalidDataException(
+                $"{nameof(SplineSerializationState.NNodes)} has length {nNodes.Length}, expected {expectedLength}.");
+
+        bool autoMode = errorThreshold != null &&
+            originalNNodes != null &&
+            originalNNodes.Length == expectedLength;
+
+        for (int i = 0; i < nNodes.Length; i++)
+        {
+            if (nNodes[i] > 0) continue;
+            if (nNodes[i] == 0 && autoMode && originalNNodes![i] is null) continue;
+            throw new InvalidDataException(
+                $"{nameof(SplineSerializationState.NNodes)}[{i}] must be positive, got {nNodes[i]}.");
+        }
+    }
+
+    private static void ValidateFiniteVector(double[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (!double.IsFinite(values[i]))
+                throw new InvalidDataException($"{name}[{i}] must be finite.");
+    }
+
+    private static void ValidateApproxVectorArray(double[][]? arrays, int[] nNodes, string name)
+    {
+        if (arrays is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (arrays.Length != nNodes.Length)
+            throw new InvalidDataException($"{name} has length {arrays.Length}, expected {nNodes.Length}.");
+
+        for (int i = 0; i < arrays.Length; i++)
+            ValidateFiniteVector(arrays[i], nNodes[i], $"{name}[{i}]");
+    }
+
+    private static void ValidateDiffMatrices(double[][]? matrices, int[] nNodes, int pieceIndex)
+    {
+        string name = $"PieceStates[{pieceIndex}].DiffMatrices";
+        if (matrices is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (matrices.Length != nNodes.Length)
+            throw new InvalidDataException($"{name} has length {matrices.Length}, expected {nNodes.Length}.");
+
+        for (int i = 0; i < nNodes.Length; i++)
+        {
+            int expectedLength = CheckedArrayLengthForInvalidData(new[] { nNodes[i], nNodes[i] }, $"{name}[{i}]");
+            ValidateFiniteVector(matrices[i], expectedLength, $"{name}[{i}]");
+        }
+    }
+
+    private static void ValidateOriginalNNodes(int?[]? originalNNodes, int numDimensions)
+    {
+        if (originalNNodes is null) return;
+        if (originalNNodes.Length != 0 && originalNNodes.Length != numDimensions)
+            throw new InvalidDataException(
+                $"OriginalNNodes has length {originalNNodes.Length}, expected 0 or {numDimensions}.");
+
+        for (int i = 0; i < originalNNodes.Length; i++)
+            if (originalNNodes[i] is <= 0)
+                throw new InvalidDataException($"OriginalNNodes[{i}] must be positive or null.");
+    }
+
+    private static void ValidateNestedNNodes(int[][]? nestedNNodes, int[] shape, int numDimensions)
+    {
+        if (nestedNNodes is null) return;
+        if (nestedNNodes.Length != numDimensions)
+            throw new InvalidDataException($"NestedNNodes has length {nestedNNodes.Length}, expected {numDimensions}.");
+
+        for (int dim = 0; dim < numDimensions; dim++)
+            ValidatePositiveVector(nestedNNodes[dim], shape[dim], $"NestedNNodes[{dim}]");
+    }
+
+    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    {
+        if (registeredDerivativeOrders is null) return;
+
+        for (int i = 0; i < registeredDerivativeOrders.Length; i++)
+        {
+            int[] orders = registeredDerivativeOrders[i]
+                ?? throw new InvalidDataException($"RegisteredDerivativeOrders[{i}] must be present.");
+            if (orders.Length != numDimensions)
+                throw new InvalidDataException(
+                    $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
+            for (int j = 0; j < orders.Length; j++)
+                if (orders[j] < 0)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+        }
+    }
+
+    private static int[] FlatToMultiIndex(int flatIndex, int[] shape)
+    {
+        var multi = new int[shape.Length];
+        int rem = flatIndex;
+        for (int dim = shape.Length - 1; dim >= 0; dim--)
+        {
+            multi[dim] = rem % shape[dim];
+            rem /= shape[dim];
+        }
+        return multi;
+    }
+
+    private static int CheckedArrayLengthForInvalidData(int[] shape, string name)
+    {
+        try
+        {
+            long product = TensorShape.CheckedProduct(shape, name);
+            return TensorShape.RequireArrayLength(product, name, shape);
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidDataException($"{name} shape [{string.Join(",", shape)}] is invalid.", ex);
+        }
+    }
+
     // ------------------------------------------------------------------
     // Nodes and FromValues
     // ------------------------------------------------------------------
@@ -977,14 +1386,7 @@ public class ChebyshevSpline
         int numDimensions, double[][] domain, int[] nNodes, double[][] knots)
     {
         ValidateKnots(numDimensions, domain, knots);
-
-        // Validate domain
-        for (int d = 0; d < numDimensions; d++)
-        {
-            if (domain[d][0] >= domain[d][1])
-                throw new ArgumentException(
-                    $"domain[{d}]: lo={domain[d][0]} must be strictly less than hi={domain[d][1]}");
-        }
+        ValidateFlatNNodes(numDimensions, nNodes);
 
         var intervals = ComputeIntervals(numDimensions, domain, knots);
         int[] shape = intervals.Select(iv => iv.Length).ToArray();
@@ -1041,14 +1443,9 @@ public class ChebyshevSpline
         double[][] knots,
         int maxDerivativeOrder = 2)
     {
+        ArgumentNullException.ThrowIfNull(pieceValues);
         ValidateKnots(numDimensions, domain, knots);
-
-        for (int d = 0; d < numDimensions; d++)
-        {
-            if (domain[d][0] >= domain[d][1])
-                throw new ArgumentException(
-                    $"domain[{d}]: lo={domain[d][0]} must be strictly less than hi={domain[d][1]}");
-        }
+        ValidateFlatNNodes(numDimensions, nNodes);
 
         var intervals = ComputeIntervals(numDimensions, domain, knots);
         int[] shape = intervals.Select(iv => iv.Length).ToArray();
@@ -1126,11 +1523,15 @@ public class ChebyshevSpline
             NNodes = (int[])source.NNodes.Clone(),
             MaxDerivativeOrder = source.MaxDerivativeOrder,
             Knots = source.Knots.Select(k => (double[])k.Clone()).ToArray(),
-            Intervals = source.Intervals,
-            Shape = source.Shape,
+            Intervals = source.Intervals.Select(iv => ((double, double)[])iv.Clone()).ToArray(),
+            Shape = (int[])source.Shape.Clone(),
             Pieces = pieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = (int?[])source.OriginalNNodes.Clone(),
+            ErrorThreshold = source.ErrorThreshold,
+            MaxN = source.MaxN,
+            NestedNNodes = CloneNestedNNodes(source.NestedNNodes),
             _cachedErrorEstimate = null,
         };
     }
@@ -1156,6 +1557,10 @@ public class ChebyshevSpline
         var shape = Shape.ToList();
         var domain = Domain.Select(d => (double[])d.Clone()).ToList();
         var nNodes = NNodes.ToList();
+        var nestedNNodes = NestedNNodes?.Select(row => row.ToList()).ToList();
+        List<int?>? originalNNodes = OriginalNNodes.Length == NumDimensions
+            ? OriginalNNodes.ToList()
+            : null;
 
         foreach (var (dimIdx, bounds, n) in sorted)
         {
@@ -1164,6 +1569,8 @@ public class ChebyshevSpline
             shape.Insert(dimIdx, 1);
             domain.Insert(dimIdx, (double[])bounds.Clone());
             nNodes.Insert(dimIdx, n);
+            nestedNNodes?.Insert(dimIdx, new List<int> { n });
+            originalNNodes?.Insert(dimIdx, n);
         }
 
         // Extrude each piece
@@ -1189,6 +1596,10 @@ public class ChebyshevSpline
             Pieces = pieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = originalNNodes?.ToArray() ?? Array.Empty<int?>(),
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = nestedNNodes?.Select(row => row.ToArray()).ToArray(),
             _cachedErrorEstimate = null,
         };
     }
@@ -1220,6 +1631,10 @@ public class ChebyshevSpline
         var shape = Shape.ToList();
         var domain = Domain.Select(d => (double[])d.Clone()).ToList();
         var nNodes = NNodes.ToList();
+        var nestedNNodes = NestedNNodes?.Select(row => row.ToList()).ToList();
+        List<int?>? originalNNodes = OriginalNNodes.Length == NumDimensions
+            ? OriginalNNodes.ToList()
+            : null;
 
         // Work with pieces as a multi-dimensional index structure
         // Use the shape to track which pieces survive
@@ -1294,6 +1709,8 @@ public class ChebyshevSpline
             shape.RemoveAt(dimIdx);
             domain.RemoveAt(dimIdx);
             nNodes.RemoveAt(dimIdx);
+            nestedNNodes?.RemoveAt(dimIdx);
+            originalNNodes?.RemoveAt(dimIdx);
         }
 
         return new ChebyshevSpline
@@ -1309,6 +1726,10 @@ public class ChebyshevSpline
             Pieces = currentPieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = originalNNodes?.ToArray() ?? Array.Empty<int?>(),
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = nestedNNodes?.Select(row => row.ToArray()).ToArray(),
             _cachedErrorEstimate = null,
         };
     }
@@ -1421,6 +1842,10 @@ public class ChebyshevSpline
         var currentIntervals = Intervals.Select(iv => ((double, double)[])iv.Clone()).ToList();
         var currentDomain = Domain.Select(d => (double[])d.Clone()).ToList();
         var currentNNodes = NNodes.ToList();
+        var currentNestedNNodes = NestedNNodes?.Select(row => row.ToList()).ToList();
+        List<int?>? currentOriginalNNodes = OriginalNNodes.Length == NumDimensions
+            ? OriginalNNodes.ToList()
+            : null;
 
         foreach (int d in sortedDims.OrderByDescending(x => x))
         {
@@ -1545,6 +1970,8 @@ public class ChebyshevSpline
             currentIntervals.RemoveAt(d);
             currentDomain.RemoveAt(d);
             currentNNodes.RemoveAt(d);
+            currentNestedNNodes?.RemoveAt(d);
+            currentOriginalNNodes?.RemoveAt(d);
         }
 
         // If 0D result, should not happen (handled in full-integration branch)
@@ -1564,6 +1991,10 @@ public class ChebyshevSpline
             Pieces = currentPieces,
             Built = true,
             BuildTime = 0.0,
+            OriginalNNodes = currentOriginalNNodes?.ToArray() ?? Array.Empty<int?>(),
+            ErrorThreshold = ErrorThreshold,
+            MaxN = MaxN,
+            NestedNNodes = currentNestedNNodes?.Select(row => row.ToArray()).ToArray(),
             _cachedErrorEstimate = null,
         };
     }
@@ -1592,6 +2023,8 @@ public class ChebyshevSpline
             allRoots.AddRange(pieceRoots);
         }
 
+        AddKnotJumpRoots(sliced, allRoots);
+
         if (allRoots.Count == 0)
             return Array.Empty<double>();
 
@@ -1611,6 +2044,30 @@ public class ChebyshevSpline
         }
 
         return allRoots.ToArray();
+    }
+
+    private static void AddKnotJumpRoots(ChebyshevSpline sliced, List<double> roots)
+    {
+        if (sliced.NumDimensions != 1 || sliced.Knots.Length == 0 || sliced.Knots[0].Length == 0)
+            return;
+
+        for (int i = 0; i < sliced.Knots[0].Length; i++)
+        {
+            double knot = sliced.Knots[0][i];
+            var leftPiece = sliced.Pieces[i]!;
+            var rightPiece = sliced.Pieces[i + 1]!;
+            double leftLimit = leftPiece.Eval(new[] { knot });
+            double rightLimit = rightPiece.Eval(new[] { knot });
+
+            if (IsZeroCrossingAtJump(leftLimit, rightLimit))
+                roots.Add(knot);
+        }
+    }
+
+    private static bool IsZeroCrossingAtJump(double leftLimit, double rightLimit)
+    {
+        return leftLimit < 0.0 && rightLimit > 0.0
+            || leftLimit > 0.0 && rightLimit < 0.0;
     }
 
     /// <summary>
@@ -1711,6 +2168,19 @@ public class ChebyshevSpline
             if (!Knots[d].SequenceEqual(other.Knots[d]))
                 throw new ArgumentException($"Knot mismatch at dimension {d}");
         }
+
+        if (Pieces.Length != other.Pieces.Length)
+            throw new ArgumentException(
+                $"Piece count mismatch: {Pieces.Length} vs {other.Pieces.Length}");
+        for (int i = 0; i < Pieces.Length; i++)
+        {
+            var leftNodes = Pieces[i]!.NNodes;
+            var rightNodes = other.Pieces[i]!.NNodes;
+            if (!leftNodes.SequenceEqual(rightNodes))
+                throw new ArgumentException(
+                    $"Piece {i} node count mismatch: " +
+                    $"[{string.Join(", ", leftNodes)}] vs [{string.Join(", ", rightNodes)}]");
+        }
     }
 
     /// <summary>Add two splines with the same grid and knots.</summary>
@@ -1746,6 +2216,9 @@ public class ChebyshevSpline
     /// <summary>Multiply spline by a scalar.</summary>
     public static ChebyshevSpline operator *(ChebyshevSpline a, double scalar)
     {
+        if (!a.Built)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+
         var pieces = new ChebyshevApproximation?[a.Pieces.Length];
         for (int i = 0; i < pieces.Length; i++)
         {
@@ -2035,9 +2508,16 @@ public class ChebyshevSpline
     /// Values are concatenated in flat piece-index C-order: piece 0 values first, then piece 1, etc.
     /// </summary>
     /// <param name="values">Flat array concatenating all pieces' values in piece-flat-index order.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when values length does not match the expected total across all pieces.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the spline is already constructed.</exception>
     public void SetOriginalFunctionValues(double[] values)
     {
+        ArgumentNullException.ThrowIfNull(values);
+        if (Built || Pieces.Any(p => p?.TensorValues != null))
+            throw new InvalidOperationException(
+                "spline is already constructed; SetOriginalFunctionValues is for unconstructed deferred objects");
+
         int totalPieces = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(Shape, nameof(SetOriginalFunctionValues)),
             nameof(SetOriginalFunctionValues),
@@ -2060,8 +2540,13 @@ public class ChebyshevSpline
         if (values.Length != requiredValues)
             throw new ArgumentException(
                 $"values has {values.Length} entries, expected {requiredValues} across all pieces");
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw new ArgumentException("values contains NaN or Inf", nameof(values));
+        }
 
-        Pieces = new ChebyshevApproximation?[totalPieces];
+        var pieces = new ChebyshevApproximation?[totalPieces];
         int offset = 0;
         for (int p = 0; p < totalPieces; p++)
         {
@@ -2070,7 +2555,7 @@ public class ChebyshevSpline
             Array.Copy(values, offset, pieceValues, 0, sz);
             offset += sz;
             var (pieceDomain, pieceNNodes) = ComputePieceDomainAndN(p);
-            Pieces[p] = ChebyshevApproximation.FromValues(
+            pieces[p] = ChebyshevApproximation.FromValues(
                 pieceValues,
                 NumDimensions,
                 pieceDomain,
@@ -2078,8 +2563,10 @@ public class ChebyshevSpline
                 MaxDerivativeOrder);
         }
 
+        Pieces = pieces;
         Built = true;
         _evaluationPointsCache = null;
+        _cachedErrorEstimate = null;
         _constructorType = "from_values";
     }
 
@@ -2114,6 +2601,7 @@ public class ChebyshevSpline
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;
@@ -2198,7 +2686,7 @@ public class ChebyshevSpline
     /// <param name="maxOrderDerivative">Max derivative order. Default 2.</param>
     /// <param name="additionalData">Optional user data threaded through f calls.</param>
     /// <param name="descriptor">Optional free-form descriptor.</param>
-    /// <param name="thresholdFactor">Spike threshold = thresholdFactor × mean(|d²f|). Default 5.0.</param>
+    /// <param name="thresholdFactor">Finite positive spike threshold factor; threshold = thresholdFactor × mean(|d²f|). Default 5.0.</param>
     /// <param name="maxKnotsPerDim">Cap on knots per dimension. Default 5. Zero means no auto-knots.</param>
     /// <param name="nScanPoints">Number of scan points per dim. Default 200; must be at least 3.</param>
     /// <param name="nWorkers">See <see cref="ChebyshevSpline"/> ctor.</param>
@@ -2225,8 +2713,8 @@ public class ChebyshevSpline
         IProgress<int>? progress = null,
         bool verbose = false)
     {
-        if (thresholdFactor <= 0)
-            throw new ArgumentException("thresholdFactor must be > 0", nameof(thresholdFactor));
+        if (!double.IsFinite(thresholdFactor) || thresholdFactor <= 0)
+            throw new ArgumentException("thresholdFactor must be finite and > 0", nameof(thresholdFactor));
         if (maxKnotsPerDim < 0)
             throw new ArgumentException("maxKnotsPerDim must be >= 0", nameof(maxKnotsPerDim));
         if (nScanPoints < 3)

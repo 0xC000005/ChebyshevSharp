@@ -2,6 +2,89 @@ using ChebyshevSharp.Tests.Helpers;
 
 namespace ChebyshevSharp.Tests;
 
+public class TestFejerMomentWeights
+{
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    [InlineData(8)]
+    public void Fejer1Weights_MatchChebyshevMoments(int n)
+    {
+        double[] nodes = TypeINodes(n);
+        double[] weights = ChebyshevSharp.Internal.Calculus.ComputeFejer1Weights(n);
+
+        for (int k = 0; k < n; k++)
+        {
+            double actual = 0.0;
+            for (int i = 0; i < n; i++)
+                actual += weights[i] * ChebyshevT(k, nodes[i]);
+
+            double expected = ChebyshevIntegral(k, -1.0, 1.0);
+            TestFixtures.AssertClose(expected, actual, rtol: 1e-12, atol: 1e-12);
+        }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(5)]
+    [InlineData(9)]
+    public void SubIntervalWeights_MatchChebyshevMoments(int n)
+    {
+        const double lo = -0.4;
+        const double hi = 0.65;
+        double[] nodes = TypeINodes(n);
+        double[] weights = ChebyshevSharp.Internal.Calculus.ComputeSubIntervalWeights(n, lo, hi);
+
+        for (int k = 0; k < n; k++)
+        {
+            double actual = 0.0;
+            for (int i = 0; i < n; i++)
+                actual += weights[i] * ChebyshevT(k, nodes[i]);
+
+            double expected = ChebyshevIntegral(k, lo, hi);
+            TestFixtures.AssertClose(expected, actual, rtol: 1e-12, atol: 1e-12);
+        }
+    }
+
+    private static double[] TypeINodes(int n)
+    {
+        double[] nodes = new double[n];
+        for (int k = 0; k < n; k++)
+            nodes[k] = Math.Cos(Math.PI * (2 * k + 1) / (2.0 * n));
+        Array.Sort(nodes);
+        return nodes;
+    }
+
+    private static double ChebyshevT(int k, double x)
+    {
+        if (k == 0) return 1.0;
+        if (k == 1) return x;
+
+        double t0 = 1.0;
+        double t1 = x;
+        for (int j = 2; j <= k; j++)
+        {
+            double tj = 2.0 * x * t1 - t0;
+            t0 = t1;
+            t1 = tj;
+        }
+
+        return t1;
+    }
+
+    private static double ChebyshevIntegral(int k, double lo, double hi)
+    {
+        if (k == 0) return hi - lo;
+        if (k == 1) return (hi * hi - lo * lo) / 2.0;
+
+        return 0.5 * (
+            (ChebyshevT(k + 1, hi) - ChebyshevT(k + 1, lo)) / (k + 1)
+            - (ChebyshevT(k - 1, hi) - ChebyshevT(k - 1, lo)) / (k - 1));
+    }
+}
+
 // ======================================================================
 // TestIntegrateApprox
 // ======================================================================
@@ -562,6 +645,18 @@ public class TestSubIntervalIntegrateApprox
     }
 
     [Fact]
+    public void Test_bounds_non_finite_raises()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var cheb = new ChebyshevApproximation(f, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 5 });
+        cheb.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Integrate(bounds: new[] { (double.NaN, 0.5) }));
+        Assert.Contains("finite", ex.Message);
+    }
+
+    [Fact]
     public void Test_bounds_lo_gt_hi_raises()
     {
         // bounds lo > hi raises ArgumentException with "lo=".
@@ -736,6 +831,52 @@ public class TestRootsSpline
         // Both pieces have x=0 as endpoint root; after dedup, expect exactly 1
         Assert.Single(roots);
         Assert.True(Math.Abs(roots[0]) < 1e-8, $"Root {roots[0]} != 0");
+    }
+
+    [Fact]
+    public void Test_spline_roots_sign_changing_jump_at_knot()
+    {
+        // A sign-changing jump is a zero crossing of the piecewise spline
+        // even though neither one-sided piece has an interior polynomial root.
+        static double f(double[] x, object? _) => x[0] < 0.0 ? -1.0 : 1.0;
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        double[] roots = sp.Roots();
+
+        Assert.Single(roots);
+        TestFixtures.AssertClose(0.0, roots[0], rtol: 0, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spline_roots_right_piece_zero_at_knot()
+    {
+        static double f(double[] x, object? _) => x[0] < 0.0 ? 1.0 : x[0];
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        double[] roots = sp.Roots();
+
+        Assert.Single(roots);
+        TestFixtures.AssertClose(0.0, roots[0], rtol: 0, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_spline_roots_same_sign_jump_does_not_create_root()
+    {
+        static double f(double[] x, object? _) => x[0] < 0.0 ? 1.0 : 2.0;
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        double[] roots = sp.Roots();
+
+        Assert.Empty(roots);
     }
 
     [Fact]
@@ -1034,6 +1175,20 @@ public class TestSubIntervalIntegrateSpline
         var result = (double)sp.Integrate(bounds: new[] { (0.0, 0.5) });
         double expected = 0.125; // int_0^0.5 x dx = 0.5^2/2
         TestFixtures.AssertClose(expected, result, rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_bounds_non_finite_raises()
+    {
+        static double f(double[] x, object? _) => Math.Abs(x[0]);
+        var sp = new ChebyshevSpline(f, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 11 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.Integrate(bounds: new[] { (0.0, double.NaN) }));
+        Assert.Contains("finite", ex.Message);
     }
 }
 

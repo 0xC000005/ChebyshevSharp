@@ -2,6 +2,52 @@ using ChebyshevSharp.Tests.Helpers;
 
 namespace ChebyshevSharp.Tests;
 
+public class TestBuildFiniteValues
+{
+    [Fact]
+    public void Build_rejects_nan_function_value()
+    {
+        static double F(double[] x, object? _) => x[0] > 0.0 ? double.NaN : x[0];
+
+        var cheb = new ChebyshevApproximation(
+            F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 6 });
+
+        var ex = Assert.Throws<ArgumentException>(() => cheb.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(cheb.IsConstructionFinished());
+        Assert.Null(cheb.TensorValues);
+    }
+
+    [Fact]
+    public void Build_rejects_infinite_function_value()
+    {
+        static double F(double[] x, object? _) => x[0] > 0.9 ? double.PositiveInfinity : x[0];
+
+        var cheb = new ChebyshevApproximation(
+            F, 1, new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+
+        var ex = Assert.Throws<ArgumentException>(() => cheb.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(cheb.IsConstructionFinished());
+        Assert.Null(cheb.TensorValues);
+    }
+
+    [Fact]
+    public void Spline_build_rejects_non_finite_piece_value()
+    {
+        static double F(double[] x, object? _) => x[0] > 0.5 ? double.NaN : x[0];
+
+        var spline = new ChebyshevSpline(
+            F, 1, new[] { new[] { -1.0, 1.0 } },
+            nNodes: new[] { 6 },
+            knots: new[] { new[] { 0.0 } });
+
+        var ex = Assert.Throws<ArgumentException>(() => spline.Build(verbose: false));
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(spline.Built);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // 3D sin tests
 // ---------------------------------------------------------------------------
@@ -220,6 +266,55 @@ public class TestEvalMethods
         var cheb = new ChebyshevApproximation(f, 1, [new[] { 0.0, 1.0 }], [5]);
         Assert.Throws<InvalidOperationException>(() =>
             cheb.VectorizedEval([0.5], [0]));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Barycentric differentiation exactness
+// ---------------------------------------------------------------------------
+
+public class TestBarycentricDifferentiationExactness
+{
+    [Theory]
+    [InlineData(5)]
+    [InlineData(7)]
+    [InlineData(12)]
+    public void PolynomialDerivativesAreExactOnNonUnitDomain(int n)
+    {
+        static double Polynomial(double x) =>
+            1.25 - 2.0 * x + 0.75 * x * x - 0.5 * x * x * x + 0.125 * Math.Pow(x, 4);
+        static double FirstDerivative(double x) =>
+            -2.0 + 1.5 * x - 1.5 * x * x + 0.5 * x * x * x;
+        static double SecondDerivative(double x) =>
+            1.5 - 3.0 * x + 1.5 * x * x;
+
+        var cheb = new ChebyshevApproximation(
+            (point, _) => Polynomial(point[0]),
+            1,
+            [new[] { -2.0, 3.0 }],
+            [n],
+            maxDerivativeOrder: 2);
+        cheb.Build(verbose: false);
+
+        double[] points =
+        [
+            -1.75,
+            -0.25,
+            0.0,
+            cheb.NodeArrays[0][n / 2],
+            2.4
+        ];
+
+        foreach (double x in points)
+        {
+            TestFixtures.AssertClose(Polynomial(x), cheb.VectorizedEval([x], [0]), rtol: 1e-10, atol: 1e-11);
+            TestFixtures.AssertClose(FirstDerivative(x), cheb.VectorizedEval([x], [1]), rtol: 1e-10, atol: 1e-10);
+            TestFixtures.AssertClose(SecondDerivative(x), cheb.VectorizedEval([x], [2]), rtol: 1e-9, atol: 1e-9);
+
+            TestFixtures.AssertClose(Polynomial(x), cheb.Eval([x], [0]), rtol: 1e-10, atol: 1e-11);
+            TestFixtures.AssertClose(FirstDerivative(x), cheb.Eval([x], [1]), rtol: 1e-10, atol: 1e-10);
+            TestFixtures.AssertClose(SecondDerivative(x), cheb.Eval([x], [2]), rtol: 1e-9, atol: 1e-9);
+        }
     }
 }
 
@@ -643,7 +738,7 @@ public class TestNullSafety
     public void Test_null_derivative_order_in_eval()
     {
         var cheb = TestFixtures.ChebSin3D;
-        Assert.ThrowsAny<NullReferenceException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             cheb.VectorizedEval([0.1, 0.3, 1.7], null!));
     }
 
@@ -695,17 +790,15 @@ public class TestBoundaryValidation
     }
 
     /// <summary>
-    /// VectorizedEval with negative derivative order silently behaves like
-    /// derivative order 0, because the implementation guards with
-    /// <c>if (deriv &gt; 0)</c>. This test documents that behavior.
+    /// VectorizedEval with negative derivative order should reject the invalid
+    /// public argument instead of treating it like derivative order 0.
     /// </summary>
     [Fact]
-    public void Test_negative_derivative_order_behaves_like_zero()
+    public void Test_negative_derivative_order_throws()
     {
         var cheb = TestFixtures.ChebSin3D;
-        double valueWithNeg = cheb.VectorizedEval([0.1, 0.3, 1.7], [-1, 0, 0]);
-        double valueWithZero = cheb.VectorizedEval([0.1, 0.3, 1.7], [0, 0, 0]);
-        Assert.Equal(valueWithZero, valueWithNeg);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.VectorizedEval([0.1, 0.3, 1.7], [-1, 0, 0]));
     }
 
     /// <summary>
@@ -734,6 +827,54 @@ public class TestBoundaryValidation
         cheb.Build(verbose: false);
         double val = cheb.VectorizedEval([0.5], [0]);
         TestFixtures.AssertClose(42.0, val, rtol: 1e-10);
+    }
+
+    [Fact]
+    public void Test_constructor_rejects_invalid_domain()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(f, 1, [new[] { 1.0, 1.0 }], [5]));
+        Assert.Contains("lo=", ex.Message);
+        Assert.Contains("strictly less than hi", ex.Message);
+    }
+
+    [Fact]
+    public void Test_constructor_rejects_non_positive_node_count()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(f, 1, [new[] { -1.0, 1.0 }], [0]));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_nullable_constructor_rejects_nnodes_length_mismatch()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(
+                f,
+                1,
+                [new[] { -1.0, 1.0 }],
+                nNodes: [5, 6]));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("numDimensions", ex.Message);
+    }
+
+    [Fact]
+    public void Test_nullable_constructor_rejects_non_positive_node_count()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(
+                f,
+                1,
+                [new[] { -1.0, 1.0 }],
+                nNodes: [0]));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -875,6 +1016,129 @@ public class TestSerializationEdgeCases
         {
             File.WriteAllText(path, "");
             Assert.ThrowsAny<System.Text.Json.JsonException>(() =>
+                ChebyshevApproximation.Load(path));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_load_json_with_null_domain_entry_throws_invalid_data()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[null]"));
+    }
+
+    [Fact]
+    public void Test_load_json_with_wrong_tensor_length_throws_invalid_data()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(tensorValues: "[1.0]"));
+    }
+
+    [Fact]
+    public void Test_load_json_rejects_malformed_dimensions_and_metadata()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(
+            numDimensions: "0",
+            domain: "[]",
+            nNodes: "[]",
+            nodeArrays: "[]",
+            tensorValues: "[]",
+            weights: "[]",
+            diffMatrices: "[]"));
+
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[[-1.0]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[[1e999, 1.0]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[[1.0, -1.0]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(
+            nNodes: "[0]",
+            nodeArrays: "[[]]",
+            tensorValues: "[]",
+            weights: "[[]]",
+            diffMatrices: "[[]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(nodeArrays: "null"));
+        AssertMalformedApproxJson(MinimalApproxJson(originalNNodes: "[0]"));
+        AssertMalformedApproxJson(MinimalApproxJson(specialPoints: "[null]"));
+    }
+
+    [Fact]
+    public void Test_load_json_accepts_valid_optional_metadata()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, MinimalApproxJson(
+                originalNNodes: "[null]",
+                specialPoints: "[[0.0]]",
+                registeredDerivativeOrders: "[[0]]"));
+
+            var loaded = ChebyshevApproximation.Load(path);
+
+            Assert.Equal(0, loaded.GetDerivativeId([0]));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_load_json_with_nonfinite_optional_values_throws_invalid_data()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(specialPoints: "[[1e999]]"));
+    }
+
+    [Fact]
+    public void Test_load_json_with_overflowing_matrix_size_throws_invalid_data()
+    {
+        string values = string.Join(",", Enumerable.Repeat("0.0", 50_000));
+        AssertMalformedApproxJson(MinimalApproxJson(
+            nNodes: "[50000]",
+            nodeArrays: $"[[{values}]]",
+            tensorValues: "[1.0]",
+            weights: $"[[{values}]]",
+            diffMatrices: "[[]]"));
+    }
+
+    private static string MinimalApproxJson(
+        string numDimensions = "1",
+        string domain = "[[-1.0, 1.0]]",
+        string nNodes = "[2]",
+        string nodeArrays = "[[-0.5, 0.5]]",
+        string tensorValues = "[1.0, 2.0]",
+        string weights = "[[-1.0, 1.0]]",
+        string diffMatrices = "[[0.0, 0.0, 0.0, 0.0]]",
+        string? originalNNodes = null,
+        string? specialPoints = null,
+        string? registeredDerivativeOrders = null)
+    {
+        return $$"""
+        {
+          "NumDimensions": {{numDimensions}},
+          "Domain": {{domain}},
+          "NNodes": {{nNodes}},
+          "MaxDerivativeOrder": 2,
+          "NodeArrays": {{nodeArrays}},
+          "TensorValues": {{tensorValues}},
+          "Weights": {{weights}},
+          "DiffMatrices": {{diffMatrices}}{{OptionalJsonProperty("OriginalNNodes", originalNNodes)}}{{OptionalJsonProperty("SpecialPoints", specialPoints)}}{{OptionalJsonProperty("RegisteredDerivativeOrders", registeredDerivativeOrders)}}
+        }
+        """;
+    }
+
+    private static string OptionalJsonProperty(string name, string? value)
+    {
+        return value == null ? "" : $",\n  \"{name}\": {value}";
+    }
+
+    private static void AssertMalformedApproxJson(string json)
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, json);
+            Assert.Throws<InvalidDataException>(() =>
                 ChebyshevApproximation.Load(path));
         }
         finally

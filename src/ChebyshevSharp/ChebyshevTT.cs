@@ -107,9 +107,9 @@ public class ChebyshevTT
     /// <param name="numDimensions">Number of input dimensions.</param>
     /// <param name="domain">Bounds [lo, hi] for each dimension.</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
-    /// <param name="maxRank">Maximum TT rank. Default is 10.</param>
-    /// <param name="tolerance">Convergence tolerance for TT-Cross. Default is 1e-6.</param>
-    /// <param name="maxSweeps">Maximum number of TT-Cross sweeps. Default is 10.</param>
+    /// <param name="maxRank">Maximum positive TT rank. Default is 10.</param>
+    /// <param name="tolerance">Finite positive convergence tolerance for TT-Cross/ALS. Default is 1e-6.</param>
+    /// <param name="maxSweeps">Maximum positive number of TT-Cross sweeps. Default is 10.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support. Default is 2.</param>
     /// <param name="additionalData">Optional user data object stored for introspection via <see cref="GetAdditionalData"/>. NOT threaded through build calls (TT function signature has no data arg).</param>
     /// <param name="nWorkers">Accepted for API symmetry with the other classes but
@@ -130,17 +130,16 @@ public class ChebyshevTT
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
-        if (domain.Length != numDimensions)
-            throw new ArgumentException(
-                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
-        if (nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateFixedGridArguments(numDimensions, domain, nNodes);
+        ValidatePositiveRank(maxRank, nameof(maxRank));
+        ValidatePositiveFiniteTolerance(tolerance, nameof(tolerance));
+        ValidatePositiveInteger(maxSweeps, nameof(maxSweeps));
 
         _function = function;
         _numDimensions = numDimensions;
-        _domain = domain;
-        _nNodes = nNodes;
+        _domain = CloneDomain(domain);
+        _nNodes = (int[])nNodes.Clone();
         _maxRank = maxRank;
         _tolerance = tolerance;
         _maxSweeps = maxSweeps;
@@ -181,6 +180,42 @@ public class ChebyshevTT
         _dimOrder = Enumerable.Range(0, numDimensions).ToArray();  // overwritten by Load's v2 deserialization
     }
 
+    private static void ValidateFixedGridArguments(int numDimensions, double[][] domain, int[] nNodes)
+    {
+        ArgumentNullException.ThrowIfNull(domain);
+        ArgumentNullException.ThrowIfNull(nNodes);
+
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}", nameof(domain));
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}", nameof(nNodes));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] is null)
+                throw new ArgumentException($"domain[{d}] must not be null.", nameof(domain));
+            if (domain[d].Length != 2)
+                throw new ArgumentException($"domain[{d}] must contain exactly two bounds [lo, hi].", nameof(domain));
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi) || lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}] must contain finite bounds with lo < hi; got [{lo}, {hi}].",
+                    nameof(domain));
+
+            if (nNodes[d] <= 0)
+                throw new ArgumentException($"nNodes[{d}] must be positive; got {nNodes[d]}.", nameof(nNodes));
+        }
+    }
+
+    private static double[][] CloneDomain(double[][] domain)
+    {
+        return domain.Select(d => (double[])d.Clone()).ToArray();
+    }
+
     // ------------------------------------------------------------------
     // Build
     // ------------------------------------------------------------------
@@ -191,11 +226,13 @@ public class ChebyshevTT
     /// <param name="verbose">If true, print build progress.</param>
     /// <param name="seed">Random seed for TT-Cross/ALS initialization. Ignored for method="svd".</param>
     /// <param name="method">"cross" (default), "svd", or "als".</param>
-    /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als".</exception>
+    /// <exception cref="ArgumentException">If method is not "cross", "svd", or "als", or if the function returns NaN or Infinity at a sampled grid point.</exception>
+    /// <exception cref="InvalidOperationException">If this TT was loaded or created from values without the original function.</exception>
     public void Build(bool verbose = true, int? seed = null, string method = "cross")
     {
         if (method != "cross" && method != "svd" && method != "als")
             throw new ArgumentException($"method must be 'cross', 'svd', or 'als', got '{method}'");
+        var function = GetRequiredFunction(nameof(Build));
         Method = method;
         BuildWarning = null;
 
@@ -218,24 +255,25 @@ public class ChebyshevTT
         // Step 2: Build value cores
         TensorTrainKernel.TtCore[] valueCores;
         int nEvals;
+        Func<double[], double> finiteFunction = point => EvaluateFiniteFunction(function, point, nameof(Build));
 
         if (method == "cross")
         {
             if (verbose) Console.WriteLine("  Running TT-Cross...");
             (valueCores, nEvals) = TensorTrainKernel.TtCross(
-                _function!, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
+                finiteFunction, grids, _maxRank, _tolerance, _maxSweeps, verbose, seed, _progress);
         }
         else if (method == "svd")
         {
             (valueCores, nEvals) = TensorTrainKernel.TtSvd(
-                _function!, grids, _maxRank, _tolerance, verbose);
+                finiteFunction, grids, _maxRank, _tolerance, verbose);
         }
         else  // method == "als"
         {
             if (verbose) Console.WriteLine("  Running TT-ALS...");
             bool hitCap;
             (valueCores, nEvals, hitCap) = TensorTrainKernel.AlsAdaptiveRank(
-                _function!, grids, _maxRank, _tolerance, seed, verbose);
+                finiteFunction, grids, _maxRank, _tolerance, seed, verbose);
             if (hitCap)
                 BuildWarning =
                     $"maxRank={_maxRank} reached before ALS tolerance={_tolerance:e2} satisfied. " +
@@ -285,10 +323,63 @@ public class ChebyshevTT
         return (int)total;
     }
 
+    private Func<double[], double> GetRequiredFunction(string caller)
+    {
+        if (_function == null)
+        {
+            throw new InvalidOperationException(
+                $"{caller} requires Function to be callable; this TT was loaded or created from values without the original function.");
+        }
+        return _function;
+    }
+
+    private static double EvaluateFiniteFunction(Func<double[], double> function, double[] point, string caller)
+    {
+        double value = function(point);
+        if (!double.IsFinite(value))
+        {
+            throw new ArgumentException(
+                $"{caller} function returned a non-finite value at a Chebyshev grid point. " +
+                "ChebyshevTT build and completion require finite function values.",
+                "function");
+        }
+        return value;
+    }
+
     private void CheckBuilt()
     {
         if (!_built)
             throw new InvalidOperationException("Call Build() before using this method.");
+    }
+
+    private static void ValidatePositiveRank(int maxRank, string paramName)
+    {
+        if (maxRank <= 0)
+            throw new ArgumentOutOfRangeException(paramName, maxRank, $"{paramName} must be positive.");
+    }
+
+    private static void ValidatePositiveInteger(int value, string paramName)
+    {
+        if (value <= 0)
+            throw new ArgumentOutOfRangeException(paramName, value, $"{paramName} must be positive.");
+    }
+
+    private static void ValidatePositiveFiniteTolerance(double tolerance, string paramName)
+    {
+        if (!double.IsFinite(tolerance) || tolerance <= 0.0)
+            throw new ArgumentOutOfRangeException(
+                paramName,
+                tolerance,
+                $"{paramName} must be finite and positive.");
+    }
+
+    private static void ValidateNonNegativeFiniteTolerance(double tolerance, string paramName)
+    {
+        if (!double.IsFinite(tolerance) || tolerance < 0.0)
+            throw new ArgumentOutOfRangeException(
+                paramName,
+                tolerance,
+                $"{paramName} must be finite and non-negative.");
     }
 
     /// <summary>Returns true if _dimOrder is the identity permutation [0, 1, ..., d-1].</summary>
@@ -499,6 +590,7 @@ public class ChebyshevTT
     {
         CheckBuilt();
         EvaluationArguments.ValidatePoint(point, _numDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, _numDimensions);
 
         // v0.21.1: race-safe via EvalStorageFrame helper that always operates in
         // storage frame. Public EvalMulti permutes user-frame inputs once into
@@ -1240,12 +1332,13 @@ public class ChebyshevTT
     /// <param name="maxIter">Maximum number of outer ALS sweeps.</param>
     /// <param name="verbose">Print per-sweep residuals.</param>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called or if <c>Function</c> is null (loaded TT).</exception>
+    /// <exception cref="ArgumentException">If the function returns NaN or Infinity at a sampled grid point.</exception>
     public void RunCompletion(double tolerance = 1e-8, int maxIter = 50, bool verbose = false)
     {
         CheckBuilt();
-        if (_function == null)
-            throw new InvalidOperationException(
-                "RunCompletion requires Function to be callable; the TT was loaded from a source without the original function.");
+        ValidatePositiveFiniteTolerance(tolerance, nameof(tolerance));
+        ValidatePositiveInteger(maxIter, nameof(maxIter));
+        var function = GetRequiredFunction(nameof(RunCompletion));
 
         // Convert coefficient cores back to value cores at Chebyshev Type I nodes.
         var valueCores = new TensorTrainKernel.TtCore[_numDimensions];
@@ -1266,7 +1359,7 @@ public class ChebyshevTT
             {
                 var pt = new double[_numDimensions];
                 for (int i = 0; i < _numDimensions; i++) pt[i] = grids[i][idx[i]];
-                v = _function(pt);
+                v = EvaluateFiniteFunction(function, pt, nameof(RunCompletion));
                 cache[key] = v;
             }
             return v;
@@ -1297,12 +1390,7 @@ public class ChebyshevTT
     public static (double[][] NodesPerDim, int[] Shape) Nodes(
         int numDimensions, double[][] domain, int[] nNodes)
     {
-        if (domain.Length != numDimensions)
-            throw new ArgumentException(
-                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
-        if (nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ValidateFixedGridArguments(numDimensions, domain, nNodes);
 
         var nodesPerDim = new double[numDimensions][];
         for (int d = 0; d < numDimensions; d++)
@@ -1318,8 +1406,8 @@ public class ChebyshevTT
     /// <param name="numDimensions">Number of dimensions.</param>
     /// <param name="domain">Bounds [lo, hi] per dimension.</param>
     /// <param name="nNodes">Number of nodes per dimension.</param>
-    /// <param name="maxRank">Maximum TT rank (default 10).</param>
-    /// <param name="tolerance">SVD truncation tolerance (default 1e-6).</param>
+    /// <param name="maxRank">Maximum positive TT rank (default 10).</param>
+    /// <param name="tolerance">Finite non-negative SVD truncation tolerance (default 1e-6).</param>
     /// <exception cref="ArgumentException">If tensorValues length doesn't match Π nNodes, or contains NaN/Infinity.</exception>
     public static ChebyshevTT FromValues(
         double[] tensorValues,
@@ -1329,12 +1417,10 @@ public class ChebyshevTT
         int maxRank = 10,
         double tolerance = 1e-6)
     {
-        if (domain.Length != numDimensions)
-            throw new ArgumentException(
-                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
-        if (nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ArgumentNullException.ThrowIfNull(tensorValues);
+        ValidateFixedGridArguments(numDimensions, domain, nNodes);
+        ValidatePositiveRank(maxRank, nameof(maxRank));
+        ValidateNonNegativeFiniteTolerance(tolerance, nameof(tolerance));
         long expected = TensorShape.CheckedProduct(nNodes, nameof(FromValues));
         if (tensorValues.LongLength != expected)
             throw new ArgumentException(
@@ -1352,7 +1438,7 @@ public class ChebyshevTT
 
         var tt = new ChebyshevTT(
             numDimensions: numDimensions,
-            domain: domain.Select(d => (double[])d.Clone()).ToArray(),
+            domain: CloneDomain(domain),
             nNodes: (int[])nNodes.Clone(),
             maxRank: maxRank,
             tolerance: tolerance,
@@ -1442,6 +1528,10 @@ public class ChebyshevTT
     public ChebyshevTT Extrude(int dim, (double Lo, double Hi) newDomain, int newN)
     {
         CheckBuilt();
+        if (!double.IsFinite(newDomain.Lo) || !double.IsFinite(newDomain.Hi))
+            throw new ArgumentException(
+                $"newDomain bounds must be finite; got ({newDomain.Lo}, {newDomain.Hi})",
+                nameof(newDomain));
         if (newDomain.Lo >= newDomain.Hi)
             throw new ArgumentException(
                 $"newDomain bounds must satisfy lo < hi; got ({newDomain.Lo}, {newDomain.Hi})",
@@ -1511,6 +1601,9 @@ public class ChebyshevTT
         int storagePos = !IsIdentityDimOrder() ? Array.IndexOf(_dimOrder, dim) : dim;
 
         double lo = _domain[storagePos][0], hi = _domain[storagePos][1];
+        if (!double.IsFinite(value))
+            throw new ArgumentOutOfRangeException(nameof(value),
+                $"Slice value {value} for dim {dim} must be finite");
         if (value < lo || value > hi)
             throw new ArgumentOutOfRangeException(nameof(value),
                 $"Slice value {value} for dim {dim} is outside domain [{lo}, {hi}]");
@@ -1829,7 +1922,8 @@ public class ChebyshevTT
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored TT interpolant.</returns>
-    /// <exception cref="InvalidOperationException">If the file does not contain a valid ChebyshevTT.</exception>
+    /// <exception cref="InvalidOperationException">If the file cannot be deserialized as a ChebyshevTT state.</exception>
+    /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevTT state.</exception>
     public static ChebyshevTT Load(string path)
     {
         string json = File.ReadAllText(path);
@@ -1838,6 +1932,7 @@ public class ChebyshevTT
 
         int jsonVersion = state.JsonVersion ?? 1;
         int[] dimOrder = state.DimOrder ?? Enumerable.Range(0, state.NumDimensions).ToArray();
+        ValidateSerializedState(state, dimOrder);
 
         var cores = new TensorTrainKernel.TtCore[state.NumDimensions];
         for (int i = 0; i < state.NumDimensions; i++)
@@ -1904,6 +1999,154 @@ public class ChebyshevTT
             throw new InvalidOperationException(
                 $"Expected a ChebyshevTT file, got a different type.");
         return Load(path);
+    }
+
+    private static void ValidateSerializedState(TTSerializationState state, int[] dimOrder)
+    {
+        int d = state.NumDimensions;
+        if (d <= 0)
+            throw new InvalidDataException($"NumDimensions must be positive, got {d}.");
+
+        ValidateDomain(state.Domain, d);
+        ValidatePositiveVector(state.NNodes, d, nameof(TTSerializationState.NNodes));
+
+        if (state.MaxRank <= 0)
+            throw new InvalidDataException($"MaxRank must be positive, got {state.MaxRank}.");
+        if (!double.IsFinite(state.Tolerance) || state.Tolerance < 0.0)
+            throw new InvalidDataException($"Tolerance must be finite and non-negative, got {state.Tolerance}.");
+        if (state.MaxSweeps < 0)
+            throw new InvalidDataException($"MaxSweeps must be non-negative, got {state.MaxSweeps}.");
+        if (!double.IsFinite(state.BuildTime) || state.BuildTime < 0.0)
+            throw new InvalidDataException($"BuildTime must be finite and non-negative, got {state.BuildTime}.");
+        if (state.TotalBuildEvals < 0)
+            throw new InvalidDataException($"TotalBuildEvals must be non-negative, got {state.TotalBuildEvals}.");
+        if (state.MaxDerivativeOrder is < 0)
+            throw new InvalidDataException($"MaxDerivativeOrder must be non-negative, got {state.MaxDerivativeOrder}.");
+
+        ValidatePositiveVector(state.TtRanks, d + 1, nameof(TTSerializationState.TtRanks));
+        if (state.TtRanks[0] != 1 || state.TtRanks[^1] != 1)
+            throw new InvalidDataException(
+                $"TtRanks endpoints must be 1, got [{string.Join(",", state.TtRanks)}].");
+
+        ValidateDimOrder(dimOrder, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+
+        if (state.Cores is null)
+            throw new InvalidDataException("Cores must be present.");
+        if (state.Cores.Length != d)
+            throw new InvalidDataException($"Cores has length {state.Cores.Length}, expected {d}.");
+
+        for (int i = 0; i < d; i++)
+        {
+            CoreData core = state.Cores[i]
+                ?? throw new InvalidDataException($"Cores[{i}] must be present.");
+
+            if (core.RLeft <= 0 || core.NNodes <= 0 || core.RRight <= 0)
+                throw new InvalidDataException(
+                    $"Cores[{i}] dimensions must be positive, got ({core.RLeft}, {core.NNodes}, {core.RRight}).");
+            if (core.RLeft != state.TtRanks[i] || core.RRight != state.TtRanks[i + 1])
+                throw new InvalidDataException(
+                    $"Cores[{i}] rank shape ({core.RLeft}, {core.RRight}) does not match " +
+                    $"TtRanks[{i}:{i + 2}] = ({state.TtRanks[i]}, {state.TtRanks[i + 1]}).");
+            if (core.NNodes != state.NNodes[i])
+                throw new InvalidDataException(
+                    $"Cores[{i}].NNodes={core.NNodes} does not match NNodes[{i}]={state.NNodes[i]}.");
+            if (core.Data is null)
+                throw new InvalidDataException($"Cores[{i}].Data must be present.");
+
+            int expected = CheckedArrayLengthForInvalidData(
+                new[] { core.RLeft, core.NNodes, core.RRight },
+                $"Cores[{i}].Data");
+            if (core.Data.Length != expected)
+                throw new InvalidDataException(
+                    $"Cores[{i}].Data has length {core.Data.Length}, expected {expected}.");
+
+            for (int j = 0; j < core.Data.Length; j++)
+                if (!double.IsFinite(core.Data[j]))
+                    throw new InvalidDataException($"Cores[{i}].Data[{j}] must be finite.");
+        }
+    }
+
+    private static void ValidateDomain(double[][]? domain, int numDimensions)
+    {
+        if (domain is null)
+            throw new InvalidDataException("Domain must be present.");
+        if (domain.Length != numDimensions)
+            throw new InvalidDataException($"Domain has length {domain.Length}, expected {numDimensions}.");
+
+        for (int i = 0; i < numDimensions; i++)
+        {
+            double[] bounds = domain[i]
+                ?? throw new InvalidDataException($"Domain[{i}] must be present.");
+            if (bounds.Length != 2)
+                throw new InvalidDataException($"Domain[{i}] must contain exactly two bounds.");
+
+            double lo = bounds[0];
+            double hi = bounds[1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi))
+                throw new InvalidDataException($"Domain[{i}] bounds must be finite.");
+            if (lo >= hi)
+                throw new InvalidDataException($"Domain[{i}] lower bound must be less than upper bound.");
+        }
+    }
+
+    private static void ValidatePositiveVector(int[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (values[i] <= 0)
+                throw new InvalidDataException($"{name}[{i}] must be positive, got {values[i]}.");
+    }
+
+    private static void ValidateDimOrder(int[] dimOrder, int numDimensions)
+    {
+        if (dimOrder.Length != numDimensions)
+            throw new InvalidDataException($"DimOrder has length {dimOrder.Length}, expected {numDimensions}.");
+
+        var seen = new bool[numDimensions];
+        for (int i = 0; i < dimOrder.Length; i++)
+        {
+            int value = dimOrder[i];
+            if (value < 0 || value >= numDimensions || seen[value])
+                throw new InvalidDataException(
+                    $"DimOrder must be a permutation of [0,{numDimensions - 1}], got [{string.Join(",", dimOrder)}].");
+            seen[value] = true;
+        }
+    }
+
+    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    {
+        if (registeredDerivativeOrders is null) return;
+
+        for (int i = 0; i < registeredDerivativeOrders.Length; i++)
+        {
+            int[] orders = registeredDerivativeOrders[i]
+                ?? throw new InvalidDataException($"RegisteredDerivativeOrders[{i}] must be present.");
+            if (orders.Length != numDimensions)
+                throw new InvalidDataException(
+                    $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
+            for (int j = 0; j < orders.Length; j++)
+                if (orders[j] < 0)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+        }
+    }
+
+    private static int CheckedArrayLengthForInvalidData(int[] shape, string name)
+    {
+        try
+        {
+            long product = TensorShape.CheckedProduct(shape, name);
+            return TensorShape.RequireArrayLength(product, name, shape);
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidDataException($"{name} shape [{string.Join(",", shape)}] is invalid.", ex);
+        }
     }
 
     private static string GetLibraryVersion()
@@ -2064,6 +2307,7 @@ public class ChebyshevTT
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, _numDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;
@@ -2122,6 +2366,8 @@ public class ChebyshevTT
         ValidatePermutation(newOrder, _numDimensions);
         int rank = maxRank ?? _maxRank;
         double tol = tolerance ?? _tolerance;
+        ValidatePositiveRank(rank, nameof(maxRank));
+        ValidateNonNegativeFiniteTolerance(tol, nameof(tolerance));
 
         // Short-circuit: reorder to current dim_order is just a clone (matches Python tensor_train.py:2397).
         if (newOrder.SequenceEqual(_dimOrder))
@@ -2245,9 +2491,9 @@ public class ChebyshevTT
     /// <param name="numDimensions">Number of input dimensions.</param>
     /// <param name="domain">Bounds for each dimension in original order.</param>
     /// <param name="numNodes">Node counts per dimension in original order.</param>
-    /// <param name="maxRank">Maximum TT rank passed to each trial. Default 10.</param>
-    /// <param name="tolerance">Convergence tolerance for each trial. Default 1e-6.</param>
-    /// <param name="maxSweeps">Max TT-Cross sweeps per trial. Default 10.</param>
+    /// <param name="maxRank">Maximum positive TT rank passed to each trial. Default 10.</param>
+    /// <param name="tolerance">Finite positive convergence tolerance for each trial. Default 1e-6.</param>
+    /// <param name="maxSweeps">Maximum positive TT-Cross sweeps per trial. Default 10.</param>
     /// <param name="additionalData">Stored on the result for introspection; not threaded into f.</param>
     /// <param name="nTrials">Number of swap iterations / random samples. Default 5.</param>
     /// <param name="method">"greedy_swap" (default, deterministic) or "random".</param>

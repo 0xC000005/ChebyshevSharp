@@ -421,6 +421,38 @@ public class TestFromValuesSpline
 /// </summary>
 public class TestDctIIviaFFT
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(31)]
+    [InlineData(32)]
+    [InlineData(33)]
+    [InlineData(34)]
+    [InlineData(50)]
+    [InlineData(63)]
+    [InlineData(64)]
+    [InlineData(65)]
+    public void ChebyshevCoefficients1D_MatchesDirectDctIIFormula(int n)
+    {
+        double[] values = new double[n];
+        for (int i = 0; i < n; i++)
+        {
+            double t = i + 1.0;
+            values[i] = Math.Sin(0.37 * t)
+                + 0.25 * Math.Cos(1.91 * t)
+                + (i % 2 == 0 ? 0.1 : -0.2) * t / n;
+        }
+
+        double[] expected = DirectTypeIRootCoefficients(values);
+        double[] actual = ChebyshevApproximation.ChebyshevCoefficients1D(values);
+
+        Assert.Equal(expected.Length, actual.Length);
+        for (int k = 0; k < n; k++)
+        {
+            TestFixtures.AssertClose(expected[k], actual[k], rtol: 5e-12, atol: 5e-12);
+        }
+    }
+
     [Fact]
     public void ErrorEstimate_LargeOrder_1D()
     {
@@ -488,6 +520,27 @@ public class TestDctIIviaFFT
 
         double err = cheb.ErrorEstimate();
         Assert.True(err < 1e-14, $"Error estimate {err:E2} too large for 50 nodes on sin(x)");
+    }
+
+    private static double[] DirectTypeIRootCoefficients(double[] values)
+    {
+        int n = values.Length;
+        double[] coeffs = new double[n];
+
+        for (int k = 0; k < n; k++)
+        {
+            double sum = 0.0;
+            for (int j = 0; j < n; j++)
+            {
+                double reversedValue = values[n - 1 - j];
+                sum += reversedValue * Math.Cos(Math.PI * k * (2 * j + 1) / (2.0 * n));
+            }
+
+            coeffs[k] = sum * 2.0 / n;
+        }
+
+        coeffs[0] /= 2.0;
+        return coeffs;
     }
 }
 
@@ -1063,6 +1116,39 @@ public class TestSliderCompatibilityErrors
 public class TestCalculusValidation
 {
     [Fact]
+    public void Calculus_FixedDimNaN_RaisesArgumentException()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 7, 7 });
+        cheb.Build(verbose: false);
+
+        var fixedDims = new Dictionary<int, double> { { 1, double.NaN } };
+
+        Assert.Throws<ArgumentException>(() => cheb.Roots(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => cheb.Minimize(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => cheb.Maximize(dim: 0, fixedDims: fixedDims));
+    }
+
+    [Fact]
+    public void Calculus_FixedDimNaN_RaisesForSpline()
+    {
+        var spline = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]) + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 7, 7 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        spline.Build(verbose: false);
+
+        var fixedDims = new Dictionary<int, double> { { 1, double.NaN } };
+
+        Assert.Throws<ArgumentException>(() => spline.Roots(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => spline.Minimize(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => spline.Maximize(dim: 0, fixedDims: fixedDims));
+    }
+
+    [Fact]
     public void Calculus_1D_WrongDim_Raises()
     {
         // 1D interpolant with dim=1 (should be 0)
@@ -1125,6 +1211,37 @@ public class TestCalculusValidation
 public class TestExtrudeSliceValidation
 {
     [Fact]
+    public void Extrude_NonFiniteBounds_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+        cheb.Build(verbose: false);
+
+        var loEx = Assert.Throws<ArgumentException>(() =>
+            cheb.Extrude((1, new[] { double.NaN, 1.0 }, 5)));
+        Assert.Contains("finite", loEx.Message);
+
+        var hiEx = Assert.Throws<ArgumentException>(() =>
+            cheb.Extrude((1, new[] { 0.0, double.PositiveInfinity }, 5)));
+        Assert.Contains("finite", hiEx.Message);
+    }
+
+    [Fact]
+    public void Slice_NonFiniteValue_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 });
+        cheb.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Slice((1, double.NaN)));
+        Assert.Contains("finite", ex.Message);
+    }
+
+    [Fact]
     public void Extrude_BoundsLoGeHi_Raises()
     {
         var cheb = new ChebyshevApproximation(
@@ -1172,6 +1289,21 @@ public class TestExtrudeSliceValidation
 /// </summary>
 public class TestSplineSliceMultiPiece
 {
+    [Fact]
+    public void Slice_NonFiniteValue_Raises()
+    {
+        var sp = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]) + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 11, 11 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        sp.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.Slice((1, double.NaN)));
+        Assert.Contains("finite", ex.Message);
+    }
+
     [Fact]
     public void Slice_2D_Spline_AllDimsHaveKnots()
     {

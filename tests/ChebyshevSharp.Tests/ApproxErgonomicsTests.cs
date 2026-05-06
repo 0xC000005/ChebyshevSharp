@@ -40,6 +40,38 @@ public class ApproxErgonomicsTests
     }
 
     [Fact]
+    public void IsConstructionFinished_true_after_arithmetic_result()
+    {
+        var approx = BuildSimple();
+        var result = approx + approx;
+        Assert.True(result.IsConstructionFinished());
+    }
+
+    [Fact]
+    public void IsConstructionFinished_true_after_Extrude_result()
+    {
+        var approx = BuildSimple();
+        var result = approx.Extrude((2, new[] { -1.0, 1.0 }, 5));
+        Assert.True(result.IsConstructionFinished());
+    }
+
+    [Fact]
+    public void IsConstructionFinished_true_after_Slice_result()
+    {
+        var approx = BuildSimple();
+        var result = approx.Slice((1, 0.25));
+        Assert.True(result.IsConstructionFinished());
+    }
+
+    [Fact]
+    public void IsConstructionFinished_true_after_partial_Integrate_result()
+    {
+        var approx = BuildSimple();
+        var result = (ChebyshevApproximation)approx.Integrate(dims: new[] { 1 });
+        Assert.True(result.IsConstructionFinished());
+    }
+
+    [Fact]
     public void GetConstructorType_returns_function_for_Build_path()
     {
         var approx = BuildSimple();

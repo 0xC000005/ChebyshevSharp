@@ -75,9 +75,9 @@ double error = cheb.ErrorEstimate();
 Console.WriteLine($"Estimated max error: {error:E2}");
 ```
 
-**How it works:** The method extracts Chebyshev expansion coefficients along each dimension using the Discrete Cosine Transform (DCT-II). For a well-resolved function, the Chebyshev coefficients decay geometrically — the rate of decay is governed by the analyticity region (Bernstein ellipse) of the function [1, Ch. 8]. The magnitude of the last coefficient provides an upper bound on the truncation error.
+**How it works:** The method extracts Chebyshev expansion coefficients along each dimension using the Discrete Cosine Transform (DCT-II). For a well-resolved function, the Chebyshev coefficients decay geometrically — the rate of decay is governed by the analyticity region (Bernstein ellipse) of the function [1, Ch. 8]. The magnitude of the last coefficient is used as a tail-size proxy, not as a rigorous error bound.
 
-The estimate is computed as the maximum of the last Chebyshev coefficient across all 1D slices and all dimensions. This is a conservative (pessimistic) heuristic — the actual interpolation error is typically smaller.
+The estimate is computed as the maximum of the last Chebyshev coefficient across all 1D slices and all dimensions. This is a heuristic that is usually conservative for well-resolved smooth functions, but aliasing can make it optimistic on an under-resolved grid.
 
 The result is cached — repeated calls return the stored value without recomputation.
 

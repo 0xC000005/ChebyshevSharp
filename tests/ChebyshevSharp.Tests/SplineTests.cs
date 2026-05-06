@@ -760,6 +760,19 @@ public class TestSplineVsGlobal
 /// </summary>
 public class TestSplineBatchEvalDerivatives
 {
+    private static ChebyshevSpline BuildCrossBoundaryDerivativeSpline()
+    {
+        static double F(double[] p, object? _) => p[0] * (p[1] < 0.0 ? -1.0 : 1.0);
+        var sp = new ChebyshevSpline(
+            F,
+            2,
+            [[-1.0, 1.0], [-1.0, 1.0]],
+            [9, 9],
+            [[], [0.0]]);
+        sp.Build(verbose: false);
+        return sp;
+    }
+
     [Fact]
     public void BatchWithFirstDerivative()
     {
@@ -802,6 +815,46 @@ public class TestSplineBatchEvalDerivatives
             Assert.True(Math.Abs(results[i] - expected[i]) < 1e-10,
                 $"Point {pts[i][0]}: expected {expected[i]}, got {results[i]}");
         }
+    }
+
+    [Fact]
+    public void BatchDerivativeAtKnot_Raises()
+    {
+        var sp = SplineFixtures.SplineAbs1D;
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.EvalBatch([[0.0], [0.5]], [1]));
+        Assert.Contains("not defined", ex.Message);
+    }
+
+    [Fact]
+    public void DerivativeAtKnotInAnyDimension_Raises()
+    {
+        var sp = BuildCrossBoundaryDerivativeSpline();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.Eval([0.4, 0.0], [1, 0]));
+        Assert.Contains("not defined", ex.Message);
+    }
+
+    [Fact]
+    public void EvalMultiDerivativeAtKnotInAnyDimension_Raises()
+    {
+        var sp = BuildCrossBoundaryDerivativeSpline();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.EvalMulti([0.4, 0.0], [[0, 0], [1, 0]]));
+        Assert.Contains("not defined", ex.Message);
+    }
+
+    [Fact]
+    public void BatchDerivativeAtKnotInAnyDimension_Raises()
+    {
+        var sp = BuildCrossBoundaryDerivativeSpline();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.EvalBatch([[0.4, 0.0], [0.5, 0.25]], [1, 0]));
+        Assert.Contains("not defined", ex.Message);
     }
 }
 
@@ -1120,6 +1173,20 @@ public class TestSplineEmptyKnotsEquivalence
 /// </summary>
 public class TestSplinePieceRouting
 {
+    private static ChebyshevSpline BuildDiscontinuousSpline()
+    {
+        static double Step(double[] x, object? _) => x[0] < 0.0 ? -2.0 : 3.0;
+
+        var sp = new ChebyshevSpline(
+            Step,
+            1,
+            [[-1.0, 1.0]],
+            [7],
+            [[0.0]]);
+        sp.Build(verbose: false);
+        return sp;
+    }
+
     [Fact]
     public void Test_point_slightly_below_knot_routes_left()
     {
@@ -1141,6 +1208,20 @@ public class TestSplinePieceRouting
         // And close to each other (continuity)
         Assert.True(Math.Abs(valLeft - valRight) < 1e-8,
             $"Values across knot should be close: {valLeft} vs {valRight}");
+    }
+
+    [Fact]
+    public void Test_exact_knot_value_uses_right_piece_convention()
+    {
+        var sp = BuildDiscontinuousSpline();
+
+        double scalar = sp.Eval([0.0], [0]);
+        double multi = sp.EvalMulti([0.0], [[0]])[0];
+        double batch = sp.EvalBatch([[0.0]], [0])[0];
+
+        Assert.Equal(3.0, scalar, precision: 12);
+        Assert.Equal(3.0, multi, precision: 12);
+        Assert.Equal(3.0, batch, precision: 12);
     }
 }
 

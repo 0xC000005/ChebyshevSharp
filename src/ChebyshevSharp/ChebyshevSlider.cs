@@ -94,6 +94,9 @@ public class ChebyshevSlider
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateConstructionArguments(numDimensions, domain, nNodes, partition, pivotPoint);
+
         Function = function;
         NumDimensions = numDimensions;
         Domain = domain.Select(d => (double[])d.Clone()).ToArray();
@@ -104,9 +107,6 @@ public class ChebyshevSlider
         _progress = progress;
         Partition = partition.Select(g => (int[])g.Clone()).ToArray();
         PivotPoint = (double[])pivotPoint.Clone();
-
-        // Validate partition covers all dims exactly once
-        ValidatePartition(Partition, numDimensions);
 
         // Build dim → slide mapping
         DimToSlide = BuildDimToSlide(Partition);
@@ -119,11 +119,92 @@ public class ChebyshevSlider
     // Validation helpers
     // ------------------------------------------------------------------
 
+    private static void ValidateConstructionArguments(
+        int numDimensions,
+        double[][] domain,
+        int[] nNodes,
+        int[][] partition,
+        double[] pivotPoint)
+    {
+        if (numDimensions <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(numDimensions),
+                numDimensions,
+                "numDimensions must be positive.");
+
+        ArgumentNullException.ThrowIfNull(domain);
+        ArgumentNullException.ThrowIfNull(nNodes);
+        ArgumentNullException.ThrowIfNull(partition);
+        ArgumentNullException.ThrowIfNull(pivotPoint);
+
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}.",
+                nameof(domain));
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}.",
+                nameof(nNodes));
+        if (pivotPoint.Length != numDimensions)
+            throw new ArgumentException(
+                $"pivotPoint has {pivotPoint.Length} entries but numDimensions={numDimensions}.",
+                nameof(pivotPoint));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] == null)
+                throw new ArgumentException($"domain[{d}] must not be null.", nameof(domain));
+            if (domain[d].Length != 2)
+                throw new ArgumentException(
+                    $"domain[{d}] must contain exactly two bounds.",
+                    nameof(domain));
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi) || lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}] must contain finite ordered bounds lo < hi, got [{lo}, {hi}].",
+                    nameof(domain));
+
+            if (nNodes[d] <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(nNodes),
+                    nNodes[d],
+                    $"nNodes[{d}] must be positive.");
+
+            double pivot = pivotPoint[d];
+            if (!double.IsFinite(pivot))
+                throw new ArgumentException(
+                    $"pivotPoint[{d}] must be finite.",
+                    nameof(pivotPoint));
+            if (pivot < lo || pivot > hi)
+                throw new ArgumentOutOfRangeException(
+                    nameof(pivotPoint),
+                    pivot,
+                    $"pivotPoint[{d}] must be inside domain [{lo}, {hi}].");
+        }
+
+        ValidatePartition(partition, numDimensions);
+    }
+
     internal static void ValidatePartition(int[][] partition, int numDimensions)
     {
+        ArgumentNullException.ThrowIfNull(partition);
+
         var allDims = new List<int>();
-        foreach (var group in partition)
+        for (int groupIdx = 0; groupIdx < partition.Length; groupIdx++)
+        {
+            var group = partition[groupIdx];
+            if (group == null)
+                throw new ArgumentException(
+                    $"partition[{groupIdx}] must not be null.",
+                    nameof(partition));
+            if (group.Length == 0)
+                throw new ArgumentException(
+                    $"partition[{groupIdx}] must not be empty.",
+                    nameof(partition));
             allDims.AddRange(group);
+        }
         allDims.Sort();
 
         var expected = Enumerable.Range(0, numDimensions).ToList();
@@ -162,7 +243,9 @@ public class ChebyshevSlider
         _cachedErrorEstimate = null;
 
         // Evaluate pivot value
-        PivotValue = Function(PivotPoint, _additionalData);
+        double pivotValue = Function(PivotPoint, _additionalData);
+        ValidateFinitePivotValue(pivotValue);
+        PivotValue = pivotValue;
 
         int totalEvals = TotalBuildEvals;
         long fullTensor = TensorShape.CheckedProduct(NNodes, nameof(Build));
@@ -242,6 +325,14 @@ public class ChebyshevSlider
         _isConstructionFinished = true;
     }
 
+    private static void ValidateFinitePivotValue(double value)
+    {
+        if (!double.IsFinite(value))
+            throw new ArgumentException(
+                "function returned a non-finite value at the slider pivot point; " +
+                "build cannot proceed with NaN/Infinity in PivotValue");
+    }
+
     // ------------------------------------------------------------------
     // Evaluation
     // ------------------------------------------------------------------
@@ -260,6 +351,7 @@ public class ChebyshevSlider
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
         EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         bool isDerivative = false;
         for (int i = 0; i < derivativeOrder.Length; i++)
@@ -331,6 +423,8 @@ public class ChebyshevSlider
     /// <returns>Results for each derivative order.</returns>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         var results = new double[derivativeOrders.Length];
         for (int i = 0; i < derivativeOrders.Length; i++)
             results[i] = Eval(point, derivativeOrders[i]);
@@ -706,6 +800,7 @@ public class ChebyshevSlider
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>A fully functional slider with Function=null.</returns>
+    /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevSlider state.</exception>
     public static ChebyshevSlider Load(string path)
     {
         string json = File.ReadAllText(path);
@@ -715,6 +810,8 @@ public class ChebyshevSlider
         if (state.Type != "ChebyshevSlider")
             throw new InvalidOperationException(
                 $"Expected type 'ChebyshevSlider', got '{state.Type}'");
+
+        ValidateSerializedState(state);
 
         var slides = new ChebyshevApproximation[state.Slides.Length];
         for (int i = 0; i < state.Slides.Length; i++)
@@ -779,6 +876,225 @@ public class ChebyshevSlider
         return slider;
     }
 
+    private static void ValidateSerializedState(SliderSerializationState state)
+    {
+        int d = state.NumDimensions;
+        if (d <= 0)
+            throw new InvalidDataException($"NumDimensions must be positive, got {d}.");
+
+        ValidateDomain(state.Domain, d, nameof(SliderSerializationState.Domain));
+        ValidatePositiveVector(state.NNodes, d, nameof(SliderSerializationState.NNodes));
+        if (state.MaxDerivativeOrder < 0)
+            throw new InvalidDataException($"MaxDerivativeOrder must be non-negative, got {state.MaxDerivativeOrder}.");
+        if (!double.IsFinite(state.PivotValue))
+            throw new InvalidDataException($"PivotValue must be finite, got {state.PivotValue}.");
+        if (!double.IsFinite(state.BuildTime) || state.BuildTime < 0.0)
+            throw new InvalidDataException($"BuildTime must be finite and non-negative, got {state.BuildTime}.");
+
+        ValidateFiniteVector(state.PivotPoint, d, nameof(SliderSerializationState.PivotPoint));
+        ValidatePartitionForLoad(state.Partition, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+
+        if (state.Slides is null)
+            throw new InvalidDataException("Slides must be present.");
+        if (state.Slides.Length != state.Partition.Length)
+            throw new InvalidDataException(
+                $"Slides has length {state.Slides.Length}, expected Partition length {state.Partition.Length}.");
+
+        for (int i = 0; i < state.Slides.Length; i++)
+            ValidateSlideState(state.Slides[i], state.Partition[i], state, i);
+    }
+
+    private static void ValidateSlideState(
+        SlideState? slide, int[] partitionGroup, SliderSerializationState parent, int slideIndex)
+    {
+        if (slide is null)
+            throw new InvalidDataException($"Slides[{slideIndex}] must be present.");
+        if (slide.NumDimensions <= 0)
+            throw new InvalidDataException(
+                $"Slides[{slideIndex}].NumDimensions must be positive, got {slide.NumDimensions}.");
+        if (slide.NumDimensions != partitionGroup.Length)
+            throw new InvalidDataException(
+                $"Slides[{slideIndex}].NumDimensions={slide.NumDimensions} does not match " +
+                $"Partition[{slideIndex}] length {partitionGroup.Length}.");
+        if (slide.MaxDerivativeOrder < 0)
+            throw new InvalidDataException(
+                $"Slides[{slideIndex}].MaxDerivativeOrder must be non-negative, got {slide.MaxDerivativeOrder}.");
+        if (!double.IsFinite(slide.BuildTime) || slide.BuildTime < 0.0)
+            throw new InvalidDataException(
+                $"Slides[{slideIndex}].BuildTime must be finite and non-negative, got {slide.BuildTime}.");
+        if (slide.NEvaluations < 0)
+            throw new InvalidDataException(
+                $"Slides[{slideIndex}].NEvaluations must be non-negative, got {slide.NEvaluations}.");
+
+        ValidateDomain(slide.Domain, slide.NumDimensions, $"Slides[{slideIndex}].Domain");
+        ValidatePositiveVector(slide.NNodes, slide.NumDimensions, $"Slides[{slideIndex}].NNodes");
+        ValidateApproxVectorArray(slide.NodeArrays, slide.NNodes, $"Slides[{slideIndex}].NodeArrays");
+        ValidateApproxVectorArray(slide.Weights, slide.NNodes, $"Slides[{slideIndex}].Weights");
+        ValidateDiffMatrices(slide.DiffMatrices, slide.DiffMatrixSizes, slide.NNodes, slideIndex);
+
+        int expectedTensorLength = CheckedArrayLengthForInvalidData(slide.NNodes, $"Slides[{slideIndex}].TensorValues");
+        ValidateFiniteVector(
+            slide.TensorValues,
+            expectedTensorLength,
+            $"Slides[{slideIndex}].TensorValues");
+
+        for (int localDim = 0; localDim < partitionGroup.Length; localDim++)
+        {
+            int parentDim = partitionGroup[localDim];
+            if (slide.NNodes[localDim] != parent.NNodes[parentDim])
+                throw new InvalidDataException(
+                    $"Slides[{slideIndex}].NNodes[{localDim}]={slide.NNodes[localDim]} does not match " +
+                    $"NNodes[{parentDim}]={parent.NNodes[parentDim]}.");
+
+            double slideLo = slide.Domain[localDim][0];
+            double slideHi = slide.Domain[localDim][1];
+            double parentLo = parent.Domain[parentDim][0];
+            double parentHi = parent.Domain[parentDim][1];
+            if (slideLo != parentLo || slideHi != parentHi)
+                throw new InvalidDataException(
+                    $"Slides[{slideIndex}].Domain[{localDim}] does not match Domain[{parentDim}].");
+        }
+    }
+
+    private static void ValidatePartitionForLoad(int[][]? partition, int numDimensions)
+    {
+        if (partition is null)
+            throw new InvalidDataException("Partition must be present.");
+
+        var allDims = new List<int>();
+        for (int i = 0; i < partition.Length; i++)
+        {
+            int[] group = partition[i]
+                ?? throw new InvalidDataException($"Partition[{i}] must be present.");
+            allDims.AddRange(group);
+        }
+
+        allDims.Sort();
+        var expected = Enumerable.Range(0, numDimensions).ToArray();
+        if (!allDims.SequenceEqual(expected))
+        {
+            throw new InvalidDataException(
+                $"Partition must cover all dimensions 0..{numDimensions - 1} exactly once. " +
+                $"Got dimensions: [{string.Join(", ", allDims)}]");
+        }
+    }
+
+    private static void ValidateDomain(double[][]? domain, int numDimensions, string name)
+    {
+        if (domain is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (domain.Length != numDimensions)
+            throw new InvalidDataException($"{name} has length {domain.Length}, expected {numDimensions}.");
+
+        for (int i = 0; i < numDimensions; i++)
+        {
+            double[] bounds = domain[i]
+                ?? throw new InvalidDataException($"{name}[{i}] must be present.");
+            if (bounds.Length != 2)
+                throw new InvalidDataException($"{name}[{i}] must contain exactly two bounds.");
+            if (!double.IsFinite(bounds[0]) || !double.IsFinite(bounds[1]))
+                throw new InvalidDataException($"{name}[{i}] bounds must be finite.");
+            if (bounds[0] >= bounds[1])
+                throw new InvalidDataException($"{name}[{i}] lower bound must be less than upper bound.");
+        }
+    }
+
+    private static void ValidatePositiveVector(int[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (values[i] <= 0)
+                throw new InvalidDataException($"{name}[{i}] must be positive, got {values[i]}.");
+    }
+
+    private static void ValidateFiniteVector(double[]? values, int expectedLength, string name)
+    {
+        if (values is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (values.Length != expectedLength)
+            throw new InvalidDataException($"{name} has length {values.Length}, expected {expectedLength}.");
+
+        for (int i = 0; i < values.Length; i++)
+            if (!double.IsFinite(values[i]))
+                throw new InvalidDataException($"{name}[{i}] must be finite.");
+    }
+
+    private static void ValidateApproxVectorArray(double[][]? arrays, int[] nNodes, string name)
+    {
+        if (arrays is null)
+            throw new InvalidDataException($"{name} must be present.");
+        if (arrays.Length != nNodes.Length)
+            throw new InvalidDataException($"{name} has length {arrays.Length}, expected {nNodes.Length}.");
+
+        for (int i = 0; i < arrays.Length; i++)
+            ValidateFiniteVector(arrays[i], nNodes[i], $"{name}[{i}]");
+    }
+
+    private static void ValidateDiffMatrices(
+        double[][]? matrices, int[][]? matrixSizes, int[] nNodes, int slideIndex)
+    {
+        string matrixName = $"Slides[{slideIndex}].DiffMatrices";
+        string sizeName = $"Slides[{slideIndex}].DiffMatrixSizes";
+        if (matrices is null)
+            throw new InvalidDataException($"{matrixName} must be present.");
+        if (matrixSizes is null)
+            throw new InvalidDataException($"{sizeName} must be present.");
+        if (matrices.Length != nNodes.Length)
+            throw new InvalidDataException($"{matrixName} has length {matrices.Length}, expected {nNodes.Length}.");
+        if (matrixSizes.Length != nNodes.Length)
+            throw new InvalidDataException($"{sizeName} has length {matrixSizes.Length}, expected {nNodes.Length}.");
+
+        for (int i = 0; i < nNodes.Length; i++)
+        {
+            int[] size = matrixSizes[i]
+                ?? throw new InvalidDataException($"{sizeName}[{i}] must be present.");
+            if (size.Length != 2)
+                throw new InvalidDataException($"{sizeName}[{i}] must contain exactly two dimensions.");
+            if (size[0] != nNodes[i] || size[1] != nNodes[i])
+                throw new InvalidDataException(
+                    $"{sizeName}[{i}] must equal [{nNodes[i]},{nNodes[i]}], got [{string.Join(",", size)}].");
+
+            int expectedLength = CheckedArrayLengthForInvalidData(size, $"{matrixName}[{i}]");
+            ValidateFiniteVector(matrices[i], expectedLength, $"{matrixName}[{i}]");
+        }
+    }
+
+    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    {
+        if (registeredDerivativeOrders is null) return;
+
+        for (int i = 0; i < registeredDerivativeOrders.Length; i++)
+        {
+            int[] orders = registeredDerivativeOrders[i]
+                ?? throw new InvalidDataException($"RegisteredDerivativeOrders[{i}] must be present.");
+            if (orders.Length != numDimensions)
+                throw new InvalidDataException(
+                    $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
+            for (int j = 0; j < orders.Length; j++)
+                if (orders[j] < 0)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+        }
+    }
+
+    private static int CheckedArrayLengthForInvalidData(int[] shape, string name)
+    {
+        try
+        {
+            long product = TensorShape.CheckedProduct(shape, name);
+            return TensorShape.RequireArrayLength(product, name, shape);
+        }
+        catch (Exception ex) when (ex is ArgumentException or OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidDataException($"{name} shape [{string.Join(",", shape)}] is invalid.", ex);
+        }
+    }
+
     // ------------------------------------------------------------------
     // Internal factory for arithmetic operators
     // ------------------------------------------------------------------
@@ -803,6 +1119,7 @@ public class ChebyshevSlider
             DimToSlide = new Dictionary<int, int>(source.DimToSlide),
             Built = true,
             BuildTime = 0.0,
+            _isConstructionFinished = true,
         };
     }
 
@@ -844,27 +1161,15 @@ public class ChebyshevSlider
             }
 
             // Create new 1D constant slide
-            var newNodes = BarycentricKernel.MakeNodesForDim(lo, hi, n);
-            var newWeights = BarycentricKernel.ComputeBarycentricWeights(newNodes);
-            var newDiffMat = BarycentricKernel.ComputeDifferentiationMatrix(newNodes, newWeights);
             var newTensor = new double[n];
             Array.Fill(newTensor, PivotValue);
 
-            var newSlide = new ChebyshevApproximation
-            {
-                Function = null,
-                NumDimensions = 1,
-                Domain = new[] { new[] { lo, hi } },
-                NNodes = new[] { n },
-                MaxDerivativeOrder = MaxDerivativeOrder,
-                NodeArrays = new[] { newNodes },
-                Weights = new[] { newWeights },
-                DiffMatrices = new[] { newDiffMat },
-                TensorValues = newTensor,
-                BuildTime = 0.0,
-                NEvaluations = 0,
-            };
-            newSlide.PrecomputeTransposedDiffMatrices();
+            var newSlide = ChebyshevApproximation.FromValues(
+                newTensor,
+                numDimensions: 1,
+                domain: new[] { new[] { lo, hi } },
+                nNodes: new[] { n },
+                maxDerivativeOrder: MaxDerivativeOrder);
 
             // Add new group and slide
             partition.Add(new List<int> { dimIdx });
@@ -892,6 +1197,7 @@ public class ChebyshevSlider
             PivotValue = PivotValue,
             DimToSlide = BuildDimToSlide(newPartition),
             Built = true,
+            _isConstructionFinished = true,
         };
     }
 
@@ -1000,6 +1306,7 @@ public class ChebyshevSlider
             PivotValue = pivotValue,
             DimToSlide = BuildDimToSlide(newPartition),
             Built = true,
+            _isConstructionFinished = true,
         };
     }
 
@@ -1197,6 +1504,9 @@ public class ChebyshevSlider
     /// <summary>Scalar multiplication.</summary>
     public static ChebyshevSlider operator *(ChebyshevSlider a, double scalar)
     {
+        if (!a.Built)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
         {
@@ -1408,6 +1718,7 @@ public class ChebyshevSlider
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;

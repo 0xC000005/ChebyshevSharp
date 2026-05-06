@@ -91,6 +91,28 @@ public class WithSpecialPointsTests
 
 public class NestedNNodesTests
 {
+    private static ChebyshevSpline BuildNested1D(int leftNodes, int rightNodes)
+    {
+        var spl = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]),
+            1, new[] { new[] { -1.0, 1.0 } },
+            nNodesNested: new[] { new[] { leftNodes, rightNodes } },
+            knots: new[] { new[] { 0.0 } });
+        spl.Build(verbose: false);
+        return spl;
+    }
+
+    private static ChebyshevSpline BuildNested2D()
+    {
+        var spl = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]) + x[1] * x[1],
+            2, new[] { new[] { -1.0, 1.0 }, new[] { -2.0, 2.0 } },
+            nNodesNested: new[] { new[] { 7, 9 }, new[] { 5 } },
+            knots: new[] { new[] { 0.0 }, Array.Empty<double>() });
+        spl.Build(verbose: false);
+        return spl;
+    }
+
     [Fact]
     public void Test_nested_n_nodes_per_piece()
     {
@@ -119,6 +141,86 @@ public class NestedNNodesTests
         Assert.Equal(2, spl.Pieces.Length);
         Assert.Equal(new[] { 7, 11 }, spl.Pieces[0]!.NNodes);
         Assert.Equal(new[] { 9, 11 }, spl.Pieces[1]!.NNodes);
+    }
+
+    [Fact]
+    public void Test_nested_total_build_evals_sums_piece_counts()
+    {
+        var spl = BuildNested1D(11, 13);
+
+        Assert.Equal(spl.GetNumEvaluationPoints(), spl.TotalBuildEvals);
+        Assert.Equal(24, spl.TotalBuildEvals);
+    }
+
+    [Fact]
+    public void Test_nested_algebra_rejects_per_piece_node_mismatch()
+    {
+        var a = BuildNested1D(11, 13);
+        var b = BuildNested1D(11, 15);
+
+        var ex = Assert.Throws<ArgumentException>(() => _ = a + b);
+        Assert.Contains("piece", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("node", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_nested_algebra_rejects_piece_count_mismatch()
+    {
+        var a = BuildNested1D(11, 13);
+        var b = BuildNested1D(11, 13);
+        b.Pieces = b.Pieces.Take(1).ToArray();
+
+        var ex = Assert.Throws<ArgumentException>(() => _ = a + b);
+        Assert.Contains("piece count", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_nested_scalar_algebra_preserves_nested_metadata()
+    {
+        var spl = BuildNested1D(11, 13);
+
+        var scaled = spl * 2.0;
+
+        Assert.Equal(new[] { new[] { 11, 13 } }, scaled.NestedNNodes);
+        Assert.Equal(spl.TotalBuildEvals, scaled.TotalBuildEvals);
+        Assert.Equal(new[] { 11 }, scaled.Pieces[0]!.NNodes);
+        Assert.Equal(new[] { 13 }, scaled.Pieces[1]!.NNodes);
+    }
+
+    [Fact]
+    public void Test_nested_extrude_preserves_nested_metadata()
+    {
+        var spl = BuildNested1D(7, 9);
+
+        var extruded = spl.Extrude((1, new[] { -2.0, 2.0 }, 5));
+
+        Assert.Equal(new[] { new[] { 7, 9 }, new[] { 5 } }, extruded.NestedNNodes);
+        Assert.Equal(new[] { 7, 5 }, extruded.Pieces[0]!.NNodes);
+        Assert.Equal(new[] { 9, 5 }, extruded.Pieces[1]!.NNodes);
+    }
+
+    [Fact]
+    public void Test_nested_slice_preserves_remaining_nested_metadata()
+    {
+        var spl = BuildNested2D();
+
+        var sliced = spl.Slice((1, 0.25));
+
+        Assert.Equal(new[] { new[] { 7, 9 } }, sliced.NestedNNodes);
+        Assert.Equal(new[] { 7 }, sliced.Pieces[0]!.NNodes);
+        Assert.Equal(new[] { 9 }, sliced.Pieces[1]!.NNodes);
+    }
+
+    [Fact]
+    public void Test_nested_integrate_preserves_remaining_nested_metadata()
+    {
+        var spl = BuildNested2D();
+
+        var integrated = (ChebyshevSpline)spl.Integrate(dims: new[] { 1 });
+
+        Assert.Equal(new[] { new[] { 7, 9 } }, integrated.NestedNNodes);
+        Assert.Equal(new[] { 7 }, integrated.Pieces[0]!.NNodes);
+        Assert.Equal(new[] { 9 }, integrated.Pieces[1]!.NNodes);
     }
 
     [Fact]
