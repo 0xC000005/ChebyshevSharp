@@ -85,6 +85,18 @@ public class TestAutoKnots
             nScanPoints: 2));
     }
 
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void Test_threshold_factor_must_be_finite_and_positive(double thresholdFactor)
+    {
+        static double F(double[] p, object? _) => Math.Abs(p[0]);
+        Assert.Throws<ArgumentException>(() => ChebyshevSpline.AutoKnots(F, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 8 },
+            thresholdFactor: thresholdFactor));
+    }
+
     [Fact]
     public void Test_function_returning_nan_throws()
     {
