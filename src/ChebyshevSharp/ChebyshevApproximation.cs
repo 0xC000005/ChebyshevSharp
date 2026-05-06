@@ -1791,9 +1791,16 @@ public class ChebyshevApproximation
     /// the <see cref="FromValues"/> factory.
     /// </summary>
     /// <param name="values">Flat C-order tensor of length nNodes[0]*nNodes[1]*...</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when values length does not match the expected product of nNodes.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the interpolant is already constructed.</exception>
     public void SetOriginalFunctionValues(double[] values)
     {
+        ArgumentNullException.ThrowIfNull(values);
+        if (_isConstructionFinished || TensorValues != null)
+            throw new InvalidOperationException(
+                "interpolant is already constructed; SetOriginalFunctionValues is for unconstructed deferred objects");
+
         int expected = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(NNodes, nameof(SetOriginalFunctionValues)),
             nameof(SetOriginalFunctionValues),
@@ -1801,6 +1808,11 @@ public class ChebyshevApproximation
         if (values.Length != expected)
             throw new ArgumentException(
                 $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", NNodes)}]");
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw new ArgumentException("values contains NaN or Inf", nameof(values));
+        }
 
         // Materialize NodeArrays now if deferred (NodeArrays is empty when deferBuild was true).
         if (NodeArrays.Length == 0)
