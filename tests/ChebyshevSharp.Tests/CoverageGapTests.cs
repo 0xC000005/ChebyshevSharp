@@ -1063,6 +1063,39 @@ public class TestSliderCompatibilityErrors
 public class TestCalculusValidation
 {
     [Fact]
+    public void Calculus_FixedDimNaN_RaisesArgumentException()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 7, 7 });
+        cheb.Build(verbose: false);
+
+        var fixedDims = new Dictionary<int, double> { { 1, double.NaN } };
+
+        Assert.Throws<ArgumentException>(() => cheb.Roots(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => cheb.Minimize(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => cheb.Maximize(dim: 0, fixedDims: fixedDims));
+    }
+
+    [Fact]
+    public void Calculus_FixedDimNaN_RaisesForSpline()
+    {
+        var spline = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]) + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 7, 7 },
+            new[] { new[] { 0.0 }, Array.Empty<double>() });
+        spline.Build(verbose: false);
+
+        var fixedDims = new Dictionary<int, double> { { 1, double.NaN } };
+
+        Assert.Throws<ArgumentException>(() => spline.Roots(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => spline.Minimize(dim: 0, fixedDims: fixedDims));
+        Assert.Throws<ArgumentException>(() => spline.Maximize(dim: 0, fixedDims: fixedDims));
+    }
+
+    [Fact]
     public void Calculus_1D_WrongDim_Raises()
     {
         // 1D interpolant with dim=1 (should be 0)
