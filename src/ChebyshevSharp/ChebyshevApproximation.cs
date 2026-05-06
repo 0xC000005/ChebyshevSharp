@@ -876,6 +876,8 @@ public class ChebyshevApproximation
         var state = JsonSerializer.Deserialize<SerializationState>(json)
             ?? throw new InvalidOperationException("Failed to deserialize");
 
+        ValidateJsonState(state);
+
         var obj = new ChebyshevApproximation
         {
             Function = null,
@@ -929,6 +931,109 @@ public class ChebyshevApproximation
 
         return obj;
     }
+
+    private static void ValidateJsonState(SerializationState state)
+    {
+        int ndim = state.NumDimensions;
+        if (ndim < 1)
+            throw MalformedJson($"NumDimensions must be >= 1, got {ndim}");
+
+        RequireLength(state.Domain, ndim, nameof(SerializationState.Domain));
+        RequireLength(state.NNodes, ndim, nameof(SerializationState.NNodes));
+        RequireLength(state.NodeArrays, ndim, nameof(SerializationState.NodeArrays));
+        RequireLength(state.Weights, ndim, nameof(SerializationState.Weights));
+        RequireLength(state.DiffMatrices, ndim, nameof(SerializationState.DiffMatrices));
+
+        int total = 1;
+        for (int d = 0; d < ndim; d++)
+        {
+            double[] domain = state.Domain[d]
+                ?? throw MalformedJson($"Domain[{d}] must not be null");
+            if (domain.Length != 2)
+                throw MalformedJson($"Domain[{d}] must have length 2, got {domain.Length}");
+            if (!double.IsFinite(domain[0]) || !double.IsFinite(domain[1]) || domain[0] >= domain[1])
+                throw MalformedJson($"Domain[{d}] must contain finite bounds with lo < hi");
+
+            int n = state.NNodes[d];
+            if (n < 1)
+                throw MalformedJson($"NNodes[{d}] must be >= 1, got {n}");
+            total = CheckedJsonProduct(total, n, "prod(NNodes)");
+
+            RequireFiniteLength(state.NodeArrays[d], n, $"NodeArrays[{d}]");
+            RequireFiniteLength(state.Weights[d], n, $"Weights[{d}]");
+            RequireFiniteLength(
+                state.DiffMatrices[d],
+                CheckedJsonProduct(n, n, $"DiffMatrices[{d}] size"),
+                $"DiffMatrices[{d}]");
+        }
+
+        RequireFiniteLength(state.TensorValues, total, nameof(SerializationState.TensorValues));
+
+        if (state.OriginalNNodes != null)
+        {
+            if (state.OriginalNNodes.Length != 0)
+                RequireLength(state.OriginalNNodes, ndim, nameof(SerializationState.OriginalNNodes));
+            for (int d = 0; d < state.OriginalNNodes.Length; d++)
+            {
+                int? n = state.OriginalNNodes[d];
+                if (n.HasValue && n.Value < 1)
+                    throw MalformedJson($"OriginalNNodes[{d}] must be null or >= 1, got {n.Value}");
+            }
+        }
+
+        if (state.SpecialPoints != null)
+        {
+            RequireLength(state.SpecialPoints, ndim, nameof(SerializationState.SpecialPoints));
+            for (int d = 0; d < state.SpecialPoints.Length; d++)
+                RequireFiniteArray(state.SpecialPoints[d], $"SpecialPoints[{d}]");
+        }
+
+        if (state.RegisteredDerivativeOrders != null)
+        {
+            for (int i = 0; i < state.RegisteredDerivativeOrders.Length; i++)
+                RequireLength(
+                    state.RegisteredDerivativeOrders[i],
+                    ndim,
+                    $"{nameof(SerializationState.RegisteredDerivativeOrders)}[{i}]");
+        }
+    }
+
+    private static void RequireLength<T>(T[]? values, int expected, string name)
+    {
+        if (values == null)
+            throw MalformedJson($"{name} must not be null");
+        if (values.Length != expected)
+            throw MalformedJson($"{name} length {values.Length} does not match NumDimensions {expected}");
+    }
+
+    private static void RequireFiniteLength(double[]? values, int expected, string name)
+    {
+        RequireLength(values, expected, name);
+        RequireFiniteArray(values!, name);
+    }
+
+    private static void RequireFiniteArray(double[]? values, string name)
+    {
+        if (values == null)
+            throw MalformedJson($"{name} must not be null");
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw MalformedJson($"{name}[{i}] must be finite");
+        }
+    }
+
+    private static int CheckedJsonProduct(int a, int b, string name)
+    {
+        try { return checked(a * b); }
+        catch (OverflowException)
+        {
+            throw MalformedJson($"{name} overflows int");
+        }
+    }
+
+    private static InvalidDataException MalformedJson(string message)
+        => new($"Malformed ChebyshevApproximation JSON: {message}");
 
     // ------------------------------------------------------------------
     // Static factories
