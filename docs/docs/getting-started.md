@@ -67,6 +67,8 @@ double d2fdx1 = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 2 });
 
 The second argument specifies the derivative order along each dimension. `{0, 0}` means the function value, `{1, 0}` means first derivative with respect to dimension 0, `{0, 2}` means second derivative with respect to dimension 1.
 
+Evaluation points must be inside the declared domain. For the example above, both coordinates must be between `-1.0` and `1.0`; out-of-domain points throw `ArgumentOutOfRangeException` rather than extrapolating silently.
+
 Derivatives are computed analytically using spectral differentiation matrices — they converge at the same rate as the function values, unlike finite differences which lose accuracy.
 
 ### 4. Check accuracy

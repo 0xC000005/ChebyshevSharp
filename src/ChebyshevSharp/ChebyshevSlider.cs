@@ -343,14 +343,14 @@ public class ChebyshevSlider
     /// For derivatives, only the slide containing that dimension contributes.
     /// Cross-group mixed partials are exactly zero.
     /// </summary>
-    /// <param name="point">Evaluation point in the full n-dimensional space.</param>
+    /// <param name="point">Evaluation point inside the full declared domain.</param>
     /// <param name="derivativeOrder">Derivative order for each dimension (0 = function value).</param>
     /// <returns>Approximated function value or derivative.</returns>
     public double Eval(double[] point, int[] derivativeOrder)
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         bool isDerivative = false;
@@ -418,12 +418,14 @@ public class ChebyshevSlider
     /// <summary>
     /// Evaluate slider at multiple derivative orders for the same point.
     /// </summary>
-    /// <param name="point">Evaluation point.</param>
+    /// <param name="point">Evaluation point inside the declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.</param>
     /// <returns>Results for each derivative order.</returns>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        if (!Built)
+            throw new InvalidOperationException("Call Build() before EvalMulti().");
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         var results = new double[derivativeOrders.Length];
         for (int i = 0; i < derivativeOrders.Length; i++)

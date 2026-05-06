@@ -627,14 +627,14 @@ public class ChebyshevSpline
     /// <summary>
     /// Evaluate the spline approximation at a point.
     /// </summary>
-    /// <param name="point">Evaluation point in the full domain.</param>
+    /// <param name="point">Evaluation point inside the full declared domain.</param>
     /// <param name="derivativeOrder">Derivative order for each dimension (0 = function value).</param>
     /// <returns>Approximated function value or derivative.</returns>
     public double Eval(double[] point, int[] derivativeOrder)
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
         CheckKnotBoundary(point, derivativeOrder);
         var (_, piece) = FindPiece(point);
@@ -644,14 +644,14 @@ public class ChebyshevSpline
     /// <summary>
     /// Evaluate multiple derivative orders at one point, sharing weights.
     /// </summary>
-    /// <param name="point">Evaluation point in the full domain.</param>
+    /// <param name="point">Evaluation point inside the full declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.</param>
     /// <returns>One result per derivative order.</returns>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         foreach (var dord in derivativeOrders)
             CheckKnotBoundary(point, dord);
@@ -662,14 +662,14 @@ public class ChebyshevSpline
     /// <summary>
     /// Evaluate at multiple points, grouping by piece for efficiency.
     /// </summary>
-    /// <param name="points">Evaluation points (N x numDimensions).</param>
+    /// <param name="points">Evaluation points inside the declared domain (N x numDimensions).</param>
     /// <param name="derivativeOrder">Derivative order for each dimension.</param>
     /// <returns>Approximated values at each point.</returns>
     public double[] EvalBatch(double[][] points, int[] derivativeOrder)
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalBatch().");
-        EvaluationArguments.ValidatePoints(points, NumDimensions);
+        EvaluationArguments.ValidatePointsInDomain(points, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         int N = points.Length;

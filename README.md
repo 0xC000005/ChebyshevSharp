@@ -68,6 +68,8 @@ double value = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 0 });
 double dfdx  = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 double d2fdy = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 2 });
 
+// Query points must be inside the declared domain; out-of-domain points throw.
+
 // 4. Check accuracy
 double error = cheb.ErrorEstimate();  // ~1e-15 for this function
 
