@@ -78,15 +78,9 @@ internal static class AdaptiveBuild
                     break;
 
                 int validationWorstDim = PickWorstGrowableDim(validationPerDim, autoDims, current, maxN);
-                if (validationWorstDim < 0)
-                {
-                    approx.BuildWarning =
-                        $"maxN={maxN} reached on all auto dims before errorThreshold={threshold:e2} satisfied " +
-                        $"(last coefficient error={err:e3}, validation error={validationErr:e3}). " +
-                        "Increase maxN or relax errorThreshold.";
-                    break;
-                }
-
+                System.Diagnostics.Debug.Assert(
+                    validationWorstDim >= 0,
+                    "Validation above threshold requires at least one growable auto dimension.");
                 current[validationWorstDim] = Math.Min(2 * current[validationWorstDim], maxN);
                 continue;
             }
@@ -129,9 +123,7 @@ internal static class AdaptiveBuild
         ChebyshevApproximation approx, int[] current, int[] autoDims)
     {
         var perDim = new double[approx.NumDimensions];
-        if (approx.Function == null)
-            return (perDim, 0);
-
+        var function = approx.Function!;
         var derivativeOrder = new int[approx.NumDimensions];
         int evaluations = 0;
 
@@ -163,7 +155,7 @@ internal static class AdaptiveBuild
                     point[d] = d == dim ? probeNodes[idx] : approx.NodeArrays[d][idx];
                 }
 
-                double expected = approx.Function(point, approx.AdditionalData);
+                double expected = function(point, approx.AdditionalData);
                 evaluations++;
                 double actual = approx.VectorizedEval(point, derivativeOrder);
                 double diff = Math.Abs(expected - actual);

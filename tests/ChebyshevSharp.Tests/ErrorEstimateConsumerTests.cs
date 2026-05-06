@@ -72,6 +72,36 @@ public class TestErrorEstimateConsumers
             $"Auto-N accepted grid [{string.Join(", ", approx.NNodes)}] with empirical error {maxActualError:E2}");
     }
 
+    [Fact]
+    public void AutoN_VerboseBuildReportsValidationError()
+    {
+        static double F(double[] x, object? _) => 0.0001 * x[0] + Math.Sin(7.0 * x[1]);
+
+        var approx = new ChebyshevApproximation(
+            F,
+            2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: null,
+            errorThreshold: 1e-6,
+            maxN: 48);
+
+        TextWriter originalOut = Console.Out;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            approx.Build(verbose: true);
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
+
+        string text = output.ToString();
+        Assert.Contains("[auto-N] nNodes=", text);
+        Assert.Contains("[auto-N] validation error=", text);
+    }
+
     private static double[] DirectErrorEstimatePerDim(double[] values, int[] shape)
     {
         var result = new double[shape.Length];
