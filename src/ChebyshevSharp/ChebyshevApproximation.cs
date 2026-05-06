@@ -11,6 +11,14 @@ namespace ChebyshevSharp;
 /// </summary>
 public class ChebyshevApproximation
 {
+    private double[][] _domain = Array.Empty<double[]>();
+    private int[] _nNodes = Array.Empty<int>();
+    private double[][] _nodeArrays = Array.Empty<double[]>();
+    private double[]? _tensorValues;
+    private double[][]? _weights;
+    private double[][,]? _diffMatrices;
+    private double[][]? _diffMatricesTFlat;
+
     /// <summary>The function to approximate. Null after load or from_values.</summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
@@ -18,28 +26,92 @@ public class ChebyshevApproximation
     public int NumDimensions { get; internal set; }
 
     /// <summary>Domain bounds for each dimension, as list of [lo, hi].</summary>
-    public double[][] Domain { get; internal set; } = Array.Empty<double[]>();
+    public double[][] Domain
+    {
+        get => CloneHelpers.DeepCopy(_domain)!;
+        internal set => _domain = value ?? Array.Empty<double[]>();
+    }
 
     /// <summary>Number of Chebyshev nodes per dimension.</summary>
-    public int[] NNodes { get; internal set; } = Array.Empty<int>();
+    public int[] NNodes
+    {
+        get => CloneHelpers.DeepCopy(_nNodes)!;
+        internal set => _nNodes = value ?? Array.Empty<int>();
+    }
 
     /// <summary>Maximum supported derivative order.</summary>
     public int MaxDerivativeOrder { get; internal set; } = 2;
 
     /// <summary>Chebyshev nodes per dimension, each sorted ascending.</summary>
-    public double[][] NodeArrays { get; internal set; } = Array.Empty<double[]>();
+    public double[][] NodeArrays
+    {
+        get => CloneHelpers.DeepCopy(_nodeArrays)!;
+        internal set => _nodeArrays = value ?? Array.Empty<double[]>();
+    }
 
     /// <summary>Flat tensor of function values at all node combinations (C-order).</summary>
-    public double[]? TensorValues { get; internal set; }
+    public double[]? TensorValues
+    {
+        get => CloneHelpers.DeepCopy(_tensorValues);
+        internal set => _tensorValues = value;
+    }
 
     /// <summary>Barycentric weights per dimension.</summary>
-    public double[][]? Weights { get; internal set; }
+    public double[][]? Weights
+    {
+        get => CloneHelpers.DeepCopy(_weights);
+        internal set => _weights = value;
+    }
 
     /// <summary>Spectral differentiation matrices per dimension.</summary>
-    public double[][,]? DiffMatrices { get; internal set; }
+    public double[][,]? DiffMatrices
+    {
+        get => CloneHelpers.DeepCopy(_diffMatrices);
+        internal set => _diffMatrices = value;
+    }
 
     /// <summary>Pre-transposed diff matrices flattened to double[] for BLAS GEMM (row-major).</summary>
-    internal double[][]? DiffMatricesTFlat { get; set; }
+    internal double[][]? DiffMatricesTFlat
+    {
+        get => _diffMatricesTFlat;
+        set => _diffMatricesTFlat = value;
+    }
+
+    internal double[][] DomainStorage
+    {
+        get => _domain;
+        set => _domain = value;
+    }
+
+    internal int[] NNodesStorage
+    {
+        get => _nNodes;
+        set => _nNodes = value;
+    }
+
+    internal double[][] NodeArraysStorage
+    {
+        get => _nodeArrays;
+        set => _nodeArrays = value;
+    }
+
+    internal double[]? TensorValuesStorage
+    {
+        get => _tensorValues;
+        set => _tensorValues = value;
+    }
+
+    internal double[][]? WeightsStorage
+    {
+        get => _weights;
+        set => _weights = value;
+    }
+
+    internal double[][,]? DiffMatricesStorage
+    {
+        get => _diffMatrices;
+        set => _diffMatrices = value;
+    }
 
     /// <summary>Time taken by Build() in seconds.</summary>
     public double BuildTime { get; internal set; }
@@ -109,8 +181,8 @@ public class ChebyshevApproximation
 
         Function = function;
         NumDimensions = numDimensions;
-        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
-        NNodes = (int[])nNodes.Clone();
+        _domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        _nNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
         _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
@@ -119,15 +191,15 @@ public class ChebyshevApproximation
         if (!deferBuild)
         {
             // Generate Chebyshev nodes for each dimension
-            NodeArrays = new double[numDimensions][];
+            _nodeArrays = new double[numDimensions][];
             for (int d = 0; d < numDimensions; d++)
             {
-                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+                _nodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
             }
         }
         else
         {
-            NodeArrays = Array.Empty<double[]>();
+            _nodeArrays = Array.Empty<double[]>();
         }
     }
 
@@ -195,7 +267,7 @@ public class ChebyshevApproximation
 
         Function = function;
         NumDimensions = numDimensions;
-        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        _domain = domain.Select(d => (double[])d.Clone()).ToArray();
         ErrorThreshold = errorThreshold;
         MaxN = maxN;
         MaxDerivativeOrder = maxDerivativeOrder;
@@ -204,20 +276,20 @@ public class ChebyshevApproximation
         _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
         _progress = progress;
 
-        // If all entries are non-null, populate NNodes + nodes immediately (matches existing fixed-N behavior).
+        // If all entries are non-null, populate resolved node counts immediately.
         if (resolved.All(n => n != null))
         {
-            NNodes = resolved.Select(n => n!.Value).ToArray();
-            ValidateNodeCounts(nameof(ChebyshevApproximation), NNodes);
-            NodeArrays = new double[numDimensions][];
+            _nNodes = resolved.Select(n => n!.Value).ToArray();
+            ValidateNodeCounts(nameof(ChebyshevApproximation), _nNodes);
+            _nodeArrays = new double[numDimensions][];
             for (int d = 0; d < numDimensions; d++)
-                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], NNodes[d]);
+                _nodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], _nNodes[d]);
         }
         else
         {
-            // Auto-N path: NNodes left empty until Build() resolves.
-            NNodes = Array.Empty<int>();
-            NodeArrays = Array.Empty<double[]>();
+            // Auto-N path: resolved node counts are empty until Build().
+            _nNodes = Array.Empty<int>();
+            _nodeArrays = Array.Empty<double[]>();
         }
     }
 
@@ -250,9 +322,9 @@ public class ChebyshevApproximation
     internal void BuildFixedGrid(bool verbose = true)
     {
         int total = TensorShape.RequireArrayLength(
-            TensorShape.CheckedProduct(NNodes, nameof(BuildFixedGrid)),
+            TensorShape.CheckedProduct(_nNodes, nameof(BuildFixedGrid)),
             nameof(BuildFixedGrid),
-            NNodes);
+            _nNodes);
 
         if (verbose)
             Console.WriteLine($"Building {NumDimensions}D Chebyshev approximation ({total:N0} evaluations)...");
@@ -269,29 +341,29 @@ public class ChebyshevApproximation
             int rem = flat;
             for (int d = NumDimensions - 1; d >= 0; d--)
             {
-                indices[d] = rem % NNodes[d];
-                rem /= NNodes[d];
+                indices[d] = rem % _nNodes[d];
+                rem /= _nNodes[d];
             }
             var pt = new double[NumDimensions];
             for (int d = 0; d < NumDimensions; d++)
-                pt[d] = NodeArrays[d][indices[d]];
+                pt[d] = _nodeArrays[d][indices[d]];
             points[flat] = pt;
         }
         var tensorValues = Internal.ParallelBuild.EvaluateInParallel(
             Function!, points, _additionalData, _nWorkers, _progress);
         ValidateFiniteBuildValues(tensorValues);
-        TensorValues = tensorValues;
+        _tensorValues = tensorValues;
         NEvaluations = total;
 
         // Step 2: Pre-compute barycentric weights
-        Weights = new double[NumDimensions][];
+        _weights = new double[NumDimensions][];
         for (int d = 0; d < NumDimensions; d++)
-            Weights[d] = BarycentricKernel.ComputeBarycentricWeights(NodeArrays[d]);
+            _weights[d] = BarycentricKernel.ComputeBarycentricWeights(_nodeArrays[d]);
 
         // Step 3: Pre-compute differentiation matrices
-        DiffMatrices = new double[NumDimensions][,];
+        _diffMatrices = new double[NumDimensions][,];
         for (int d = 0; d < NumDimensions; d++)
-            DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(NodeArrays[d], Weights[d]);
+            _diffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(_nodeArrays[d], _weights[d]);
 
         // Step 4: Pre-transpose diff matrices for VectorizedEval
         PrecomputeTransposedDiffMatrices();
@@ -301,7 +373,7 @@ public class ChebyshevApproximation
 
         if (verbose)
         {
-            int totalWeights = Weights.Sum(w => w.Length);
+            int totalWeights = _weights.Sum(w => w.Length);
             Console.WriteLine($"  Built in {BuildTime:F3}s ({totalWeights} weights, {totalWeights * 8} bytes)");
         }
 
@@ -332,23 +404,23 @@ public class ChebyshevApproximation
     /// <returns>Interpolated value or derivative at the query point.</returns>
     public double Eval(double[] point, int[] derivativeOrder)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Current working data and its shape
-        double[] current = TensorValues;
-        int[] currentShape = (int[])NNodes.Clone();
+        double[] current = _tensorValues;
+        int[] currentShape = (int[])_nNodes.Clone();
 
         for (int d = NumDimensions - 1; d >= 0; d--)
         {
             double x = point[d];
             int deriv = derivativeOrder[d];
-            double[] nodes = NodeArrays[d];
-            double[] weights = Weights![d];
-            double[,] diffMatrix = DiffMatrices![d];
-            int nNodesD = NNodes[d];
+            double[] nodes = _nodeArrays[d];
+            double[] weights = _weights![d];
+            double[,] diffMatrix = _diffMatrices![d];
+            int nNodesD = _nNodes[d];
 
             if (d == 0)
             {
@@ -406,10 +478,10 @@ public class ChebyshevApproximation
     /// <returns>Interpolated value at the query point.</returns>
     public double Eval(double[] point)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException(
                 "Cannot evaluate an unbuilt interpolant. Call Build() or SetOriginalFunctionValues() first.");
-        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
         return Eval(point, new int[NumDimensions]);
     }
 
@@ -422,12 +494,12 @@ public class ChebyshevApproximation
     /// <returns>Interpolated value or derivative.</returns>
     public double VectorizedEval(double[] point, int[] derivativeOrder)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
-        double[] current = TensorValues;
+        double[] current = _tensorValues;
 
         // Track tensor dimensions without shape array allocations.
         // leadSize = product of all dims before current last dim.
@@ -438,13 +510,13 @@ public class ChebyshevApproximation
         {
             double x = point[d];
             int deriv = derivativeOrder[d];
-            int lastDim = NNodes[d];
+            int lastDim = _nNodes[d];
             int leadSize = totalSize / lastDim;
 
             // Apply differentiation matrix if derivative order > 0
             if (deriv > 0)
             {
-                double[] dTFlat = DiffMatricesTFlat![d];
+                double[] dTFlat = _diffMatricesTFlat![d];
                 for (int o = 0; o < deriv; o++)
                     current = BarycentricKernel.MatmulLastAxisMatrixFlat(current, leadSize, lastDim, dTFlat, lastDim);
             }
@@ -453,7 +525,7 @@ public class ChebyshevApproximation
             int exactIdx = -1;
             for (int i = 0; i < lastDim; i++)
             {
-                if (Math.Abs(x - NodeArrays[d][i]) < 1e-14)
+                if (Math.Abs(x - _nodeArrays[d][i]) < 1e-14)
                 {
                     exactIdx = i;
                     break;
@@ -475,7 +547,7 @@ public class ChebyshevApproximation
                 double sumW = 0.0;
                 for (int i = 0; i < lastDim; i++)
                 {
-                    double wod = Weights![d][i] / (x - NodeArrays[d][i]);
+                    double wod = _weights![d][i] / (x - _nodeArrays[d][i]);
                     wNorm[i] = wod;
                     sumW += wod;
                 }
@@ -502,17 +574,17 @@ public class ChebyshevApproximation
     /// <returns>Results array of length N.</returns>
     public double[] VectorizedEvalBatch(double[][] points, int[] derivativeOrder)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePointsInDomain(points, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointsInDomain(points, NumDimensions, _domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Hoist: apply all derivative-matrix matmuls once — they are point-independent.
         // Process from last dimension to first to match VectorizedEval ordering.
-        double[] tensorWithDerivs = ApplyDerivativePasses(TensorValues, NNodes, derivativeOrder);
+        double[] tensorWithDerivs = ApplyDerivativePasses(_tensorValues, _nNodes, derivativeOrder);
 
         double[] results = new double[points.Length];
-        int totalSize = TensorValues.Length;
+        int totalSize = _tensorValues.Length;
 
         for (int i = 0; i < points.Length; i++)
         {
@@ -523,14 +595,14 @@ public class ChebyshevApproximation
             for (int d = NumDimensions - 1; d >= 0; d--)
             {
                 double x = points[i][d];
-                int lastDim = NNodes[d];
+                int lastDim = _nNodes[d];
                 int leadSize = curSize / lastDim;
 
                 // Barycentric contraction along last axis (no diff-matrix here — already hoisted)
                 int exactIdx = -1;
                 for (int j = 0; j < lastDim; j++)
                 {
-                    if (Math.Abs(x - NodeArrays[d][j]) < 1e-14)
+                    if (Math.Abs(x - _nodeArrays[d][j]) < 1e-14)
                     {
                         exactIdx = j;
                         break;
@@ -550,7 +622,7 @@ public class ChebyshevApproximation
                     double sumW = 0.0;
                     for (int j = 0; j < lastDim; j++)
                     {
-                        double wod = Weights![d][j] / (x - NodeArrays[d][j]);
+                        double wod = _weights![d][j] / (x - _nodeArrays[d][j]);
                         wNorm[j] = wod;
                         sumW += wod;
                     }
@@ -585,7 +657,7 @@ public class ChebyshevApproximation
             int deriv = derivativeOrder[d];
             if (deriv > 0)
             {
-                double[,] dm = DiffMatrices![d];
+                double[,] dm = _diffMatrices![d];
                 for (int o = 0; o < deriv; o++)
                     result = BarycentricKernel.MatmulAlongAxis(result, shape, d, dm);
             }
@@ -601,9 +673,9 @@ public class ChebyshevApproximation
     /// <returns>One result per derivative order.</returns>
     public double[] VectorizedEvalMulti(double[] point, int[][] derivativeOrders)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
         EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
 
         // Pre-compute dimension info (shared across all derivative orders)
@@ -612,9 +684,9 @@ public class ChebyshevApproximation
         {
             double x = point[d];
             int exactIdx = -1;
-            for (int i = 0; i < NNodes[d]; i++)
+            for (int i = 0; i < _nNodes[d]; i++)
             {
-                if (Math.Abs(x - NodeArrays[d][i]) < 1e-14)
+                if (Math.Abs(x - _nodeArrays[d][i]) < 1e-14)
                 {
                     exactIdx = i;
                     break;
@@ -627,19 +699,19 @@ public class ChebyshevApproximation
             }
             else
             {
-                double[] diff = new double[NNodes[d]];
-                for (int i = 0; i < NNodes[d]; i++)
-                    diff[i] = x - NodeArrays[d][i];
+                double[] diff = new double[_nNodes[d]];
+                for (int i = 0; i < _nNodes[d]; i++)
+                    diff[i] = x - _nodeArrays[d][i];
 
-                double[] wOverDiff = new double[NNodes[d]];
+                double[] wOverDiff = new double[_nNodes[d]];
                 double sumW = 0.0;
-                for (int i = 0; i < NNodes[d]; i++)
+                for (int i = 0; i < _nNodes[d]; i++)
                 {
-                    wOverDiff[i] = Weights![d][i] / diff[i];
+                    wOverDiff[i] = _weights![d][i] / diff[i];
                     sumW += wOverDiff[i];
                 }
-                double[] wNorm = new double[NNodes[d]];
-                for (int i = 0; i < NNodes[d]; i++)
+                double[] wNorm = new double[_nNodes[d]];
+                for (int i = 0; i < _nNodes[d]; i++)
                     wNorm[i] = wOverDiff[i] / sumW;
 
                 dimInfo[d] = (false, -1, wNorm);
@@ -647,23 +719,23 @@ public class ChebyshevApproximation
         }
 
         double[] results = new double[derivativeOrders.Length];
-        int tensorSize = TensorValues.Length;
+        int tensorSize = _tensorValues.Length;
 
         for (int q = 0; q < derivativeOrders.Length; q++)
         {
             int[] derivOrder = derivativeOrders[q];
-            double[] current = TensorValues;
+            double[] current = _tensorValues;
             int totalSize = tensorSize;
 
             for (int d = NumDimensions - 1; d >= 0; d--)
             {
                 int deriv = derivOrder[d];
-                int lastDim = NNodes[d];
+                int lastDim = _nNodes[d];
                 int leadSize = totalSize / lastDim;
 
                 if (deriv > 0)
                 {
-                    double[] dTFlat = DiffMatricesTFlat![d];
+                    double[] dTFlat = _diffMatricesTFlat![d];
                     for (int o = 0; o < deriv; o++)
                         current = BarycentricKernel.MatmulLastAxisMatrixFlat(current, leadSize, lastDim, dTFlat, lastDim);
                 }
@@ -702,14 +774,14 @@ public class ChebyshevApproximation
     /// <returns>Per-dimension last-coefficient magnitudes, one entry per dim.</returns>
     public double[] ErrorEstimatePerDim()
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
         var perDim = new double[NumDimensions];
         for (int d = 0; d < NumDimensions; d++)
         {
             double maxErrThisDim = 0.0;
-            int[] otherShape = NNodes.Where((_, i) => i != d).ToArray();
+            int[] otherShape = _nNodes.Where((_, i) => i != d).ToArray();
             int otherTotal = TensorShape.RequireArrayLength(
                 TensorShape.CheckedProduct(otherShape, nameof(ErrorEstimatePerDim)),
                 nameof(ErrorEstimatePerDim),
@@ -717,7 +789,7 @@ public class ChebyshevApproximation
 
             for (int otherFlat = 0; otherFlat < otherTotal; otherFlat++)
             {
-                double[] values1d = Extract1DSlice(TensorValues, NNodes, d, otherFlat, otherShape);
+                double[] values1d = Extract1DSlice(_tensorValues, _nNodes, d, otherFlat, otherShape);
                 double[] coeffs = BarycentricKernel.ChebyshevCoefficients1D(values1d);
                 double lastCoeff = Math.Abs(coeffs[^1]);
                 if (lastCoeff > maxErrThisDim)
@@ -765,7 +837,7 @@ public class ChebyshevApproximation
             function, 1, new[] { new[] { domain.lo, domain.hi } },
             nNodes: null, errorThreshold: errorThreshold, maxN: maxN);
         cheb.Build(verbose: false);
-        return cheb.NNodes[0];
+        return cheb._nNodes[0];
     }
 
     /// <summary>
@@ -789,7 +861,7 @@ public class ChebyshevApproximation
     /// portable .pcb format readable by C/Rust/Julia consumers.</param>
     public void Save(string path, string format = "json")
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException(
                 "Cannot save an unbuilt interpolant. Call Build() first.");
 
@@ -813,13 +885,13 @@ public class ChebyshevApproximation
         var state = new SerializationState
         {
             NumDimensions = NumDimensions,
-            Domain = Domain,
-            NNodes = NNodes,
+            Domain = _domain,
+            NNodes = _nNodes,
             MaxDerivativeOrder = MaxDerivativeOrder,
-            NodeArrays = NodeArrays,
-            TensorValues = TensorValues!,
-            Weights = Weights!,
-            DiffMatrices = DiffMatrices!.Select(Flatten2D).ToArray(),
+            NodeArrays = _nodeArrays,
+            TensorValues = _tensorValues!,
+            Weights = _weights!,
+            DiffMatrices = _diffMatrices!.Select(Flatten2D).ToArray(),
             BuildTime = BuildTime,
             NEvaluations = NEvaluations,
             OriginalNNodes = OriginalNNodes,
@@ -843,7 +915,7 @@ public class ChebyshevApproximation
         using var fs = File.Create(path);
         using var w = new BinaryWriter(fs);
         Internal.PcbFormat.WriteHeader(w, Internal.PcbFormat.ClassTagApproximation);
-        Internal.PcbFormat.WriteApproximationBody(w, Domain, NNodes, TensorValues!);
+        Internal.PcbFormat.WriteApproximationBody(w, _domain, _nNodes, _tensorValues!);
     }
 
     /// <summary>
@@ -900,23 +972,23 @@ public class ChebyshevApproximation
         {
             Function = null,
             NumDimensions = state.NumDimensions,
-            Domain = state.Domain,
-            NNodes = state.NNodes,
+            _domain = state.Domain,
+            _nNodes = state.NNodes,
             MaxDerivativeOrder = state.MaxDerivativeOrder ?? 2,
-            NodeArrays = state.NodeArrays,
-            TensorValues = state.TensorValues,
-            Weights = state.Weights,
+            _nodeArrays = state.NodeArrays,
+            _tensorValues = state.TensorValues,
+            _weights = state.Weights,
             BuildTime = state.BuildTime,
             NEvaluations = state.NEvaluations,
             _cachedErrorEstimate = null,
         };
 
         // Reconstruct diff matrices from flat arrays
-        obj.DiffMatrices = new double[state.NumDimensions][,];
+        obj._diffMatrices = new double[state.NumDimensions][,];
         for (int d = 0; d < state.NumDimensions; d++)
         {
             int n = state.NNodes[d];
-            obj.DiffMatrices[d] = Unflatten2D(state.DiffMatrices[d], n, n);
+            obj._diffMatrices[d] = Unflatten2D(state.DiffMatrices[d], n, n);
         }
 
         obj.PrecomputeTransposedDiffMatrices();
@@ -925,7 +997,7 @@ public class ChebyshevApproximation
         if (state.OriginalNNodes != null)
             obj.OriginalNNodes = state.OriginalNNodes;
         else
-            obj.OriginalNNodes = obj.NNodes.Select(n => (int?)n).ToArray();
+            obj.OriginalNNodes = obj._nNodes.Select(n => (int?)n).ToArray();
         obj.ErrorThreshold = state.ErrorThreshold;
         obj.MaxN = state.MaxN ?? 64;
 
@@ -1135,8 +1207,8 @@ public class ChebyshevApproximation
         {
             Function = null,
             NumDimensions = numDimensions,
-            Domain = domain.Select(d => (double[])d.Clone()).ToArray(),
-            NNodes = (int[])nNodes.Clone(),
+            _domain = domain.Select(d => (double[])d.Clone()).ToArray(),
+            _nNodes = (int[])nNodes.Clone(),
             MaxDerivativeOrder = maxDerivativeOrder,
             BuildTime = 0.0,
             NEvaluations = 0,
@@ -1144,21 +1216,21 @@ public class ChebyshevApproximation
         };
 
         // Chebyshev nodes
-        obj.NodeArrays = new double[numDimensions][];
+        obj._nodeArrays = new double[numDimensions][];
         for (int d = 0; d < numDimensions; d++)
-            obj.NodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
+            obj._nodeArrays[d] = BarycentricKernel.MakeNodesForDim(domain[d][0], domain[d][1], nNodes[d]);
 
-        obj.TensorValues = (double[])tensorValues.Clone();
+        obj._tensorValues = (double[])tensorValues.Clone();
 
         // Barycentric weights
-        obj.Weights = new double[numDimensions][];
+        obj._weights = new double[numDimensions][];
         for (int d = 0; d < numDimensions; d++)
-            obj.Weights[d] = BarycentricKernel.ComputeBarycentricWeights(obj.NodeArrays[d]);
+            obj._weights[d] = BarycentricKernel.ComputeBarycentricWeights(obj._nodeArrays[d]);
 
         // Differentiation matrices
-        obj.DiffMatrices = new double[numDimensions][,];
+        obj._diffMatrices = new double[numDimensions][,];
         for (int d = 0; d < numDimensions; d++)
-            obj.DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(obj.NodeArrays[d], obj.Weights[d]);
+            obj._diffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(obj._nodeArrays[d], obj._weights[d]);
 
         obj.PrecomputeTransposedDiffMatrices();
 
@@ -1178,14 +1250,14 @@ public class ChebyshevApproximation
         {
             Function = null,
             NumDimensions = source.NumDimensions,
-            Domain = source.Domain.Select(d => (double[])d.Clone()).ToArray(),
-            NNodes = (int[])source.NNodes.Clone(),
+            _domain = source._domain.Select(d => (double[])d.Clone()).ToArray(),
+            _nNodes = (int[])source._nNodes.Clone(),
             MaxDerivativeOrder = source.MaxDerivativeOrder,
-            NodeArrays = Internal.CloneHelpers.DeepCopy(source.NodeArrays)!,
-            Weights = Internal.CloneHelpers.DeepCopy(source.Weights),
-            DiffMatrices = Internal.CloneHelpers.DeepCopy(source.DiffMatrices),
-            DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(source.DiffMatricesTFlat),
-            TensorValues = tensorValues,
+            _nodeArrays = Internal.CloneHelpers.DeepCopy(source._nodeArrays)!,
+            _weights = Internal.CloneHelpers.DeepCopy(source._weights),
+            _diffMatrices = Internal.CloneHelpers.DeepCopy(source._diffMatrices),
+            _diffMatricesTFlat = Internal.CloneHelpers.DeepCopy(source._diffMatricesTFlat),
+            _tensorValues = tensorValues,
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
@@ -1202,18 +1274,18 @@ public class ChebyshevApproximation
     /// </summary>
     public ChebyshevApproximation Extrude(params (int dimIndex, double[] bounds, int nNodes)[] extrudeParams)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
         var sorted = ExtrudeSlice.NormalizeExtrusionParams(extrudeParams, NumDimensions);
 
-        double[] tensor = (double[])TensorValues.Clone();
-        int[] shape = (int[])NNodes.Clone();
-        var nodes = NodeArrays.ToList();
-        var weights = Weights!.ToList();
-        var diffMats = DiffMatrices!.ToList();
-        var domain = Domain.Select(d => (double[])d.Clone()).ToList();
-        var nNodes = NNodes.ToList();
+        double[] tensor = (double[])_tensorValues.Clone();
+        int[] shape = (int[])_nNodes.Clone();
+        var nodes = _nodeArrays.ToList();
+        var weights = _weights!.ToList();
+        var diffMats = _diffMatrices!.ToList();
+        var domain = _domain.Select(d => (double[])d.Clone()).ToList();
+        var nNodes = _nNodes.ToList();
 
         foreach (var (dimIdx, bounds, n) in sorted)
         {
@@ -1238,13 +1310,13 @@ public class ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
-            Domain = domain.ToArray(),
-            NNodes = nNodes.ToArray(),
+            _domain = domain.ToArray(),
+            _nNodes = nNodes.ToArray(),
             MaxDerivativeOrder = MaxDerivativeOrder,
-            NodeArrays = nodes.ToArray(),
-            Weights = weights.ToArray(),
-            DiffMatrices = diffMats.ToArray(),
-            TensorValues = tensor,
+            _nodeArrays = nodes.ToArray(),
+            _weights = weights.ToArray(),
+            _diffMatrices = diffMats.ToArray(),
+            _tensorValues = tensor,
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
@@ -1259,7 +1331,7 @@ public class ChebyshevApproximation
     /// </summary>
     public ChebyshevApproximation Slice(params (int dimIndex, double value)[] sliceParams)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
         var sorted = ExtrudeSlice.NormalizeSlicingParams(sliceParams, NumDimensions);
@@ -1267,20 +1339,20 @@ public class ChebyshevApproximation
         // Validate values within domain
         foreach (var (dimIdx, value) in sorted)
         {
-            double lo = Domain[dimIdx][0];
-            double hi = Domain[dimIdx][1];
+            double lo = _domain[dimIdx][0];
+            double hi = _domain[dimIdx][1];
             if (value < lo || value > hi)
                 throw new ArgumentException(
                     $"Slice value {value} for dim {dimIdx} is outside domain [{lo}, {hi}]");
         }
 
-        double[] tensor = (double[])TensorValues.Clone();
-        int[] shape = (int[])NNodes.Clone();
-        var nodes = NodeArrays.ToList();
-        var weights = Weights!.ToList();
-        var diffMats = DiffMatrices!.ToList();
-        var domain = Domain.Select(d => (double[])d.Clone()).ToList();
-        var nNodes = NNodes.ToList();
+        double[] tensor = (double[])_tensorValues.Clone();
+        int[] shape = (int[])_nNodes.Clone();
+        var nodes = _nodeArrays.ToList();
+        var weights = _weights!.ToList();
+        var diffMats = _diffMatrices!.ToList();
+        var domain = _domain.Select(d => (double[])d.Clone()).ToList();
+        var nNodes = _nNodes.ToList();
 
         foreach (var (dimIdx, value) in sorted)
         {
@@ -1303,13 +1375,13 @@ public class ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
-            Domain = domain.ToArray(),
-            NNodes = nNodes.ToArray(),
+            _domain = domain.ToArray(),
+            _nNodes = nNodes.ToArray(),
             MaxDerivativeOrder = MaxDerivativeOrder,
-            NodeArrays = nodes.ToArray(),
-            Weights = weights.ToArray(),
-            DiffMatrices = diffMats.ToArray(),
-            TensorValues = tensor,
+            _nodeArrays = nodes.ToArray(),
+            _weights = weights.ToArray(),
+            _diffMatrices = diffMats.ToArray(),
+            _tensorValues = tensor,
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
@@ -1331,7 +1403,7 @@ public class ChebyshevApproximation
     /// <returns>Scalar if all dims integrated, otherwise a lower-dimensional interpolant.</returns>
     public object Integrate(int[]? dims = null, (double lo, double hi)[]? bounds = null)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
         if (dims == null)
@@ -1345,18 +1417,18 @@ public class ChebyshevApproximation
                 throw new ArgumentException($"dim {d} out of range [0, {NumDimensions - 1}]");
         }
 
-        var perDimBounds = Calculus.NormalizeBounds(sortedDims, bounds, Domain);
+        var perDimBounds = Calculus.NormalizeBounds(sortedDims, bounds, _domain);
         var dimToIdx = new Dictionary<int, int>();
         for (int i = 0; i < sortedDims.Length; i++)
             dimToIdx[sortedDims[i]] = i;
 
-        double[] tensor = (double[])TensorValues.Clone();
-        int[] shape = (int[])NNodes.Clone();
-        var nodes = NodeArrays.ToList();
-        var wts = Weights!.ToList();
-        var diffMats = DiffMatrices!.ToList();
-        var domain = Domain.Select(d => (double[])d.Clone()).ToList();
-        var nNodes = NNodes.ToList();
+        double[] tensor = (double[])_tensorValues.Clone();
+        int[] shape = (int[])_nNodes.Clone();
+        var nodes = _nodeArrays.ToList();
+        var wts = _weights!.ToList();
+        var diffMats = _diffMatrices!.ToList();
+        var domain = _domain.Select(d => (double[])d.Clone()).ToList();
+        var nNodes = _nNodes.ToList();
 
         // Process dimensions in descending order
         foreach (int d in sortedDims.OrderByDescending(x => x))
@@ -1405,13 +1477,13 @@ public class ChebyshevApproximation
         {
             Function = null,
             NumDimensions = newNdim,
-            Domain = domain.ToArray(),
-            NNodes = nNodes.ToArray(),
+            _domain = domain.ToArray(),
+            _nNodes = nNodes.ToArray(),
             MaxDerivativeOrder = MaxDerivativeOrder,
-            NodeArrays = nodes.ToArray(),
-            Weights = wts.ToArray(),
-            DiffMatrices = diffMats.ToArray(),
-            TensorValues = tensor,
+            _nodeArrays = nodes.ToArray(),
+            _weights = wts.ToArray(),
+            _diffMatrices = diffMats.ToArray(),
+            _tensorValues = tensor,
             BuildTime = 0.0,
             NEvaluations = 0,
             _cachedErrorEstimate = null,
@@ -1426,13 +1498,13 @@ public class ChebyshevApproximation
     /// </summary>
     public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
-        var (targetDim, sliceParams) = Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+        var (targetDim, sliceParams) = Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, _domain);
 
         ChebyshevApproximation sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
-        return Calculus.Roots1D(sliced.TensorValues!, sliced.Domain[0]);
+        return Calculus.Roots1D(sliced._tensorValues!, sliced._domain[0]);
     }
 
     /// <summary>
@@ -1440,15 +1512,15 @@ public class ChebyshevApproximation
     /// </summary>
     public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
-        var (targetDim, sliceParams) = Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+        var (targetDim, sliceParams) = Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, _domain);
         ChebyshevApproximation sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
 
         return Calculus.Optimize1D(
-            sliced.TensorValues!, sliced.NodeArrays[0], sliced.Weights![0],
-            sliced.DiffMatrices![0], sliced.Domain[0], "min");
+            sliced._tensorValues!, sliced._nodeArrays[0], sliced._weights![0],
+            sliced._diffMatrices![0], sliced._domain[0], "min");
     }
 
     /// <summary>
@@ -1456,15 +1528,15 @@ public class ChebyshevApproximation
     /// </summary>
     public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
 
-        var (targetDim, sliceParams) = Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+        var (targetDim, sliceParams) = Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, _domain);
         ChebyshevApproximation sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
 
         return Calculus.Optimize1D(
-            sliced.TensorValues!, sliced.NodeArrays[0], sliced.Weights![0],
-            sliced.DiffMatrices![0], sliced.Domain[0], "max");
+            sliced._tensorValues!, sliced._nodeArrays[0], sliced._weights![0],
+            sliced._diffMatrices![0], sliced._domain[0], "max");
     }
 
     // ------------------------------------------------------------------
@@ -1477,9 +1549,9 @@ public class ChebyshevApproximation
         if (a.GetType() != b.GetType())
             throw new InvalidOperationException("Cannot combine different types");
         Algebra.CheckCompatible(a, b);
-        double[] newValues = new double[a.TensorValues!.Length];
+        double[] newValues = new double[a._tensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
-            newValues[i] = a.TensorValues[i] + b.TensorValues![i];
+            newValues[i] = a._tensorValues[i] + b._tensorValues![i];
         return FromGrid(a, newValues);
     }
 
@@ -1489,21 +1561,21 @@ public class ChebyshevApproximation
         if (a.GetType() != b.GetType())
             throw new InvalidOperationException("Cannot combine different types");
         Algebra.CheckCompatible(a, b);
-        double[] newValues = new double[a.TensorValues!.Length];
+        double[] newValues = new double[a._tensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
-            newValues[i] = a.TensorValues[i] - b.TensorValues![i];
+            newValues[i] = a._tensorValues[i] - b._tensorValues![i];
         return FromGrid(a, newValues);
     }
 
     /// <summary>Multiply interpolant by a scalar.</summary>
     public static ChebyshevApproximation operator *(ChebyshevApproximation a, double scalar)
     {
-        if (a.TensorValues == null)
+        if (a._tensorValues == null)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
 
-        double[] newValues = new double[a.TensorValues!.Length];
+        double[] newValues = new double[a._tensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
-            newValues[i] = a.TensorValues[i] * scalar;
+            newValues[i] = a._tensorValues[i] * scalar;
         return FromGrid(a, newValues);
     }
 
@@ -1532,21 +1604,21 @@ public class ChebyshevApproximation
     /// <inheritdoc/>
     public override string ToString()
     {
-        bool built = TensorValues != null;
-        long totalNodes = TensorShape.CheckedProduct(NNodes, nameof(ToString));
+        bool built = _tensorValues != null;
+        long totalNodes = TensorShape.CheckedProduct(_nNodes, nameof(ToString));
         string status = built ? "built" : "not built";
 
         int maxDisplay = 6;
         string nodesStr, domainStr;
         if (NumDimensions > maxDisplay)
         {
-            nodesStr = "[" + string.Join(", ", NNodes.Take(maxDisplay)) + ", ...]";
-            domainStr = string.Join(" x ", Domain.Take(maxDisplay).Select(d => $"[{d[0]}, {d[1]}]")) + " x ...";
+            nodesStr = "[" + string.Join(", ", _nNodes.Take(maxDisplay)) + ", ...]";
+            domainStr = string.Join(" x ", _domain.Take(maxDisplay).Select(d => $"[{d[0]}, {d[1]}]")) + " x ...";
         }
         else
         {
-            nodesStr = "[" + string.Join(", ", NNodes) + "]";
-            domainStr = string.Join(" x ", Domain.Select(d => $"[{d[0]}, {d[1]}]"));
+            nodesStr = "[" + string.Join(", ", _nNodes) + "]";
+            domainStr = string.Join(" x ", _domain.Select(d => $"[{d[0]}, {d[1]}]"));
         }
 
         var sb = new StringBuilder();
@@ -1569,8 +1641,8 @@ public class ChebyshevApproximation
     /// </summary>
     public string ToReprString()
     {
-        bool built = TensorValues != null;
-        return $"ChebyshevApproximation(dims={NumDimensions}, nodes=[{string.Join(", ", NNodes)}], built={built})";
+        bool built = _tensorValues != null;
+        return $"ChebyshevApproximation(dims={NumDimensions}, nodes=[{string.Join(", ", _nNodes)}], built={built})";
     }
 
     // ------------------------------------------------------------------
@@ -1630,16 +1702,16 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Pre-compute transposed diff matrices as flat arrays for BLAS GEMM.
-    /// Called after DiffMatrices is set in Build, FromValues, Load, Extrude, Slice, and Integrate.
+    /// Called after differentiation matrices are set in Build, FromValues, Load, Extrude, Slice, and Integrate.
     /// </summary>
     internal void PrecomputeTransposedDiffMatrices()
     {
-        if (DiffMatrices == null) return;
-        DiffMatricesTFlat = new double[DiffMatrices.Length][];
-        for (int d = 0; d < DiffMatrices.Length; d++)
+        if (_diffMatrices == null) return;
+        _diffMatricesTFlat = new double[_diffMatrices.Length][];
+        for (int d = 0; d < _diffMatrices.Length; d++)
         {
-            int rows = DiffMatrices[d].GetLength(0);
-            int cols = DiffMatrices[d].GetLength(1);
+            int rows = _diffMatrices[d].GetLength(0);
+            int cols = _diffMatrices[d].GetLength(1);
             // Transpose and flatten in one pass (row-major)
             int flatLength = TensorShape.RequireArrayLength(
                 TensorShape.CheckedProduct(new[] { rows, cols }, nameof(PrecomputeTransposedDiffMatrices)),
@@ -1648,8 +1720,8 @@ public class ChebyshevApproximation
             var flat = new double[flatLength];
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < cols; j++)
-                    flat[j * rows + i] = DiffMatrices[d][i, j];
-            DiffMatricesTFlat[d] = flat;
+                    flat[j * rows + i] = _diffMatrices[d][i, j];
+            _diffMatricesTFlat[d] = flat;
         }
     }
 
@@ -1738,7 +1810,7 @@ public class ChebyshevApproximation
     public string GetConstructorType() => _constructorType;
 
     /// <summary>Per-dimension Chebyshev node counts actually used. After auto-N construction, these are the resolved values.</summary>
-    public int[] GetUsedNs() => (int[])NNodes.Clone();
+    public int[] GetUsedNs() => (int[])_nNodes.Clone();
 
     /// <summary>Maximum derivative order this approximation supports.</summary>
     public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
@@ -1760,9 +1832,9 @@ public class ChebyshevApproximation
     public int GetNumEvaluationPoints()
     {
         return TensorShape.RequireArrayLength(
-            TensorShape.CheckedProduct(NNodes, nameof(GetNumEvaluationPoints)),
+            TensorShape.CheckedProduct(_nNodes, nameof(GetNumEvaluationPoints)),
             nameof(GetNumEvaluationPoints),
-            NNodes);
+            _nNodes);
     }
 
     /// <summary>
@@ -1788,12 +1860,12 @@ public class ChebyshevApproximation
             int rem = flat;
             for (int d = ndim - 1; d >= 0; d--)
             {
-                indices[d] = rem % NNodes[d];
-                rem /= NNodes[d];
+                indices[d] = rem % _nNodes[d];
+                rem /= _nNodes[d];
             }
             for (int d = 0; d < ndim; d++)
             {
-                points[flat * ndim + d] = NodeArrays[d][indices[d]];
+                points[flat * ndim + d] = _nodeArrays[d][indices[d]];
             }
         }
 
@@ -1819,41 +1891,41 @@ public class ChebyshevApproximation
     public void SetOriginalFunctionValues(double[] values)
     {
         ArgumentNullException.ThrowIfNull(values);
-        if (_isConstructionFinished || TensorValues != null)
+        if (_isConstructionFinished || _tensorValues != null)
             throw new InvalidOperationException(
                 "interpolant is already constructed; SetOriginalFunctionValues is for unconstructed deferred objects");
 
         int expected = TensorShape.RequireArrayLength(
-            TensorShape.CheckedProduct(NNodes, nameof(SetOriginalFunctionValues)),
+            TensorShape.CheckedProduct(_nNodes, nameof(SetOriginalFunctionValues)),
             nameof(SetOriginalFunctionValues),
-            NNodes);
+            _nNodes);
         if (values.Length != expected)
             throw new ArgumentException(
-                $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", NNodes)}]");
+                $"values has {values.Length} entries, expected {expected} for nNodes=[{string.Join(",", _nNodes)}]");
         for (int i = 0; i < values.Length; i++)
         {
             if (!double.IsFinite(values[i]))
                 throw new ArgumentException("values contains NaN or Inf", nameof(values));
         }
 
-        // Materialize NodeArrays now if deferred (NodeArrays is empty when deferBuild was true).
-        if (NodeArrays.Length == 0)
+        // Materialize node arrays now if deferred.
+        if (_nodeArrays.Length == 0)
         {
-            NodeArrays = new double[NumDimensions][];
+            _nodeArrays = new double[NumDimensions][];
             for (int d = 0; d < NumDimensions; d++)
-                NodeArrays[d] = BarycentricKernel.MakeNodesForDim(Domain[d][0], Domain[d][1], NNodes[d]);
+                _nodeArrays[d] = BarycentricKernel.MakeNodesForDim(_domain[d][0], _domain[d][1], _nNodes[d]);
         }
 
         // Mirror FromValues precomputation (bit-identical).
-        TensorValues = (double[])values.Clone();
+        _tensorValues = (double[])values.Clone();
 
-        Weights = new double[NumDimensions][];
+        _weights = new double[NumDimensions][];
         for (int d = 0; d < NumDimensions; d++)
-            Weights[d] = BarycentricKernel.ComputeBarycentricWeights(NodeArrays[d]);
+            _weights[d] = BarycentricKernel.ComputeBarycentricWeights(_nodeArrays[d]);
 
-        DiffMatrices = new double[NumDimensions][,];
+        _diffMatrices = new double[NumDimensions][,];
         for (int d = 0; d < NumDimensions; d++)
-            DiffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(NodeArrays[d], Weights[d]);
+            _diffMatrices[d] = BarycentricKernel.ComputeDifferentiationMatrix(_nodeArrays[d], _weights[d]);
 
         PrecomputeTransposedDiffMatrices();
 
@@ -1913,13 +1985,13 @@ public class ChebyshevApproximation
     {
         var copy = new ChebyshevApproximation();
         copy.NumDimensions = NumDimensions;
-        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
-        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
-        copy.NodeArrays = Internal.CloneHelpers.DeepCopy(NodeArrays)!;
-        copy.TensorValues = Internal.CloneHelpers.DeepCopy(TensorValues);
-        copy.Weights = Internal.CloneHelpers.DeepCopy(Weights);
-        copy.DiffMatrices = Internal.CloneHelpers.DeepCopy(DiffMatrices);
-        copy.DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(DiffMatricesTFlat);
+        copy.NNodes = Internal.CloneHelpers.DeepCopy(_nNodes)!;
+        copy.Domain = Internal.CloneHelpers.DeepCopy(_domain)!;
+        copy.NodeArrays = Internal.CloneHelpers.DeepCopy(_nodeArrays)!;
+        copy.TensorValues = Internal.CloneHelpers.DeepCopy(_tensorValues);
+        copy.Weights = Internal.CloneHelpers.DeepCopy(_weights);
+        copy.DiffMatrices = Internal.CloneHelpers.DeepCopy(_diffMatrices);
+        copy.DiffMatricesTFlat = Internal.CloneHelpers.DeepCopy(_diffMatricesTFlat);
         copy.MaxDerivativeOrder = MaxDerivativeOrder;
         copy.MaxN = MaxN;
         copy.ErrorThreshold = ErrorThreshold;
@@ -1954,11 +2026,11 @@ public class ChebyshevApproximation
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public SobolResult SobolIndices()
     {
-        if (TensorValues == null)
+        if (_tensorValues == null)
             throw new InvalidOperationException(
                 "SobolIndices requires a built ChebyshevApproximation. Call Build() first.");
-        var coeffs = Internal.Sensitivity.ChebyshevCoefficientsND(TensorValues, NNodes);
-        return Internal.Sensitivity.ComputeSobolFromCoeffs(coeffs, NNodes);
+        var coeffs = Internal.Sensitivity.ChebyshevCoefficientsND(_tensorValues, _nNodes);
+        return Internal.Sensitivity.ComputeSobolFromCoeffs(coeffs, _nNodes);
     }
 
     // ------------------------------------------------------------------

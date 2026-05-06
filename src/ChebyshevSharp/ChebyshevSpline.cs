@@ -1020,22 +1020,22 @@ public class ChebyshevSpline
             {
                 Function = null,
                 NumDimensions = ps.NumDimensions,
-                Domain = ps.Domain,
-                NNodes = ps.NNodes,
+                DomainStorage = ps.Domain,
+                NNodesStorage = ps.NNodes,
                 MaxDerivativeOrder = ps.MaxDerivativeOrder ?? 2,
-                NodeArrays = ps.NodeArrays,
-                TensorValues = ps.TensorValues,
-                Weights = ps.Weights,
+                NodeArraysStorage = ps.NodeArrays,
+                TensorValuesStorage = ps.TensorValues,
+                WeightsStorage = ps.Weights,
                 BuildTime = ps.BuildTime,
                 NEvaluations = ps.NEvaluations,
             };
 
             // Reconstruct diff matrices
-            piece.DiffMatrices = new double[ps.NumDimensions][,];
+            piece.DiffMatricesStorage = new double[ps.NumDimensions][,];
             for (int d = 0; d < ps.NumDimensions; d++)
             {
                 int n = ps.NNodes[d];
-                piece.DiffMatrices[d] = ChebyshevApproximation.Unflatten2D(ps.DiffMatrices[d], n, n);
+                piece.DiffMatricesStorage[d] = ChebyshevApproximation.Unflatten2D(ps.DiffMatrices[d], n, n);
             }
             piece.PrecomputeTransposedDiffMatrices();
             return piece;
