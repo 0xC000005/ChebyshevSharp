@@ -7,6 +7,14 @@ namespace ChebyshevSharp.Internal;
 /// </summary>
 internal static class AdaptiveBuild
 {
+    internal static void ValidateErrorThreshold(double? errorThreshold)
+    {
+        if (errorThreshold is { } value && (!double.IsFinite(value) || value <= 0.0))
+            throw new ArgumentException(
+                "errorThreshold must be finite and > 0.",
+                nameof(errorThreshold));
+    }
+
     /// <summary>
     /// Run the doubling loop on an approximation that has at least one null
     /// entry in OriginalNNodes. On return, the approximation is fully built

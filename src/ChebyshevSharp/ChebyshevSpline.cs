@@ -141,7 +141,7 @@ public class ChebyshevSpline
     /// <param name="domain">Bounds per dimension.</param>
     /// <param name="nNodes">Number of nodes per dimension; null entries signal auto-N. Pass null to make every dim auto-N (requires errorThreshold).</param>
     /// <param name="knots">Interior knots per dimension. Null defaults to empty arrays (single piece per dim).</param>
-    /// <param name="errorThreshold">Target supremum-norm error per piece. Required if any nNodes entry is null.</param>
+    /// <param name="errorThreshold">Finite positive target supremum-norm error per piece. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
@@ -169,6 +169,7 @@ public class ChebyshevSpline
         if (maxN < 3)
             throw new ArgumentException(
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}.");
+        AdaptiveBuild.ValidateErrorThreshold(errorThreshold);
 
         knots ??= Enumerable.Range(0, numDimensions).Select(_ => Array.Empty<double>()).ToArray();
 
@@ -807,7 +808,7 @@ public class ChebyshevSpline
     /// Mutually exclusive with <paramref name="errorThreshold"/>.</param>
     /// <param name="nNodes">Flat per-dim node counts (shared across pieces).
     /// Mutually exclusive with <paramref name="nNodesNested"/> and <paramref name="errorThreshold"/>.</param>
-    /// <param name="errorThreshold">Target error per piece.
+    /// <param name="errorThreshold">Finite positive target error per piece.
     /// Mutually exclusive with <paramref name="nNodes"/>/<paramref name="nNodesNested"/>.</param>
     /// <param name="maxN">Cap on doubling-loop nodes per dimension (default 64).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>

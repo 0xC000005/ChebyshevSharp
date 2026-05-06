@@ -7,6 +7,9 @@ dim each iteration until both the coefficient-tail estimate and an off-grid
 validation pass are at or below `errorThreshold` (or `maxN` is reached, in which
 case `BuildWarning` is set).
 
+`errorThreshold` must be finite and greater than zero. Use `maxN` to cap
+runtime, not `NaN`, infinity, zero, or a negative threshold.
+
 ## Quick Start
 
 ```csharp

@@ -141,7 +141,7 @@ public class ChebyshevApproximation
     /// <param name="numDimensions">Number of input dimensions.</param>
     /// <param name="domain">Bounds for each dimension as double[ndim][2].</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension; null entries signal auto-N for that dim. Pass null to make every dim auto-N (requires errorThreshold).</param>
-    /// <param name="errorThreshold">Target supremum-norm error. Required if any nNodes entry is null.</param>
+    /// <param name="errorThreshold">Finite positive target supremum-norm error. Required if any nNodes entry is null.</param>
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
@@ -169,6 +169,7 @@ public class ChebyshevApproximation
             throw new ArgumentException(
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}. " +
                 "For a grid smaller than 3 per dimension, pass nNodes explicitly.");
+        AdaptiveBuild.ValidateErrorThreshold(errorThreshold);
 
         ValidateDomainArguments(nameof(ChebyshevApproximation), numDimensions, domain);
 
@@ -734,7 +735,7 @@ public class ChebyshevApproximation
     /// </summary>
     /// <param name="function">Function to approximate; signature f(point[1], data) -&gt; double.</param>
     /// <param name="domain">(lo, hi) bounds for the single dimension.</param>
-    /// <param name="errorThreshold">Target supremum-norm error.</param>
+    /// <param name="errorThreshold">Finite positive target supremum-norm error.</param>
     /// <param name="maxN">Cap on the returned N. Default 64. If the doubling loop cannot achieve <paramref name="errorThreshold"/> within this cap, returns <paramref name="maxN"/> with BuildWarning set on the temporary internal interpolant.</param>
     /// <returns>Resolved N on the single dimension.</returns>
     public static int GetOptimalN1(
