@@ -672,6 +672,20 @@ public class TestSplineArithmetic
     }
 
     [Fact]
+    public void Spline_UnbuiltScalarOperatorsRaiseInvalidOperation()
+    {
+        var spline = new ChebyshevSpline(
+            (x, _) => Math.Abs(x[0]), 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 15 },
+            new[] { new[] { 0.0 } });
+
+        Assert.Throws<InvalidOperationException>(() => { var _ = spline * 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = 2.0 * spline; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = spline / 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = -spline; });
+    }
+
+    [Fact]
     public void Spline_Isub()
     {
         var c = 1.0 * SF;
