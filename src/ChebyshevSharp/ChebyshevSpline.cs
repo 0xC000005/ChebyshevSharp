@@ -1749,6 +1749,9 @@ public class ChebyshevSpline
     /// <summary>Multiply spline by a scalar.</summary>
     public static ChebyshevSpline operator *(ChebyshevSpline a, double scalar)
     {
+        if (!a.Built)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+
         var pieces = new ChebyshevApproximation?[a.Pieces.Length];
         for (int i = 0; i < pieces.Length; i++)
         {
