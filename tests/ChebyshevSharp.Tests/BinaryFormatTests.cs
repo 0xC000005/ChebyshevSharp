@@ -829,6 +829,42 @@ public class PcbFormatDefensiveTests
         Assert.Contains("int.MaxValue", ex.Message);
     }
 
+    [Fact]
+    public void Test_read_approx_body_rejects_non_finite_domain()
+    {
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(double.NaN); w.Write(1.0);
+            w.Write((uint)1);
+            w.Write(0.0);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("finite", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_read_approx_body_rejects_non_finite_tensor_values()
+    {
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0); w.Write(1.0);
+            w.Write((uint)1);
+            w.Write(double.PositiveInfinity);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("finite", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     // --- WriteSplineBody argument validation ---
 
     [Fact]
@@ -964,6 +1000,90 @@ public class PcbFormatDefensiveTests
         PcbFormat.ReadHeader(r);
         var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
         Assert.Contains("num_pieces", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_non_finite_domain()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(double.NegativeInfinity); w.Write(1.0);
+            w.Write((uint)1);
+            w.Write((uint)0);
+            w.Write((uint)1);
+            w.Write(0.0);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("finite", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_non_finite_knots()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0); w.Write(1.0);
+            w.Write((uint)1);
+            w.Write((uint)1);
+            w.Write(double.NaN);
+            w.Write((uint)2);
+            w.Write(0.0);
+            w.Write(0.0);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("finite", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_out_of_domain_knots()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0); w.Write(1.0);
+            w.Write((uint)1);
+            w.Write((uint)1);
+            w.Write(2.0);
+            w.Write((uint)2);
+            w.Write(0.0);
+            w.Write(0.0);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("domain", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_non_finite_piece_tensor_values()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0); w.Write(1.0);
+            w.Write((uint)1);
+            w.Write((uint)0);
+            w.Write((uint)1);
+            w.Write(double.NaN);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("finite", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
