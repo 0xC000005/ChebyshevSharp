@@ -6,6 +6,9 @@ each dimension you want auto-sized; the build doubles the worst-contributing
 dim each iteration until `ErrorEstimate() <= errorThreshold` (or `maxN` is
 reached, in which case `BuildWarning` is set).
 
+`errorThreshold` must be finite and greater than zero. Use `maxN` to cap
+runtime, not `NaN`, infinity, zero, or a negative threshold.
+
 ## Quick Start
 
 ```csharp
