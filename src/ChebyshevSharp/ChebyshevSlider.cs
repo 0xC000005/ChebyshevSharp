@@ -259,6 +259,8 @@ public class ChebyshevSlider
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         bool isDerivative = false;
         for (int i = 0; i < derivativeOrder.Length; i++)
@@ -330,6 +332,8 @@ public class ChebyshevSlider
     /// <returns>Results for each derivative order.</returns>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
+        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         var results = new double[derivativeOrders.Length];
         for (int i = 0; i < derivativeOrders.Length; i++)
             results[i] = Eval(point, derivativeOrders[i]);
@@ -1407,6 +1411,7 @@ public class ChebyshevSlider
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;
