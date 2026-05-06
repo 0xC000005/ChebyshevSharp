@@ -2032,9 +2032,16 @@ public class ChebyshevSpline
     /// Values are concatenated in flat piece-index C-order: piece 0 values first, then piece 1, etc.
     /// </summary>
     /// <param name="values">Flat array concatenating all pieces' values in piece-flat-index order.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="values"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when values length does not match the expected total across all pieces.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the spline is already constructed.</exception>
     public void SetOriginalFunctionValues(double[] values)
     {
+        ArgumentNullException.ThrowIfNull(values);
+        if (Built || Pieces.Any(p => p?.TensorValues != null))
+            throw new InvalidOperationException(
+                "spline is already constructed; SetOriginalFunctionValues is for unconstructed deferred objects");
+
         int totalPieces = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(Shape, nameof(SetOriginalFunctionValues)),
             nameof(SetOriginalFunctionValues),
@@ -2057,8 +2064,13 @@ public class ChebyshevSpline
         if (values.Length != requiredValues)
             throw new ArgumentException(
                 $"values has {values.Length} entries, expected {requiredValues} across all pieces");
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw new ArgumentException("values contains NaN or Inf", nameof(values));
+        }
 
-        Pieces = new ChebyshevApproximation?[totalPieces];
+        var pieces = new ChebyshevApproximation?[totalPieces];
         int offset = 0;
         for (int p = 0; p < totalPieces; p++)
         {
@@ -2067,7 +2079,7 @@ public class ChebyshevSpline
             Array.Copy(values, offset, pieceValues, 0, sz);
             offset += sz;
             var (pieceDomain, pieceNNodes) = ComputePieceDomainAndN(p);
-            Pieces[p] = ChebyshevApproximation.FromValues(
+            pieces[p] = ChebyshevApproximation.FromValues(
                 pieceValues,
                 NumDimensions,
                 pieceDomain,
@@ -2075,8 +2087,10 @@ public class ChebyshevSpline
                 MaxDerivativeOrder);
         }
 
+        Pieces = pieces;
         Built = true;
         _evaluationPointsCache = null;
+        _cachedErrorEstimate = null;
         _constructorType = "from_values";
     }
 
