@@ -514,16 +514,12 @@ public class ChebyshevSpline
 
         for (int d = 0; d < NumDimensions; d++)
         {
-            if (derivativeOrder[d] > 0)
+            for (int k = 0; k < Knots[d].Length; k++)
             {
-                for (int k = 0; k < Knots[d].Length; k++)
-                {
-                    if (Math.Abs(point[d] - Knots[d][k]) < 1e-14)
-                        throw new ArgumentException(
-                            $"Derivative w.r.t. dimension {d} is not defined " +
-                            $"at knot x[{d}]={Knots[d][k]}. The left and right " +
-                            $"derivatives may differ at this point.");
-                }
+                if (Math.Abs(point[d] - Knots[d][k]) < 1e-14)
+                    throw new ArgumentException(
+                        $"Requested derivative is not defined at knot x[{d}]={Knots[d][k]}. " +
+                        "The adjacent polynomial pieces may have different derivative values at this point.");
             }
         }
     }

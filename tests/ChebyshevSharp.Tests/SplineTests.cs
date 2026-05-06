@@ -760,6 +760,19 @@ public class TestSplineVsGlobal
 /// </summary>
 public class TestSplineBatchEvalDerivatives
 {
+    private static ChebyshevSpline BuildCrossBoundaryDerivativeSpline()
+    {
+        static double F(double[] p, object? _) => p[0] * (p[1] < 0.0 ? -1.0 : 1.0);
+        var sp = new ChebyshevSpline(
+            F,
+            2,
+            [[-1.0, 1.0], [-1.0, 1.0]],
+            [9, 9],
+            [[], [0.0]]);
+        sp.Build(verbose: false);
+        return sp;
+    }
+
     [Fact]
     public void BatchWithFirstDerivative()
     {
@@ -811,6 +824,36 @@ public class TestSplineBatchEvalDerivatives
 
         var ex = Assert.Throws<ArgumentException>(() =>
             sp.EvalBatch([[0.0], [0.5]], [1]));
+        Assert.Contains("not defined", ex.Message);
+    }
+
+    [Fact]
+    public void DerivativeAtKnotInAnyDimension_Raises()
+    {
+        var sp = BuildCrossBoundaryDerivativeSpline();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.Eval([0.4, 0.0], [1, 0]));
+        Assert.Contains("not defined", ex.Message);
+    }
+
+    [Fact]
+    public void EvalMultiDerivativeAtKnotInAnyDimension_Raises()
+    {
+        var sp = BuildCrossBoundaryDerivativeSpline();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.EvalMulti([0.4, 0.0], [[0, 0], [1, 0]]));
+        Assert.Contains("not defined", ex.Message);
+    }
+
+    [Fact]
+    public void BatchDerivativeAtKnotInAnyDimension_Raises()
+    {
+        var sp = BuildCrossBoundaryDerivativeSpline();
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            sp.EvalBatch([[0.4, 0.0], [0.5, 0.25]], [1, 0]));
         Assert.Contains("not defined", ex.Message);
     }
 }
