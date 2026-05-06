@@ -883,6 +883,129 @@ public class TestSerializationEdgeCases
         }
     }
 
+    [Fact]
+    public void Test_load_json_with_null_domain_entry_throws_invalid_data()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[null]"));
+    }
+
+    [Fact]
+    public void Test_load_json_with_wrong_tensor_length_throws_invalid_data()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(tensorValues: "[1.0]"));
+    }
+
+    [Fact]
+    public void Test_load_json_rejects_malformed_dimensions_and_metadata()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(
+            numDimensions: "0",
+            domain: "[]",
+            nNodes: "[]",
+            nodeArrays: "[]",
+            tensorValues: "[]",
+            weights: "[]",
+            diffMatrices: "[]"));
+
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[[-1.0]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[[1e999, 1.0]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(domain: "[[1.0, -1.0]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(
+            nNodes: "[0]",
+            nodeArrays: "[[]]",
+            tensorValues: "[]",
+            weights: "[[]]",
+            diffMatrices: "[[]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(nodeArrays: "null"));
+        AssertMalformedApproxJson(MinimalApproxJson(originalNNodes: "[0]"));
+        AssertMalformedApproxJson(MinimalApproxJson(specialPoints: "[null]"));
+    }
+
+    [Fact]
+    public void Test_load_json_accepts_valid_optional_metadata()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, MinimalApproxJson(
+                originalNNodes: "[null]",
+                specialPoints: "[[0.0]]",
+                registeredDerivativeOrders: "[[0]]"));
+
+            var loaded = ChebyshevApproximation.Load(path);
+
+            Assert.Equal(0, loaded.GetDerivativeId([0]));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void Test_load_json_with_nonfinite_optional_values_throws_invalid_data()
+    {
+        AssertMalformedApproxJson(MinimalApproxJson(specialPoints: "[[1e999]]"));
+    }
+
+    [Fact]
+    public void Test_load_json_with_overflowing_matrix_size_throws_invalid_data()
+    {
+        string values = string.Join(",", Enumerable.Repeat("0.0", 50_000));
+        AssertMalformedApproxJson(MinimalApproxJson(
+            nNodes: "[50000]",
+            nodeArrays: $"[[{values}]]",
+            tensorValues: "[1.0]",
+            weights: $"[[{values}]]",
+            diffMatrices: "[[]]"));
+    }
+
+    private static string MinimalApproxJson(
+        string numDimensions = "1",
+        string domain = "[[-1.0, 1.0]]",
+        string nNodes = "[2]",
+        string nodeArrays = "[[-0.5, 0.5]]",
+        string tensorValues = "[1.0, 2.0]",
+        string weights = "[[-1.0, 1.0]]",
+        string diffMatrices = "[[0.0, 0.0, 0.0, 0.0]]",
+        string? originalNNodes = null,
+        string? specialPoints = null,
+        string? registeredDerivativeOrders = null)
+    {
+        return $$"""
+        {
+          "NumDimensions": {{numDimensions}},
+          "Domain": {{domain}},
+          "NNodes": {{nNodes}},
+          "MaxDerivativeOrder": 2,
+          "NodeArrays": {{nodeArrays}},
+          "TensorValues": {{tensorValues}},
+          "Weights": {{weights}},
+          "DiffMatrices": {{diffMatrices}}{{OptionalJsonProperty("OriginalNNodes", originalNNodes)}}{{OptionalJsonProperty("SpecialPoints", specialPoints)}}{{OptionalJsonProperty("RegisteredDerivativeOrders", registeredDerivativeOrders)}}
+        }
+        """;
+    }
+
+    private static string OptionalJsonProperty(string name, string? value)
+    {
+        return value == null ? "" : $",\n  \"{name}\": {value}";
+    }
+
+    private static void AssertMalformedApproxJson(string json)
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, json);
+            Assert.Throws<InvalidDataException>(() =>
+                ChebyshevApproximation.Load(path));
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
     /// <summary>
     /// Save, load, then eval at 10 test points — results must be bit-identical
     /// (exactly equal, not just close) since all data is round-tripped through JSON.
