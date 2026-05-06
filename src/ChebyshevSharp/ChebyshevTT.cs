@@ -130,17 +130,13 @@ public class ChebyshevTT
         int? nWorkers = null,
         IProgress<int>? progress = null)
     {
-        if (domain.Length != numDimensions)
-            throw new ArgumentException(
-                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
-        if (nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateFixedGridArguments(numDimensions, domain, nNodes);
 
         _function = function;
         _numDimensions = numDimensions;
-        _domain = domain;
-        _nNodes = nNodes;
+        _domain = CloneDomain(domain);
+        _nNodes = (int[])nNodes.Clone();
         _maxRank = maxRank;
         _tolerance = tolerance;
         _maxSweeps = maxSweeps;
@@ -179,6 +175,42 @@ public class ChebyshevTT
         _maxDerivativeOrder = maxDerivativeOrder;
         _built = true;
         _dimOrder = Enumerable.Range(0, numDimensions).ToArray();  // overwritten by Load's v2 deserialization
+    }
+
+    private static void ValidateFixedGridArguments(int numDimensions, double[][] domain, int[] nNodes)
+    {
+        ArgumentNullException.ThrowIfNull(domain);
+        ArgumentNullException.ThrowIfNull(nNodes);
+
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"domain has {domain.Length} entries but numDimensions={numDimensions}", nameof(domain));
+        if (nNodes.Length != numDimensions)
+            throw new ArgumentException(
+                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}", nameof(nNodes));
+
+        for (int d = 0; d < numDimensions; d++)
+        {
+            if (domain[d] is null)
+                throw new ArgumentException($"domain[{d}] must not be null.", nameof(domain));
+            if (domain[d].Length != 2)
+                throw new ArgumentException($"domain[{d}] must contain exactly two bounds [lo, hi].", nameof(domain));
+
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            if (!double.IsFinite(lo) || !double.IsFinite(hi) || lo >= hi)
+                throw new ArgumentException(
+                    $"domain[{d}] must contain finite bounds with lo < hi; got [{lo}, {hi}].",
+                    nameof(domain));
+
+            if (nNodes[d] <= 0)
+                throw new ArgumentException($"nNodes[{d}] must be positive; got {nNodes[d]}.", nameof(nNodes));
+        }
+    }
+
+    private static double[][] CloneDomain(double[][] domain)
+    {
+        return domain.Select(d => (double[])d.Clone()).ToArray();
     }
 
     // ------------------------------------------------------------------
@@ -1294,12 +1326,7 @@ public class ChebyshevTT
     public static (double[][] NodesPerDim, int[] Shape) Nodes(
         int numDimensions, double[][] domain, int[] nNodes)
     {
-        if (domain.Length != numDimensions)
-            throw new ArgumentException(
-                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
-        if (nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ValidateFixedGridArguments(numDimensions, domain, nNodes);
 
         var nodesPerDim = new double[numDimensions][];
         for (int d = 0; d < numDimensions; d++)
@@ -1326,12 +1353,9 @@ public class ChebyshevTT
         int maxRank = 10,
         double tolerance = 1e-6)
     {
-        if (domain.Length != numDimensions)
-            throw new ArgumentException(
-                $"domain has {domain.Length} entries but numDimensions={numDimensions}");
-        if (nNodes.Length != numDimensions)
-            throw new ArgumentException(
-                $"nNodes has {nNodes.Length} entries but numDimensions={numDimensions}");
+        ArgumentNullException.ThrowIfNull(tensorValues);
+        ValidateFixedGridArguments(numDimensions, domain, nNodes);
+
         long expected = TensorShape.CheckedProduct(nNodes, nameof(FromValues));
         if (tensorValues.LongLength != expected)
             throw new ArgumentException(
@@ -1349,7 +1373,7 @@ public class ChebyshevTT
 
         var tt = new ChebyshevTT(
             numDimensions: numDimensions,
-            domain: domain.Select(d => (double[])d.Clone()).ToArray(),
+            domain: CloneDomain(domain),
             nNodes: (int[])nNodes.Clone(),
             maxRank: maxRank,
             tolerance: tolerance,
