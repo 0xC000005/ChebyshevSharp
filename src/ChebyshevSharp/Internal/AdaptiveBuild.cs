@@ -59,20 +59,40 @@ internal static class AdaptiveBuild
                 Console.WriteLine($"[auto-N] nNodes=[{string.Join(", ", current)}], error={err:e3}");
 
             if (err <= threshold)
-                break;
+            {
+                var validationSw = System.Diagnostics.Stopwatch.StartNew();
+                var validation = ValidationErrorPerAutoDim(approx, current, autoDims);
+                validationSw.Stop();
+                totalEvals += validation.Evaluations;
+                totalBuildTime += validationSw.Elapsed.TotalSeconds;
+
+                double[] validationPerDim = validation.PerDim;
+                double validationErr = validationPerDim.Length == 0 ? 0.0 : validationPerDim.Max();
+                double combinedErr = Math.Max(err, validationErr);
+                approx.SetCachedErrorEstimate(combinedErr);
+
+                if (verbose && validationPerDim.Length > 0)
+                    Console.WriteLine($"[auto-N] validation error={validationErr:e3}");
+
+                if (combinedErr <= threshold)
+                    break;
+
+                int validationWorstDim = PickWorstGrowableDim(validationPerDim, autoDims, current, maxN);
+                if (validationWorstDim < 0)
+                {
+                    approx.BuildWarning =
+                        $"maxN={maxN} reached on all auto dims before errorThreshold={threshold:e2} satisfied " +
+                        $"(last coefficient error={err:e3}, validation error={validationErr:e3}). " +
+                        "Increase maxN or relax errorThreshold.";
+                    break;
+                }
+
+                current[validationWorstDim] = Math.Min(2 * current[validationWorstDim], maxN);
+                continue;
+            }
 
             // Pick the worst auto-dim not at maxN. Tie: lowest index first.
-            int worstDim = -1;
-            double worstErr = -1.0;
-            foreach (int d in autoDims)
-            {
-                if (current[d] >= maxN) continue;
-                if (perDim[d] > worstErr)
-                {
-                    worstErr = perDim[d];
-                    worstDim = d;
-                }
-            }
+            int worstDim = PickWorstGrowableDim(perDim, autoDims, current, maxN);
 
             if (worstDim < 0)
             {
@@ -87,5 +107,73 @@ internal static class AdaptiveBuild
 
         approx.NEvaluations = totalEvals;
         approx.BuildTime = totalBuildTime;
+    }
+
+    private static int PickWorstGrowableDim(double[] perDim, int[] autoDims, int[] current, int maxN)
+    {
+        int worstDim = -1;
+        double worstErr = -1.0;
+        foreach (int d in autoDims)
+        {
+            if (current[d] >= maxN) continue;
+            if (perDim[d] > worstErr)
+            {
+                worstErr = perDim[d];
+                worstDim = d;
+            }
+        }
+        return worstDim;
+    }
+
+    private static (double[] PerDim, int Evaluations) ValidationErrorPerAutoDim(
+        ChebyshevApproximation approx, int[] current, int[] autoDims)
+    {
+        var perDim = new double[approx.NumDimensions];
+        if (approx.Function == null)
+            return (perDim, 0);
+
+        var derivativeOrder = new int[approx.NumDimensions];
+        int evaluations = 0;
+
+        foreach (int dim in autoDims)
+        {
+            int probeN = current[dim] < approx.MaxN
+                ? Math.Min(2 * current[dim], approx.MaxN)
+                : current[dim];
+
+            var validationShape = (int[])current.Clone();
+            validationShape[dim] = probeN;
+            int total = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(validationShape, nameof(ValidationErrorPerAutoDim)),
+                nameof(ValidationErrorPerAutoDim),
+                validationShape);
+
+            double[] probeNodes = BarycentricKernel.MakeNodesForDim(
+                approx.Domain[dim][0], approx.Domain[dim][1], probeN);
+
+            double maxErr = 0.0;
+            for (int flat = 0; flat < total; flat++)
+            {
+                var point = new double[approx.NumDimensions];
+                int rem = flat;
+                for (int d = approx.NumDimensions - 1; d >= 0; d--)
+                {
+                    int idx = rem % validationShape[d];
+                    rem /= validationShape[d];
+                    point[d] = d == dim ? probeNodes[idx] : approx.NodeArrays[d][idx];
+                }
+
+                double expected = approx.Function(point, approx.AdditionalData);
+                evaluations++;
+                double actual = approx.VectorizedEval(point, derivativeOrder);
+                double diff = Math.Abs(expected - actual);
+                if (diff > maxErr)
+                    maxErr = diff;
+            }
+
+            perDim[dim] = maxErr;
+        }
+
+        return (perDim, evaluations);
     }
 }
