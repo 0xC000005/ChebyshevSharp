@@ -39,27 +39,31 @@ internal static class Algebra
                 $"Cannot combine {a.GetType().Name} with {b.GetType().Name}; " +
                 "operands must be the same type.");
 
-        if (a.TensorValues == null)
+        if (a.TensorValuesStorage == null)
             throw new InvalidOperationException("Left operand is not built. Call Build() first.");
-        if (b.TensorValues == null)
+        if (b.TensorValuesStorage == null)
             throw new InvalidOperationException("Right operand is not built. Call Build() first.");
 
         if (a.NumDimensions != b.NumDimensions)
             throw new ArgumentException(
                 $"Dimension mismatch: {a.NumDimensions} vs {b.NumDimensions}");
 
-        if (!a.NNodes.SequenceEqual(b.NNodes))
+        int[] aNNodes = a.NNodesStorage;
+        int[] bNNodes = b.NNodesStorage;
+        if (!aNNodes.SequenceEqual(bNNodes))
             throw new ArgumentException(
-                $"Node count mismatch: [{string.Join(", ", a.NNodes)}] vs [{string.Join(", ", b.NNodes)}]");
+                $"Node count mismatch: [{string.Join(", ", aNNodes)}] vs [{string.Join(", ", bNNodes)}]");
 
         // v0.21.1: numerical comparison on Domain[d] (was SequenceEqual = exact).
         // Tolerates sub-ULP drift between equivalent allocations.
+        double[][] aDomain = a.DomainStorage;
+        double[][] bDomain = b.DomainStorage;
         for (int d = 0; d < a.NumDimensions; d++)
         {
-            if (!DoublesAllClose(a.Domain[d], b.Domain[d]))
+            if (!DoublesAllClose(aDomain[d], bDomain[d]))
                 throw new ArgumentException(
                     $"Domain mismatch at dim {d}: " +
-                    $"[{a.Domain[d][0]}, {a.Domain[d][1]}] vs [{b.Domain[d][0]}, {b.Domain[d][1]}]");
+                    $"[{aDomain[d][0]}, {aDomain[d][1]}] vs [{bDomain[d][0]}, {bDomain[d][1]}]");
         }
 
         if (a.MaxDerivativeOrder != b.MaxDerivativeOrder)

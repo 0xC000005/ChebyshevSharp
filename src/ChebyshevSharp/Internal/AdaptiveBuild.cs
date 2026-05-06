@@ -48,11 +48,11 @@ internal static class AdaptiveBuild
         while (true)
         {
             // Apply current grid
-            approx.NNodes = (int[])current.Clone();
-            approx.NodeArrays = new double[numDim][];
+            approx.NNodesStorage = (int[])current.Clone();
+            approx.NodeArraysStorage = new double[numDim][];
             for (int d = 0; d < numDim; d++)
-                approx.NodeArrays[d] = BarycentricKernel.MakeNodesForDim(
-                    approx.Domain[d][0], approx.Domain[d][1], current[d]);
+                approx.NodeArraysStorage[d] = BarycentricKernel.MakeNodesForDim(
+                    approx.DomainStorage[d][0], approx.DomainStorage[d][1], current[d]);
 
             approx.BuildFixedGrid(verbose: false);
             totalEvals += approx.NEvaluations;
@@ -149,7 +149,7 @@ internal static class AdaptiveBuild
                 validationShape);
 
             double[] probeNodes = BarycentricKernel.MakeNodesForDim(
-                approx.Domain[dim][0], approx.Domain[dim][1], probeN);
+                approx.DomainStorage[dim][0], approx.DomainStorage[dim][1], probeN);
 
             double maxErr = 0.0;
             for (int flat = 0; flat < total; flat++)
@@ -160,7 +160,7 @@ internal static class AdaptiveBuild
                 {
                     int idx = rem % validationShape[d];
                     rem /= validationShape[d];
-                    point[d] = d == dim ? probeNodes[idx] : approx.NodeArrays[d][idx];
+                    point[d] = d == dim ? probeNodes[idx] : approx.NodeArraysStorage[d][idx];
                 }
 
                 double expected = function(point, approx.AdditionalData);
