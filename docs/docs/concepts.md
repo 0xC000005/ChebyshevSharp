@@ -67,6 +67,8 @@ where the barycentric weights $w_i = 1 / \prod_{j \neq i}(x_i - x_j)$ depend **o
 
 When the evaluation point $x$ coincides with a node $x_j$ (within floating-point tolerance), the formula reduces to $p(x) = f_j$ without division by zero -- ChebyshevSharp handles this case explicitly.
 
+ChebyshevSharp evaluation APIs use a strict domain policy: every finite query coordinate must lie inside the interpolant's declared domain, including endpoints. Points outside the domain are rejected instead of extrapolated, because barycentric interpolation outside the interval has different numerical stability behavior than interpolation on the sampled interval.
+
 The evaluation cost is $O(n)$ per dimension per query point, dominated by the weighted sum.
 
 ## Multi-Dimensional Extension

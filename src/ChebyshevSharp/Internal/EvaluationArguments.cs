@@ -17,6 +17,28 @@ internal static class EvaluationArguments
         }
     }
 
+    internal static void ValidatePointInDomain(
+        double[] point,
+        int numDimensions,
+        double[][] domain,
+        string paramName = "point")
+    {
+        ValidatePoint(point, numDimensions, paramName);
+        ValidateDomain(domain, numDimensions, nameof(domain));
+
+        for (int d = 0; d < point.Length; d++)
+        {
+            double lo = domain[d][0];
+            double hi = domain[d][1];
+            double value = point[d];
+            if (value < lo || value > hi)
+                throw new ArgumentOutOfRangeException(
+                    paramName,
+                    value,
+                    $"{paramName}[{d}]={value} must be within domain[{d}]=[{lo}, {hi}]");
+        }
+    }
+
     internal static void ValidatePoints(double[][] points, int numDimensions, string paramName = "points")
     {
         ArgumentNullException.ThrowIfNull(points, paramName);
@@ -25,6 +47,22 @@ internal static class EvaluationArguments
             if (points[i] is null)
                 throw new ArgumentException($"{paramName}[{i}] must not be null", paramName);
             ValidatePoint(points[i], numDimensions, $"{paramName}[{i}]");
+        }
+    }
+
+    internal static void ValidatePointsInDomain(
+        double[][] points,
+        int numDimensions,
+        double[][] domain,
+        string paramName = "points")
+    {
+        ArgumentNullException.ThrowIfNull(points, paramName);
+        ValidateDomain(domain, numDimensions, nameof(domain));
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (points[i] is null)
+                throw new ArgumentException($"{paramName}[{i}] must not be null", paramName);
+            ValidatePointInDomain(points[i], numDimensions, domain, $"{paramName}[{i}]");
         }
     }
 
@@ -43,6 +81,32 @@ internal static class EvaluationArguments
             {
                 if (!double.IsFinite(points[i, d]))
                     throw new ArgumentException($"{paramName}[{i},{d}] must be finite", paramName);
+            }
+        }
+    }
+
+    internal static void ValidatePointBatchInDomain(
+        double[,] points,
+        int numDimensions,
+        double[][] domain,
+        string paramName = "points")
+    {
+        ValidatePointBatch(points, numDimensions, paramName);
+        ValidateDomain(domain, numDimensions, nameof(domain));
+
+        int rows = points.GetLength(0);
+        for (int i = 0; i < rows; i++)
+        {
+            for (int d = 0; d < numDimensions; d++)
+            {
+                double lo = domain[d][0];
+                double hi = domain[d][1];
+                double value = points[i, d];
+                if (value < lo || value > hi)
+                    throw new ArgumentOutOfRangeException(
+                        paramName,
+                        value,
+                        $"{paramName}[{i},{d}]={value} must be within domain[{d}]=[{lo}, {hi}]");
             }
         }
     }
@@ -80,6 +144,23 @@ internal static class EvaluationArguments
             if (derivativeOrders[i] is null)
                 throw new ArgumentException($"{paramName}[{i}] must not be null", paramName);
             ValidateDerivativeOrder(derivativeOrders[i], numDimensions, $"{paramName}[{i}]");
+        }
+    }
+
+    private static void ValidateDomain(double[][] domain, int numDimensions, string paramName)
+    {
+        ArgumentNullException.ThrowIfNull(domain, paramName);
+        if (domain.Length != numDimensions)
+            throw new ArgumentException(
+                $"{paramName} length {domain.Length} must equal numDimensions={numDimensions}",
+                paramName);
+
+        for (int d = 0; d < domain.Length; d++)
+        {
+            if (domain[d] is null)
+                throw new ArgumentException($"{paramName}[{d}] must not be null", paramName);
+            if (domain[d].Length != 2)
+                throw new ArgumentException($"{paramName}[{d}] must contain [lo, hi]", paramName);
         }
     }
 }

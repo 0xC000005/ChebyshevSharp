@@ -398,13 +398,13 @@ public class ChebyshevTT
     /// Evaluate at a single point via TT inner product with Chebyshev polynomial basis.
     /// Cost: O(d * n * r^2) per point.
     /// </summary>
-    /// <param name="point">Query point, one coordinate per dimension.</param>
+    /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <returns>Interpolated value.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public double Eval(double[] point)
     {
         CheckBuilt();
-        EvaluationArguments.ValidatePoint(point, _numDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, _numDimensions, UserFrameDomain());
         // Remap user coordinates to internal TT storage order when a non-identity
         // dim_order was set by Reorder() or WithAutoOrder(). Identity order is a no-op.
         if (!IsIdentityDimOrder())
@@ -482,13 +482,13 @@ public class ChebyshevTT
     /// Evaluate at multiple points simultaneously.
     /// Vectorized TT inner product: 15-20x speedup over calling Eval in a loop.
     /// </summary>
-    /// <param name="points">Query points, shape (N, numDimensions).</param>
+    /// <param name="points">Query points inside the declared domain, shape (N, numDimensions).</param>
     /// <returns>Interpolated values, length N.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public double[] EvalBatch(double[,] points)
     {
         CheckBuilt();
-        EvaluationArguments.ValidatePointBatch(points, _numDimensions);
+        EvaluationArguments.ValidatePointBatchInDomain(points, _numDimensions, UserFrameDomain());
 
         // Remap columns from user's original dim order to internal storage order.
         if (!IsIdentityDimOrder())
@@ -581,7 +581,7 @@ public class ChebyshevTT
     /// <summary>
     /// Evaluate with finite-difference derivatives at a single point.
     /// </summary>
-    /// <param name="point">Evaluation point.</param>
+    /// <param name="point">Evaluation point inside the declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.
     /// Supports 0 (value), 1 (first), and 2 (second).</param>
     /// <returns>One result per derivative order specification.</returns>
@@ -589,7 +589,7 @@ public class ChebyshevTT
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
         CheckBuilt();
-        EvaluationArguments.ValidatePoint(point, _numDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, _numDimensions, UserFrameDomain());
         EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, _numDimensions);
 
         // v0.21.1: race-safe via EvalStorageFrame helper that always operates in

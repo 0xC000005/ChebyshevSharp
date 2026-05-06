@@ -327,14 +327,14 @@ public class ChebyshevApproximation
     /// Evaluate using dimensional decomposition with barycentric interpolation.
     /// Loop-based implementation matching Python eval().
     /// </summary>
-    /// <param name="point">Query point, one coordinate per dimension.</param>
+    /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Interpolated value or derivative at the query point.</returns>
     public double Eval(double[] point, int[] derivativeOrder)
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Current working data and its shape
@@ -402,14 +402,14 @@ public class ChebyshevApproximation
     /// Evaluate the function value (no derivatives) at the given point.
     /// Convenience overload equivalent to <c>Eval(point, new int[NumDimensions])</c>.
     /// </summary>
-    /// <param name="point">Query point, one coordinate per dimension.</param>
+    /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <returns>Interpolated value at the query point.</returns>
     public double Eval(double[] point)
     {
         if (TensorValues == null)
             throw new InvalidOperationException(
                 "Cannot evaluate an unbuilt interpolant. Call Build() or SetOriginalFunctionValues() first.");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         return Eval(point, new int[NumDimensions]);
     }
 
@@ -417,14 +417,14 @@ public class ChebyshevApproximation
     /// Fully vectorized evaluation using matrix operations.
     /// Replaces the Python loop with BLAS-style matrix-vector products.
     /// </summary>
-    /// <param name="point">Query point, one coordinate per dimension.</param>
+    /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Interpolated value or derivative.</returns>
     public double VectorizedEval(double[] point, int[] derivativeOrder)
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         double[] current = TensorValues;
@@ -497,14 +497,14 @@ public class ChebyshevApproximation
     /// Hoists derivative-matrix matmuls outside the per-point loop (they are
     /// point-independent), then does only barycentric reductions per point.
     /// </summary>
-    /// <param name="points">Points as double[N][numDimensions].</param>
+    /// <param name="points">Points inside the declared domain as double[N][numDimensions].</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Results array of length N.</returns>
     public double[] VectorizedEvalBatch(double[][] points, int[] derivativeOrder)
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePoints(points, NumDimensions);
+        EvaluationArguments.ValidatePointsInDomain(points, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         // Hoist: apply all derivative-matrix matmuls once — they are point-independent.
@@ -596,14 +596,14 @@ public class ChebyshevApproximation
     /// <summary>
     /// Evaluate multiple derivative orders at the same point, sharing barycentric weights.
     /// </summary>
-    /// <param name="point">Query point.</param>
+    /// <param name="point">Query point inside the declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.</param>
     /// <returns>One result per derivative order.</returns>
     public double[] VectorizedEvalMulti(double[] point, int[][] derivativeOrders)
     {
         if (TensorValues == null)
             throw new InvalidOperationException("Call Build() first");
-        EvaluationArguments.ValidatePoint(point, NumDimensions);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
         EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
 
         // Pre-compute dimension info (shared across all derivative orders)
