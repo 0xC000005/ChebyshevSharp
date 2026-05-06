@@ -735,6 +735,54 @@ public class TestBoundaryValidation
         double val = cheb.VectorizedEval([0.5], [0]);
         TestFixtures.AssertClose(42.0, val, rtol: 1e-10);
     }
+
+    [Fact]
+    public void Test_constructor_rejects_invalid_domain()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(f, 1, [new[] { 1.0, 1.0 }], [5]));
+        Assert.Contains("lo=", ex.Message);
+        Assert.Contains("strictly less than hi", ex.Message);
+    }
+
+    [Fact]
+    public void Test_constructor_rejects_non_positive_node_count()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(f, 1, [new[] { -1.0, 1.0 }], [0]));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Test_nullable_constructor_rejects_nnodes_length_mismatch()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(
+                f,
+                1,
+                [new[] { -1.0, 1.0 }],
+                nNodes: [5, 6]));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("numDimensions", ex.Message);
+    }
+
+    [Fact]
+    public void Test_nullable_constructor_rejects_non_positive_node_count()
+    {
+        static double f(double[] x, object? _) => x[0];
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevApproximation(
+                f,
+                1,
+                [new[] { -1.0, 1.0 }],
+                nNodes: [0]));
+        Assert.Contains("nNodes", ex.Message);
+        Assert.Contains("positive", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 // ---------------------------------------------------------------------------
