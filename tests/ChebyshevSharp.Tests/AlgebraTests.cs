@@ -1297,6 +1297,22 @@ public class TestSliderArithmeticCSharpEdgeCases
     }
 
     [Fact]
+    public void Test_slider_unbuilt_scalar_operators_raise_invalid_operation()
+    {
+        double F(double[] x, object? _) => Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]);
+        var slider = new ChebyshevSlider(F, 3,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 8, 8, 8 },
+            new[] { new[] { 0 }, new[] { 1 }, new[] { 2 } },
+            new[] { 0.0, 0.0, 0.0 });
+
+        Assert.Throws<InvalidOperationException>(() => { var _ = slider * 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = 2.0 * slider; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = slider / 2.0; });
+        Assert.Throws<InvalidOperationException>(() => { var _ = -slider; });
+    }
+
+    [Fact]
     public void Test_slider_add_subtract_roundtrip()
     {
         // (F + G) - G should approximately equal F.
