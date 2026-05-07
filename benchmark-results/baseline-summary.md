@@ -4,6 +4,8 @@
 **System**: 12th Gen Intel Core i7-12700K, 20 logical / 12 physical cores
 **Runtime**: .NET 10.0.3 (10.0.326.7603), X64 RyuJIT AVX2
 
+These are historical pre-optimization results from the 2026-02-24 benchmark review. Raw BenchmarkDotNet exports for this baseline are committed under `baseline/results/`.
+
 ## Eval Benchmarks
 
 `Multi_3D_Greeks` measures price, delta, and gamma for the 3D Black-Scholes fixture.

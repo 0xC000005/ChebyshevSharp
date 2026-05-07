@@ -4,6 +4,8 @@
 **System**: 12th Gen Intel Core i7-12700K, .NET 10.0.3, X64 RyuJIT AVX2
 **BLAS**: OpenBLAS via BlasSharp.OpenBlas NuGet package
 
+These are historical results from the 2026-02-24 optimization review. Baseline raw BenchmarkDotNet exports are committed under `baseline/results/`; matching optimized raw exports were not committed. Regenerate current results before updating release-critical performance claims.
+
 ## Optimizations Applied
 
 1. **Native BLAS GEMV/GEMM** via BlasSharp.OpenBlas NuGet package: Provides pre-built OpenBLAS bindings for all platforms (Linux, macOS, Windows). No runtime probing or fallback logic needed. Uses `CblasRowMajor` -- zero-copy, no transpose tricks.

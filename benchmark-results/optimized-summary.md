@@ -5,6 +5,8 @@
 **Runtime**: .NET 10.0.3 (10.0.326.7603), X64 RyuJIT AVX2
 **BLAS**: OpenBLAS via BlasSharp.OpenBlas NuGet package
 
+These are historical results from the 2026-02-24 optimization review. Matching raw optimized BenchmarkDotNet exports were not committed; regenerate current results before updating release-critical performance claims.
+
 ## Optimizations Applied
 
 1. **Native BLAS GEMV/GEMM**: BlasSharp.OpenBlas NuGet package provides pre-built OpenBLAS bindings for all platforms. No runtime library probing or fallback logic needed.
