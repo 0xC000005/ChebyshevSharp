@@ -67,13 +67,17 @@ wc -c tests/fixtures/*.pcb
 
 ## Regenerating from ChebyshevSharp (fallback)
 
-If PyChebyshev is unavailable, ChebyshevSharp can produce the 2D fixture
-byte-identically (verified during Phase 3 development). The 1D spline
-fixture from C# diverges by 1–4 ULPs; cross-language consumers should not
-treat C#-generated spline fixtures as the canonical byte form.
+If PyChebyshev is unavailable, ChebyshevSharp can produce the approximation
+fixtures byte-identically. The 1D spline fixture from C# diverges by 1–4 ULPs;
+cross-language consumers should not treat C#-generated spline bytes as
+canonical. The C# generator therefore writes the approximation fixtures but
+preserves the committed PyChebyshev spline fixture when its temporary C#
+candidate differs.
 
 ```bash
 dotnet run --project tools/GenerateFixtures
+git diff -- tests/fixtures/spline_1d_kink.pcb
+# Expected: no diff; the PyChebyshev-canonical spline bytes are preserved.
 ```
 
 ## Cross-checking when bumping the submodule
