@@ -180,6 +180,13 @@ public class RoundingTests
 
 public class ScalarAlgebraTests
 {
+    public static IEnumerable<object[]> NonFiniteScalars()
+    {
+        yield return new object[] { double.NaN };
+        yield return new object[] { double.PositiveInfinity };
+        yield return new object[] { double.NegativeInfinity };
+    }
+
     [Fact]
     public void Test_scalar_mul_returns_tt()
     {
@@ -222,6 +229,29 @@ public class ScalarAlgebraTests
     {
         var tt = TestFixtures.TtAlgebraF;
         Assert.Throws<DivideByZeroException>(() => tt / 0.0);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Test_scalar_mul_rejects_non_finite_scalar(double scalar)
+    {
+        var tt = TestFixtures.TtAlgebraF;
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => tt * scalar);
+        Assert.Equal("scalar", ex.ParamName);
+
+        ex = Assert.Throws<ArgumentOutOfRangeException>(() => scalar * tt);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Test_scalar_div_rejects_non_finite_scalar(double scalar)
+    {
+        var tt = TestFixtures.TtAlgebraF;
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => tt / scalar);
+        Assert.Equal("scalar", ex.ParamName);
     }
 
     [Fact]
@@ -269,6 +299,26 @@ public class ScalarAlgebraTests
 
 public class ScalarInPlaceTests
 {
+    public static IEnumerable<object[]> NonFiniteScalars()
+    {
+        yield return new object[] { double.NaN };
+        yield return new object[] { double.PositiveInfinity };
+        yield return new object[] { double.NegativeInfinity };
+    }
+
+    private static ChebyshevTT CreateBuiltTt()
+    {
+        var tt = new ChebyshevTT(
+            p => p[0] + p[1],
+            2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 5, 5 },
+            maxRank: 3,
+            tolerance: 1e-8);
+        tt.Build(verbose: false, seed: 0);
+        return tt;
+    }
+
     [Fact]
     public void Test_scalar_mul_in_place_mutates()
     {
@@ -294,6 +344,26 @@ public class ScalarInPlaceTests
         var tt = new ChebyshevTT(p => p[0], 1, new[] { new[] { -1.0, 1.0 } }, new[] { 4 });
         tt.Build(verbose: false);
         Assert.Throws<DivideByZeroException>(() => tt.ScalarDivInPlace(0.0));
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Test_scalar_mul_in_place_rejects_non_finite_scalar(double scalar)
+    {
+        var tt = CreateBuiltTt();
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => tt.ScalarMulInPlace(scalar));
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Test_scalar_div_in_place_rejects_non_finite_scalar(double scalar)
+    {
+        var tt = CreateBuiltTt();
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => tt.ScalarDivInPlace(scalar));
+        Assert.Equal("scalar", ex.ParamName);
     }
 
     [Fact]

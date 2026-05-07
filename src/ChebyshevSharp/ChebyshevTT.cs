@@ -1698,6 +1698,7 @@ public class ChebyshevTT
     {
         if (tt is null) throw new ArgumentNullException(nameof(tt));
         tt.CheckBuilt();
+        Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
         var newCores = TensorTrainAlgebra.ScalarMulCores(tt._coeffCores!, scalar);
         var domainCopy = tt._domain.Select(d => (double[])d.Clone()).ToArray();
         var nNodesCopy = (int[])tt._nNodes.Clone();
@@ -1713,8 +1714,9 @@ public class ChebyshevTT
     /// <exception cref="DivideByZeroException">If <paramref name="scalar"/> is zero.</exception>
     public static ChebyshevTT operator /(ChebyshevTT tt, double scalar)
     {
-        if (scalar == 0.0)
-            throw new DivideByZeroException("Cannot divide ChebyshevTT by zero.");
+        if (tt is null) throw new ArgumentNullException(nameof(tt));
+        tt.CheckBuilt();
+        Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));
         return tt * (1.0 / scalar);
     }
 
@@ -1735,6 +1737,7 @@ public class ChebyshevTT
     public void ScalarMulInPlace(double scalar)
     {
         CheckBuilt();
+        Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
         TensorTrainAlgebra.ScalarMulCoresInPlace(_coeffCores!, scalar);
         _cachedErrorEstimate = null;
     }
@@ -1743,9 +1746,10 @@ public class ChebyshevTT
     /// <exception cref="DivideByZeroException">If <paramref name="scalar"/> is zero.</exception>
     public void ScalarDivInPlace(double scalar)
     {
-        if (scalar == 0.0)
-            throw new DivideByZeroException("Cannot divide ChebyshevTT by zero.");
-        ScalarMulInPlace(1.0 / scalar);
+        CheckBuilt();
+        Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));
+        TensorTrainAlgebra.ScalarMulCoresInPlace(_coeffCores!, 1.0 / scalar);
+        _cachedErrorEstimate = null;
     }
 
     /// <summary>Negate this TT in place.</summary>

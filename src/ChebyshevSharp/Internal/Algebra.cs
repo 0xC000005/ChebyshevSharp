@@ -5,6 +5,19 @@ namespace ChebyshevSharp.Internal;
 /// </summary>
 internal static class Algebra
 {
+    internal static void ValidateFiniteScalar(double scalar, string paramName)
+    {
+        if (!double.IsFinite(scalar))
+            throw new ArgumentOutOfRangeException(paramName, scalar, $"{paramName} must be finite.");
+    }
+
+    internal static void ValidateFiniteNonZeroDivisor(double scalar, string paramName)
+    {
+        ValidateFiniteScalar(scalar, paramName);
+        if (scalar == 0.0)
+            throw new DivideByZeroException("Cannot divide a Chebyshev interpolant by zero.");
+    }
+
     /// <summary>
     /// Numerical equality test for two double arrays. Mirrors NumPy's
     /// <c>np.allclose(a, b, rtol, atol)</c>: <c>|a - b| &lt;= atol + rtol * |b|</c>

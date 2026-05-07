@@ -1562,6 +1562,7 @@ public class ChebyshevSlider
     {
         if (!a.Built)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
+        Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
 
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
@@ -1579,7 +1580,13 @@ public class ChebyshevSlider
     public static ChebyshevSlider operator *(double scalar, ChebyshevSlider a) => a * scalar;
 
     /// <summary>Scalar division.</summary>
-    public static ChebyshevSlider operator /(ChebyshevSlider a, double scalar) => a * (1.0 / scalar);
+    public static ChebyshevSlider operator /(ChebyshevSlider a, double scalar)
+    {
+        if (!a.Built)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+        Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));
+        return a * (1.0 / scalar);
+    }
 
     /// <summary>Unary negation.</summary>
     public static ChebyshevSlider operator -(ChebyshevSlider a) => a * -1.0;

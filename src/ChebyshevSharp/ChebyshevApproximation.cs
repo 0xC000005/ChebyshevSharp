@@ -1597,6 +1597,7 @@ public class ChebyshevApproximation
     {
         if (a._tensorValues == null)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
+        Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
 
         double[] newValues = new double[a._tensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
@@ -1613,6 +1614,9 @@ public class ChebyshevApproximation
     /// <summary>Divide interpolant by a scalar.</summary>
     public static ChebyshevApproximation operator /(ChebyshevApproximation a, double scalar)
     {
+        if (a._tensorValues == null)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+        Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));
         return a * (1.0 / scalar);
     }
 
