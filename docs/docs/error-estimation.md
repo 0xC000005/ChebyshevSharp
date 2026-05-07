@@ -161,7 +161,7 @@ for (int n = 5; n <= 30; n += 5)
 {
     var cheb = new ChebyshevApproximation(f, 1, new[] { new[] { -1.0, 1.0 } }, new[] { n });
     cheb.Build(verbose: false);
-    Console.WriteLine($"n={n,2}: error_estimate = {cheb.ErrorEstimate():E2}");
+    Console.WriteLine($"n={n,2}: ErrorEstimate = {cheb.ErrorEstimate():E2}");
 }
 ```
 

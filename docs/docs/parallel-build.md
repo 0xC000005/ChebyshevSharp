@@ -4,7 +4,7 @@ title: Parallel Build & Progress Reporting
 
 # Parallel Build & Progress Reporting
 
-ChebyshevSharp v0.10.0 adds two ctor-time kwargs to all four interpolant classes:
+ChebyshevSharp exposes two constructor-time options on all four interpolant classes:
 
 - `nWorkers` (`int?`): null (sequential, default), `-1` (`Environment.ProcessorCount`), or positive int (`Parallel.For` pool size).
 - `progress` (`IProgress<int>?`): per-evaluation cumulative count for Approx/Spline/Slider; per-sweep for TT.
@@ -40,7 +40,12 @@ Progress reports are cumulative integer counts. The total is derivable upfront v
 
 ```csharp
 var counter = new Progress<int>(n => Console.Write($"\r{n} evaluations done"));
-var ap = new ChebyshevApproximation(F, 2, ..., progress: counter);
+var ap = new ChebyshevApproximation(
+    function: F,
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 32, 32 },
+    progress: counter);
 ap.Build();
 ```
 
