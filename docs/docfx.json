@@ -21,6 +21,7 @@
         ],
         "exclude": [
           "_site/**",
+          "_obj/**",
           "superpowers/**"
         ]
       }

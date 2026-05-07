@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public evaluation APIs now reject finite out-of-domain query points across `ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`, and `ChebyshevTT` instead of silently extrapolating.
 - `ChebyshevSpline.SobolIndices()` now includes between-piece variance and interval-membership interactions instead of aggregating only independent per-piece Sobol energies ([#83](https://github.com/0xC000005/ChebyshevSharp/issues/83)).
 - `ChebyshevSpline.AutoKnots()` now validates public `domain` and `numNodes` arguments before scanning the user function ([#85](https://github.com/0xC000005/ChebyshevSharp/issues/85)).
+- DocFX API metadata is now generated under an ignored build folder instead of tracked `docs/api` YAML, preventing local source-path churn during docs verification ([#87](https://github.com/0xC000005/ChebyshevSharp/issues/87)).
 
 ## [0.12.0] - 2026-05-02 — Quality and documentation hardening ([#25](https://github.com/0xC000005/ChebyshevSharp/pull/25), [#26](https://github.com/0xC000005/ChebyshevSharp/pull/26), [#27](https://github.com/0xC000005/ChebyshevSharp/pull/27), [#28](https://github.com/0xC000005/ChebyshevSharp/pull/28))
 
