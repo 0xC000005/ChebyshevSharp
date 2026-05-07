@@ -1324,7 +1324,7 @@ public class TestSplineSerializationEdgeCases
             // deserialized SplineSerializationState.Type will be "ChebyshevSpline"
             // (its default), but PieceStates will be empty, causing a failure.
             // Either way, it should not silently succeed.
-            Assert.ThrowsAny<Exception>(() => ChebyshevSpline.Load(path));
+            Assert.Throws<InvalidDataException>(() => ChebyshevSpline.Load(path));
         }
         finally
         {
@@ -1345,7 +1345,7 @@ public class TestSplineNullSafety
     [Fact]
     public void Test_null_knots_throws()
     {
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             new ChebyshevSpline(
                 (x, _) => x[0],
                 1, [[-1.0, 1.0]], [10], null!));
