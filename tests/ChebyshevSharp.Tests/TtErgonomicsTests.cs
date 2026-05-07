@@ -89,10 +89,15 @@ public class TtErgonomicsTests
     }
 
     [Fact]
-    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    public void GetEvaluationPoints_returns_snapshot_on_each_call()
     {
         var tt = BuildSimple();
-        Assert.Same(tt.GetEvaluationPoints(), tt.GetEvaluationPoints());
+        double[] first = tt.GetEvaluationPoints();
+        first[0] = 123.0;
+
+        double[] second = tt.GetEvaluationPoints();
+        Assert.NotSame(first, second);
+        Assert.NotEqual(123.0, second[0]);
     }
 
     [Fact]

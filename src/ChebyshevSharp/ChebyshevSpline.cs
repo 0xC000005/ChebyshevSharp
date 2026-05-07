@@ -2436,12 +2436,12 @@ public class ChebyshevSpline
 
     /// <summary>
     /// Flat row-major array of all spline piece evaluation points, concatenated sequentially.
-    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached internally.
     /// </summary>
-    /// <returns>Double array of concatenated piece node coordinates, flattened in row-major order.</returns>
+    /// <returns>A snapshot of concatenated piece node coordinates, flattened in row-major order.</returns>
     public double[] GetEvaluationPoints()
     {
-        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+        if (_evaluationPointsCache != null) return CloneHelpers.DeepCopy(_evaluationPointsCache)!;
 
         int total = GetNumEvaluationPoints();
         int coordinateCount = TensorShape.RequireArrayLength(
@@ -2460,7 +2460,7 @@ public class ChebyshevSpline
         }
 
         _evaluationPointsCache = points;
-        return points;
+        return CloneHelpers.DeepCopy(points)!;
     }
 
     /// <summary>

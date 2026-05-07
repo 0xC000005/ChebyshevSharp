@@ -2247,12 +2247,12 @@ public class ChebyshevTT
     /// <summary>
     /// Flat row-major array of the full Chebyshev grid coordinates.
     /// Generated on-demand using the domain and nNodes, independent of the sparse TT sampling.
-    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached internally.
     /// </summary>
-    /// <returns>Double array of full-grid node coordinates, flattened in row-major order.</returns>
+    /// <returns>A snapshot of full-grid node coordinates, flattened in row-major order.</returns>
     public double[] GetEvaluationPoints()
     {
-        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+        if (_evaluationPointsCache != null) return CloneHelpers.DeepCopy(_evaluationPointsCache)!;
 
         int num = GetNumEvaluationPoints();
         int ndim = _numDimensions;
@@ -2295,7 +2295,7 @@ public class ChebyshevTT
         }
 
         _evaluationPointsCache = points;
-        return points;
+        return CloneHelpers.DeepCopy(points)!;
     }
 
     /// <summary>
