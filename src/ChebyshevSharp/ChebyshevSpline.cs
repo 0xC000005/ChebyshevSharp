@@ -2178,6 +2178,8 @@ public class ChebyshevSpline
 
     internal void CheckSplineCompatible(ChebyshevSpline other)
     {
+        ArgumentNullException.ThrowIfNull(other);
+
         // Check base compatibility for the first piece as proxy
         if (NumDimensions != other.NumDimensions)
             throw new ArgumentException($"Dimension mismatch: {NumDimensions} vs {other.NumDimensions}");
@@ -2222,6 +2224,8 @@ public class ChebyshevSpline
     /// <summary>Add two splines with the same grid and knots.</summary>
     public static ChebyshevSpline operator +(ChebyshevSpline a, ChebyshevSpline b)
     {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
         a.CheckSplineCompatible(b);
         var pieces = new ChebyshevApproximation?[a.Pieces.Length];
         for (int i = 0; i < pieces.Length; i++)
@@ -2237,6 +2241,8 @@ public class ChebyshevSpline
     /// <summary>Subtract two splines with the same grid and knots.</summary>
     public static ChebyshevSpline operator -(ChebyshevSpline a, ChebyshevSpline b)
     {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
         a.CheckSplineCompatible(b);
         var pieces = new ChebyshevApproximation?[a.Pieces.Length];
         for (int i = 0; i < pieces.Length; i++)
@@ -2252,6 +2258,7 @@ public class ChebyshevSpline
     /// <summary>Multiply spline by a scalar.</summary>
     public static ChebyshevSpline operator *(ChebyshevSpline a, double scalar)
     {
+        ArgumentNullException.ThrowIfNull(a);
         if (!a.Built)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
         Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
@@ -2276,6 +2283,7 @@ public class ChebyshevSpline
     /// <summary>Divide spline by a scalar.</summary>
     public static ChebyshevSpline operator /(ChebyshevSpline a, double scalar)
     {
+        ArgumentNullException.ThrowIfNull(a);
         if (!a.Built)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
         Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));
