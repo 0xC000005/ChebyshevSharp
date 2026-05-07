@@ -128,9 +128,9 @@ internal static class TensorTrainExtrude
             newCore[i, 0, i] = 1.0;
 
         var result = new TensorTrainKernel.TtCore[d + 1];
-        for (int k = 0; k < dim; k++) result[k] = coeffCores[k];
+        for (int k = 0; k < dim; k++) result[k] = coeffCores[k].Copy();
         result[dim] = newCore;
-        for (int k = dim; k < d; k++) result[k + 1] = coeffCores[k];
+        for (int k = dim; k < d; k++) result[k + 1] = coeffCores[k].Copy();
         return result;
     }
 
@@ -211,9 +211,9 @@ internal static class TensorTrainExtrude
                             s += M[i * rR + r] * neighbor[r, j, k];
                         newNeighbor[i, j, k] = s;
                     }
-            for (int k = 0; k < dim; k++) result[k] = coeffCores[k];
+            for (int k = 0; k < dim; k++) result[k] = coeffCores[k].Copy();
             result[dim] = newNeighbor;
-            for (int k = dim + 2; k < d; k++) result[k - 1] = coeffCores[k];
+            for (int k = dim + 2; k < d; k++) result[k - 1] = coeffCores[k].Copy();
         }
         else
         {
@@ -230,7 +230,7 @@ internal static class TensorTrainExtrude
                             s += neighbor[i, j, r] * M[r * rR + k];
                         newNeighbor[i, j, k] = s;
                     }
-            for (int k = 0; k < dim - 1; k++) result[k] = coeffCores[k];
+            for (int k = 0; k < dim - 1; k++) result[k] = coeffCores[k].Copy();
             result[dim - 1] = newNeighbor;
         }
         return result;
