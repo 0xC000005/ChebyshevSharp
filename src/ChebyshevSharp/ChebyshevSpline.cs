@@ -2479,9 +2479,10 @@ public class ChebyshevSpline
     /// <summary>
     /// Compute variance-based sensitivity indices aggregated across spline pieces.
     /// Per-piece coefficients are computed under the Chebyshev measure on each piece's
-    /// local domain; per-piece contributions are weighted by domain volume × variance,
-    /// then normalized by global variance. For a single-piece spline, this reduces to
-    /// the <see cref="ChebyshevApproximation.SobolIndices"/> case.
+    /// local domain. The piecewise aggregation includes local polynomial variance,
+    /// between-piece mean variance, and interactions between interval membership and
+    /// local Chebyshev modes. For a single-piece spline, this reduces to the
+    /// <see cref="ChebyshevApproximation.SobolIndices"/> index values.
     /// </summary>
     /// <returns>A <see cref="SobolResult"/> with per-dim FirstOrder, TotalOrder, and Chebyshev-weighted global Variance.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
@@ -2491,38 +2492,33 @@ public class ChebyshevSpline
             throw new InvalidOperationException(
                 "SobolIndices requires a built ChebyshevSpline. Call Build() first.");
 
-        int nDim = NumDimensions;
-        var globalFirstOrder = new double[nDim];
-        var globalTotalOrder = new double[nDim];
-        double globalVariance = 0.0;
-
-        foreach (var piece in Pieces)
+        var pieceCoeffs = new double[Pieces.Length][];
+        var pieceCoeffShapes = new int[Pieces.Length][];
+        for (int flat = 0; flat < Pieces.Length; flat++)
         {
-            if (piece == null) continue;
-            double vol = 1.0;
-            for (int d = 0; d < nDim; d++)
+            var piece = Pieces[flat]!;
+            pieceCoeffShapes[flat] = piece.NNodesStorage;
+            pieceCoeffs[flat] = Internal.Sensitivity.ChebyshevCoefficientsND(
+                piece.TensorValuesStorage!,
+                piece.NNodesStorage);
+        }
+
+        var intervalLengths = new double[NumDimensions][];
+        for (int d = 0; d < NumDimensions; d++)
+        {
+            intervalLengths[d] = new double[Shape[d]];
+            for (int i = 0; i < Shape[d]; i++)
             {
-                double lo = piece.DomainStorage[d][0], hi = piece.DomainStorage[d][1];
-                vol *= (hi - lo);
-            }
-            var coeffs = Internal.Sensitivity.ChebyshevCoefficientsND(piece.TensorValuesStorage!, piece.NNodesStorage);
-            var pieceResult = Internal.Sensitivity.ComputeSobolFromCoeffs(coeffs, piece.NNodesStorage);
-            globalVariance += vol * pieceResult.Variance;
-            for (int d = 0; d < nDim; d++)
-            {
-                globalFirstOrder[d] += vol * pieceResult.FirstOrder[d] * pieceResult.Variance;
-                globalTotalOrder[d] += vol * pieceResult.TotalOrder[d] * pieceResult.Variance;
+                var (lo, hi) = Intervals[d][i];
+                intervalLengths[d][i] = hi - lo;
             }
         }
 
-        if (globalVariance == 0)
-            return new SobolResult(new double[nDim], new double[nDim], 0);
-        for (int d = 0; d < nDim; d++)
-        {
-            globalFirstOrder[d] /= globalVariance;
-            globalTotalOrder[d] /= globalVariance;
-        }
-        return new SobolResult(globalFirstOrder, globalTotalOrder, globalVariance);
+        return Internal.Sensitivity.ComputeSobolFromPiecewiseCoeffs(
+            pieceCoeffs,
+            pieceCoeffShapes,
+            Shape,
+            intervalLengths);
     }
 
     /// <summary>

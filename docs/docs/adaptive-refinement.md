@@ -35,7 +35,7 @@ Console.WriteLine($"TotalOrder: [{string.Join(", ", s.TotalOrder)}]");
 Console.WriteLine($"Variance: {s.Variance}");
 ```
 
-`s.Variance == 0` or a value at the documented numerical noise floor indicates a constant function; the indices are zero and meaningless. For `ChebyshevSpline`, indices are aggregated across pieces (volume-weighted variance).
+`s.Variance == 0` or a value at the documented numerical noise floor indicates a constant function; the indices are zero and meaningless. For `ChebyshevSpline`, indices are computed from the full piecewise expansion, combining within-piece Chebyshev variance, between-piece mean variance, and interactions between interval membership and local Chebyshev modes.
 
 For a Chebyshev expansion
 

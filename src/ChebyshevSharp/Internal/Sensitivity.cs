@@ -98,6 +98,22 @@ internal static class Sensitivity
         return idx;
     }
 
+    private static long RavelIndex(int[] idx, int[] shape)
+    {
+        long flat = 0;
+        for (int d = 0; d < shape.Length; d++)
+            flat = checked(flat * shape[d] + idx[d]);
+        return flat;
+    }
+
+    private static int[] RemoveDimension(int[] values, int dim)
+    {
+        var result = new int[values.Length - 1];
+        for (int src = 0, dst = 0; src < values.Length; src++)
+            if (src != dim) result[dst++] = values[src];
+        return result;
+    }
+
     /// <summary>
     /// Apply <see cref="BarycentricKernel.ChebyshevCoefficients1D"/> along every axis,
     /// matching PyChebyshev's <c>_compute_chebyshev_coefficients</c> convention
@@ -145,6 +161,314 @@ internal static class Sensitivity
         }
 
         return coeffs;
+    }
+
+    /// <summary>
+    /// Compute Sobol indices for piecewise Chebyshev coefficients on a tensor-product
+    /// interval partition. This includes both local polynomial variance within each
+    /// piece and variance from different piece means.
+    /// </summary>
+    internal static SobolResult ComputeSobolFromPiecewiseCoeffs(
+        double[][] pieceCoeffs,
+        int[][] pieceCoeffShapes,
+        int[] pieceShape,
+        double[][] intervalLengths)
+    {
+        int nDim = pieceShape.Length;
+        int totalPieces = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(pieceShape, nameof(ComputeSobolFromPiecewiseCoeffs)),
+            nameof(ComputeSobolFromPiecewiseCoeffs),
+            pieceShape);
+
+        if (pieceCoeffs.Length != totalPieces)
+            throw new ArgumentException(
+                $"pieceCoeffs.Length={pieceCoeffs.Length} does not match prod(pieceShape)={totalPieces}.");
+        if (pieceCoeffShapes.Length != totalPieces)
+            throw new ArgumentException(
+                $"pieceCoeffShapes.Length={pieceCoeffShapes.Length} does not match prod(pieceShape)={totalPieces}.");
+        if (intervalLengths.Length != nDim)
+            throw new ArgumentException(
+                $"intervalLengths.Length={intervalLengths.Length} != pieceShape.Length={nDim}.");
+
+        var totalLengths = new double[nDim];
+        for (int d = 0; d < nDim; d++)
+        {
+            if (intervalLengths[d].Length != pieceShape[d])
+                throw new ArgumentException(
+                    $"intervalLengths[{d}].Length={intervalLengths[d].Length} != pieceShape[{d}]={pieceShape[d]}.");
+            for (int i = 0; i < intervalLengths[d].Length; i++)
+            {
+                double length = intervalLengths[d][i];
+                if (!double.IsFinite(length) || length <= 0.0)
+                    throw new ArgumentException("interval lengths must be finite and positive.");
+                totalLengths[d] += length;
+            }
+        }
+
+        var pieceIndices = new int[totalPieces][];
+        double totalVolume = 1.0;
+        double totalMeasure = 1.0;
+        for (int d = 0; d < nDim; d++)
+        {
+            totalVolume *= totalLengths[d];
+            totalMeasure *= totalLengths[d] * Math.PI;
+        }
+
+        double weightedMeanSum = 0.0;
+        double totalWeightedSquared = 0.0;
+        for (int flatPiece = 0; flatPiece < totalPieces; flatPiece++)
+        {
+            int[] pieceIndex = UnravelIndex(flatPiece, pieceShape);
+            pieceIndices[flatPiece] = pieceIndex;
+
+            double volume = 1.0;
+            for (int d = 0; d < nDim; d++)
+                volume *= intervalLengths[d][pieceIndex[d]];
+
+            int[] coeffShape = pieceCoeffShapes[flatPiece];
+            double[] coeffs = pieceCoeffs[flatPiece];
+            int expectedCoeffLength = TensorShape.RequireArrayLength(
+                TensorShape.CheckedProduct(coeffShape, nameof(ComputeSobolFromPiecewiseCoeffs)),
+                nameof(ComputeSobolFromPiecewiseCoeffs),
+                coeffShape);
+            if (coeffs.Length != expectedCoeffLength)
+                throw new ArgumentException(
+                    $"pieceCoeffs[{flatPiece}].Length={coeffs.Length} does not match prod(pieceCoeffShapes[{flatPiece}])={expectedCoeffLength}.");
+
+            weightedMeanSum += volume * coeffs[0];
+            for (long flatCoeff = 0; flatCoeff < coeffs.Length; flatCoeff++)
+            {
+                double coeff = coeffs[flatCoeff];
+                if (!double.IsFinite(coeff))
+                    throw new ArgumentException(
+                        "coefficients contain NaN or Inf; SobolIndices() requires finite spectral coefficients");
+
+                if (coeff == 0.0) continue;
+                int[] alpha = UnravelIndex(flatCoeff, coeffShape);
+                totalWeightedSquared += volume * coeff * coeff * MultiIndexNormSquared(alpha);
+            }
+        }
+
+        double globalMean = weightedMeanSum / totalVolume;
+        double variance = totalWeightedSquared - totalMeasure * globalMean * globalMean;
+        if (IsNumericalZeroVariance(variance, totalWeightedSquared))
+            return new SobolResult(new double[nDim], new double[nDim], variance);
+
+        var firstOrder = new double[nDim];
+        var totalOrder = new double[nDim];
+
+        for (int d = 0; d < nDim; d++)
+        {
+            firstOrder[d] = FirstProjectionEnergy(
+                d,
+                globalMean,
+                pieceCoeffs,
+                pieceCoeffShapes,
+                pieceShape,
+                pieceIndices,
+                intervalLengths,
+                totalLengths);
+
+            double complementEnergy = ComplementProjectionEnergy(
+                d,
+                globalMean,
+                pieceCoeffs,
+                pieceCoeffShapes,
+                pieceShape,
+                pieceIndices,
+                intervalLengths,
+                totalLengths);
+
+            double totalEnergy = variance - complementEnergy;
+            if (totalEnergy < 0.0 && totalEnergy > -Math.Abs(variance) * 1e-12)
+                totalEnergy = 0.0;
+            if (totalEnergy > variance && totalEnergy - variance < Math.Abs(variance) * 1e-12)
+                totalEnergy = variance;
+            totalOrder[d] = totalEnergy;
+        }
+
+        for (int d = 0; d < nDim; d++)
+        {
+            firstOrder[d] /= variance;
+            totalOrder[d] /= variance;
+        }
+
+        return new SobolResult(firstOrder, totalOrder, variance);
+    }
+
+    private static double FirstProjectionEnergy(
+        int dim,
+        double globalMean,
+        double[][] pieceCoeffs,
+        int[][] pieceCoeffShapes,
+        int[] pieceShape,
+        int[][] pieceIndices,
+        double[][] intervalLengths,
+        double[] totalLengths)
+    {
+        var projectedCoeffs = new double[pieceShape[dim]][];
+        for (int interval = 0; interval < projectedCoeffs.Length; interval++)
+            projectedCoeffs[interval] = Array.Empty<double>();
+
+        double measureOther = 1.0;
+        double volumeOther = 1.0;
+        for (int d = 0; d < pieceShape.Length; d++)
+        {
+            if (d == dim) continue;
+            measureOther *= totalLengths[d] * Math.PI;
+            volumeOther *= totalLengths[d];
+        }
+
+        for (int flatPiece = 0; flatPiece < pieceCoeffs.Length; flatPiece++)
+        {
+            int[] pieceIndex = pieceIndices[flatPiece];
+            int interval = pieceIndex[dim];
+            int[] coeffShape = pieceCoeffShapes[flatPiece];
+            double[] coeffs = pieceCoeffs[flatPiece];
+
+            if (projectedCoeffs[interval].Length < coeffShape[dim])
+                Array.Resize(ref projectedCoeffs[interval], coeffShape[dim]);
+
+            double weight = 1.0;
+            for (int d = 0; d < pieceShape.Length; d++)
+            {
+                if (d == dim) continue;
+                weight *= intervalLengths[d][pieceIndex[d]];
+            }
+            weight /= volumeOther;
+
+            var alpha = new int[coeffShape.Length];
+            for (int mode = 0; mode < coeffShape[dim]; mode++)
+            {
+                alpha[dim] = mode;
+                projectedCoeffs[interval][mode] += weight * coeffs[RavelIndex(alpha, coeffShape)];
+            }
+        }
+
+        double univariateEnergy = 0.0;
+        for (int interval = 0; interval < projectedCoeffs.Length; interval++)
+        {
+            double length = intervalLengths[dim][interval];
+            var coeffs = projectedCoeffs[interval];
+            if (coeffs.Length == 0)
+                continue;
+
+            double meanDelta = coeffs[0] - globalMean;
+            univariateEnergy += length * meanDelta * meanDelta * ChebyshevNormSquared(0);
+            for (int mode = 1; mode < coeffs.Length; mode++)
+                univariateEnergy += length * coeffs[mode] * coeffs[mode] * ChebyshevNormSquared(mode);
+        }
+
+        return measureOther * univariateEnergy;
+    }
+
+    private static double ComplementProjectionEnergy(
+        int dim,
+        double globalMean,
+        double[][] pieceCoeffs,
+        int[][] pieceCoeffShapes,
+        int[] pieceShape,
+        int[][] pieceIndices,
+        double[][] intervalLengths,
+        double[] totalLengths)
+    {
+        int nDim = pieceShape.Length;
+        if (nDim == 1) return 0.0;
+
+        int[] complementPieceShape = RemoveDimension(pieceShape, dim);
+        int complementPieceCount = TensorShape.RequireArrayLength(
+            TensorShape.CheckedProduct(complementPieceShape, nameof(ComplementProjectionEnergy)),
+            nameof(ComplementProjectionEnergy),
+            complementPieceShape);
+        var complementCoeffShapes = new int[complementPieceCount][];
+        for (int i = 0; i < complementPieceCount; i++)
+            complementCoeffShapes[i] = new int[nDim - 1];
+
+        for (int flatPiece = 0; flatPiece < pieceCoeffs.Length; flatPiece++)
+        {
+            int compFlat = RavelComplementPiece(pieceIndices[flatPiece], dim, complementPieceShape);
+            int[] coeffShape = pieceCoeffShapes[flatPiece];
+            for (int src = 0, dst = 0; src < nDim; src++)
+            {
+                if (src == dim) continue;
+                complementCoeffShapes[compFlat][dst] = Math.Max(
+                    complementCoeffShapes[compFlat][dst],
+                    coeffShape[src]);
+                dst++;
+            }
+        }
+
+        var projected = new Dictionary<long, double>[complementPieceCount];
+        for (int i = 0; i < projected.Length; i++)
+            projected[i] = new Dictionary<long, double>();
+
+        for (int flatPiece = 0; flatPiece < pieceCoeffs.Length; flatPiece++)
+        {
+            int[] pieceIndex = pieceIndices[flatPiece];
+            int compFlat = RavelComplementPiece(pieceIndex, dim, complementPieceShape);
+            int[] coeffShape = pieceCoeffShapes[flatPiece];
+            double[] coeffs = pieceCoeffs[flatPiece];
+            int[] compCoeffShape = complementCoeffShapes[compFlat];
+            double weight = intervalLengths[dim][pieceIndex[dim]] / totalLengths[dim];
+
+            for (long flatCoeff = 0; flatCoeff < coeffs.Length; flatCoeff++)
+            {
+                double coeff = coeffs[flatCoeff];
+                if (coeff == 0.0) continue;
+
+                int[] alpha = UnravelIndex(flatCoeff, coeffShape);
+                if (alpha[dim] != 0) continue;
+
+                int[] compAlpha = RemoveDimension(alpha, dim);
+                long compKey = RavelIndex(compAlpha, compCoeffShape);
+                projected[compFlat].TryGetValue(compKey, out double current);
+                projected[compFlat][compKey] = current + weight * coeff;
+            }
+        }
+
+        double complementTotalWeightedSquared = 0.0;
+        for (int compFlat = 0; compFlat < complementPieceCount; compFlat++)
+        {
+            int[] compPieceIndex = UnravelIndex(compFlat, complementPieceShape);
+            double compVolume = 1.0;
+            for (int src = 0, dst = 0; src < nDim; src++)
+            {
+                if (src == dim) continue;
+                compVolume *= intervalLengths[src][compPieceIndex[dst]];
+                dst++;
+            }
+
+            int[] compCoeffShape = complementCoeffShapes[compFlat];
+            foreach (var kvp in projected[compFlat])
+            {
+                int[] alpha = UnravelIndex(kvp.Key, compCoeffShape);
+                complementTotalWeightedSquared += compVolume * kvp.Value * kvp.Value * MultiIndexNormSquared(alpha);
+            }
+        }
+
+        double complementMeasure = 1.0;
+        for (int d = 0; d < nDim; d++)
+            if (d != dim) complementMeasure *= totalLengths[d] * Math.PI;
+
+        double complementVariance = complementTotalWeightedSquared - complementMeasure * globalMean * globalMean;
+        if (complementVariance < 0.0 && complementVariance > -Math.Abs(complementTotalWeightedSquared) * 1e-12)
+            complementVariance = 0.0;
+
+        return totalLengths[dim] * Math.PI * complementVariance;
+    }
+
+    private static int RavelComplementPiece(int[] pieceIndex, int removedDim, int[] complementPieceShape)
+    {
+        if (complementPieceShape.Length == 0) return 0;
+
+        var compIndex = new int[complementPieceShape.Length];
+        for (int src = 0, dst = 0; src < pieceIndex.Length; src++)
+            if (src != removedDim) compIndex[dst++] = pieceIndex[src];
+
+        return TensorShape.RequireArrayLength(
+            RavelIndex(compIndex, complementPieceShape),
+            nameof(RavelComplementPiece),
+            complementPieceShape);
     }
 
     /// <summary>
