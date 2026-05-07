@@ -114,7 +114,8 @@ internal static class EvaluationArguments
     internal static void ValidateDerivativeOrder(
         int[] derivativeOrder,
         int numDimensions,
-        string paramName = "derivativeOrder")
+        string paramName = "derivativeOrder",
+        int? maxDerivativeOrder = null)
     {
         ArgumentNullException.ThrowIfNull(derivativeOrder, paramName);
         if (derivativeOrder.Length != numDimensions)
@@ -130,20 +131,30 @@ internal static class EvaluationArguments
                     paramName,
                     order,
                     $"{paramName}[{d}]={order} must be non-negative");
+            if (maxDerivativeOrder is { } maxOrder && order > maxOrder)
+                throw new ArgumentOutOfRangeException(
+                    paramName,
+                    order,
+                    $"{paramName}[{d}]={order} is not supported; maximum derivative order is {maxOrder}");
         }
     }
 
     internal static void ValidateDerivativeOrders(
         int[][] derivativeOrders,
         int numDimensions,
-        string paramName = "derivativeOrders")
+        string paramName = "derivativeOrders",
+        int? maxDerivativeOrder = null)
     {
         ArgumentNullException.ThrowIfNull(derivativeOrders, paramName);
         for (int i = 0; i < derivativeOrders.Length; i++)
         {
             if (derivativeOrders[i] is null)
                 throw new ArgumentException($"{paramName}[{i}] must not be null", paramName);
-            ValidateDerivativeOrder(derivativeOrders[i], numDimensions, $"{paramName}[{i}]");
+            ValidateDerivativeOrder(
+                derivativeOrders[i],
+                numDimensions,
+                $"{paramName}[{i}]",
+                maxDerivativeOrder);
         }
     }
 

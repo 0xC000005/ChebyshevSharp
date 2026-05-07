@@ -40,6 +40,8 @@ public class ChebyshevTT
     private readonly int? _nWorkers;   // accepted for API symmetry; ignored (D10).
     private readonly IProgress<int>? _progress;
 
+    private int EffectiveMaxDerivativeOrder => Math.Min(_maxDerivativeOrder, 2);
+
     /// <summary>Warning message set when loading from a different library version.</summary>
     public string? LoadWarning { get; private set; }
 
@@ -596,7 +598,10 @@ public class ChebyshevTT
     {
         CheckBuilt();
         EvaluationArguments.ValidatePointInDomain(point, _numDimensions, UserFrameDomain());
-        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, _numDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(
+            derivativeOrders,
+            _numDimensions,
+            maxDerivativeOrder: EffectiveMaxDerivativeOrder);
 
         // v0.21.1: race-safe via EvalStorageFrame helper that always operates in
         // storage frame. Public EvalMulti permutes user-frame inputs once into
@@ -2035,7 +2040,7 @@ public class ChebyshevTT
                 $"TtRanks endpoints must be 1, got [{string.Join(",", state.TtRanks)}].");
 
         ValidateDimOrder(dimOrder, d);
-        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d, Math.Min(state.MaxDerivativeOrder ?? 2, 2));
 
         if (state.Cores is null)
             throw new InvalidDataException("Cores must be present.");
@@ -2124,7 +2129,10 @@ public class ChebyshevTT
         }
     }
 
-    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    private static void ValidateDerivativeRegistry(
+        int[][]? registeredDerivativeOrders,
+        int numDimensions,
+        int maxDerivativeOrder)
     {
         if (registeredDerivativeOrders is null) return;
 
@@ -2136,9 +2144,14 @@ public class ChebyshevTT
                 throw new InvalidDataException(
                     $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
             for (int j = 0; j < orders.Length; j++)
+            {
                 if (orders[j] < 0)
                     throw new InvalidDataException(
                         $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+                if (orders[j] > maxDerivativeOrder)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}]={orders[j]} exceeds maximum supported derivative order {maxDerivativeOrder}.");
+            }
         }
     }
 
@@ -2313,7 +2326,11 @@ public class ChebyshevTT
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
-        EvaluationArguments.ValidateDerivativeOrder(orders, _numDimensions, nameof(orders));
+        EvaluationArguments.ValidateDerivativeOrder(
+            orders,
+            _numDimensions,
+            nameof(orders),
+            EffectiveMaxDerivativeOrder);
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;

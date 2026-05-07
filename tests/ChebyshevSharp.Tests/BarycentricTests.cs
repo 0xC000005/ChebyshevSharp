@@ -1061,6 +1061,11 @@ public class TestSerializationEdgeCases
         AssertMalformedApproxJson(MinimalApproxJson(nodeArrays: "null"));
         AssertMalformedApproxJson(MinimalApproxJson(originalNNodes: "[0]"));
         AssertMalformedApproxJson(MinimalApproxJson(specialPoints: "[null]"));
+        AssertMalformedApproxJson(MinimalApproxJson(maxDerivativeOrder: "-1"));
+        AssertMalformedApproxJson(MinimalApproxJson(registeredDerivativeOrders: "[[-1]]"));
+        AssertMalformedApproxJson(MinimalApproxJson(
+            maxDerivativeOrder: "1",
+            registeredDerivativeOrders: "[[2]]"));
     }
 
     [Fact]
@@ -1110,6 +1115,7 @@ public class TestSerializationEdgeCases
         string tensorValues = "[1.0, 2.0]",
         string weights = "[[-1.0, 1.0]]",
         string diffMatrices = "[[0.0, 0.0, 0.0, 0.0]]",
+        string maxDerivativeOrder = "2",
         string? originalNNodes = null,
         string? specialPoints = null,
         string? registeredDerivativeOrders = null)
@@ -1119,7 +1125,7 @@ public class TestSerializationEdgeCases
           "NumDimensions": {{numDimensions}},
           "Domain": {{domain}},
           "NNodes": {{nNodes}},
-          "MaxDerivativeOrder": 2,
+          "MaxDerivativeOrder": {{maxDerivativeOrder}},
           "NodeArrays": {{nodeArrays}},
           "TensorValues": {{tensorValues}},
           "Weights": {{weights}},

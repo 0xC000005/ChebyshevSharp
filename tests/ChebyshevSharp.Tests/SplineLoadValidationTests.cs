@@ -44,6 +44,11 @@ public class SplineLoadValidationTests
             yield return Case("null derivative order row", s => s.RegisteredDerivativeOrders = new int[][] { null! });
             yield return Case("short derivative order row", s => s.RegisteredDerivativeOrders = new[] { System.Array.Empty<int>() });
             yield return Case("negative derivative order", s => s.RegisteredDerivativeOrders = new[] { new[] { -1 } });
+            yield return Case("derivative order above max", s =>
+            {
+                s.MaxDerivativeOrder = 1;
+                s.RegisteredDerivativeOrders = new[] { new[] { 2 } };
+            });
             yield return Case("piece dimension mismatch", s => s.PieceStates![0].NumDimensions = 2);
             yield return Case("negative piece max derivative order", s => s.PieceStates![0].MaxDerivativeOrder = -1);
             yield return Case("negative piece build time", s => s.PieceStates![0].BuildTime = -1.0);

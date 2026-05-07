@@ -672,7 +672,7 @@ public class ChebyshevSpline
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
         CheckKnotBoundary(point, derivativeOrder);
         var (_, piece) = FindPiece(point);
         return piece.VectorizedEval(point, derivativeOrder);
@@ -689,7 +689,7 @@ public class ChebyshevSpline
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
         foreach (var dord in derivativeOrders)
             CheckKnotBoundary(point, dord);
         var (_, piece) = FindPiece(point);
@@ -707,7 +707,7 @@ public class ChebyshevSpline
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalBatch().");
         EvaluationArguments.ValidatePointsInDomain(points, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
 
         int N = points.Length;
         double[] results = new double[N];
@@ -1143,7 +1143,7 @@ public class ChebyshevSpline
 
         ValidateShape(state.Shape, state.Knots, d);
         ValidateNestedNNodes(state.NestedNNodes, state.Shape, d);
-        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d, state.MaxDerivativeOrder ?? 2);
 
         int expectedPieces = CheckedArrayLengthForInvalidData(state.Shape, nameof(SplineSerializationState.PieceStates));
         if (state.PieceStates is null)
@@ -1364,7 +1364,10 @@ public class ChebyshevSpline
             ValidatePositiveVector(nestedNNodes[dim], shape[dim], $"NestedNNodes[{dim}]");
     }
 
-    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    private static void ValidateDerivativeRegistry(
+        int[][]? registeredDerivativeOrders,
+        int numDimensions,
+        int maxDerivativeOrder)
     {
         if (registeredDerivativeOrders is null) return;
 
@@ -1376,9 +1379,14 @@ public class ChebyshevSpline
                 throw new InvalidDataException(
                     $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
             for (int j = 0; j < orders.Length; j++)
+            {
                 if (orders[j] < 0)
                     throw new InvalidDataException(
                         $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+                if (orders[j] > maxDerivativeOrder)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}]={orders[j]} exceeds MaxDerivativeOrder {maxDerivativeOrder}.");
+            }
         }
     }
 
@@ -2625,7 +2633,7 @@ public class ChebyshevSpline
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
-        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders), MaxDerivativeOrder);
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;

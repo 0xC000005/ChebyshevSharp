@@ -1280,7 +1280,14 @@ public class TestSliderEvalCSharp
     public void TestHigherOrderDerivativeWithinGroup()
     {
         // 3rd derivative of sin(x) within a single-dim slide.
-        var slider = SliderFixtures.SliderSin3D;
+        var slider = new ChebyshevSlider(
+            TestFixtures.SinSum3D, 3,
+            [[-1.0, 1.0], [-1.0, 1.0], [1.0, 3.0]],
+            [12, 10, 10],
+            partition: [[0], [1], [2]],
+            pivotPoint: [0.0, 0.0, 2.0],
+            maxDerivativeOrder: 3);
+        slider.Build(verbose: false);
         double[] pt = [0.5, -0.3, 1.7];
         // d^3/dx^3 of sin(x) = -cos(x)
         double expected = -Math.Cos(0.5);

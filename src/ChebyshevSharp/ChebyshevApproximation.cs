@@ -409,7 +409,7 @@ public class ChebyshevApproximation
         if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
 
         // Current working data and its shape
         double[] current = _tensorValues;
@@ -499,7 +499,7 @@ public class ChebyshevApproximation
         if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
 
         double[] current = _tensorValues;
 
@@ -579,7 +579,7 @@ public class ChebyshevApproximation
         if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
         EvaluationArguments.ValidatePointsInDomain(points, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
 
         // Hoist: apply all derivative-matrix matmuls once — they are point-independent.
         // Process from last dimension to first to match VectorizedEval ordering.
@@ -678,7 +678,7 @@ public class ChebyshevApproximation
         if (_tensorValues == null)
             throw new InvalidOperationException("Call Build() first");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
 
         // Pre-compute dimension info (shared across all derivative orders)
         var dimInfo = new (bool isExact, int exactIdx, double[]? wNorm)[NumDimensions];
@@ -1029,6 +1029,9 @@ public class ChebyshevApproximation
         int ndim = state.NumDimensions;
         if (ndim < 1)
             throw MalformedJson($"NumDimensions must be >= 1, got {ndim}");
+        int maxDerivativeOrder = state.MaxDerivativeOrder ?? 2;
+        if (maxDerivativeOrder < 0)
+            throw MalformedJson($"MaxDerivativeOrder must be non-negative, got {maxDerivativeOrder}");
 
         RequireLength(state.Domain, ndim, nameof(SerializationState.Domain));
         RequireLength(state.NNodes, ndim, nameof(SerializationState.NNodes));
@@ -1080,13 +1083,32 @@ public class ChebyshevApproximation
                 RequireFiniteArray(state.SpecialPoints[d], $"SpecialPoints[{d}]");
         }
 
-        if (state.RegisteredDerivativeOrders != null)
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, ndim, maxDerivativeOrder);
+    }
+
+    private static void ValidateDerivativeRegistry(
+        int[][]? registeredDerivativeOrders,
+        int numDimensions,
+        int maxDerivativeOrder)
+    {
+        if (registeredDerivativeOrders is null) return;
+
+        for (int i = 0; i < registeredDerivativeOrders.Length; i++)
         {
-            for (int i = 0; i < state.RegisteredDerivativeOrders.Length; i++)
-                RequireLength(
-                    state.RegisteredDerivativeOrders[i],
-                    ndim,
-                    $"{nameof(SerializationState.RegisteredDerivativeOrders)}[{i}]");
+            int[]? orders = registeredDerivativeOrders[i];
+            RequireLength(
+                orders,
+                numDimensions,
+                $"{nameof(SerializationState.RegisteredDerivativeOrders)}[{i}]");
+            for (int j = 0; j < orders!.Length; j++)
+            {
+                if (orders[j] < 0)
+                    throw MalformedJson(
+                        $"{nameof(SerializationState.RegisteredDerivativeOrders)}[{i}][{j}] must be non-negative, got {orders[j]}");
+                if (orders[j] > maxDerivativeOrder)
+                    throw MalformedJson(
+                        $"{nameof(SerializationState.RegisteredDerivativeOrders)}[{i}][{j}]={orders[j]} exceeds MaxDerivativeOrder {maxDerivativeOrder}");
+            }
         }
     }
 
@@ -1946,7 +1968,7 @@ public class ChebyshevApproximation
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
-        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders), MaxDerivativeOrder);
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;
