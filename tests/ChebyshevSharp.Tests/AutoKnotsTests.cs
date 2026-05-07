@@ -106,6 +106,43 @@ public class TestAutoKnots
     }
 
     [Fact]
+    public void Test_null_function_throws_argument_null()
+    {
+        Assert.Throws<ArgumentNullException>(() => ChebyshevSpline.AutoKnots(null!, 1,
+            new[] { new[] { 0.0, 1.0 } }, new[] { 5 }));
+    }
+
+    [Fact]
+    public void Test_invalid_domain_is_rejected_before_scan()
+    {
+        int calls = 0;
+        double F(double[] p, object? _)
+        {
+            calls++;
+            return p[0];
+        }
+
+        Assert.Throws<ArgumentException>(() => ChebyshevSpline.AutoKnots(F, 1,
+            Array.Empty<double[]>(), new[] { 5 }));
+        Assert.Equal(0, calls);
+    }
+
+    [Fact]
+    public void Test_invalid_num_nodes_is_rejected_before_scan()
+    {
+        int calls = 0;
+        double F(double[] p, object? _)
+        {
+            calls++;
+            return p[0];
+        }
+
+        Assert.Throws<ArgumentException>(() => ChebyshevSpline.AutoKnots(F, 1,
+            new[] { new[] { 0.0, 1.0 } }, new[] { 0 }));
+        Assert.Equal(0, calls);
+    }
+
+    [Fact]
     public void Test_max_knots_zero_returns_no_knot_spline()
     {
         // maxKnotsPerDim=0 means "no auto-knots, just build a single-piece spline".
