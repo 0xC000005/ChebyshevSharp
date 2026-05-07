@@ -1,3 +1,4 @@
+using System.IO;
 using Xunit;
 
 namespace ChebyshevSharp.Tests;
@@ -179,4 +180,41 @@ public class ApproxPublicStateOwnershipTests
         Assert.Throws<InvalidOperationException>(
             () => approx.VectorizedEvalBatch(new[] { new[] { 0.0 } }, new[] { 0 }));
     }
+
+    [Fact]
+    public void GetSpecialPoints_returns_snapshots_for_loaded_metadata()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, MinimalApproxJsonWithSpecialPoints());
+            var approx = ChebyshevApproximation.Load(path);
+
+            double[][] specialPoints = approx.GetSpecialPoints()!;
+            specialPoints[0][0] = 0.75;
+
+            double[][] specialPointsAgain = approx.GetSpecialPoints()!;
+            Assert.NotSame(specialPoints, specialPointsAgain);
+            Assert.Equal(0.0, specialPointsAgain[0][0]);
+        }
+        finally
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    private static string MinimalApproxJsonWithSpecialPoints() =>
+        """
+        {
+          "NumDimensions": 1,
+          "Domain": [[-1.0, 1.0]],
+          "NNodes": [2],
+          "MaxDerivativeOrder": 2,
+          "NodeArrays": [[-0.5, 0.5]],
+          "TensorValues": [1.0, 2.0],
+          "Weights": [[-1.0, 1.0]],
+          "DiffMatrices": [[0.0, 0.0, 0.0, 0.0]],
+          "SpecialPoints": [[0.0]]
+        }
+        """;
 }

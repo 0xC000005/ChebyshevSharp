@@ -1877,7 +1877,7 @@ public class ChebyshevApproximation
     /// Get special points (e.g., knots or singularities) used in construction.
     /// </summary>
     /// <returns>Special points per dimension, or null if not applicable.</returns>
-    public double[][]? GetSpecialPoints() => _specialPoints;
+    public double[][]? GetSpecialPoints() => Internal.CloneHelpers.DeepCopy(_specialPoints);
 
     /// <summary>
     /// Populate this interpolant's tensor values from a precomputed flat array.
