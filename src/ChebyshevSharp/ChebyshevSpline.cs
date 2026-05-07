@@ -2733,6 +2733,10 @@ public class ChebyshevSpline
         IProgress<int>? progress = null,
         bool verbose = false)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateDomain(numDimensions, domain);
+        ValidateFlatNNodes(numDimensions, numNodes);
+
         if (!double.IsFinite(thresholdFactor) || thresholdFactor <= 0)
             throw new ArgumentException("thresholdFactor must be finite and > 0", nameof(thresholdFactor));
         if (maxKnotsPerDim < 0)
