@@ -21,6 +21,11 @@ namespace ChebyshevSharp;
 /// </remarks>
 public class ChebyshevSlider
 {
+    private double[][] _domain = Array.Empty<double[]>();
+    private int[] _nNodes = Array.Empty<int>();
+    private int[][] _partition = Array.Empty<int[]>();
+    private double[] _pivotPoint = Array.Empty<double>();
+
     /// <summary>The function to approximate. Null after load.</summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
@@ -28,19 +33,59 @@ public class ChebyshevSlider
     public int NumDimensions { get; internal set; }
 
     /// <summary>Domain bounds for each dimension, as list of [lo, hi].</summary>
-    public double[][] Domain { get; internal set; } = Array.Empty<double[]>();
+    public double[][] Domain
+    {
+        get => CloneHelpers.DeepCopy(_domain)!;
+        internal set => _domain = value ?? Array.Empty<double[]>();
+    }
 
     /// <summary>Number of Chebyshev nodes per dimension.</summary>
-    public int[] NNodes { get; internal set; } = Array.Empty<int>();
+    public int[] NNodes
+    {
+        get => CloneHelpers.DeepCopy(_nNodes)!;
+        internal set => _nNodes = value ?? Array.Empty<int>();
+    }
 
     /// <summary>Maximum supported derivative order.</summary>
     public int MaxDerivativeOrder { get; internal set; } = 2;
 
     /// <summary>Grouping of dimension indices into slides.</summary>
-    public int[][] Partition { get; internal set; } = Array.Empty<int[]>();
+    public int[][] Partition
+    {
+        get => CloneHelpers.DeepCopy(_partition)!;
+        internal set => _partition = value ?? Array.Empty<int[]>();
+    }
 
     /// <summary>Reference point z around which slides are built.</summary>
-    public double[] PivotPoint { get; internal set; } = Array.Empty<double>();
+    public double[] PivotPoint
+    {
+        get => CloneHelpers.DeepCopy(_pivotPoint)!;
+        internal set => _pivotPoint = value ?? Array.Empty<double>();
+    }
+
+    internal double[][] DomainStorage
+    {
+        get => _domain;
+        set => _domain = value ?? Array.Empty<double[]>();
+    }
+
+    internal int[] NNodesStorage
+    {
+        get => _nNodes;
+        set => _nNodes = value ?? Array.Empty<int>();
+    }
+
+    internal int[][] PartitionStorage
+    {
+        get => _partition;
+        set => _partition = value ?? Array.Empty<int[]>();
+    }
+
+    internal double[] PivotPointStorage
+    {
+        get => _pivotPoint;
+        set => _pivotPoint = value ?? Array.Empty<double>();
+    }
 
     /// <summary>Function value at the pivot point: f(z).</summary>
     public double PivotValue { get; internal set; }
@@ -99,17 +144,17 @@ public class ChebyshevSlider
 
         Function = function;
         NumDimensions = numDimensions;
-        Domain = domain.Select(d => (double[])d.Clone()).ToArray();
-        NNodes = (int[])nNodes.Clone();
+        _domain = domain.Select(d => (double[])d.Clone()).ToArray();
+        _nNodes = (int[])nNodes.Clone();
         MaxDerivativeOrder = maxDerivativeOrder;
         _additionalData = additionalData;
         _nWorkers = Internal.ParallelBuild.NormalizeNWorkers(nWorkers);
         _progress = progress;
-        Partition = partition.Select(g => (int[])g.Clone()).ToArray();
-        PivotPoint = (double[])pivotPoint.Clone();
+        _partition = partition.Select(g => (int[])g.Clone()).ToArray();
+        _pivotPoint = (double[])pivotPoint.Clone();
 
         // Build dim → slide mapping
-        DimToSlide = BuildDimToSlide(Partition);
+        DimToSlide = BuildDimToSlide(_partition);
     }
 
     /// <summary>Internal parameterless constructor for factories.</summary>
@@ -243,38 +288,38 @@ public class ChebyshevSlider
         _cachedErrorEstimate = null;
 
         // Evaluate pivot value
-        double pivotValue = Function(PivotPoint, _additionalData);
+        double pivotValue = Function(_pivotPoint, _additionalData);
         ValidateFinitePivotValue(pivotValue);
         PivotValue = pivotValue;
 
         int totalEvals = TotalBuildEvals;
-        long fullTensor = TensorShape.CheckedProduct(NNodes, nameof(Build));
+        long fullTensor = TensorShape.CheckedProduct(_nNodes, nameof(Build));
 
         if (verbose)
         {
             Console.WriteLine(
                 $"Building {NumDimensions}D Chebyshev Slider " +
-                $"({Partition.Length} slides, {totalEvals:N0} evaluations " +
+                $"({_partition.Length} slides, {totalEvals:N0} evaluations " +
                 $"vs {fullTensor:N0} for full tensor)...");
         }
 
-        Slides = new ChebyshevApproximation[Partition.Length];
+        Slides = new ChebyshevApproximation[_partition.Length];
         int progressOffset = 0;
-        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        for (int slideIdx = 0; slideIdx < _partition.Length; slideIdx++)
         {
-            var group = Partition[slideIdx];
+            var group = _partition[slideIdx];
             int slideDim = group.Length;
             var slideDomain = new double[slideDim][];
             var slideNNodes = new int[slideDim];
             for (int i = 0; i < slideDim; i++)
             {
-                slideDomain[i] = (double[])Domain[group[i]].Clone();
-                slideNNodes[i] = NNodes[group[i]];
+                slideDomain[i] = (double[])_domain[group[i]].Clone();
+                slideNNodes[i] = _nNodes[group[i]];
             }
 
             // Create closure that fixes non-group dims at pivot
             var grp = group;
-            var pvt = PivotPoint;
+            var pvt = _pivotPoint;
             var func = Function;
             int ndim = NumDimensions;
             Func<double[], object?, double> slideFunc = (subPoint, data) =>
@@ -310,7 +355,7 @@ public class ChebyshevSlider
                     nameof(Build),
                     slideNNodes);
                 Console.WriteLine(
-                    $"  Slide {slideIdx + 1}/{Partition.Length}: " +
+                    $"  Slide {slideIdx + 1}/{_partition.Length}: " +
                     $"dims [{string.Join(", ", group)}], {slideEvals:N0} evals");
             }
         }
@@ -350,7 +395,7 @@ public class ChebyshevSlider
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
-        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
         EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
 
         bool isDerivative = false;
@@ -384,7 +429,7 @@ public class ChebyshevSlider
                 return 0.0;
 
             // Single slide contributes
-            var group = Partition[activeSlide];
+            var group = _partition[activeSlide];
             var subPoint = new double[group.Length];
             var subDeriv = new int[group.Length];
             for (int i = 0; i < group.Length; i++)
@@ -398,9 +443,9 @@ public class ChebyshevSlider
         {
             // Eq 7.5: f(x) ≈ v + Σ [s_i(x_i) - v]
             double result = PivotValue;
-            for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+            for (int slideIdx = 0; slideIdx < _partition.Length; slideIdx++)
             {
-                var group = Partition[slideIdx];
+                var group = _partition[slideIdx];
                 var subPoint = new double[group.Length];
                 var subDeriv = new int[group.Length];
                 for (int i = 0; i < group.Length; i++)
@@ -425,7 +470,7 @@ public class ChebyshevSlider
     {
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
-        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, Domain);
+        EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
         EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
         var results = new double[derivativeOrders.Length];
         for (int i = 0; i < derivativeOrders.Length; i++)
@@ -491,7 +536,7 @@ public class ChebyshevSlider
                     $"dim {d} out-of-range [0, {NumDimensions - 1}]");
         }
 
-        var perDimBounds = Internal.Calculus.NormalizeBounds(sortedDims, bounds, Domain);
+        var perDimBounds = Internal.Calculus.NormalizeBounds(sortedDims, bounds, _domain);
         var dimToIdx = new Dictionary<int, int>();
         for (int i = 0; i < sortedDims.Length; i++)
             dimToIdx[sortedDims[i]] = i;
@@ -502,7 +547,7 @@ public class ChebyshevSlider
         foreach (int d in sortedDims)
         {
             var bd = perDimBounds[dimToIdx[d]];
-            double a = Domain[d][0], b = Domain[d][1];
+            double a = _domain[d][0], b = _domain[d][1];
             if (bd == null)
             {
                 widths[d] = b - a;
@@ -519,11 +564,11 @@ public class ChebyshevSlider
         foreach (int d in sortedDims) volT *= widths[d];
 
         // Per-slide classification.
-        var slideKinds = new (string kind, int[] kept)[Partition.Length];
-        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        var slideKinds = new (string kind, int[] kept)[_partition.Length];
+        for (int slideIdx = 0; slideIdx < _partition.Length; slideIdx++)
         {
             slideKinds[slideIdx] = Internal.Calculus.SliderPartitionIntersect(
-                Partition[slideIdx], sortedDims);
+                _partition[slideIdx], sortedDims);
         }
 
         // pv_new accumulator: starts as pv * vol_T (the first term of the sum).
@@ -533,13 +578,13 @@ public class ChebyshevSlider
         // appropriate sub-interval bounds, then add contribution to pv_new.
         // Contribution = vol(T \ G_i) * (I_i - pv * vol(G_i ∩ T))
         // For "full" slides, vol(G_i ∩ T) is the product of widths over G_i.
-        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        for (int slideIdx = 0; slideIdx < _partition.Length; slideIdx++)
         {
             var (kind, _) = slideKinds[slideIdx];
             if (kind != "full") continue;
 
             var slide = Slides[slideIdx];
-            var group = Partition[slideIdx];
+            var group = _partition[slideIdx];
 
             // Local-dim list (always all dims of the slide) with corresponding bounds.
             int[] localDims = Enumerable.Range(0, group.Length).ToArray();
@@ -551,7 +596,7 @@ public class ChebyshevSlider
                 if (bd == null)
                 {
                     // Use full slide-domain for this local dim
-                    localBoundsList.Add((slide.Domain[gi][0], slide.Domain[gi][1]));
+                    localBoundsList.Add((slide.DomainStorage[gi][0], slide.DomainStorage[gi][1]));
                 }
                 else
                 {
@@ -596,12 +641,12 @@ public class ChebyshevSlider
         var newPartition = new List<int[]>();
         var newSlides = new List<ChebyshevApproximation>();
 
-        for (int slideIdx = 0; slideIdx < Partition.Length; slideIdx++)
+        for (int slideIdx = 0; slideIdx < _partition.Length; slideIdx++)
         {
             var (kind, kept) = slideKinds[slideIdx];
             if (kind == "full") continue; // absorbed into pv_new
 
-            var group = Partition[slideIdx];
+            var group = _partition[slideIdx];
             var slide = Slides[slideIdx];
 
             ChebyshevApproximation newSlide;
@@ -612,7 +657,7 @@ public class ChebyshevSlider
                 // The slide passes through. Apply the partition-of-unity shift:
                 //   new_tensor = vol_T * tensor + (pv_new - pv * vol_T)
                 double shift = pvNew - PivotValue * volT;
-                var tv = slide.TensorValues!;
+                var tv = slide.TensorValuesStorage!;
                 var newTensor = new double[tv.Length];
                 for (int j = 0; j < tv.Length; j++)
                     newTensor[j] = volT * tv[j] + shift;
@@ -637,7 +682,7 @@ public class ChebyshevSlider
                         {
                             // Local-dim full domain.
                             localBoundsList.Add(
-                                (slide.Domain[localI][0], slide.Domain[localI][1]));
+                                (slide.DomainStorage[localI][0], slide.DomainStorage[localI][1]));
                         }
                         else
                         {
@@ -665,7 +710,7 @@ public class ChebyshevSlider
                 // Apply unified rule:
                 //   new_tensor = vol_outside * reduced.tensor + (pv_new - pv * vol_T)
                 double shift = pvNew - PivotValue * volT;
-                var rtv = reduced.TensorValues!;
+                var rtv = reduced.TensorValuesStorage!;
                 var newTensor = new double[rtv.Length];
                 for (int j = 0; j < rtv.Length; j++)
                     newTensor[j] = volOutside * rtv[j] + shift;
@@ -685,19 +730,19 @@ public class ChebyshevSlider
         // for "none" (scale = vol_T) and "partial" (scale = vol_outside) slides.
         // Subtracting pv_new from tilde_s_j gives scale * source(y) - pv * vol_T,
         // the required contribution of the slide.
-        var newDomain = survive.Select(d => (double[])Domain[d].Clone()).ToArray();
-        var newNNodes = survive.Select(d => NNodes[d]).ToArray();
-        var newPivotPoint = survive.Select(d => PivotPoint[d]).ToArray();
+        var newDomain = survive.Select(d => (double[])_domain[d].Clone()).ToArray();
+        var newNNodes = survive.Select(d => _nNodes[d]).ToArray();
+        var newPivotPoint = survive.Select(d => _pivotPoint[d]).ToArray();
         var newPartitionArr = newPartition.ToArray();
 
         var result = new ChebyshevSlider();
         result.Function = null;
         result.NumDimensions = survive.Length;
-        result.Domain = newDomain;
-        result.NNodes = newNNodes;
+        result.DomainStorage = newDomain;
+        result.NNodesStorage = newNNodes;
         result.MaxDerivativeOrder = MaxDerivativeOrder;
-        result.Partition = newPartitionArr;
-        result.PivotPoint = newPivotPoint;
+        result.PartitionStorage = newPartitionArr;
+        result.PivotPointStorage = newPivotPoint;
         result.PivotValue = pvNew;
         result.Slides = newSlides.ToArray();
         result.DimToSlide = BuildDimToSlide(newPartitionArr);
@@ -729,9 +774,9 @@ public class ChebyshevSlider
         get
         {
             long total = 0;
-            foreach (var group in Partition)
+            foreach (var group in _partition)
             {
-                int[] slideShape = group.Select(d => NNodes[d]).ToArray();
+                int[] slideShape = group.Select(d => _nNodes[d]).ToArray();
                 int slideEvals = TensorShape.RequireArrayLength(
                     TensorShape.CheckedProduct(slideShape, nameof(TotalBuildEvals)),
                     nameof(TotalBuildEvals),
@@ -762,14 +807,14 @@ public class ChebyshevSlider
             slideStates[i] = new SlideState
             {
                 NumDimensions = s.NumDimensions,
-                Domain = s.Domain.Select(d => (double[])d.Clone()).ToArray(),
-                NNodes = (int[])s.NNodes.Clone(),
+                Domain = s.DomainStorage.Select(d => (double[])d.Clone()).ToArray(),
+                NNodes = (int[])s.NNodesStorage.Clone(),
                 MaxDerivativeOrder = s.MaxDerivativeOrder,
-                NodeArrays = s.NodeArrays.Select(a => (double[])a.Clone()).ToArray(),
-                TensorValues = (double[])s.TensorValues!.Clone(),
-                Weights = s.Weights!.Select(a => (double[])a.Clone()).ToArray(),
-                DiffMatrices = s.DiffMatrices!.Select(m => ChebyshevApproximation.Flatten2D(m)).ToArray(),
-                DiffMatrixSizes = s.DiffMatrices!.Select(m => new[] { m.GetLength(0), m.GetLength(1) }).ToArray(),
+                NodeArrays = s.NodeArraysStorage.Select(a => (double[])a.Clone()).ToArray(),
+                TensorValues = (double[])s.TensorValuesStorage!.Clone(),
+                Weights = s.WeightsStorage!.Select(a => (double[])a.Clone()).ToArray(),
+                DiffMatrices = s.DiffMatricesStorage!.Select(m => ChebyshevApproximation.Flatten2D(m)).ToArray(),
+                DiffMatrixSizes = s.DiffMatricesStorage!.Select(m => new[] { m.GetLength(0), m.GetLength(1) }).ToArray(),
                 BuildTime = s.BuildTime,
                 NEvaluations = s.NEvaluations,
             };
@@ -778,11 +823,11 @@ public class ChebyshevSlider
         var state = new SliderSerializationState
         {
             NumDimensions = NumDimensions,
-            Domain = Domain.Select(d => (double[])d.Clone()).ToArray(),
-            NNodes = (int[])NNodes.Clone(),
+            Domain = _domain.Select(d => (double[])d.Clone()).ToArray(),
+            NNodes = (int[])_nNodes.Clone(),
             MaxDerivativeOrder = MaxDerivativeOrder,
-            Partition = Partition.Select(g => (int[])g.Clone()).ToArray(),
-            PivotPoint = (double[])PivotPoint.Clone(),
+            Partition = _partition.Select(g => (int[])g.Clone()).ToArray(),
+            PivotPoint = (double[])_pivotPoint.Clone(),
             PivotValue = PivotValue,
             BuildTime = BuildTime,
             Slides = slideStates,
@@ -831,13 +876,13 @@ public class ChebyshevSlider
             {
                 Function = null,
                 NumDimensions = ss.NumDimensions,
-                Domain = ss.Domain,
-                NNodes = ss.NNodes,
+                DomainStorage = ss.Domain,
+                NNodesStorage = ss.NNodes,
                 MaxDerivativeOrder = ss.MaxDerivativeOrder,
-                NodeArrays = ss.NodeArrays,
-                TensorValues = ss.TensorValues,
-                Weights = ss.Weights,
-                DiffMatrices = diffMatrices,
+                NodeArraysStorage = ss.NodeArrays,
+                TensorValuesStorage = ss.TensorValues,
+                WeightsStorage = ss.Weights,
+                DiffMatricesStorage = diffMatrices,
                 BuildTime = ss.BuildTime,
                 NEvaluations = ss.NEvaluations,
             };
@@ -849,11 +894,11 @@ public class ChebyshevSlider
         {
             Function = null,
             NumDimensions = state.NumDimensions,
-            Domain = state.Domain,
-            NNodes = state.NNodes,
+            DomainStorage = state.Domain,
+            NNodesStorage = state.NNodes,
             MaxDerivativeOrder = state.MaxDerivativeOrder,
-            Partition = state.Partition,
-            PivotPoint = state.PivotPoint,
+            PartitionStorage = state.Partition,
+            PivotPointStorage = state.PivotPoint,
             PivotValue = state.PivotValue,
             Slides = slides,
             DimToSlide = BuildDimToSlide(state.Partition),
@@ -1111,11 +1156,11 @@ public class ChebyshevSlider
         {
             Function = null,
             NumDimensions = source.NumDimensions,
-            Domain = source.Domain.Select(d => (double[])d.Clone()).ToArray(),
-            NNodes = (int[])source.NNodes.Clone(),
+            DomainStorage = source._domain.Select(d => (double[])d.Clone()).ToArray(),
+            NNodesStorage = (int[])source._nNodes.Clone(),
             MaxDerivativeOrder = source.MaxDerivativeOrder,
-            Partition = source.Partition.Select(g => (int[])g.Clone()).ToArray(),
-            PivotPoint = (double[])source.PivotPoint.Clone(),
+            PartitionStorage = source._partition.Select(g => (int[])g.Clone()).ToArray(),
+            PivotPointStorage = (double[])source._pivotPoint.Clone(),
             Slides = slides,
             PivotValue = pivotValue,
             DimToSlide = new Dictionary<int, int>(source.DimToSlide),
@@ -1144,10 +1189,10 @@ public class ChebyshevSlider
 
         var sorted = ExtrudeSlice.NormalizeExtrusionParams(extrudeParams, NumDimensions);
 
-        var domain = Domain.Select(d => (double[])d.Clone()).ToList();
-        var nNodes = NNodes.ToList();
-        var pivotPoint = PivotPoint.ToList();
-        var partition = Partition.Select(g => g.ToList()).ToList();
+        var domain = _domain.Select(d => (double[])d.Clone()).ToList();
+        var nNodes = _nNodes.ToList();
+        var pivotPoint = _pivotPoint.ToList();
+        var partition = _partition.Select(g => g.ToList()).ToList();
         var slides = Slides.ToList();
 
         foreach (var (dimIdx, bounds, n) in sorted)
@@ -1190,11 +1235,11 @@ public class ChebyshevSlider
         {
             Function = null,
             NumDimensions = newNdim,
-            Domain = domain.ToArray(),
-            NNodes = nNodes.ToArray(),
+            DomainStorage = domain.ToArray(),
+            NNodesStorage = nNodes.ToArray(),
             MaxDerivativeOrder = MaxDerivativeOrder,
-            Partition = newPartition,
-            PivotPoint = pivotPoint.ToArray(),
+            PartitionStorage = newPartition,
+            PivotPointStorage = pivotPoint.ToArray(),
             Slides = slides.ToArray(),
             PivotValue = PivotValue,
             DimToSlide = BuildDimToSlide(newPartition),
@@ -1218,16 +1263,16 @@ public class ChebyshevSlider
         // Validate values within domain
         foreach (var (dimIdx, value) in sorted)
         {
-            double lo = Domain[dimIdx][0], hi = Domain[dimIdx][1];
+            double lo = _domain[dimIdx][0], hi = _domain[dimIdx][1];
             if (value < lo || value > hi)
                 throw new ArgumentException(
                     $"Slice value {value} for dim {dimIdx} is outside domain [{lo}, {hi}]");
         }
 
-        var domain = Domain.Select(d => (double[])d.Clone()).ToList();
-        var nNodes = NNodes.ToList();
-        var pivotPoint = PivotPoint.ToList();
-        var partition = Partition.Select(g => g.ToList()).ToList();
+        var domain = _domain.Select(d => (double[])d.Clone()).ToList();
+        var nNodes = _nNodes.ToList();
+        var pivotPoint = _pivotPoint.ToList();
+        var partition = _partition.Select(g => g.ToList()).ToList();
         var slides = Slides.ToList();
         double pivotValue = PivotValue;
 
@@ -1264,7 +1309,7 @@ public class ChebyshevSlider
                 {
                     if (i != slideIdx)
                     {
-                        var tv = slides[i].TensorValues!;
+                        var tv = slides[i].TensorValuesStorage!;
                         var newTv = new double[tv.Length];
                         for (int j = 0; j < tv.Length; j++)
                             newTv[j] = tv[j] + delta;
@@ -1299,11 +1344,11 @@ public class ChebyshevSlider
         {
             Function = null,
             NumDimensions = newNdim,
-            Domain = domain.ToArray(),
-            NNodes = nNodes.ToArray(),
+            DomainStorage = domain.ToArray(),
+            NNodesStorage = nNodes.ToArray(),
             MaxDerivativeOrder = MaxDerivativeOrder,
-            Partition = newPartition,
-            PivotPoint = pivotPoint.ToArray(),
+            PartitionStorage = newPartition,
+            PivotPointStorage = pivotPoint.ToArray(),
             Slides = slides.ToArray(),
             PivotValue = pivotValue,
             DimToSlide = BuildDimToSlide(newPartition),
@@ -1332,9 +1377,9 @@ public class ChebyshevSlider
             throw new InvalidOperationException(
                 $"To1DChebyshev requires a 1-D slider, got {NumDimensions}-D");
 
-        int n = NNodes[0];
-        double a = Domain[0][0];
-        double b = Domain[0][1];
+        int n = _nNodes[0];
+        double a = _domain[0][0];
+        double b = _domain[0][1];
         double[] chebNodes = Internal.BarycentricKernel.MakeNodesForDim(a, b, n);
 
         var zeroOrder = new int[] { 0 };
@@ -1369,7 +1414,7 @@ public class ChebyshevSlider
             throw new InvalidOperationException("Call Build() first");
 
         var (validatedDim, sliceParams) =
-            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, _domain);
 
         var sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
         var cheb1D = sliced.To1DChebyshev();
@@ -1397,7 +1442,7 @@ public class ChebyshevSlider
             throw new InvalidOperationException("Call Build() first");
 
         var (validatedDim, sliceParams) =
-            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, _domain);
 
         var sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
         var cheb1D = sliced.To1DChebyshev();
@@ -1417,7 +1462,7 @@ public class ChebyshevSlider
             throw new InvalidOperationException("Call Build() first");
 
         var (validatedDim, sliceParams) =
-            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, Domain);
+            Internal.Calculus.ValidateCalculusArgs(NumDimensions, dim, fixedDims, _domain);
 
         var sliced = sliceParams.Length > 0 ? Slice(sliceParams) : this;
         var cheb1D = sliced.To1DChebyshev();
@@ -1438,30 +1483,30 @@ public class ChebyshevSlider
         if (NumDimensions != other.NumDimensions)
             throw new InvalidOperationException(
                 $"Dimension mismatch: {NumDimensions} vs {other.NumDimensions}");
-        if (!NNodes.SequenceEqual(other.NNodes))
+        if (!_nNodes.SequenceEqual(other._nNodes))
             throw new InvalidOperationException("Node count mismatch.");
         for (int d = 0; d < NumDimensions; d++)
         {
-            if (Math.Abs(Domain[d][0] - other.Domain[d][0]) > 1e-14 ||
-                Math.Abs(Domain[d][1] - other.Domain[d][1]) > 1e-14)
+            if (Math.Abs(_domain[d][0] - other._domain[d][0]) > 1e-14 ||
+                Math.Abs(_domain[d][1] - other._domain[d][1]) > 1e-14)
                 throw new InvalidOperationException($"Domain mismatch at dimension {d}.");
         }
         if (MaxDerivativeOrder != other.MaxDerivativeOrder)
             throw new InvalidOperationException("MaxDerivativeOrder mismatch.");
 
         // Slider-specific checks
-        if (Partition.Length != other.Partition.Length)
+        if (_partition.Length != other._partition.Length)
             throw new ArgumentException(
-                $"Partition mismatch: {FormatPartition(Partition)} vs {FormatPartition(other.Partition)}");
-        for (int i = 0; i < Partition.Length; i++)
+                $"Partition mismatch: {FormatPartition(_partition)} vs {FormatPartition(other._partition)}");
+        for (int i = 0; i < _partition.Length; i++)
         {
-            if (!Partition[i].SequenceEqual(other.Partition[i]))
+            if (!_partition[i].SequenceEqual(other._partition[i]))
                 throw new ArgumentException(
-                    $"Partition mismatch: {FormatPartition(Partition)} vs {FormatPartition(other.Partition)}");
+                    $"Partition mismatch: {FormatPartition(_partition)} vs {FormatPartition(other._partition)}");
         }
-        if (!PivotPoint.SequenceEqual(other.PivotPoint))
+        if (!_pivotPoint.SequenceEqual(other._pivotPoint))
             throw new ArgumentException(
-                $"Pivot point mismatch: [{string.Join(", ", PivotPoint)}] vs [{string.Join(", ", other.PivotPoint)}]");
+                $"Pivot point mismatch: [{string.Join(", ", _pivotPoint)}] vs [{string.Join(", ", other._pivotPoint)}]");
     }
 
     private static string FormatPartition(int[][] partition)
@@ -1476,8 +1521,8 @@ public class ChebyshevSlider
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
         {
-            var tvA = a.Slides[i].TensorValues!;
-            var tvB = b.Slides[i].TensorValues!;
+            var tvA = a.Slides[i].TensorValuesStorage!;
+            var tvB = b.Slides[i].TensorValuesStorage!;
             var sum = new double[tvA.Length];
             for (int j = 0; j < tvA.Length; j++)
                 sum[j] = tvA[j] + tvB[j];
@@ -1493,8 +1538,8 @@ public class ChebyshevSlider
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
         {
-            var tvA = a.Slides[i].TensorValues!;
-            var tvB = b.Slides[i].TensorValues!;
+            var tvA = a.Slides[i].TensorValuesStorage!;
+            var tvB = b.Slides[i].TensorValuesStorage!;
             var diff = new double[tvA.Length];
             for (int j = 0; j < tvA.Length; j++)
                 diff[j] = tvA[j] - tvB[j];
@@ -1512,7 +1557,7 @@ public class ChebyshevSlider
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
         {
-            var tv = a.Slides[i].TensorValues!;
+            var tv = a.Slides[i].TensorValuesStorage!;
             var scaled = new double[tv.Length];
             for (int j = 0; j < tv.Length; j++)
                 scaled[j] = tv[j] * scalar;
@@ -1539,8 +1584,8 @@ public class ChebyshevSlider
     {
         return $"ChebyshevSlider(" +
             $"dims={NumDimensions}, " +
-            $"slides={Partition.Length}, " +
-            $"partition={FormatPartition(Partition)}, " +
+            $"slides={_partition.Length}, " +
+            $"partition={FormatPartition(_partition)}, " +
             $"built={Built})";
     }
 
@@ -1549,7 +1594,7 @@ public class ChebyshevSlider
     {
         string status = Built ? "built" : "not built";
         int totalSlideEvals = TotalBuildEvals;
-        long fullTensorEvals = TensorShape.CheckedProduct(NNodes, nameof(ToString));
+        long fullTensorEvals = TensorShape.CheckedProduct(_nNodes, nameof(ToString));
 
         const int maxDisplay = 6;
 
@@ -1557,11 +1602,11 @@ public class ChebyshevSlider
         string nodesStr;
         if (NumDimensions > maxDisplay)
         {
-            nodesStr = "[" + string.Join(", ", NNodes.Take(maxDisplay)) + ", ...]";
+            nodesStr = "[" + string.Join(", ", _nNodes.Take(maxDisplay)) + ", ...]";
         }
         else
         {
-            nodesStr = "[" + string.Join(", ", NNodes) + "]";
+            nodesStr = "[" + string.Join(", ", _nNodes) + "]";
         }
 
         // Domain line
@@ -1569,41 +1614,41 @@ public class ChebyshevSlider
         if (NumDimensions > maxDisplay)
         {
             domainStr = string.Join(" x ",
-                Domain.Take(maxDisplay).Select(d => $"[{d[0]}, {d[1]}]")) + " x ...";
+                _domain.Take(maxDisplay).Select(d => $"[{d[0]}, {d[1]}]")) + " x ...";
         }
         else
         {
             domainStr = string.Join(" x ",
-                Domain.Select(d => $"[{d[0]}, {d[1]}]"));
+                _domain.Select(d => $"[{d[0]}, {d[1]}]"));
         }
 
         // Pivot line
         string pivotStr;
         if (NumDimensions > maxDisplay)
         {
-            pivotStr = "[" + string.Join(", ", PivotPoint.Take(maxDisplay)) + ", ...]";
+            pivotStr = "[" + string.Join(", ", _pivotPoint.Take(maxDisplay)) + ", ...]";
         }
         else
         {
-            pivotStr = "[" + string.Join(", ", PivotPoint) + "]";
+            pivotStr = "[" + string.Join(", ", _pivotPoint) + "]";
         }
 
         // Partition line
         string partitionStr;
-        if (Partition.Length > maxDisplay)
+        if (_partition.Length > maxDisplay)
         {
             partitionStr = "[" +
-                string.Join(", ", Partition.Take(maxDisplay).Select(g => "[" + string.Join(", ", g) + "]")) +
+                string.Join(", ", _partition.Take(maxDisplay).Select(g => "[" + string.Join(", ", g) + "]")) +
                 ", ...]";
         }
         else
         {
-            partitionStr = FormatPartition(Partition);
+            partitionStr = FormatPartition(_partition);
         }
 
         var lines = new List<string>
         {
-            $"ChebyshevSlider ({NumDimensions}D, {Partition.Length} slides, {status})",
+            $"ChebyshevSlider ({NumDimensions}D, {_partition.Length} slides, {status})",
             $"  Partition: {partitionStr}",
             $"  Pivot:     {pivotStr}",
             $"  Nodes:     {nodesStr} ({totalSlideEvals:N0} vs {fullTensorEvals:N0} full tensor)",
@@ -1614,11 +1659,11 @@ public class ChebyshevSlider
         {
             lines.Add($"  Error est: {ErrorEstimate():E2}");
             lines.Add("  Slides:");
-            for (int i = 0; i < Partition.Length; i++)
+            for (int i = 0; i < _partition.Length; i++)
             {
-                var group = Partition[i];
+                var group = _partition[i];
                 int slideEvals = TensorShape.RequireArrayLength(
-                    TensorShape.CheckedProduct(group.Select(d => NNodes[d]), nameof(ToString)),
+                    TensorShape.CheckedProduct(group.Select(d => _nNodes[d]), nameof(ToString)),
                     nameof(ToString));
                 lines.Add(
                     $"    [{i}] dims [{string.Join(", ", group)}]: " +
@@ -1647,7 +1692,7 @@ public class ChebyshevSlider
     public string GetConstructorType() => _constructorType;
 
     /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
-    public int[] GetUsedNs() => (int[])NNodes.Clone();
+    public int[] GetUsedNs() => (int[])_nNodes.Clone();
 
     /// <summary>Maximum derivative order this slider supports.</summary>
     public int GetMaxDerivativeOrder() => MaxDerivativeOrder;
@@ -1692,7 +1737,7 @@ public class ChebyshevSlider
         for (int slideIdx = 0; slideIdx < Slides!.Length; slideIdx++)
         {
             var slide = Slides[slideIdx];
-            var group = Partition[slideIdx];
+            var group = _partition[slideIdx];
             var slidePts = slide.GetEvaluationPoints();
             int slideNum = slide.GetNumEvaluationPoints();
             int gdim = group.Length;
@@ -1700,7 +1745,7 @@ public class ChebyshevSlider
             for (int p = 0; p < slideNum; p++)
             {
                 for (int d = 0; d < NumDimensions; d++)
-                    points[offset + p * NumDimensions + d] = PivotPoint[d];
+                    points[offset + p * NumDimensions + d] = _pivotPoint[d];
                 for (int gi = 0; gi < gdim; gi++)
                     points[offset + p * NumDimensions + group[gi]] = slidePts[p * gdim + gi];
             }
@@ -1761,10 +1806,10 @@ public class ChebyshevSlider
     {
         var copy = new ChebyshevSlider();
         copy.NumDimensions = NumDimensions;
-        copy.Domain = Internal.CloneHelpers.DeepCopy(Domain)!;
-        copy.NNodes = Internal.CloneHelpers.DeepCopy(NNodes)!;
-        copy.Partition = Internal.CloneHelpers.DeepCopy(Partition)!;
-        copy.PivotPoint = Internal.CloneHelpers.DeepCopy(PivotPoint)!;
+        copy.DomainStorage = Internal.CloneHelpers.DeepCopy(_domain)!;
+        copy.NNodesStorage = Internal.CloneHelpers.DeepCopy(_nNodes)!;
+        copy.PartitionStorage = Internal.CloneHelpers.DeepCopy(_partition)!;
+        copy.PivotPointStorage = Internal.CloneHelpers.DeepCopy(_pivotPoint)!;
         copy.PivotValue = PivotValue;
         copy.MaxDerivativeOrder = MaxDerivativeOrder;
         copy.Built = Built;
