@@ -54,26 +54,26 @@ public class SliderConstructorValidationTests
     [Fact]
     public void Constructor_rejects_shape_mismatches()
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, [[-1.0, 1.0]], NNodes, Partition, PivotPoint));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, Domain, [5], Partition, PivotPoint));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, Domain, NNodes, Partition, [0.0]));
     }
 
     [Fact]
     public void Constructor_rejects_malformed_domain_entries()
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, [null!, [-2.0, 2.0]], NNodes, Partition, PivotPoint));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, [[-1.0], [-2.0, 2.0]], NNodes, Partition, PivotPoint));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, [[1.0, -1.0], [-2.0, 2.0]], NNodes, Partition, PivotPoint));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, [[double.NaN, 1.0], [-2.0, 2.0]], NNodes, Partition, PivotPoint));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, [[-1.0, double.PositiveInfinity], [-2.0, 2.0]], NNodes, Partition, PivotPoint));
     }
 
@@ -82,32 +82,32 @@ public class SliderConstructorValidationTests
     [InlineData(-1)]
     public void Constructor_rejects_non_positive_node_counts(int nodeCount)
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
             new ChebyshevSlider(F, 2, Domain, [nodeCount, 6], Partition, PivotPoint));
     }
 
     [Fact]
     public void Constructor_rejects_empty_partition_groups()
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, Domain, NNodes, [[], [0, 1]], PivotPoint));
     }
 
     [Fact]
     public void Constructor_rejects_null_partition_groups()
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, Domain, NNodes, [null!, [0, 1]], PivotPoint));
     }
 
     [Fact]
     public void Constructor_rejects_non_finite_or_out_of_domain_pivots()
     {
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, Domain, NNodes, Partition, [double.NaN, 0.0]));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             new ChebyshevSlider(F, 2, Domain, NNodes, Partition, [0.0, double.PositiveInfinity]));
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
             new ChebyshevSlider(F, 2, Domain, NNodes, Partition, [2.0, 0.0]));
     }
 }

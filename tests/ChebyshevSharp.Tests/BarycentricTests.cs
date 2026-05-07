@@ -810,7 +810,7 @@ public class TestBoundaryValidation
     public void Test_domain_lo_equals_hi_throws()
     {
         // FromValues validates domain lo &lt; hi
-        Assert.ThrowsAny<ArgumentException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             ChebyshevApproximation.FromValues(
                 new double[] { 1.0, 1.0, 1.0, 1.0, 1.0 },
                 1, [new[] { 1.0, 1.0 }], [5]));
