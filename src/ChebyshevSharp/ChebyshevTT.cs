@@ -135,6 +135,7 @@ public class ChebyshevTT
         ValidatePositiveRank(maxRank, nameof(maxRank));
         ValidatePositiveFiniteTolerance(tolerance, nameof(tolerance));
         ValidatePositiveInteger(maxSweeps, nameof(maxSweeps));
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         _function = function;
         _numDimensions = numDimensions;
