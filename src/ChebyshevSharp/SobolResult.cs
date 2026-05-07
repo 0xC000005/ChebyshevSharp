@@ -9,6 +9,7 @@ public sealed record SobolResult
 {
     private readonly double[] _firstOrder = [];
     private readonly double[] _totalOrder = [];
+    private readonly double _variance;
 
     /// <summary>Create a Sobol result from first-order and total-order index arrays.</summary>
     /// <param name="FirstOrder">First-order index per dimension. Sums to ≤ 1; sums to 1 for purely additive functions.</param>
@@ -27,7 +28,8 @@ public sealed record SobolResult
         get => Internal.CloneHelpers.DeepCopy(_firstOrder)!;
         init
         {
-            ArgumentNullException.ThrowIfNull(value);
+            ValidateFiniteVector(value, nameof(FirstOrder));
+            ValidateMatchingLength(value.Length, _totalOrder.Length, nameof(FirstOrder), nameof(TotalOrder));
             _firstOrder = Internal.CloneHelpers.DeepCopy(value)!;
         }
     }
@@ -38,7 +40,8 @@ public sealed record SobolResult
         get => Internal.CloneHelpers.DeepCopy(_totalOrder)!;
         init
         {
-            ArgumentNullException.ThrowIfNull(value);
+            ValidateFiniteVector(value, nameof(TotalOrder));
+            ValidateMatchingLength(_firstOrder.Length, value.Length, nameof(FirstOrder), nameof(TotalOrder));
             _totalOrder = Internal.CloneHelpers.DeepCopy(value)!;
         }
     }
@@ -48,7 +51,46 @@ public sealed record SobolResult
     /// noise level, the function is effectively constant and the indices are
     /// meaningless.
     /// </summary>
-    public double Variance { get; init; }
+    public double Variance
+    {
+        get => _variance;
+        init
+        {
+            if (!double.IsFinite(value))
+                throw new ArgumentException($"{nameof(Variance)} must be finite.", nameof(Variance));
+            if (value < 0.0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(Variance),
+                    value,
+                    $"{nameof(Variance)} must be non-negative.");
+            _variance = value;
+        }
+    }
+
+    private static void ValidateFiniteVector(double[] values, string paramName)
+    {
+        ArgumentNullException.ThrowIfNull(values, paramName);
+        if (values.Length == 0)
+            throw new ArgumentException($"{paramName} must not be empty.", paramName);
+        for (int i = 0; i < values.Length; i++)
+        {
+            if (!double.IsFinite(values[i]))
+                throw new ArgumentException($"{paramName}[{i}] must be finite.", paramName);
+        }
+    }
+
+    private static void ValidateMatchingLength(
+        int firstLength,
+        int totalLength,
+        string firstName,
+        string totalName)
+    {
+        if (firstLength == 0 || totalLength == 0)
+            return;
+        if (firstLength != totalLength)
+            throw new ArgumentException(
+                $"{firstName} and {totalName} must have the same length.");
+    }
 
     /// <summary>Deconstruct into first-order indices, total-order indices, and variance.</summary>
     public void Deconstruct(out double[] FirstOrder, out double[] TotalOrder, out double Variance)

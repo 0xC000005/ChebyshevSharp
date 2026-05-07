@@ -6,6 +6,44 @@ namespace ChebyshevSharp.Tests;
 public class RecordTypesTests
 {
     [Fact]
+    public void Domain_rejects_malformed_bounds()
+    {
+        Assert.Throws<ArgumentNullException>(() => new Domain(null!));
+        Assert.Throws<ArgumentException>(() => new Domain(new double[][] { null! }));
+        Assert.Throws<ArgumentException>(() => new Domain(new[] { new[] { 0.0 } }));
+        Assert.Throws<ArgumentException>(() => new Domain(new[] { new[] { 0.0, double.NaN } }));
+        Assert.Throws<ArgumentException>(() => new Domain(new[] { new[] { 1.0, 1.0 } }));
+    }
+
+    [Fact]
+    public void Ns_rejects_non_positive_counts()
+    {
+        Assert.Throws<ArgumentNullException>(() => new Ns(null!));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Ns(new[] { 0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Ns(new[] { 5, -1 }));
+    }
+
+    [Fact]
+    public void SpecialPoints_rejects_malformed_points()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SpecialPoints(null!));
+        Assert.Throws<ArgumentException>(() => new SpecialPoints(new double[][] { null! }));
+        Assert.Throws<ArgumentException>(() => new SpecialPoints(new[] { new[] { 0.25, double.PositiveInfinity } }));
+    }
+
+    [Fact]
+    public void SobolResult_rejects_malformed_arrays_and_variance()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SobolResult(null!, new[] { 1.0 }, 1.0));
+        Assert.Throws<ArgumentNullException>(() => new SobolResult(new[] { 1.0 }, null!, 1.0));
+        Assert.Throws<ArgumentException>(() => new SobolResult(new[] { 0.25 }, new[] { 0.25, 0.75 }, 1.0));
+        Assert.Throws<ArgumentException>(() => new SobolResult(new[] { double.NaN }, new[] { 1.0 }, 1.0));
+        Assert.Throws<ArgumentException>(() => new SobolResult(new[] { 0.25 }, new[] { double.NegativeInfinity }, 1.0));
+        Assert.Throws<ArgumentException>(() => new SobolResult(new[] { 0.25 }, new[] { 0.5 }, double.NaN));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SobolResult(new[] { 0.25 }, new[] { 0.5 }, -1.0));
+    }
+
+    [Fact]
     public void Domain_implicit_conversion_both_directions()
     {
         double[][] raw = new[] { new[] { 0.0, 1.0 }, new[] { -1.0, 2.0 } };

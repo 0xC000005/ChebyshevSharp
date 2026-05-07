@@ -22,8 +22,21 @@ public sealed record Ns
         get => Internal.CloneHelpers.DeepCopy(_counts)!;
         init
         {
-            ArgumentNullException.ThrowIfNull(value);
+            ValidateCounts(value);
             _counts = Internal.CloneHelpers.DeepCopy(value)!;
+        }
+    }
+
+    private static void ValidateCounts(int[] counts)
+    {
+        ArgumentNullException.ThrowIfNull(counts, nameof(Counts));
+        for (int d = 0; d < counts.Length; d++)
+        {
+            if (counts[d] <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(Counts),
+                    counts[d],
+                    $"{nameof(Counts)}[{d}] must be positive.");
         }
     }
 
