@@ -32,6 +32,11 @@ jobs:
       - name: Build release
         run: dotnet build --configuration Release --no-restore
 
+      - name: Run examples
+        run: |
+          dotnet run --configuration Release --no-build --project examples/QuickStart/QuickStart.csproj
+          dotnet run --configuration Release --no-build --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
+
       - name: Pack with package validation
         run: dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artifacts/packages
 
@@ -42,11 +47,24 @@ jobs:
         run: docfx docs/docfx.json
 
   test:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     needs: [validation]
     strategy:
       matrix:
-        dotnet-version: ["8.0.x", "10.0.x"]
+        include:
+          - name: .NET 8 library build
+            dotnet-version: "8.0.x"
+            target-framework: net8.0
+            project: src/ChebyshevSharp/ChebyshevSharp.csproj
+            run-tests: false
+            upload-coverage: false
+          - name: .NET 10 tests
+            dotnet-version: "10.0.x"
+            target-framework: net10.0
+            project: tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj
+            run-tests: true
+            upload-coverage: true
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -54,20 +72,28 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+        id: setup-dotnet
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
 
+      - name: Select requested SDK
+        run: dotnet new globaljson --sdk-version "${{ steps.setup-dotnet.outputs.dotnet-version }}" --roll-forward latestFeature --force
+
+      - name: Show selected SDK
+        run: dotnet --version
+
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ${{ matrix.project }} -p:TargetFramework=${{ matrix.target-framework }}
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build ${{ matrix.project }} --framework ${{ matrix.target-framework }} --no-restore
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+        if: matrix.run-tests == true
+        run: dotnet test ${{ matrix.project }} --framework ${{ matrix.target-framework }} --no-build --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Upload coverage to Codecov
-        if: matrix.dotnet-version == '10.0.x'
+        if: matrix.upload-coverage == true
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6
         with:
           files: tests/ChebyshevSharp.Tests/TestResults/**/coverage.cobertura.xml
