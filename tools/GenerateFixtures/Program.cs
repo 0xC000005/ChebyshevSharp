@@ -82,9 +82,44 @@ Console.WriteLine($"Writing fixtures to: {fixtureDir}");
         knots: new[] { new[] { 0.0 } });
     kink.Build(verbose: false);
     string path = Path.Combine(fixtureDir, "spline_1d_kink.pcb");
-    kink.Save(path, format: "binary");
-    long sz = new FileInfo(path).Length;
-    Console.WriteLine($"Wrote {path} ({sz} bytes)");
+    string candidate = Path.Combine(
+        Path.GetTempPath(),
+        $"spline_1d_kink.csharp.{Guid.NewGuid():N}.pcb");
+    try
+    {
+        kink.Save(candidate, format: "binary");
+        long sz = new FileInfo(candidate).Length;
+
+        if (!File.Exists(path))
+        {
+            Console.Error.WriteLine(
+                $"  WARNING: {path} is missing. Not writing the C# spline candidate " +
+                "because PyChebyshev bytes are canonical for this fixture.");
+        }
+        else if (FilesEqual(path, candidate))
+        {
+            File.Copy(candidate, path, overwrite: true);
+            Console.WriteLine($"Wrote {path} ({sz} bytes)");
+        }
+        else
+        {
+            Console.WriteLine(
+                $"Preserved {path} ({new FileInfo(path).Length} bytes); " +
+                $"C# candidate was {sz} bytes but differs from PyChebyshev canonical bytes.");
+        }
+    }
+    finally
+    {
+        if (File.Exists(candidate))
+            File.Delete(candidate);
+    }
 }
 
 Console.WriteLine("Done.");
+
+static bool FilesEqual(string left, string right)
+{
+    byte[] leftBytes = File.ReadAllBytes(left);
+    byte[] rightBytes = File.ReadAllBytes(right);
+    return leftBytes.SequenceEqual(rightBytes);
+}
