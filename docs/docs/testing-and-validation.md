@@ -14,7 +14,7 @@ docfx docs/docfx.json
 Install DocFX first if needed:
 
 ```bash
-dotnet tool install --global docfx
+dotnet tool install --global docfx --version 2.78.5
 ```
 
 Run examples when changing public workflows:
@@ -29,7 +29,7 @@ Property tests live in `tests/ChebyshevSharp.Tests/PropertyTests.cs` and run wit
 Mutation testing is available as a manual or scheduled workflow. To run it locally:
 
 ```bash
-dotnet tool install --global dotnet-stryker
+dotnet tool install --global dotnet-stryker --version 4.14.1
 dotnet stryker --config-file stryker-config.json
 ```
 

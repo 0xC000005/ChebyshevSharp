@@ -43,8 +43,8 @@ dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artif
 docfx docs/docfx.json
 ```
 
-Install DocFX with `dotnet tool install --global docfx` if it is not already
-available.
+Install DocFX with `dotnet tool install --global docfx --version 2.78.5` if it
+is not already available.
 
 ## Coverage and Mutation Testing
 
@@ -54,7 +54,7 @@ coverage drop. Add focused tests for modified coverable lines.
 Stryker.NET mutation testing targets high-risk numerical code:
 
 ```bash
-dotnet tool install --global dotnet-stryker
+dotnet tool install --global dotnet-stryker --version 4.14.1
 dotnet stryker --config-file stryker-config.json
 ```
 

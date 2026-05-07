@@ -36,7 +36,7 @@ jobs:
         run: dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artifacts/packages
 
       - name: Install DocFX
-        run: dotnet tool install --global docfx
+        run: dotnet tool install --global docfx --version 2.78.5
 
       - name: Build docs
         run: docfx docs/docfx.json

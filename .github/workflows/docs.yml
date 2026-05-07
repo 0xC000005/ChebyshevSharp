@@ -29,7 +29,7 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Install DocFX
-        run: dotnet tool install --global docfx
+        run: dotnet tool install --global docfx --version 2.78.5
 
       - name: Build docs
         run: docfx docs/docfx.json
