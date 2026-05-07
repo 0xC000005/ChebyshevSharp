@@ -110,10 +110,15 @@ public class SplineErgonomicsTests
     }
 
     [Fact]
-    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    public void GetEvaluationPoints_returns_snapshot_on_each_call()
     {
         var spline = BuildSimple();
-        Assert.Same(spline.GetEvaluationPoints(), spline.GetEvaluationPoints());
+        double[] first = spline.GetEvaluationPoints();
+        first[0] = 123.0;
+
+        double[] second = spline.GetEvaluationPoints();
+        Assert.NotSame(first, second);
+        Assert.NotEqual(123.0, second[0]);
     }
 
     [Fact]

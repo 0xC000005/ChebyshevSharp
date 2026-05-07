@@ -160,12 +160,15 @@ public class ApproxErgonomicsTests
     }
 
     [Fact]
-    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    public void GetEvaluationPoints_returns_snapshot_on_each_call()
     {
         var approx = BuildSimple();
         double[] first = approx.GetEvaluationPoints();
+        first[0] = 123.0;
+
         double[] second = approx.GetEvaluationPoints();
-        Assert.Same(first, second);
+        Assert.NotSame(first, second);
+        Assert.NotEqual(123.0, second[0]);
     }
 
     [Fact]

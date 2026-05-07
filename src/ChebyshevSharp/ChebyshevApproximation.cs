@@ -1839,12 +1839,12 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Flat row-major array of all Chebyshev node coordinates.
-    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached.
+    /// Length is GetNumEvaluationPoints() * NumDimensions. Result is lazily built and cached internally.
     /// </summary>
-    /// <returns>Double array of shape [numPoints, ndim] flattened to 1D in row-major order.</returns>
+    /// <returns>A snapshot of shape [numPoints, ndim] flattened to 1D in row-major order.</returns>
     public double[] GetEvaluationPoints()
     {
-        if (_evaluationPointsCache != null) return _evaluationPointsCache;
+        if (_evaluationPointsCache != null) return CloneHelpers.DeepCopy(_evaluationPointsCache)!;
 
         int num = GetNumEvaluationPoints();
         int ndim = NumDimensions;
@@ -1870,7 +1870,7 @@ public class ChebyshevApproximation
         }
 
         _evaluationPointsCache = points;
-        return points;
+        return CloneHelpers.DeepCopy(points)!;
     }
 
     /// <summary>

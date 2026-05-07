@@ -131,10 +131,15 @@ public class SliderErgonomicsTests
     }
 
     [Fact]
-    public void GetEvaluationPoints_returns_cached_array_on_second_call()
+    public void GetEvaluationPoints_returns_snapshot_on_each_call()
     {
         var slider = BuildSimple();
-        Assert.Same(slider.GetEvaluationPoints(), slider.GetEvaluationPoints());
+        double[] first = slider.GetEvaluationPoints();
+        first[0] = 123.0;
+
+        double[] second = slider.GetEvaluationPoints();
+        Assert.NotSame(first, second);
+        Assert.NotEqual(123.0, second[0]);
     }
 
     [Fact]
