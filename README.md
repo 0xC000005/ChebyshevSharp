@@ -95,7 +95,7 @@ dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 
 ## Example: Option Pricing
 
-Replace a slow Black-Scholes pricer with a fast Chebyshev interpolant that returns price in ~500 ns, or price plus several Greeks in ~2 us:
+Replace a slow Black-Scholes pricer with a fast Chebyshev interpolant that returns price in ~500 ns, or price plus delta and gamma in ~2 us:
 
 ```csharp
 var cheb = new ChebyshevApproximation(
@@ -110,14 +110,13 @@ var cheb = new ChebyshevApproximation(
 );
 cheb.Build();  // 1,800 function evaluations (one-time cost)
 
-// Price and all Greeks in one call
+// Price, delta, and gamma in one call
 double[] results = cheb.VectorizedEvalMulti(
     new[] { 100.0, 0.2, 1.0 },
     new[] {
         new[] { 0, 0, 0 },  // price
         new[] { 1, 0, 0 },  // delta
         new[] { 2, 0, 0 },  // gamma
-        new[] { 0, 1, 0 },  // vega
     }
 );
 ```

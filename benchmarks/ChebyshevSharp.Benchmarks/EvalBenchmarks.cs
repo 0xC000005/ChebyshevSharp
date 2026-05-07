@@ -18,6 +18,7 @@ public class EvalBenchmarks
     private int[] _noDerivs1D = null!;
     private int[] _noDerivs3D = null!;
     private int[] _noDerivs5D = null!;
+    private int[] _deriv1_1D = null!;
     private int[] _deriv1_3D = null!;
     private int[] _deriv1_5D = null!;
 
@@ -60,6 +61,7 @@ public class EvalBenchmarks
         _noDerivs1D = new[] { 0 };
         _noDerivs3D = new[] { 0, 0, 0 };
         _noDerivs5D = new[] { 0, 0, 0, 0, 0 };
+        _deriv1_1D = new[] { 1 };
         _deriv1_3D = new[] { 1, 0, 0 };
         _deriv1_5D = new[] { 1, 0, 0, 0, 0 };
 
@@ -89,7 +91,7 @@ public class EvalBenchmarks
     public double Eval_1D_Value() => _sin1D.VectorizedEval(_point1D, _noDerivs1D);
 
     [Benchmark]
-    public double Eval_1D_Deriv1() => _sin1D.VectorizedEval(_point1D, new[] { 1 });
+    public double Eval_1D_Deriv1() => _sin1D.VectorizedEval(_point1D, _deriv1_1D);
 
     // --- 3D Eval ---
 

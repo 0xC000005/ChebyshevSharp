@@ -14,6 +14,8 @@
 
 ## Eval Benchmarks
 
+`Multi_3D_Greeks` measures price, delta, and gamma for the 3D Black-Scholes fixture.
+
 | Method           | Baseline (ns) | Optimized (ns) | Speedup  | Alloc Before | Alloc After | Reduction |
 |----------------- |---------------:|---------------:|---------:|-------------:|------------:|----------:|
 | Eval_1D_Value    |          134.3 |          83.3  | **1.6x** |        640 B |       216 B |   **-66%** |
@@ -29,6 +31,7 @@
 ## Cross-Language Comparison (C# vs PyChebyshev)
 
 PyChebyshev uses NumPy + OpenBLAS. Same BLAS library, same hardware.
+`Multi_3D_Greeks` measures price, delta, and gamma for the 3D Black-Scholes fixture.
 
 | Method           | Python (ns)  | C# (ns)    | C# Speedup   |
 |----------------- |-------------:|-----------:|:-------------|

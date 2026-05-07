@@ -6,6 +6,8 @@
 
 ## Eval Benchmarks
 
+`Multi_3D_Greeks` measures price, delta, and gamma for the 3D Black-Scholes fixture.
+
 | Method           | Mean          | Error      | StdDev     | Allocated |
 |----------------- |--------------:|-----------:|-----------:|----------:|
 | Eval_1D_Value    |     134.3 ns  |   0.94 ns  |   0.84 ns  |     640 B |
