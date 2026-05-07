@@ -23,8 +23,26 @@ public sealed record SpecialPoints
         get => Internal.CloneHelpers.DeepCopy(_points)!;
         init
         {
-            ArgumentNullException.ThrowIfNull(value);
+            ValidatePoints(value);
             _points = Internal.CloneHelpers.DeepCopy(value)!;
+        }
+    }
+
+    private static void ValidatePoints(double[][] points)
+    {
+        ArgumentNullException.ThrowIfNull(points, nameof(Points));
+        for (int d = 0; d < points.Length; d++)
+        {
+            double[] row = points[d] ?? throw new ArgumentException(
+                $"{nameof(Points)}[{d}] must not be null.",
+                nameof(Points));
+            for (int i = 0; i < row.Length; i++)
+            {
+                if (!double.IsFinite(row[i]))
+                    throw new ArgumentException(
+                        $"{nameof(Points)}[{d}][{i}] must be finite.",
+                        nameof(Points));
+            }
         }
     }
 

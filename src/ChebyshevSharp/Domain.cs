@@ -23,8 +23,31 @@ public sealed record Domain
         get => Internal.CloneHelpers.DeepCopy(_bounds)!;
         init
         {
-            ArgumentNullException.ThrowIfNull(value);
+            ValidateBounds(value);
             _bounds = Internal.CloneHelpers.DeepCopy(value)!;
+        }
+    }
+
+    private static void ValidateBounds(double[][] bounds)
+    {
+        ArgumentNullException.ThrowIfNull(bounds, nameof(Bounds));
+        for (int d = 0; d < bounds.Length; d++)
+        {
+            double[] row = bounds[d] ?? throw new ArgumentException(
+                $"{nameof(Bounds)}[{d}] must not be null.",
+                nameof(Bounds));
+            if (row.Length != 2)
+                throw new ArgumentException(
+                    $"{nameof(Bounds)}[{d}] must contain exactly [lo, hi].",
+                    nameof(Bounds));
+            if (!double.IsFinite(row[0]) || !double.IsFinite(row[1]))
+                throw new ArgumentException(
+                    $"{nameof(Bounds)}[{d}] endpoints must be finite.",
+                    nameof(Bounds));
+            if (row[0] >= row[1])
+                throw new ArgumentException(
+                    $"{nameof(Bounds)}[{d}] must satisfy lo < hi.",
+                    nameof(Bounds));
         }
     }
 
