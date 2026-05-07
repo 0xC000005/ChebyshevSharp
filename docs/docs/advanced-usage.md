@@ -30,7 +30,7 @@ double[] values = cheb.VectorizedEvalBatch(points, new[] { 0, 0, 0 });
 | `VectorizedEval` | Single point, single derivative order. BLAS-optimized; recommended for most uses. |
 | `Eval` | Same as `VectorizedEval` but uses loop-based contraction. Matches the Python `eval()` method. |
 | `VectorizedEvalBatch` | Multiple points, same derivative order. Loops over points with JIT-compiled code. |
-| `VectorizedEvalMulti` | Single point, multiple derivative orders (e.g., price + all Greeks). Shares barycentric weight computation across outputs. |
+| `VectorizedEvalMulti` | Single point, multiple derivative orders (e.g., price plus selected Greeks). Shares barycentric weight computation across outputs. |
 
 `ChebyshevSpline` and `ChebyshevSlider` provide `Eval` and `EvalMulti` with the same signatures. `ChebyshevSpline` also supports `EvalBatch`.
 
@@ -42,7 +42,7 @@ Compute the function value and multiple derivatives at the same point in a singl
 
 ```csharp
 // Black-Scholes 3D: (spot, volatility, maturity)
-// Compute price and all Greeks at one point
+// Compute price and selected Greeks at one point
 int[][] derivativeOrders = new[]
 {
     new[] { 0, 0, 0 },  // value (price)
@@ -64,7 +64,7 @@ double vega  = results[3];
 double theta = results[4];
 ```
 
-`VectorizedEvalMulti` is faster than calling `VectorizedEval` in a loop because it computes the barycentric weights and exact-node detection once and reuses them across all derivative orders. For 3D with 5 outputs, this gives a ~3x speedup over separate calls.
+`VectorizedEvalMulti` can be faster than calling `VectorizedEval` in a loop because it computes the barycentric weights and exact-node detection once and reuses them across all derivative orders. Benchmark latency-sensitive derivative sets directly, because the speedup depends on the number and order of derivatives requested.
 
 ## Error Estimation
 

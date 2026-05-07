@@ -60,19 +60,18 @@ var cheb = new ChebyshevApproximation(
 );
 cheb.Build();
 
-// Price and all Greeks in one call
+// Price, delta, and gamma in one call
 double[] results = cheb.VectorizedEvalMulti(
     new[] { 100.0, 0.2, 1.0 },
     new[] {
         new[] { 0, 0, 0 },  // price
         new[] { 1, 0, 0 },  // delta
         new[] { 2, 0, 0 },  // gamma
-        new[] { 0, 1, 0 },  // vega
     }
 );
 ```
 
-After a one-time build cost of 1,800 function evaluations, value-only evaluation takes ~500 ns and a price-plus-Greeks multi-evaluation takes ~2 us in the benchmark suite — orders of magnitude faster than the original model.
+After a one-time build cost of 1,800 function evaluations, value-only evaluation takes ~500 ns and a multi-evaluation for price, delta, and gamma takes ~2 us in the benchmark suite — orders of magnitude faster than the original model.
 
 For functions with discontinuities or singularities (e.g., digital options, barrier payoffs), use `ChebyshevSpline` to place knots at the trouble points and achieve spectral convergence on each smooth piece. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 

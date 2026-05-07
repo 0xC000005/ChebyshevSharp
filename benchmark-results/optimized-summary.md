@@ -15,6 +15,8 @@
 
 ## Eval Benchmarks
 
+`Multi_3D_Greeks` measures price, delta, and gamma for the 3D Black-Scholes fixture.
+
 | Method           | Mean          | Allocated |
 |----------------- |--------------:|----------:|
 | Eval_1D_Value    |      83.29 ns |     216 B |
@@ -42,6 +44,8 @@
 | DCT_n50                |     7,652.05 ns |    8135 B |
 
 ## Cross-Language Comparison
+
+`Multi_3D_Greeks` measures price, delta, and gamma for the 3D Black-Scholes fixture.
 
 | Method           | Python (ns) | C# (ns) | C# Speedup |
 |----------------- |------------:|--------:|-----------:|

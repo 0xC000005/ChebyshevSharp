@@ -57,7 +57,7 @@ Both implementations use OpenBLAS for the underlying linear algebra. Benchmarks 
 | 5D value eval | 55,455 ns | 39,082 ns | 1.4x |
 | 5D delta (derivative) | 56,747 ns | 38,835 ns | 1.5x |
 | 3D batch (100 points) | 1,251,969 ns | 54,117 ns | 23x |
-| 3D multi (price + Greeks) | 17,908 ns | 1,921 ns | 9.3x |
+| 3D multi (price + delta + gamma) | 17,908 ns | 1,921 ns | 9.3x |
 
 ### Why the Gap Varies by Dimension
 
@@ -66,6 +66,8 @@ Both implementations use OpenBLAS for the underlying linear algebra. Benchmarks 
 **5D (1.4--1.5x faster):** The 161,051-element tensor contraction saturates the BLAS GEMV call. Both languages call the same OpenBLAS `dgemv` routine, so the speedup narrows to what C# saves in loop overhead and memory management.
 
 **Batch 3D (23x faster):** Python's `vectorized_eval_batch` loops over points in the interpreter; C# loops in JIT-compiled native code. Each individual eval is fast, so the loop overhead matters.
+
+**Multi 3D:** The `Multi_3D_Greeks` benchmark measures price, delta, and gamma for the 3D Black-Scholes fixture. Additional derivative orders can be requested with `VectorizedEvalMulti`; they add work and should be benchmarked separately for latency-sensitive paths.
 
 ## Memory Allocation
 
