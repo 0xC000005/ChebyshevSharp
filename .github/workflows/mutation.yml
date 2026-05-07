@@ -25,7 +25,7 @@ jobs:
         run: dotnet restore
 
       - name: Install Stryker.NET
-        run: dotnet tool install --global dotnet-stryker
+        run: dotnet tool install --global dotnet-stryker --version 4.14.1
 
       - name: Run mutation tests
         run: dotnet stryker --config-file stryker-config.json
