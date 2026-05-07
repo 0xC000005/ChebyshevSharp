@@ -2546,6 +2546,13 @@ public class ChebyshevTT
         IProgress<int>? progress = null,
         bool verbose = false)
     {
+        ArgumentNullException.ThrowIfNull(function);
+        ValidateFixedGridArguments(numDimensions, domain, numNodes);
+        ValidatePositiveRank(maxRank, nameof(maxRank));
+        ValidatePositiveFiniteTolerance(tolerance, nameof(tolerance));
+        ValidatePositiveInteger(maxSweeps, nameof(maxSweeps));
+        if (nTrials < 0)
+            throw new ArgumentOutOfRangeException(nameof(nTrials), nTrials, "nTrials must be non-negative.");
         if (method != "greedy_swap" && method != "random")
             throw new ArgumentException(
                 $"unknown method: '{method}' (use 'greedy_swap' or 'random')", nameof(method));

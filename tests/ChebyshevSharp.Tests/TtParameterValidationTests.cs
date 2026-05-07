@@ -199,4 +199,87 @@ public class TtParameterValidationTests
 
         Assert.Equal("maxSweeps", ex.ParamName);
     }
+
+    [Fact]
+    public void WithAutoOrder_rejects_malformed_public_arguments()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.WithAutoOrder(null!, 2, Domain, NNodes, verbose: false));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.WithAutoOrder(p => p[0] + p[1], 2, null!, NNodes, verbose: false));
+
+        Assert.Throws<ArgumentNullException>(() =>
+            ChebyshevTT.WithAutoOrder(p => p[0] + p[1], 2, Domain, null!, verbose: false));
+
+        var shortDomain = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.WithAutoOrder(
+                p => p[0] + p[1],
+                2,
+                new[] { new[] { -1.0, 1.0 } },
+                NNodes,
+                verbose: false));
+        Assert.Contains("domain", shortDomain.Message);
+
+        var shortNNodes = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.WithAutoOrder(
+                p => p[0] + p[1],
+                2,
+                Domain,
+                new[] { 5 },
+                verbose: false));
+        Assert.Contains("nNodes", shortNNodes.Message);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void WithAutoOrder_rejects_non_positive_maxRank(int maxRank)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            ChebyshevTT.WithAutoOrder(
+                p => p[0] + p[1],
+                2,
+                Domain,
+                NNodes,
+                maxRank: maxRank,
+                verbose: false));
+
+        Assert.Equal("maxRank", ex.ParamName);
+    }
+
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(-1e-6)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void WithAutoOrder_rejects_non_positive_or_non_finite_tolerance(double tolerance)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            ChebyshevTT.WithAutoOrder(
+                p => p[0] + p[1],
+                2,
+                Domain,
+                NNodes,
+                tolerance: tolerance,
+                verbose: false));
+
+        Assert.Equal("tolerance", ex.ParamName);
+    }
+
+    [Fact]
+    public void WithAutoOrder_rejects_negative_nTrials()
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            ChebyshevTT.WithAutoOrder(
+                p => p[0] + p[1],
+                2,
+                Domain,
+                NNodes,
+                nTrials: -1,
+                verbose: false));
+
+        Assert.Equal("nTrials", ex.ParamName);
+    }
 }
