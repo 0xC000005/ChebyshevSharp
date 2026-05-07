@@ -62,4 +62,76 @@ public class TtPublicStateOwnershipTests
         Assert.Equal(before, after, precision: 12);
         Assert.Throws<ArgumentOutOfRangeException>(() => tt.Eval(new[] { 2.0, 0.0 }));
     }
+
+    [Fact]
+    public void Extrude_result_in_place_mutation_does_not_change_source_tt()
+    {
+        var source = new ChebyshevTT(
+            p => p[0] + 2.0 * p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 6, 6 },
+            maxRank: 4);
+        source.Build(verbose: false, method: "svd");
+
+        double[] sourcePoint = [0.25, -0.4];
+        double before = source.Eval(sourcePoint);
+
+        ChebyshevTT extruded = source.Extrude(dim: 1, newDomain: (0.0, 1.0), newN: 4);
+        extruded.ScalarMulInPlace(2.0);
+
+        Assert.Equal(before, source.Eval(sourcePoint), precision: 12);
+    }
+
+    [Fact]
+    public void Slice_result_in_place_mutation_does_not_change_source_tt()
+    {
+        var source = new ChebyshevTT(
+            p => p[0] + 2.0 * p[1] - 0.5 * p[2],
+            numDimensions: 3,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5, 5 },
+            maxRank: 4);
+        source.Build(verbose: false, method: "svd");
+
+        double[] sourcePoint = [0.2, 0.1, -0.3];
+        double before = source.Eval(sourcePoint);
+
+        ChebyshevTT sliced = source.Slice(dim: 1, value: 0.25);
+        sliced.NegateInPlace();
+
+        Assert.Equal(before, source.Eval(sourcePoint), precision: 12);
+    }
+
+    [Fact]
+    public void Slice_result_copies_unaffected_trailing_cores()
+    {
+        var source = BuildThreeDimensionalTt();
+
+        ChebyshevTT sliced = source.Slice(dim: 0, value: 0.25);
+
+        Assert.NotSame(source.GetCoreShape(2).Data, sliced.GetCoreShape(1).Data);
+    }
+
+    [Fact]
+    public void Slice_result_copies_unaffected_leading_cores_when_slicing_rightmost_dim()
+    {
+        var source = BuildThreeDimensionalTt();
+
+        ChebyshevTT sliced = source.Slice(dim: 2, value: -0.25);
+
+        Assert.NotSame(source.GetCoreShape(0).Data, sliced.GetCoreShape(0).Data);
+    }
+
+    private static ChebyshevTT BuildThreeDimensionalTt()
+    {
+        var tt = new ChebyshevTT(
+            p => p[0] + 2.0 * p[1] - 0.5 * p[2],
+            numDimensions: 3,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5, 5 },
+            maxRank: 4);
+        tt.Build(verbose: false, method: "svd");
+        return tt;
+    }
 }
