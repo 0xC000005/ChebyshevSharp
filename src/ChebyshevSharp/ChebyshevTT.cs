@@ -1845,9 +1845,12 @@ public class ChebyshevTT
     }
 
     /// <summary>Round TT to lower rank in place via TT-SVD recompression.</summary>
+    /// <param name="tolerance">Finite non-negative relative singular-value cutoff. Zero keeps rank-only truncation.</param>
+    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="tolerance"/> is negative, NaN, or infinite.</exception>
     public void RoundInPlace(double tolerance)
     {
         CheckBuilt();
+        ValidateNonNegativeFiniteTolerance(tolerance, nameof(tolerance));
         _coeffCores = TensorTrainAlgebra.RoundCores(_coeffCores!, _maxRank, tolerance);
         _cachedErrorEstimate = null;
         for (int i = 0; i < _numDimensions; i++)

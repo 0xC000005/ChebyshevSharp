@@ -132,6 +132,31 @@ public class TtParameterValidationTests
     }
 
     [Theory]
+    [InlineData(-1e-6)]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NegativeInfinity)]
+    public void RoundInPlace_rejects_negative_or_non_finite_tolerance(double tolerance)
+    {
+        var tt = CreateBuiltTt();
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            tt.RoundInPlace(tolerance));
+
+        Assert.Equal("tolerance", ex.ParamName);
+    }
+
+    [Fact]
+    public void RoundInPlace_allows_zero_tolerance_for_rank_only_svd_truncation()
+    {
+        var tt = CreateBuiltTt();
+
+        tt.RoundInPlace(0.0);
+
+        Assert.Equal(2, tt.NumDimensions);
+    }
+
+    [Theory]
     [InlineData(0.0)]
     [InlineData(-1e-6)]
     [InlineData(double.NaN)]
