@@ -165,7 +165,8 @@ public class ChebyshevTT
         int[] ttRanks,
         double buildTime,
         int totalBuildEvals,
-        int maxDerivativeOrder = 2)
+        int maxDerivativeOrder = 2,
+        bool built = true)
     {
         _function = null;
         _numDimensions = numDimensions;
@@ -174,12 +175,12 @@ public class ChebyshevTT
         _maxRank = maxRank;
         _tolerance = tolerance;
         _maxSweeps = maxSweeps;
-        _coeffCores = coeffCores;
-        _ttRanks = ttRanks;
+        _coeffCores = built ? coeffCores : null;
+        _ttRanks = built ? ttRanks : null;
         _buildTime = buildTime;
         _totalBuildEvals = totalBuildEvals;
         _maxDerivativeOrder = maxDerivativeOrder;
-        _built = true;
+        _built = built;
         _dimOrder = Enumerable.Range(0, numDimensions).ToArray();  // overwritten by Load's v2 deserialization
     }
 
@@ -2670,7 +2671,8 @@ public class ChebyshevTT
             ttRanks: _ttRanks != null ? (int[])_ttRanks.Clone() : System.Array.Empty<int>(),
             buildTime: _buildTime,
             totalBuildEvals: _totalBuildEvals,
-            maxDerivativeOrder: _maxDerivativeOrder);
+            maxDerivativeOrder: _maxDerivativeOrder,
+            built: _built);
         copy.Method = Method;
         copy._constructorType = "clone";
         copy.BuildWarning = BuildWarning;

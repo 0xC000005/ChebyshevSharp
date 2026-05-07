@@ -89,6 +89,27 @@ public class CloneTests
     }
 
     [Fact]
+    public void Tt_Clone_of_unbuilt_source_preserves_unbuilt_state()
+    {
+        var src = new ChebyshevTT(
+            p => p[0] + p[1],
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5 });
+
+        ChebyshevTT copy = src.Clone();
+
+        Assert.Equal("clone", copy.GetConstructorType());
+        Assert.False(copy.IsConstructionFinished());
+        Assert.Equal(new[] { 5, 5 }, copy.GetUsedNs());
+        Assert.Throws<InvalidOperationException>(() => copy.Eval(new[] { 0.0, 0.0 }));
+        Assert.Throws<InvalidOperationException>(() => _ = copy.TtRanks);
+        Assert.Throws<InvalidOperationException>(() =>
+            copy.Save(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName())));
+        Assert.Throws<InvalidOperationException>(() => copy.Build(verbose: false));
+    }
+
+    [Fact]
     public void Approx_Clone_arrays_are_not_aliased_with_source()
     {
         // Reflection-based completeness audit. Walks every private field and
