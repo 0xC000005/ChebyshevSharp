@@ -24,6 +24,8 @@ internal static class PcbFormat
 
     public static readonly byte[] Magic = { 0x50, 0x43, 0x42, 0x00 }; // "PCB\0"
 
+    private const int LargeAllocationPreflightThreshold = 1_000_000;
+
     static PcbFormat()
     {
         // .pcb format is fixed little-endian. .NET supports big-endian platforms
@@ -59,6 +61,56 @@ internal static class PcbFormat
         {
             throw new InvalidDataException(
                 $"{description} overflows int (a={a}, b={b})");
+        }
+    }
+
+    private static void PreflightLargeRead(BinaryReader r, long itemCount, int bytesPerItem, string fieldName)
+    {
+        if (itemCount <= LargeAllocationPreflightThreshold || !r.BaseStream.CanSeek)
+            return;
+
+        long bytesRequired;
+        try
+        {
+            checked { bytesRequired = itemCount * bytesPerItem; }
+        }
+        catch (OverflowException)
+        {
+            throw new InvalidDataException(
+                $"{fieldName} declares {itemCount:N0} items, exceeding addressable byte size");
+        }
+
+        long remaining = r.BaseStream.Length - r.BaseStream.Position;
+        if (remaining < bytesRequired)
+            throw new InvalidDataException(
+                $"{fieldName} declares {itemCount:N0} items ({bytesRequired:N0} bytes), " +
+                $"but only {remaining:N0} bytes remain in the stream");
+    }
+
+    private static int CheckedPieceCountFromKnots(int[] numKnots)
+    {
+        long expectedPieces = 1;
+        try
+        {
+            checked
+            {
+                foreach (int k in numKnots)
+                    expectedPieces *= (long)k + 1L;
+            }
+        }
+        catch (OverflowException ex)
+        {
+            throw new InvalidDataException("prod(num_knots+1) overflows long", ex);
+        }
+
+        try
+        {
+            return TensorShape.RequireArrayLength(expectedPieces, "prod(num_knots+1)", numKnots);
+        }
+        catch (OverflowException ex)
+        {
+            throw new InvalidDataException(
+                $"prod(num_knots+1)={expectedPieces:N0} exceeds supported array length", ex);
         }
     }
 
@@ -208,6 +260,7 @@ internal static class PcbFormat
         if (d32 < 1)
             throw new InvalidDataException($"num_dimensions must be >= 1, got {d32}");
         int d = ToCheckedInt(d32, "num_dimensions");
+        PreflightLargeRead(r, d, 20, "approximation metadata");
 
         double[] lo = new double[d];
         for (int i = 0; i < d; i++) lo[i] = ReadFiniteDouble(r, $"lo[{i}]");
@@ -232,6 +285,7 @@ internal static class PcbFormat
             total = CheckedMul(total, nNodes[i], "prod(n_nodes)");
         }
 
+        PreflightLargeRead(r, total, sizeof(double), "tensor_values");
         double[] tensor = new double[total];
         for (int i = 0; i < total; i++)
             tensor[i] = ReadFiniteDouble(r, $"tensor_values[{i}]");
@@ -313,6 +367,7 @@ internal static class PcbFormat
         if (d32 < 1)
             throw new InvalidDataException($"num_dimensions must be >= 1, got {d32}");
         int d = ToCheckedInt(d32, "num_dimensions");
+        PreflightLargeRead(r, d, 24, "spline metadata");
 
         double[] lo = new double[d];
         for (int i = 0; i < d; i++) lo[i] = ReadFiniteDouble(r, $"lo[{i}]");
@@ -337,13 +392,15 @@ internal static class PcbFormat
         }
 
         int[] numKnots = new int[d];
-        int expectedPieces = 1;
+        long totalKnots = 0;
         for (int i = 0; i < d; i++)
         {
             uint k32 = r.ReadUInt32();
             numKnots[i] = ToCheckedInt(k32, $"num_knots[{i}]");
-            expectedPieces = CheckedMul(expectedPieces, numKnots[i] + 1, "expected pieces");
+            totalKnots += numKnots[i];
         }
+        int expectedPieces = CheckedPieceCountFromKnots(numKnots);
+        PreflightLargeRead(r, totalKnots, sizeof(double), "spline knots");
 
         var knots = new double[d][];
         for (int i = 0; i < d; i++)
@@ -370,6 +427,9 @@ internal static class PcbFormat
         if (pieceCount != expectedPieces)
             throw new InvalidDataException(
                 $"num_pieces={pieceCount} does not match prod(num_knots+1)={expectedPieces}");
+
+        long pieceValueCount = (long)expectedPieces * perPieceFloats;
+        PreflightLargeRead(r, pieceValueCount, sizeof(double), "piece_tensors");
 
         var pieces = new double[expectedPieces][];
         for (int p = 0; p < expectedPieces; p++)

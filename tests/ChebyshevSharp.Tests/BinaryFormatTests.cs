@@ -874,6 +874,41 @@ public class PcbFormatDefensiveTests
     }
 
     [Fact]
+    public void Test_read_approx_body_rejects_implausible_dimension_count_before_allocation()
+    {
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)int.MaxValue); // huge d fits int but cannot be satisfied by this stream
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("approximation metadata", ex.Message);
+        Assert.Contains("bytes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_approx_body_rejects_huge_tensor_before_allocation()
+    {
+        using var ms = NewStreamWithApproxHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0);
+            w.Write(1.0);
+            w.Write((uint)int.MaxValue);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadApproximationBody(r));
+        Assert.Contains("tensor_values", ex.Message);
+        Assert.Contains("bytes", ex.Message);
+    }
+
+    [Fact]
     public void Test_read_approx_body_rejects_non_finite_domain()
     {
         using var ms = NewStreamWithApproxHeader();
@@ -1169,5 +1204,107 @@ public class PcbFormatDefensiveTests
         var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
         Assert.Contains("num_knots", ex.Message);
         Assert.Contains("int.MaxValue", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_implausible_dimension_count_before_allocation()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)int.MaxValue); // huge d fits int but cannot be satisfied by this stream
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("spline metadata", ex.Message);
+        Assert.Contains("bytes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_num_knots_piece_count_overflow()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0);
+            w.Write(1.0);
+            w.Write((uint)1);
+            w.Write((uint)int.MaxValue);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("prod(num_knots+1)", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_num_knots_long_product_overflow()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)3);
+            w.Write(-1.0); w.Write(-1.0); w.Write(-1.0);
+            w.Write(1.0); w.Write(1.0); w.Write(1.0);
+            w.Write((uint)1); w.Write((uint)1); w.Write((uint)1);
+            w.Write((uint)int.MaxValue);
+            w.Write((uint)int.MaxValue);
+            w.Write((uint)int.MaxValue);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("prod(num_knots+1)", ex.Message);
+        Assert.Contains("overflows long", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_huge_piece_tensor_before_allocation()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            w.Write((uint)1);
+            w.Write(-1.0);
+            w.Write(1.0);
+            w.Write((uint)int.MaxValue);
+            w.Write((uint)0);
+            w.Write((uint)1);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("piece_tensors", ex.Message);
+        Assert.Contains("bytes", ex.Message);
+    }
+
+    [Fact]
+    public void Test_read_spline_body_rejects_piece_tensor_byte_size_overflow()
+    {
+        using var ms = NewStreamWithSplineHeader();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            const int d = 30;
+            w.Write((uint)d);
+            for (int i = 0; i < d; i++) w.Write(-1.0);
+            for (int i = 0; i < d; i++) w.Write(1.0);
+            w.Write((uint)1_073_741_824);
+            for (int i = 1; i < d; i++) w.Write((uint)1);
+            for (int i = 0; i < d; i++) w.Write((uint)1);
+            for (int i = 0; i < d; i++) w.Write(0.0);
+            w.Write((uint)1_073_741_824);
+        }
+        ms.Position = 0;
+        using var r = new BinaryReader(ms);
+        PcbFormat.ReadHeader(r);
+        var ex = Assert.Throws<InvalidDataException>(() => PcbFormat.ReadSplineBody(r));
+        Assert.Contains("piece_tensors", ex.Message);
+        Assert.Contains("addressable byte size", ex.Message);
     }
 }
