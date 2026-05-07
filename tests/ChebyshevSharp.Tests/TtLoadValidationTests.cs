@@ -36,6 +36,11 @@ public class TtLoadValidationTests
             yield return Case("null derivative order row", s => s.RegisteredDerivativeOrders = new int[][] { null! });
             yield return Case("short derivative order row", s => s.RegisteredDerivativeOrders = new[] { new[] { 0 } });
             yield return Case("negative derivative order", s => s.RegisteredDerivativeOrders = new[] { new[] { 0, -1 } });
+            yield return Case("derivative order above max", s =>
+            {
+                s.MaxDerivativeOrder = 1;
+                s.RegisteredDerivativeOrders = new[] { new[] { 2, 0 } };
+            });
             yield return Case("null cores", s => s.Cores = null);
             yield return Case("short cores", s => s.Cores = new[] { s.Cores![0] });
             yield return Case("null core row", s => s.Cores![1] = null!);

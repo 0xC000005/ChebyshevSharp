@@ -326,4 +326,88 @@ public class EvaluationDerivativeOrderValidationTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             tt.GetDerivativeId([-1, 0, 0]));
     }
+
+    [Fact]
+    public void Approximation_rejects_orders_above_max_derivative_order()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] * x[0],
+            1,
+            [new[] { -1.0, 1.0 }],
+            [7],
+            maxDerivativeOrder: 1);
+        cheb.Build(verbose: false);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.Eval([0.25], [2]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.VectorizedEval([0.25], [2]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.VectorizedEvalBatch([[0.25]], [2]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.VectorizedEvalMulti([0.25], [[2]]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            cheb.GetDerivativeId([2]));
+    }
+
+    [Fact]
+    public void Spline_rejects_orders_above_max_derivative_order()
+    {
+        var spline = new ChebyshevSpline(
+            (x, _) => x[0] * x[0],
+            1,
+            [new[] { -1.0, 1.0 }],
+            [7],
+            [Array.Empty<double>()],
+            maxDerivativeOrder: 1);
+        spline.Build(verbose: false);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            spline.Eval([0.25], [2]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            spline.EvalBatch([[0.25]], [2]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            spline.EvalMulti([0.25], [[2]]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            spline.GetDerivativeId([2]));
+    }
+
+    [Fact]
+    public void Slider_rejects_orders_above_max_derivative_order()
+    {
+        var slider = new ChebyshevSlider(
+            (x, _) => x[0] * x[0] + x[1],
+            2,
+            [new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }],
+            [7, 7],
+            [new[] { 0 }, new[] { 1 }],
+            [0.0, 0.0],
+            maxDerivativeOrder: 1);
+        slider.Build(verbose: false);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            slider.Eval([0.25, 0.0], [2, 0]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            slider.EvalMulti([0.25, 0.0], [[2, 0]]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            slider.GetDerivativeId([2, 0]));
+    }
+
+    [Fact]
+    public void TensorTrain_rejects_orders_above_max_derivative_order()
+    {
+        var tt = new ChebyshevTT(
+            x => x[0] * x[0] + x[1],
+            2,
+            [new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }],
+            [5, 5],
+            maxRank: 4,
+            maxDerivativeOrder: 1);
+        tt.Build(verbose: false, method: "svd");
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            tt.EvalMulti([0.25, 0.0], [[2, 0]]));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            tt.GetDerivativeId([2, 0]));
+    }
 }

@@ -496,7 +496,7 @@ public class TensorTrainCoverageTests
     {
         var tt = TestFixtures.TtSin3D;
         double[] pt = { 0.5, 0.3, 0.1 };
-        var ex = Assert.Throws<ArgumentException>(() =>
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() =>
             tt.EvalMulti(pt, new[] { new[] { 3, 0, 0 } }));
         Assert.Contains("not supported", ex.Message);
     }

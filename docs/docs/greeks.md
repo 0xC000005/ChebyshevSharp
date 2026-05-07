@@ -110,8 +110,10 @@ For the barycentric differentiation matrix formulas, see Berrut & Trefethen (200
 
 ## MaxDerivativeOrder
 
-The `maxDerivativeOrder` constructor parameter (default 2) controls how many powers
-of $D$ are pre-computed at build time. If you need third-order derivatives, set it to 3:
+The `maxDerivativeOrder` constructor parameter (default 2) controls the largest
+per-dimension derivative order accepted by the evaluation APIs. Dense interpolants
+compute the $k$-th derivative by applying $D$ repeatedly. If you need third-order
+derivatives, set it to 3:
 
 ```csharp
 var cheb = new ChebyshevApproximation(
@@ -131,7 +133,7 @@ Higher derivative orders require more nodes for accurate results. As a rule of t
 use at least $n \geq 2k + 5$ nodes per dimension for derivative order $k$.
 
 > **Runtime validation.** Evaluating a derivative order higher than `maxDerivativeOrder`
-> throws `InvalidOperationException`. If you need third-order Greeks, set
+> throws `ArgumentOutOfRangeException`. If you need third-order Greeks, set
 > `maxDerivativeOrder: 3` in the constructor.
 
 ## Accuracy

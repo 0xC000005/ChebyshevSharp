@@ -34,6 +34,11 @@ public class SliderLoadValidationTests
             yield return Case("null derivative order row", s => s.RegisteredDerivativeOrders = new int[][] { null! });
             yield return Case("short derivative order row", s => s.RegisteredDerivativeOrders = new[] { new[] { 0 } });
             yield return Case("negative derivative order", s => s.RegisteredDerivativeOrders = new[] { new[] { 0, -1 } });
+            yield return Case("derivative order above max", s =>
+            {
+                s.MaxDerivativeOrder = 1;
+                s.RegisteredDerivativeOrders = new[] { new[] { 2, 0 } };
+            });
             yield return Case("zero slide dimensions", s => s.Slides![0].NumDimensions = 0);
             yield return Case("slide dimension partition mismatch", s => s.Slides![0].NumDimensions = 2);
             yield return Case("negative slide max derivative order", s => s.Slides![0].MaxDerivativeOrder = -1);

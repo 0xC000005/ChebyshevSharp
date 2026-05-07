@@ -397,7 +397,7 @@ public class ChebyshevSlider
         if (!Built)
             throw new InvalidOperationException("Call Build() before Eval().");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrder(derivativeOrder, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
 
         bool isDerivative = false;
         for (int i = 0; i < derivativeOrder.Length; i++)
@@ -472,7 +472,7 @@ public class ChebyshevSlider
         if (!Built)
             throw new InvalidOperationException("Call Build() before EvalMulti().");
         EvaluationArguments.ValidatePointInDomain(point, NumDimensions, _domain);
-        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions);
+        EvaluationArguments.ValidateDerivativeOrders(derivativeOrders, NumDimensions, maxDerivativeOrder: MaxDerivativeOrder);
         var results = new double[derivativeOrders.Length];
         for (int i = 0; i < derivativeOrders.Length; i++)
             results[i] = Eval(point, derivativeOrders[i]);
@@ -941,7 +941,7 @@ public class ChebyshevSlider
 
         ValidateFiniteVector(state.PivotPoint, d, nameof(SliderSerializationState.PivotPoint));
         ValidatePartitionForLoad(state.Partition, d);
-        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d);
+        ValidateDerivativeRegistry(state.RegisteredDerivativeOrders, d, state.MaxDerivativeOrder);
 
         if (state.Slides is null)
             throw new InvalidDataException("Slides must be present.");
@@ -1112,7 +1112,10 @@ public class ChebyshevSlider
         }
     }
 
-    private static void ValidateDerivativeRegistry(int[][]? registeredDerivativeOrders, int numDimensions)
+    private static void ValidateDerivativeRegistry(
+        int[][]? registeredDerivativeOrders,
+        int numDimensions,
+        int maxDerivativeOrder)
     {
         if (registeredDerivativeOrders is null) return;
 
@@ -1124,9 +1127,14 @@ public class ChebyshevSlider
                 throw new InvalidDataException(
                     $"RegisteredDerivativeOrders[{i}] has length {orders.Length}, expected {numDimensions}.");
             for (int j = 0; j < orders.Length; j++)
+            {
                 if (orders[j] < 0)
                     throw new InvalidDataException(
                         $"RegisteredDerivativeOrders[{i}][{j}] must be non-negative, got {orders[j]}.");
+                if (orders[j] > maxDerivativeOrder)
+                    throw new InvalidDataException(
+                        $"RegisteredDerivativeOrders[{i}][{j}]={orders[j]} exceeds MaxDerivativeOrder {maxDerivativeOrder}.");
+            }
         }
     }
 
@@ -1766,7 +1774,7 @@ public class ChebyshevSlider
     /// <returns>A stable int id for this orders tuple (0-based, assigned in registration order).</returns>
     public int GetDerivativeId(int[] orders)
     {
-        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders));
+        EvaluationArguments.ValidateDerivativeOrder(orders, NumDimensions, nameof(orders), MaxDerivativeOrder);
         var key = new Internal.TupleKey(orders);
         if (_derivativeIdRegistry.TryGetValue(key, out int existing))
             return existing;
