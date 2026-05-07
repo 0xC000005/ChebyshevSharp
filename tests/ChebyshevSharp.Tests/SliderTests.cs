@@ -1061,7 +1061,7 @@ public class TestSliderSerializationCSharp
         try
         {
             File.WriteAllText(path, "");
-            Assert.ThrowsAny<Exception>(() => ChebyshevSlider.Load(path));
+            Assert.Throws<System.Text.Json.JsonException>(() => ChebyshevSlider.Load(path));
         }
         finally
         {
@@ -1076,7 +1076,7 @@ public class TestSliderSerializationCSharp
         try
         {
             File.WriteAllText(path, "not valid json {{{");
-            Assert.ThrowsAny<Exception>(() => ChebyshevSlider.Load(path));
+            Assert.Throws<System.Text.Json.JsonException>(() => ChebyshevSlider.Load(path));
         }
         finally
         {

@@ -712,7 +712,8 @@ public class TestCoverageGaps
         try
         {
             File.WriteAllText(path, "this is not json at all");
-            Assert.ThrowsAny<Exception>(() => ChebyshevApproximation.Load(path));
+            Assert.Throws<System.Text.Json.JsonException>(() =>
+                ChebyshevApproximation.Load(path));
         }
         finally
         {
@@ -773,7 +774,7 @@ public class TestBoundaryValidation
     {
         var cheb = TestFixtures.ChebSin3D; // 3D interpolant
         // Point has 2 dimensions instead of 3
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<ArgumentException>(() =>
             cheb.VectorizedEval([0.1, 0.3], [0, 0, 0]));
     }
 
@@ -785,7 +786,7 @@ public class TestBoundaryValidation
     {
         var cheb = TestFixtures.ChebSin3D; // 3D interpolant
         // derivativeOrder has 2 elements instead of 3
-        Assert.ThrowsAny<Exception>(() =>
+        Assert.Throws<ArgumentException>(() =>
             cheb.VectorizedEval([0.1, 0.3, 1.7], [0, 0]));
     }
 
@@ -1015,7 +1016,7 @@ public class TestSerializationEdgeCases
         try
         {
             File.WriteAllText(path, "");
-            Assert.ThrowsAny<System.Text.Json.JsonException>(() =>
+            Assert.Throws<System.Text.Json.JsonException>(() =>
                 ChebyshevApproximation.Load(path));
         }
         finally
