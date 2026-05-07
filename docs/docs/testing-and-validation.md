@@ -24,6 +24,10 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 ```
 
+CI runs the examples in the validation job. The test matrix pins the selected
+SDK inside each job: .NET 8 builds the library target, and .NET 10 runs the
+full xUnit suite with coverage upload.
+
 Property tests live in `tests/ChebyshevSharp.Tests/PropertyTests.cs` and run with the normal xUnit suite. They use deterministic FsCheck seeds and small grids so failures are reproducible and fast to debug.
 
 Mutation testing is available as a manual or scheduled workflow. To run it locally:
