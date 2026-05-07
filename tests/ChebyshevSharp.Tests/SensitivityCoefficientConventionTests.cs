@@ -41,6 +41,69 @@ public class TestSensitivityCoefficientConventions
         TestFixtures.AssertClose((e01 + e11) / variance, result.TotalOrder[1], rtol: 1e-12, atol: 1e-12);
     }
 
+    [Fact]
+    public void ComputeSobolFromPiecewiseCoeffs_UsesConditionalProjectionDefinitions()
+    {
+        double[][] pieceCoeffs =
+        {
+            new[] { 0.0, 1.0 },
+            new[] { 0.0, 0.0 },
+        };
+        int[][] pieceCoeffShapes =
+        {
+            new[] { 2, 1 },
+            new[] { 2, 1 },
+        };
+        int[] pieceShape = { 1, 2 };
+        double[][] intervalLengths =
+        {
+            new[] { 2.0 },
+            new[] { 1.0, 1.0 },
+        };
+
+        var result = Sensitivity.ComputeSobolFromPiecewiseCoeffs(
+            pieceCoeffs,
+            pieceCoeffShapes,
+            pieceShape,
+            intervalLengths);
+
+        Assert.True(result.Variance > 0.0);
+        TestFixtures.AssertClose(0.5, result.FirstOrder[0], rtol: 1e-12, atol: 1e-12);
+        TestFixtures.AssertClose(0.0, result.FirstOrder[1], rtol: 1e-12, atol: 1e-12);
+        TestFixtures.AssertClose(1.0, result.TotalOrder[0], rtol: 1e-12, atol: 1e-12);
+        TestFixtures.AssertClose(0.5, result.TotalOrder[1], rtol: 1e-12, atol: 1e-12);
+    }
+
+    [Fact]
+    public void ComputeSobolFromPiecewiseCoeffs_RejectsMalformedInputs()
+    {
+        double[][] pieceCoeffs = { new[] { 1.0 } };
+        int[][] pieceCoeffShapes = { new[] { 1 } };
+        int[] pieceShape = { 1 };
+        double[][] intervalLengths = { new[] { 1.0 } };
+
+        Assert.Throws<ArgumentException>(() => Sensitivity.ComputeSobolFromPiecewiseCoeffs(
+            Array.Empty<double[]>(),
+            pieceCoeffShapes,
+            pieceShape,
+            intervalLengths));
+        Assert.Throws<ArgumentException>(() => Sensitivity.ComputeSobolFromPiecewiseCoeffs(
+            pieceCoeffs,
+            Array.Empty<int[]>(),
+            pieceShape,
+            intervalLengths));
+        Assert.Throws<ArgumentException>(() => Sensitivity.ComputeSobolFromPiecewiseCoeffs(
+            pieceCoeffs,
+            pieceCoeffShapes,
+            pieceShape,
+            new[] { Array.Empty<double>() }));
+        Assert.Throws<ArgumentException>(() => Sensitivity.ComputeSobolFromPiecewiseCoeffs(
+            new[] { new[] { double.NaN } },
+            pieceCoeffShapes,
+            pieceShape,
+            intervalLengths));
+    }
+
     private static void CheckCoefficientShape(int[] shape)
     {
         int total = shape.Aggregate(1, (acc, n) => acc * n);

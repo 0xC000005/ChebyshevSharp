@@ -213,6 +213,42 @@ public class TestSplineSobolIndices
     }
 
     [Fact]
+    public void Test_piecewise_step_has_between_piece_variance()
+    {
+        static double F(double[] p, object? _) => p[0] < 0.0 ? 0.0 : 1.0;
+        var sp = new ChebyshevSpline(F, 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 3 },
+            new[] { new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        var s = sp.SobolIndices();
+
+        Assert.True(s.Variance > 0.0,
+            "A step spline is nonconstant even though each constant piece has zero internal variance.");
+        TestFixtures.AssertClose(1.0, s.FirstOrder[0], rtol: 1e-12, atol: 1e-12);
+        TestFixtures.AssertClose(1.0, s.TotalOrder[0], rtol: 1e-12, atol: 1e-12);
+    }
+
+    [Fact]
+    public void Test_piecewise_x_active_on_one_y_piece_counts_interaction()
+    {
+        static double F(double[] p, object? _) => p[1] < 0.0 ? p[0] : 0.0;
+        var sp = new ChebyshevSpline(F, 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 5, 3 },
+            new[] { Array.Empty<double>(), new[] { 0.0 } });
+        sp.Build(verbose: false);
+
+        var s = sp.SobolIndices();
+
+        Assert.True(s.Variance > 0.0);
+        TestFixtures.AssertClose(0.5, s.FirstOrder[0], rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(0.0, s.FirstOrder[1], rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(1.0, s.TotalOrder[0], rtol: 1e-10, atol: 1e-10);
+        TestFixtures.AssertClose(0.5, s.TotalOrder[1], rtol: 1e-10, atol: 1e-10);
+    }
+
+    [Fact]
     public void Test_piecewise_abs_x_plus_abs_y_2d()
     {
         // f(x,y) = |x| + |y| with knots at 0 in both dims. Additive → both first-orders sum to 1.
