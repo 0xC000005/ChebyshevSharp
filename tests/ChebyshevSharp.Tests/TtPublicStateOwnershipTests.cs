@@ -102,4 +102,36 @@ public class TtPublicStateOwnershipTests
 
         Assert.Equal(before, source.Eval(sourcePoint), precision: 12);
     }
+
+    [Fact]
+    public void Slice_result_copies_unaffected_trailing_cores()
+    {
+        var source = BuildThreeDimensionalTt();
+
+        ChebyshevTT sliced = source.Slice(dim: 0, value: 0.25);
+
+        Assert.NotSame(source.GetCoreShape(2).Data, sliced.GetCoreShape(1).Data);
+    }
+
+    [Fact]
+    public void Slice_result_copies_unaffected_leading_cores_when_slicing_rightmost_dim()
+    {
+        var source = BuildThreeDimensionalTt();
+
+        ChebyshevTT sliced = source.Slice(dim: 2, value: -0.25);
+
+        Assert.NotSame(source.GetCoreShape(0).Data, sliced.GetCoreShape(0).Data);
+    }
+
+    private static ChebyshevTT BuildThreeDimensionalTt()
+    {
+        var tt = new ChebyshevTT(
+            p => p[0] + 2.0 * p[1] - 0.5 * p[2],
+            numDimensions: 3,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5, 5, 5 },
+            maxRank: 4);
+        tt.Build(verbose: false, method: "svd");
+        return tt;
+    }
 }
