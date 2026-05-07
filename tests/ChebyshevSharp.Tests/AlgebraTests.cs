@@ -905,14 +905,7 @@ public class TestSplineArithmeticCSharpEdgeCases
     [Fact]
     public void Test_spline_divide_by_zero_scalar()
     {
-        // Division by 0.0 should produce Infinity values, not throw.
-        var sp = TestFixtures.AlgebraSplineF;
-        var result = sp / 0.0;
-
-        // Evaluate at a point where |x| > 0 (non-zero value)
-        double val = result.Eval(new[] { 0.5 }, new[] { 0 });
-        Assert.True(double.IsInfinity(val),
-            $"Expected Infinity from division by zero, got {val}");
+        Assert.Throws<DivideByZeroException>(() => { var _ = TestFixtures.AlgebraSplineF / 0.0; });
     }
 
     [Fact]
@@ -936,37 +929,29 @@ public class TestSplineArithmeticCSharpEdgeCases
 
 /// <summary>
 /// Tests for arithmetic edge cases with special floating-point values.
-/// These are C#-specific concerns around IEEE 754 behavior that don't
-/// exist in the Python baseline.
+/// These are C#-specific validation concerns that keep interpolants finite.
 /// </summary>
 public class TestArithmeticEdgeCases
 {
     private static ChebyshevApproximation F => TestFixtures.AlgebraChebF;
 
     /// <summary>
-    /// Dividing by zero scalar should produce Infinity values in the tensor
-    /// (not throw an exception), consistent with IEEE 754 behavior.
+    /// Dividing by zero scalar is rejected before it can create non-finite tensor values.
     /// </summary>
     [Fact]
     public void Test_divide_by_zero_scalar()
     {
-        var c = F / 0.0;
-        double[] p = { 0.5, 0.3 };
-        double val = c.VectorizedEval(p, new[] { 0, 0 });
-        Assert.True(double.IsInfinity(val) || double.IsNaN(val),
-            $"Expected Infinity or NaN, got {val}");
+        Assert.Throws<DivideByZeroException>(() => { var _ = F / 0.0; });
     }
 
     /// <summary>
-    /// Multiplying by NaN should produce NaN values in the result.
+    /// Multiplying by NaN is rejected before it can create non-finite tensor values.
     /// </summary>
     [Fact]
     public void Test_multiply_by_nan()
     {
-        var c = F * double.NaN;
-        double[] p = { 0.5, 0.3 };
-        double val = c.VectorizedEval(p, new[] { 0, 0 });
-        Assert.True(double.IsNaN(val), $"Expected NaN, got {val}");
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => F * double.NaN);
+        Assert.Equal("scalar", ex.ParamName);
     }
 
     /// <summary>
@@ -1250,7 +1235,7 @@ public class TestSliderArithmetic
 
 /// <summary>
 /// C#-specific slider arithmetic edge case tests not in the Python baseline.
-/// Covers IEEE 754 behavior, compatibility errors, and cross-type checks.
+/// Covers finite-state validation, compatibility errors, and cross-type checks.
 /// </summary>
 public class TestSliderArithmeticCSharpEdgeCases
 {
@@ -1260,20 +1245,14 @@ public class TestSliderArithmeticCSharpEdgeCases
     [Fact]
     public void Test_slider_divide_by_zero_scalar()
     {
-        var c = SlF / 0.0;
-        double[] p = { 0.5, 0.3, 0.7 };
-        double val = c.Eval(p, new[] { 0, 0, 0 });
-        Assert.True(double.IsInfinity(val) || double.IsNaN(val),
-            $"Expected Infinity or NaN from division by zero, got {val}");
+        Assert.Throws<DivideByZeroException>(() => { var _ = SlF / 0.0; });
     }
 
     [Fact]
     public void Test_slider_multiply_by_nan()
     {
-        var c = SlF * double.NaN;
-        double[] p = { 0.5, 0.3, 0.7 };
-        double val = c.Eval(p, new[] { 0, 0, 0 });
-        Assert.True(double.IsNaN(val), $"Expected NaN, got {val}");
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => SlF * double.NaN);
+        Assert.Equal("scalar", ex.ParamName);
     }
 
     [Fact]
@@ -1379,5 +1358,90 @@ public class TestSliderArithmeticCSharpEdgeCases
     {
         var c = -SlF;
         Assert.True(Math.Abs(c.PivotValue - (-SlF.PivotValue)) < 1e-14);
+    }
+}
+
+public class ScalarAlgebraValidationTests
+{
+    public static IEnumerable<object[]> NonFiniteScalars()
+    {
+        yield return new object[] { double.NaN };
+        yield return new object[] { double.PositiveInfinity };
+        yield return new object[] { double.NegativeInfinity };
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Approximation_scalar_multiplication_rejects_non_finite_scalar(double scalar)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => TestFixtures.AlgebraChebF * scalar);
+        Assert.Equal("scalar", ex.ParamName);
+
+        ex = Assert.Throws<ArgumentOutOfRangeException>(() => scalar * TestFixtures.AlgebraChebF);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Approximation_scalar_division_rejects_non_finite_scalar(double scalar)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => TestFixtures.AlgebraChebF / scalar);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Fact]
+    public void Approximation_scalar_division_rejects_zero()
+    {
+        Assert.Throws<DivideByZeroException>(() => TestFixtures.AlgebraChebF / 0.0);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Spline_scalar_multiplication_rejects_non_finite_scalar(double scalar)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => TestFixtures.AlgebraSplineF * scalar);
+        Assert.Equal("scalar", ex.ParamName);
+
+        ex = Assert.Throws<ArgumentOutOfRangeException>(() => scalar * TestFixtures.AlgebraSplineF);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Spline_scalar_division_rejects_non_finite_scalar(double scalar)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => TestFixtures.AlgebraSplineF / scalar);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Fact]
+    public void Spline_scalar_division_rejects_zero()
+    {
+        Assert.Throws<DivideByZeroException>(() => TestFixtures.AlgebraSplineF / 0.0);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Slider_scalar_multiplication_rejects_non_finite_scalar(double scalar)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => TestFixtures.AlgebraSliderF * scalar);
+        Assert.Equal("scalar", ex.ParamName);
+
+        ex = Assert.Throws<ArgumentOutOfRangeException>(() => scalar * TestFixtures.AlgebraSliderF);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteScalars))]
+    public void Slider_scalar_division_rejects_non_finite_scalar(double scalar)
+    {
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => TestFixtures.AlgebraSliderF / scalar);
+        Assert.Equal("scalar", ex.ParamName);
+    }
+
+    [Fact]
+    public void Slider_scalar_division_rejects_zero()
+    {
+        Assert.Throws<DivideByZeroException>(() => TestFixtures.AlgebraSliderF / 0.0);
     }
 }

@@ -2254,6 +2254,7 @@ public class ChebyshevSpline
     {
         if (!a.Built)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
+        Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
 
         var pieces = new ChebyshevApproximation?[a.Pieces.Length];
         for (int i = 0; i < pieces.Length; i++)
@@ -2275,6 +2276,9 @@ public class ChebyshevSpline
     /// <summary>Divide spline by a scalar.</summary>
     public static ChebyshevSpline operator /(ChebyshevSpline a, double scalar)
     {
+        if (!a.Built)
+            throw new InvalidOperationException("Operand is not built. Call Build() first.");
+        Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));
         return a * (1.0 / scalar);
     }
 
