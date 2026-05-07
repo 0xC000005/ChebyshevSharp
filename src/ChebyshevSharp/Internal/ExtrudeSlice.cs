@@ -9,17 +9,23 @@ internal static class ExtrudeSlice
     /// Validate and normalize extrusion parameters. Returns sorted ascending by dimIndex.
     /// </summary>
     internal static (int dimIndex, double[] bounds, int nNodes)[] NormalizeExtrusionParams(
-        (int dimIndex, double[] bounds, int nNodes)[] param, int ndim)
+        (int dimIndex, double[] bounds, int nNodes)[] extrudeParams, int ndim)
     {
-        int newNdim = ndim + param.Length;
+        ArgumentNullException.ThrowIfNull(extrudeParams);
+
+        int newNdim = ndim + extrudeParams.Length;
         var seen = new HashSet<int>();
 
-        foreach (var (dimIdx, bounds, n) in param)
+        foreach (var (dimIdx, bounds, n) in extrudeParams)
         {
             if (dimIdx < 0 || dimIdx >= newNdim)
                 throw new ArgumentException($"dim_index {dimIdx} out of range [0, {newNdim - 1}]");
             if (!seen.Add(dimIdx))
                 throw new ArgumentException($"Duplicate dim_index {dimIdx}");
+            if (bounds is null || bounds.Length != 2)
+                throw new ArgumentException(
+                    $"bounds for dim_index {dimIdx} must contain exactly two bounds [lo, hi]",
+                    nameof(extrudeParams));
             if (!double.IsFinite(bounds[0]) || !double.IsFinite(bounds[1]))
                 throw new ArgumentException($"Domain bounds must be finite, got [{bounds[0]}, {bounds[1]}]");
             if (bounds[0] >= bounds[1])
@@ -28,20 +34,22 @@ internal static class ExtrudeSlice
                 throw new ArgumentException($"n_nodes must be int >= 2, got {n}");
         }
 
-        return param.OrderBy(p => p.dimIndex).ToArray();
+        return extrudeParams.OrderBy(p => p.dimIndex).ToArray();
     }
 
     /// <summary>
     /// Validate and normalize slicing parameters. Returns sorted descending by dimIndex.
     /// </summary>
     internal static (int dimIndex, double value)[] NormalizeSlicingParams(
-        (int dimIndex, double value)[] param, int ndim)
+        (int dimIndex, double value)[] sliceParams, int ndim)
     {
-        if (param.Length >= ndim)
+        ArgumentNullException.ThrowIfNull(sliceParams);
+
+        if (sliceParams.Length >= ndim)
             throw new ArgumentException($"Cannot slice all {ndim} dimensions (would produce 0D result)");
 
         var seen = new HashSet<int>();
-        foreach (var (dimIdx, value) in param)
+        foreach (var (dimIdx, value) in sliceParams)
         {
             if (dimIdx < 0 || dimIdx >= ndim)
                 throw new ArgumentException($"dim_index {dimIdx} out of range [0, {ndim - 1}]");
@@ -51,7 +59,7 @@ internal static class ExtrudeSlice
                 throw new ArgumentException($"Slice value {value} for dim {dimIdx} must be finite");
         }
 
-        return param.OrderByDescending(p => p.dimIndex).ToArray();
+        return sliceParams.OrderByDescending(p => p.dimIndex).ToArray();
     }
 
     /// <summary>

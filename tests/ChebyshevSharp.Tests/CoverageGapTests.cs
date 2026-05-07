@@ -1211,6 +1211,55 @@ public class TestCalculusValidation
 public class TestExtrudeSliceValidation
 {
     [Fact]
+    public void Extrude_NullParamsArray_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+        cheb.Build(verbose: false);
+
+        Assert.Throws<ArgumentNullException>(() => cheb.Extrude(null!));
+    }
+
+    [Fact]
+    public void Slice_NullParamsArray_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0] + x[1], 2,
+            new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+            new[] { 10, 10 });
+        cheb.Build(verbose: false);
+
+        Assert.Throws<ArgumentNullException>(() => cheb.Slice(null!));
+    }
+
+    [Fact]
+    public void Extrude_NullBounds_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+        cheb.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Extrude((1, null!, 5)));
+        Assert.Contains("two bounds", ex.Message);
+    }
+
+    [Fact]
+    public void Extrude_BoundsLengthNotTwo_Raises()
+    {
+        var cheb = new ChebyshevApproximation(
+            (x, _) => x[0], 1,
+            new[] { new[] { -1.0, 1.0 } }, new[] { 10 });
+        cheb.Build(verbose: false);
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            cheb.Extrude((1, new[] { 0.0 }, 5)));
+        Assert.Contains("two bounds", ex.Message);
+    }
+
+    [Fact]
     public void Extrude_NonFiniteBounds_Raises()
     {
         var cheb = new ChebyshevApproximation(
