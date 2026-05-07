@@ -107,11 +107,11 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 | High-dimensional function (6+ dims), additively separable or nearly so | `ChebyshevSlider` — partition dimensions into groups, build cost is sum instead of product |
 | High-dimensional function (5+ dims), general cross-variable coupling | `ChebyshevTT` — Tensor Train decomposition, build cost is $O(d \cdot n \cdot r^2)$ |
 
-`ChebyshevSpline` supports the same API as `ChebyshevApproximation` (eval, derivatives, batch, multi, save/load, arithmetic, extrusion, slicing, integration, roots, optimization). See [Piecewise Chebyshev Interpolation](spline.md) for a full guide.
+`ChebyshevSpline` supports the same API shape as `ChebyshevApproximation` (`Eval`, derivatives, batch evaluation, multi-output evaluation, `Save`, `Load`, arithmetic, extrusion, slicing, integration, roots, and optimization). See [Piecewise Chebyshev Interpolation](spline.md) for a full guide.
 
-`ChebyshevSlider` supports eval, eval_multi, error estimation, save/load, integration, roots, optimization, extrusion, slicing, and arithmetic operators. It does not support batch eval or the `Nodes()`/`FromValues()` workflow. See [Sliding Technique](slider.md) for a full guide.
+`ChebyshevSlider` supports `Eval`, `EvalMulti`, error estimation, `Save`, `Load`, integration, roots, optimization, extrusion, slicing, and arithmetic operators. It does not support batch evaluation or the `Nodes()`/`FromValues()` workflow. See [Sliding Technique](slider.md) for a full guide.
 
-`ChebyshevTT` supports eval, batch eval, finite-difference derivatives, error estimation, save/load, integration, roots, optimization, algebra, extrusion, slicing, rank refinement, and dimension reordering. It intentionally guards dense materialization paths because a full grid can exceed memory even when TT-Cross is feasible. See [Tensor Train Interpolation](tensor-train.md) for a full guide.
+`ChebyshevTT` supports `Eval`, `EvalBatch`, `EvalMulti`, finite-difference derivatives, error estimation, `Save`, `Load`, integration, roots, optimization, algebra, extrusion, slicing, rank refinement, and dimension reordering. It intentionally guards dense materialization paths because a full grid can exceed memory even when TT-Cross is feasible. See [Tensor Train Interpolation](tensor-train.md) for a full guide.
 
 For a more detailed decision map, see [Which Class Should I Use?](which-class.md).
 
@@ -126,7 +126,7 @@ For a more detailed decision map, see [Which Class Should I Use?](which-class.md
 - [Computing Greeks](greeks.md) — analytical derivatives for option Greeks
 - [Calculus](calculus.md) — integration, root-finding, minimization, maximization
 - [Error Estimation](error-estimation.md) — measuring interpolation accuracy via DCT-II
-- [Serialization & Construction](serialization.md) — save/load, FromValues, Nodes
+- [Serialization & Construction](serialization.md) — `Save`, `Load`, `FromValues`, `Nodes`
 - [Performance](performance.md) — BLAS integration and benchmark results
 - [Testing & Validation](testing-and-validation.md) — local quality gates, property tests, and mutation testing
 - [Citations](citations.md) — references used by the algorithms and documentation

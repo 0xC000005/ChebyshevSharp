@@ -35,7 +35,7 @@ ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyCheb
 | **Algebra** | Combine interpolants via `+`, `-`, `*`, `/` |
 | **Extrusion & slicing** | Add or fix dimensions for portfolio aggregation |
 | **Spectral calculus** | Integration (Fejer-1), root-finding (colleague matrix), minimization, maximization |
-| **Serialization** | Save/load interpolants as JSON for deployment without the original function |
+| **Serialization** | Save/load interpolants as JSON, plus portable `.pcb` for dense approximations and compatible splines |
 
 ## Installation
 

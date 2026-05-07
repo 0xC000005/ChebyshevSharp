@@ -4,7 +4,7 @@ title: Adaptive Refinement
 
 # Adaptive Refinement
 
-ChebyshevSharp v0.10.0 adds three adaptive-refinement APIs derived from PyChebyshev v0.20.0 + v0.20.1.
+ChebyshevSharp provides adaptive-refinement APIs derived from PyChebyshev v0.20.0 + v0.20.1.
 
 ## ChebyshevSpline.AutoKnots
 
@@ -18,7 +18,7 @@ var sp = ChebyshevSpline.AutoKnots(F, 1,
 // Discovers a knot near x=0; the resulting Spline has 2 pieces.
 ```
 
-Tuning kwargs: `thresholdFactor` (default 5.0), `maxKnotsPerDim` (default 5), `nScanPoints` (default 200).
+Tuning parameters: `thresholdFactor` (default 5.0), `maxKnotsPerDim` (default 5), `nScanPoints` (default 200).
 
 ## SobolIndices
 
@@ -27,7 +27,16 @@ The reported variance uses the Chebyshev orthogonality weight on each normalized
 
 ```csharp
 double F(double[] p, object? _) => Math.Sin(p[0]) + p[1] * p[2];
-var ap = new ChebyshevApproximation(F, 3, ..., new[] { 16, 16, 16 });
+var ap = new ChebyshevApproximation(
+    function: F,
+    numDimensions: 3,
+    domain: new[]
+    {
+        new[] { -1.0, 1.0 },
+        new[] { -1.0, 1.0 },
+        new[] { -1.0, 1.0 }
+    },
+    nNodes: new[] { 16, 16, 16 });
 ap.Build();
 SobolResult s = ap.SobolIndices();
 Console.WriteLine($"FirstOrder: [{string.Join(", ", s.FirstOrder)}]");

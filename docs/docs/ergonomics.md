@@ -30,13 +30,13 @@ string? label = approx.GetDescriptor();
 Pass calibration parameters through every `f(point, data)` call during build:
 
 ```csharp
-var calibration = LoadCalibration("EOD-2026-04-28.json");
+double scale = 0.25;
 var approx = new ChebyshevApproximation(
-    (p, data) => BlackScholesPrice(p, (Calibration)data!),
+    (p, data) => p[0] + (double)data! * p[1],
     numDimensions: 2,
-    domain: ...,
-    nNodes: ...,
-    additionalData: calibration);
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 5, 5 },
+    additionalData: scale);
 approx.Build();
 
 object? stored = approx.GetAdditionalData();
@@ -88,12 +88,12 @@ ChebyshevApproximation clone = approx.Clone();
 var deferred = new ChebyshevApproximation(
     (_, _) => throw new InvalidOperationException("not used"),
     numDimensions: 2,
-    domain: ...,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
     nNodes: new[] { 5, 5 },
     deferBuild: true);
 // IsConstructionFinished() == false; Eval/Save throw.
 
-double[] precomputed = await FetchValuesAsync();
+double[] precomputed = new double[25];
 deferred.SetOriginalFunctionValues(precomputed);
 // IsConstructionFinished() == true; constructor type is "from_values".
 ```

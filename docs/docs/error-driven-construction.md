@@ -29,9 +29,9 @@ cheb.Build(verbose: true);  // [auto-N] nNodes=[3, 3], error=...
 
 // Mixed: fix dim 1 at 15, auto-size dim 0 against the threshold.
 var mixed = new ChebyshevApproximation(
-    function: ...,
+    function: (x, _) => Math.Sin(8 * x[0]) + Math.Cos(x[1]),
     numDimensions: 2,
-    domain: ...,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
     nNodes: new int?[] { null, 15 },
     errorThreshold: 1e-6);
 ```

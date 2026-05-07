@@ -300,8 +300,8 @@ grid refinement step and is not supported.
 
 > **Workaround for products.**
 > If you need to approximate $f \cdot g$, build a single Chebyshev interpolant
-> for the product function directly: define `h(x, data) => f(x) * g(x)` and call
-> `new ChebyshevApproximation(h, ...).Build()`.
+> for the product function directly: define `h(x, data) => f(x) * g(x)`, build
+> it on the desired domain and node grid, and then evaluate that interpolant.
 
 ## Limitations
 

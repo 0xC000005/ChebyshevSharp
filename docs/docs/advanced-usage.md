@@ -89,7 +89,11 @@ Add new dimensions to an existing interpolant. The function value is constant al
 
 ```csharp
 // Start with a 2D interpolant f(x, y)
-var cheb2d = new ChebyshevApproximation(...);
+var cheb2d = new ChebyshevApproximation(
+    function: (x, _) => Math.Sin(x[0]) + Math.Cos(x[1]),
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: new[] { 11, 11 });
 cheb2d.Build();
 
 // Add a third dimension at index 2: g(x, y, z) = f(x, y)
