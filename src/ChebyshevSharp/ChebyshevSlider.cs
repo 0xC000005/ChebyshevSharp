@@ -141,6 +141,7 @@ public class ChebyshevSlider
     {
         ArgumentNullException.ThrowIfNull(function);
         ValidateConstructionArguments(numDimensions, domain, nNodes, partition, pivotPoint);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         Function = function;
         NumDimensions = numDimensions;

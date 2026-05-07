@@ -137,6 +137,7 @@ public class ChebyshevSpline
         ArgumentNullException.ThrowIfNull(function);
         ValidateKnots(numDimensions, domain, knots);
         ValidateFlatNNodes(numDimensions, nNodes);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         Function = function;
         NumDimensions = numDimensions;
@@ -199,6 +200,7 @@ public class ChebyshevSpline
     {
         ArgumentNullException.ThrowIfNull(function);
         ValidateDomain(numDimensions, domain);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         if (maxN < 3)
             throw new ArgumentException(
@@ -286,6 +288,7 @@ public class ChebyshevSpline
         ArgumentNullException.ThrowIfNull(function);
         ValidateKnots(numDimensions, domain, knots);
         ValidateNestedNNodes(numDimensions, nNodesNested, knots);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         Function = function;
         NumDimensions = numDimensions;
@@ -1480,6 +1483,7 @@ public class ChebyshevSpline
         ArgumentNullException.ThrowIfNull(pieceValues);
         ValidateKnots(numDimensions, domain, knots);
         ValidateFlatNNodes(numDimensions, nNodes);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         var intervals = ComputeIntervals(numDimensions, domain, knots);
         int[] shape = intervals.Select(iv => iv.Length).ToArray();

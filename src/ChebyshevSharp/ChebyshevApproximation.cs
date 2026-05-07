@@ -178,6 +178,7 @@ public class ChebyshevApproximation
         IProgress<int>? progress = null)
     {
         ValidateFixedGridArguments(nameof(ChebyshevApproximation), numDimensions, domain, nNodes);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         Function = function;
         NumDimensions = numDimensions;
@@ -241,6 +242,7 @@ public class ChebyshevApproximation
             throw new ArgumentException(
                 $"maxN must be at least 3 (the initial N of the doubling loop), got maxN={maxN}. " +
                 "For a grid smaller than 3 per dimension, pass nNodes explicitly.");
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
         AdaptiveBuild.ValidateErrorThreshold(errorThreshold);
 
         ValidateDomainArguments(nameof(ChebyshevApproximation), numDimensions, domain);
@@ -1186,6 +1188,7 @@ public class ChebyshevApproximation
     {
         // Validation
         ValidateFixedGridArguments(nameof(FromValues), numDimensions, domain, nNodes);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxDerivativeOrder);
 
         int expectedTotal = TensorShape.RequireArrayLength(
             TensorShape.CheckedProduct(nNodes, nameof(FromValues)),
