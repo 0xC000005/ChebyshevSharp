@@ -182,6 +182,11 @@ public class ChebyshevTT
 
     private static void ValidateFixedGridArguments(int numDimensions, double[][] domain, int[] nNodes)
     {
+        if (numDimensions <= 0)
+            throw new ArgumentException(
+                $"numDimensions must be positive, got {numDimensions}.",
+                nameof(numDimensions));
+
         ArgumentNullException.ThrowIfNull(domain);
         ArgumentNullException.ThrowIfNull(nNodes);
 

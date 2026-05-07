@@ -145,6 +145,19 @@ public class FromValuesTests
 public class TtFactoryValidationTests
 {
     [Fact]
+    public void Test_constructor_validates_positive_num_dimensions()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            new ChebyshevTT(
+                _ => 0.0,
+                0,
+                Array.Empty<double[]>(),
+                Array.Empty<int>()));
+
+        Assert.Contains("numDimensions", ex.Message);
+    }
+
+    [Fact]
     public void Test_constructor_validates_null_function()
     {
         var ex = Assert.Throws<ArgumentNullException>(() =>
@@ -222,6 +235,14 @@ public class TtFactoryValidationTests
     }
 
     [Fact]
+    public void Test_nodes_validates_positive_num_dimensions()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.Nodes(0, Array.Empty<double[]>(), Array.Empty<int>()));
+        Assert.Contains("numDimensions", ex.Message);
+    }
+
+    [Fact]
     public void Test_nodes_validates_nNodes_length()
     {
         var ex = Assert.Throws<ArgumentException>(() =>
@@ -268,6 +289,14 @@ public class TtFactoryValidationTests
         var ex = Assert.Throws<ArgumentException>(() =>
             ChebyshevTT.FromValues(values, 2, new[] { new[] { -1.0, 1.0 } }, new[] { 5, 5 }));
         Assert.Contains("domain", ex.Message);
+    }
+
+    [Fact]
+    public void Test_from_values_validates_positive_num_dimensions()
+    {
+        var ex = Assert.Throws<ArgumentException>(() =>
+            ChebyshevTT.FromValues([1.0], 0, Array.Empty<double[]>(), Array.Empty<int>()));
+        Assert.Contains("numDimensions", ex.Message);
     }
 
     [Fact]
