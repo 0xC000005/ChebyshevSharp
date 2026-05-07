@@ -1484,6 +1484,8 @@ public class ChebyshevSlider
 
     internal void CheckSliderCompatible(ChebyshevSlider other)
     {
+        ArgumentNullException.ThrowIfNull(other);
+
         if (GetType() != other.GetType())
             throw new InvalidOperationException(
                 $"Cannot combine {GetType().Name} with {other.GetType().Name}");
@@ -1526,6 +1528,8 @@ public class ChebyshevSlider
     /// <summary>Pointwise addition of two sliders on the same grid.</summary>
     public static ChebyshevSlider operator +(ChebyshevSlider a, ChebyshevSlider b)
     {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
         a.CheckSliderCompatible(b);
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
@@ -1543,6 +1547,8 @@ public class ChebyshevSlider
     /// <summary>Pointwise subtraction of two sliders on the same grid.</summary>
     public static ChebyshevSlider operator -(ChebyshevSlider a, ChebyshevSlider b)
     {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
         a.CheckSliderCompatible(b);
         var slides = new ChebyshevApproximation[a.Slides.Length];
         for (int i = 0; i < slides.Length; i++)
@@ -1560,6 +1566,7 @@ public class ChebyshevSlider
     /// <summary>Scalar multiplication.</summary>
     public static ChebyshevSlider operator *(ChebyshevSlider a, double scalar)
     {
+        ArgumentNullException.ThrowIfNull(a);
         if (!a.Built)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
         Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
@@ -1582,6 +1589,7 @@ public class ChebyshevSlider
     /// <summary>Scalar division.</summary>
     public static ChebyshevSlider operator /(ChebyshevSlider a, double scalar)
     {
+        ArgumentNullException.ThrowIfNull(a);
         if (!a.Built)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
         Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));

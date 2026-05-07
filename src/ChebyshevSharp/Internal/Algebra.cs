@@ -47,6 +47,9 @@ internal static class Algebra
     /// </summary>
     internal static void CheckCompatible(ChebyshevApproximation a, ChebyshevApproximation b)
     {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+
         if (a.GetType() != b.GetType())
             throw new InvalidOperationException(
                 $"Cannot combine {a.GetType().Name} with {b.GetType().Name}; " +

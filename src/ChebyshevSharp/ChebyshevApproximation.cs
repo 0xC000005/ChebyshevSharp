@@ -1571,8 +1571,6 @@ public class ChebyshevApproximation
     /// <summary>Add two interpolants with the same grid.</summary>
     public static ChebyshevApproximation operator +(ChebyshevApproximation a, ChebyshevApproximation b)
     {
-        if (a.GetType() != b.GetType())
-            throw new InvalidOperationException("Cannot combine different types");
         Algebra.CheckCompatible(a, b);
         double[] newValues = new double[a._tensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
@@ -1583,8 +1581,6 @@ public class ChebyshevApproximation
     /// <summary>Subtract two interpolants with the same grid.</summary>
     public static ChebyshevApproximation operator -(ChebyshevApproximation a, ChebyshevApproximation b)
     {
-        if (a.GetType() != b.GetType())
-            throw new InvalidOperationException("Cannot combine different types");
         Algebra.CheckCompatible(a, b);
         double[] newValues = new double[a._tensorValues!.Length];
         for (int i = 0; i < newValues.Length; i++)
@@ -1595,6 +1591,7 @@ public class ChebyshevApproximation
     /// <summary>Multiply interpolant by a scalar.</summary>
     public static ChebyshevApproximation operator *(ChebyshevApproximation a, double scalar)
     {
+        ArgumentNullException.ThrowIfNull(a);
         if (a._tensorValues == null)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
         Algebra.ValidateFiniteScalar(scalar, nameof(scalar));
@@ -1614,6 +1611,7 @@ public class ChebyshevApproximation
     /// <summary>Divide interpolant by a scalar.</summary>
     public static ChebyshevApproximation operator /(ChebyshevApproximation a, double scalar)
     {
+        ArgumentNullException.ThrowIfNull(a);
         if (a._tensorValues == null)
             throw new InvalidOperationException("Operand is not built. Call Build() first.");
         Algebra.ValidateFiniteNonZeroDivisor(scalar, nameof(scalar));

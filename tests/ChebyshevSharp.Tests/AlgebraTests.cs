@@ -1445,3 +1445,81 @@ public class ScalarAlgebraValidationTests
         Assert.Throws<DivideByZeroException>(() => TestFixtures.AlgebraSliderF / 0.0);
     }
 }
+
+public class AlgebraNullOperandValidationTests
+{
+    private static void AssertNullParam(string expectedParamName, Action action)
+    {
+        var ex = Assert.Throws<ArgumentNullException>(action);
+        Assert.Equal(expectedParamName, ex.ParamName);
+    }
+
+    [Fact]
+    public void Approximation_binary_operators_reject_null_operands()
+    {
+        var f = TestFixtures.AlgebraChebF;
+        ChebyshevApproximation? missing = null;
+
+        AssertNullParam("a", () => { var _ = missing! + f; });
+        AssertNullParam("b", () => { var _ = f + missing!; });
+        AssertNullParam("a", () => { var _ = missing! - f; });
+        AssertNullParam("b", () => { var _ = f - missing!; });
+    }
+
+    [Fact]
+    public void Approximation_scalar_operators_reject_null_operand()
+    {
+        ChebyshevApproximation? missing = null;
+
+        AssertNullParam("a", () => { var _ = missing! * 2.0; });
+        AssertNullParam("a", () => { var _ = 2.0 * missing!; });
+        AssertNullParam("a", () => { var _ = missing! / 2.0; });
+        AssertNullParam("a", () => { var _ = -missing!; });
+    }
+
+    [Fact]
+    public void Spline_binary_operators_reject_null_operands()
+    {
+        var f = TestFixtures.AlgebraSplineF;
+        ChebyshevSpline? missing = null;
+
+        AssertNullParam("a", () => { var _ = missing! + f; });
+        AssertNullParam("b", () => { var _ = f + missing!; });
+        AssertNullParam("a", () => { var _ = missing! - f; });
+        AssertNullParam("b", () => { var _ = f - missing!; });
+    }
+
+    [Fact]
+    public void Spline_scalar_operators_reject_null_operand()
+    {
+        ChebyshevSpline? missing = null;
+
+        AssertNullParam("a", () => { var _ = missing! * 2.0; });
+        AssertNullParam("a", () => { var _ = 2.0 * missing!; });
+        AssertNullParam("a", () => { var _ = missing! / 2.0; });
+        AssertNullParam("a", () => { var _ = -missing!; });
+    }
+
+    [Fact]
+    public void Slider_binary_operators_reject_null_operands()
+    {
+        var f = TestFixtures.AlgebraSliderF;
+        ChebyshevSlider? missing = null;
+
+        AssertNullParam("a", () => { var _ = missing! + f; });
+        AssertNullParam("b", () => { var _ = f + missing!; });
+        AssertNullParam("a", () => { var _ = missing! - f; });
+        AssertNullParam("b", () => { var _ = f - missing!; });
+    }
+
+    [Fact]
+    public void Slider_scalar_operators_reject_null_operand()
+    {
+        ChebyshevSlider? missing = null;
+
+        AssertNullParam("a", () => { var _ = missing! * 2.0; });
+        AssertNullParam("a", () => { var _ = 2.0 * missing!; });
+        AssertNullParam("a", () => { var _ = missing! / 2.0; });
+        AssertNullParam("a", () => { var _ = -missing!; });
+    }
+}
