@@ -1331,8 +1331,10 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Add new dimensions where the function is constant.
+    /// Add one or more dimensions where the represented interpolant is constant.
     /// </summary>
+    /// <param name="extrudeParams">Tuples of output dimension index, domain bounds, and node count for each inserted dimension.</param>
+    /// <returns>A built approximation with the inserted dimensions and no source function attached.</returns>
     public ChebyshevApproximation Extrude(params (int dimIndex, double[] bounds, int nNodes)[] extrudeParams)
     {
         if (_tensorValues == null)
@@ -1388,8 +1390,10 @@ public class ChebyshevApproximation
     }
 
     /// <summary>
-    /// Fix one or more dimensions at given values, reducing dimensionality.
+    /// Fix one or more dimensions at given values using barycentric interpolation.
     /// </summary>
+    /// <param name="sliceParams">Tuples of current dimension index and value to fix.</param>
+    /// <returns>A built lower-dimensional approximation with no source function attached.</returns>
     public ChebyshevApproximation Slice(params (int dimIndex, double value)[] sliceParams)
     {
         if (_tensorValues == null)
@@ -1457,7 +1461,7 @@ public class ChebyshevApproximation
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Integrate the interpolant over one or more dimensions.
+    /// Integrate the represented interpolant over one or more dimensions.
     /// </summary>
     /// <param name="dims">Dimensions to integrate out. Null = all.</param>
     /// <param name="bounds">Sub-interval bounds per dim. Null = full domain.</param>
@@ -1555,8 +1559,10 @@ public class ChebyshevApproximation
     }
 
     /// <summary>
-    /// Find all roots of the interpolant along a specified dimension.
+    /// Find real roots of the represented one-dimensional interpolant.
     /// </summary>
+    /// <param name="dim">Dimension to search. Required for multi-dimensional approximations.</param>
+    /// <param name="fixedDims">Values for every non-search dimension when the approximation is multi-dimensional.</param>
     public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         if (_tensorValues == null)
@@ -1569,8 +1575,10 @@ public class ChebyshevApproximation
     }
 
     /// <summary>
-    /// Find the minimum value of the interpolant along a dimension.
+    /// Find the minimum of the represented one-dimensional interpolant.
     /// </summary>
+    /// <param name="dim">Dimension to optimize. Required for multi-dimensional approximations.</param>
+    /// <param name="fixedDims">Values for every non-search dimension when the approximation is multi-dimensional.</param>
     public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         if (_tensorValues == null)
@@ -1585,8 +1593,10 @@ public class ChebyshevApproximation
     }
 
     /// <summary>
-    /// Find the maximum value of the interpolant along a dimension.
+    /// Find the maximum of the represented one-dimensional interpolant.
     /// </summary>
+    /// <param name="dim">Dimension to optimize. Required for multi-dimensional approximations.</param>
+    /// <param name="fixedDims">Values for every non-search dimension when the approximation is multi-dimensional.</param>
     public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         if (_tensorValues == null)

@@ -72,8 +72,9 @@ $$
 \prod_{m \neq k} \ell_{i_m}^{(m)}(x_m) = p_{\text{orig}}(\mathbf{x}_{\text{orig}})
 $$
 
-**Result**: The extruded CT evaluates to the same value as the original,
-regardless of the new coordinate. Extrusion is exact.
+**Result**: The extruded CT evaluates to the same represented interpolant as the
+original, regardless of the new coordinate. Extrusion adds no approximation
+error to the represented model.
 
 ### Slicing Proof
 
@@ -115,11 +116,12 @@ $\sum_j v \cdot \ell_j(x^*) = v \cdot 1 = v$.
 
 ### Error Bounds
 
-- **Extrusion**: No approximation error introduced (exact operation), following
-  directly from the partition of unity (Berrut & Trefethen 2004).
+- **Extrusion**: No additional approximation error is introduced in the
+  represented interpolant, following directly from the partition of unity
+  (Berrut & Trefethen 2004).
 - **Slicing**: The sliced CT evaluates the polynomial interpolant at $x_k = x^*$.
-  No additional error beyond the original approximation error
-  (Trefethen 2013, Ch. 8):
+  No additional modeling error is introduced beyond the original approximation
+  error and floating-point contraction error (Trefethen 2013, Ch. 8):
   if $\|f - p\|_\infty \leq \epsilon$, then
   $\|f(\cdot, x^*) - p(\cdot, x^*)\|_\infty \leq \epsilon$.
 
@@ -185,10 +187,15 @@ var result = cheb.Extrude(params);
 **Returns**: A new interpolant of the same type, already built, with
 `Function = null`.
 
+For `ChebyshevTT`, the API is `tt.Extrude(int dim, (double Lo, double Hi)
+newDomain, int newN)`.
+
 **Errors**:
 
 - `InvalidOperationException` if the interpolant has not been built
-- `ArgumentException` if `dimIndex` is out of range, duplicated, `lo >= hi`, or `nNodes < 2`
+- `ArgumentNullException` if the params array is null
+- `ArgumentException` if `dimIndex` is out of range, duplicated, bounds are
+  missing or non-finite, `lo >= hi`, or `nNodes < 2`
 
 ### Multi-Extrude: 1D to 3D
 
@@ -227,8 +234,11 @@ var result = cheb.Slice(params);
 **Errors**:
 
 - `InvalidOperationException` if the interpolant has not been built
-- `ArgumentException` if `value` is outside the domain, `dimIndex` is out of range,
-  duplicated, or if slicing all dimensions
+- `ArgumentNullException` if the params array is null
+- `ArgumentException` if `value` is non-finite or outside the domain,
+  `dimIndex` is out of range, duplicated, or if slicing all dimensions
+- `ChebyshevTT.Slice` uses `ArgumentOutOfRangeException` for invalid `dim` or
+  `value`, and rejects slicing a 1D TT because that would produce a 0D object
 
 ### Slice 3D to 1D
 
@@ -281,21 +291,23 @@ number of dimensions.
 
 ## Derivatives
 
-**Extrusion**: Derivatives in the original dimensions are preserved.
+**Extrusion**: For dense, spline, and slider interpolants, derivatives in the
+original dimensions are preserved.
 Derivatives with respect to the new dimension are zero (the function is
 constant along the new axis). This follows from
 $\mathcal{D}_k \cdot [c, c, \ldots, c]^T = \mathbf{0}$.
 
-**Slicing**: Derivatives in the remaining dimensions are preserved. The
-sliced CT has valid spectral differentiation matrices for all surviving
-dimensions.
+**Slicing**: Derivatives in the remaining dimensions are preserved for the
+represented interpolant. The sliced CT has valid spectral differentiation
+matrices for all surviving dimensions. `ChebyshevTT` still evaluates
+derivatives through its finite-difference `EvalMulti` path.
 
 ```csharp
 // Extrude: derivative w.r.t. new dim is zero
 var ct3d = ct2d.Extrude((2, new[] { 0.0, 1.0 }, 11));
 double dNew = ct3d.VectorizedEval(
     new[] { 0.5, 0.3, 0.7 }, new[] { 0, 0, 1 });
-// dNew ~ 0.0 (within ~1e-12)
+// dNew is zero up to floating-point rounding.
 
 // Slice: derivative in remaining dim preserved
 var ct1d = ct2d.Slice((1, 0.5));

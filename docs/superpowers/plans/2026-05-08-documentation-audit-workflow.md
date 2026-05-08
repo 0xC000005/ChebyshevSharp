@@ -167,8 +167,8 @@ Use this body shape for each documentation-audit issue:
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | Complete | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
 | Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | Complete | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Complete | [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) | [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) | Clarified pivot cost, per-slide error diagnostics, cross-group derivative limits, and public benchmark framing. |
-| Tensor Train docs | `tensor-train.md`, TT sections in related pages | In PR | [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164) | [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165) | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
-| Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Not started | TBD | TBD | Separate mathematical intuition from exact API reference. |
+| Tensor Train docs | `tensor-train.md`, TT sections in related pages | Complete | [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164) | [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165) | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
+| Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | In progress | [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) | TBD | Local audit implemented; PR pending. |
 | Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Not started | TBD | TBD | Public persistence docs vs contributor fixture provenance. |
 | Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | Not started | TBD | TBD | Keep public expectations clear without leaking internal notes. |
 | API reference surface | XML docs in `src/`, generated `docs/api/` | Not started | TBD | TBD | Ensure public XML docs are accurate and not implementation-history heavy. |
@@ -335,6 +335,29 @@ Use this body shape for each documentation-audit issue:
 - 2026-05-08: Opened Tensor Train workflow PR
   [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165) for
   [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164).
+- 2026-05-08: Merged Tensor Train workflow PR
+  [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165), closing
+  [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164). Opened
+  [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) for algebra,
+  calculus, and special operations.
+- 2026-05-08: Implemented local algebra/calculus/special-operations audit for
+  [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166). Evidence:
+  checked algebra compatibility, scalar validation, TT rounded binary algebra,
+  Fejer-1 integration, colleague-matrix roots, extrema, extrusion/slicing,
+  special-point validation, and related Greeks/advanced-usage wording against
+  source and focused tests; verified public references for Berrut and Trefethen
+  (2004), Good (1961), Waldvogel (2006), and the Chebfun root/extrema guide;
+  qualified exactness, cost, and root/optimization guarantees; removed
+  release-history/provenance wording from user docs. Local gates:
+  `git diff --check`, `docfx docs/docfx.json`, `dotnet restore
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj -p:TargetFramework=net10.0
+  -p:NuGetAudit=false`, `dotnet build
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0
+  --no-restore`, algebra/calculus/extrude/slice/special-points/Greeks-focused
+  `dotnet test` filter (`350` tests passed), `dotnet restore
+  src/ChebyshevSharp/ChebyshevSharp.csproj -p:NuGetAudit=false`, and
+  `dotnet format src/ChebyshevSharp/ChebyshevSharp.csproj
+  --verify-no-changes`.
 
 ## External Workflow References
 

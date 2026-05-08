@@ -19,7 +19,10 @@ double[][] points = new[]
 double[] values = cheb.VectorizedEvalBatch(points, new[] { 0, 0, 0 });
 ```
 
-`VectorizedEvalBatch` loops over points internally, calling `VectorizedEval` for each. It is 23x faster than Python's equivalent on 3D problems because the loop runs in JIT-compiled native code rather than the Python interpreter (see [Performance](performance.md)).
+`VectorizedEvalBatch` loops over points internally, calling `VectorizedEval` for
+each. It is usually preferable to a user-written loop when many points share the
+same derivative order; benchmark latency-sensitive workloads because the exact
+speedup depends on dimension, node count, and hardware (see [Performance](performance.md)).
 
 ## Evaluation Methods
 
@@ -28,7 +31,7 @@ double[] values = cheb.VectorizedEvalBatch(points, new[] { 0, 0, 0 });
 | Method | Use case |
 |--------|----------|
 | `VectorizedEval` | Single point, single derivative order. BLAS-optimized; recommended for most uses. |
-| `Eval` | Same as `VectorizedEval` but uses loop-based contraction. Matches the Python `eval()` method. |
+| `Eval` | Same API shape as `VectorizedEval`, but uses loop-based contraction. |
 | `VectorizedEvalBatch` | Multiple points, same derivative order. Loops over points with JIT-compiled code. |
 | `VectorizedEvalMulti` | Single point, multiple derivative orders (e.g., price plus selected Greeks). Shares barycentric weight computation across outputs. |
 
@@ -144,7 +147,12 @@ var halved = cheb1 / 2.0;       // scalar division
 
 Both operands must have the same number of dimensions, domain bounds, and node counts. The result is a new `ChebyshevApproximation` with tensor values computed pointwise.
 
-Arithmetic on interpolants is exact at the nodes. Between nodes, the result is the Chebyshev interpolant of the pointwise operation — which differs from the true pointwise result by the interpolation error. For well-resolved interpolants, this difference is negligible.
+Arithmetic on dense, spline, and slider interpolants is exact at the stored
+nodes or per-piece/per-slide nodes. Between nodes, the result is the Chebyshev
+interpolant of the linear combination, so the remaining difference from the true
+combined function is interpolation error. `ChebyshevTT` binary `+` and `-`
+perform TT rounding after forming the combined cores, so validate rank-sensitive
+linear combinations when the rank cap is tight.
 
 `ChebyshevSpline` also supports arithmetic operators. Both operands must have the same knots, domain bounds, and node counts. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
