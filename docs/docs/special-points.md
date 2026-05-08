@@ -25,7 +25,8 @@ var bad = new ChebyshevApproximation(
     1, new[] { new[] { -1.0, 1.0 } }, new[] { 31 });
 bad.Build(verbose: false);
 
-// With kink declaration: machine precision at N=11 per piece.
+// With kink declaration: this piecewise-linear example reaches machine precision
+// with 11 nodes per piece in the regression tests.
 var good = ChebyshevSpline.WithSpecialPoints(
     function: (x, _) => Math.Abs(x[0]),
     numDimensions: 1,
@@ -47,6 +48,16 @@ tensor to a piecewise spline, so the C# API exposes it through
 Use [Adaptive Refinement](adaptive-refinement.md) if you want a heuristic scan
 for candidate knots instead of declaring known locations yourself.
 
+## Validation Rules
+
+- `specialPoints` must have one array per dimension.
+- Points must be finite, sorted, unique, and strictly inside the domain; endpoints
+  are already piece boundaries.
+- Exactly one construction mode must be supplied: `nNodesNested`, `nNodes`, or
+  `errorThreshold`.
+- For `nNodesNested`, each dimension needs `specialPoints[d].Length + 1` node
+  counts, one for each sub-interval.
+
 ## Per-Sub-Interval Node Counts
 
 Pass nested arrays to `nNodesNested` for per-piece refinement:
@@ -63,3 +74,8 @@ var spl = ChebyshevSpline.WithSpecialPoints(
 // Dim 0: 2 pieces (split at 0.0) with 7 and 9 nodes.
 // Dim 1: 1 piece (no kink) with 11 nodes.
 ```
+
+Use nested counts when one side of a kink needs more resolution than the other.
+Use flat `nNodes` when every sub-interval can use the same node count. Use
+`errorThreshold` when you want each piece to choose its node count by the
+standard error-driven build loop.

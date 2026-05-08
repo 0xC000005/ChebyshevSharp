@@ -4,8 +4,10 @@ title: Computing Greeks
 
 # Computing Greeks
 
-ChebyshevSharp computes option Greeks (and any partial derivatives) analytically
-using spectral differentiation matrices -- no finite differences needed.
+For dense approximations and splines, ChebyshevSharp computes option Greeks
+(and any partial derivatives) analytically using spectral differentiation
+matrices. `ChebyshevTT` uses finite differences for derivatives because it does
+not store the full dense tensor.
 
 ## Derivative Specification
 
@@ -130,8 +132,10 @@ cheb.Build();
 double d3f = cheb.VectorizedEval(point, new[] { 3, 0, 0 });
 ```
 
-Higher derivative orders require more nodes for accurate results. As a rule of thumb,
-use at least $n \geq 2k + 5$ nodes per dimension for derivative order $k$.
+Higher derivative orders require more nodes for accurate results. A practical
+starting point is to increase the node count with the requested derivative
+order, then validate the Greek against an analytical formula, a refined grid, or
+an independent finite-difference check.
 
 > **Runtime validation.** Evaluating a derivative order higher than `maxDerivativeOrder`
 > throws `ArgumentOutOfRangeException`. If you need third-order Greeks, set

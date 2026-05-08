@@ -19,7 +19,8 @@ var portfolio = w1 * trade1 + w2 * trade2 + ... + wN * tradeN;
 ```
 
 One evaluation of `portfolio` gives the netting set price -- $O(1)$ regardless of
-the number of trades.
+the number of trades. The evaluation still costs whatever the combined
+interpolant costs to evaluate; algebra removes the per-trade loop.
 
 > **When to use algebra.**
 > Use algebraic combination when multiple Chebyshev interpolants share the **same
@@ -41,14 +42,20 @@ $$
 where $\ell^{(k)}_{i_k}$ are the barycentric basis functions (Berrut &
 Trefethen 2004). This is **linear in the values** $v_{i_1, \ldots, i_d}$.
 
-**Theorem (Linearity of CT operations).** Let $T_f$ and $T_g$ be two CTs on the
-same grid. Then:
+**Theorem (Linearity of CT operations).** Let $T_f$ and $T_g$ be two dense CTs
+on the same grid. Then:
 
 1. **Addition**: $T_f + T_g$ (element-wise on grid values) is the CT for $f + g$
 2. **Scalar multiplication**: $c \cdot T_f$ is the CT for $c \cdot f$
 3. **Subtraction**: $T_f - T_g$ is the CT for $f - g$
 
 *Proof.* Direct from linearity of the barycentric formula.
+
+For `ChebyshevSpline`, the same argument applies independently on each matching
+piece. For `ChebyshevSlider`, it applies to each slide and to the pivot value.
+For `ChebyshevTT`, block-diagonal TT addition represents the sum before the
+result is rounded back to the configured rank cap, so TT `+` and `-` should be
+treated as rank-rounded linear combinations.
 
 **Corollary (Derivatives).** Since the spectral differentiation matrix
 $\mathcal{D}_k$ depends only on grid points (Berrut & Trefethen 2004, Section 9):
@@ -115,14 +122,17 @@ evaluation methods (`Eval`, `VectorizedEval`, `VectorizedEvalMulti`,
 | `/` scalar | `cheb / 2.0` | Divide all tensor values |
 | unary `-` | `-cheb` | Negate all tensor values |
 
-Compound assignment is supported via the standard C# operators:
+Compound assignment works through normal C# reassignment:
 
 ```csharp
-a += b;    // In-place add (allocates new tensor, reassigns)
-a -= b;    // In-place subtract
-a *= 3.0;  // In-place scale
-a /= 2.0;  // In-place divide
+a += b;    // equivalent to a = a + b
+a -= b;    // equivalent to a = a - b
+a *= 3.0;  // equivalent to a = a * 3.0
+a /= 2.0;  // equivalent to a = a / 2.0
 ```
+
+`ChebyshevTT` also exposes explicit mutating methods such as `AddInPlace`,
+`SubInPlace`, `ScalarMulInPlace`, and `ScalarDivInPlace`.
 
 ## Compatibility Requirements
 
@@ -132,15 +142,18 @@ Both operands must share:
 - **Same `NumDimensions`** -- number of interpolation dimensions
 - **Same `Domain`** -- identical domain bounds in every dimension
 - **Same `NNodes`** -- same node counts in every dimension
-- **Same `MaxDerivativeOrder`** -- same spectral differentiation depth
+- **Same `MaxDerivativeOrder`** -- required for dense, spline, and slider operands
 - **Both must be built** -- `Build()` must have been called on each operand
 
 Additional requirements for specific classes:
 
 - **`ChebyshevSpline`**: same `Knots` in every dimension
 - **`ChebyshevSlider`**: same `Partition` and same `PivotPoint`
-- **`ChebyshevTT`**: same `DimOrder`; call `Reorder()` first when two TTs
-  store the same user dimensions in different TT positions
+- **`ChebyshevTT`**: same dimension count, domain, node counts, and `DimOrder`;
+  call `Reorder()` first when two TTs store the same user dimensions in
+  different TT positions. TT binary arithmetic does not require matching
+  `MaxDerivativeOrder`, because TT derivatives are evaluated by finite
+  differences on the resulting TT.
 
 An exception is thrown if any of these conditions are not met:
 
@@ -194,16 +207,21 @@ combined TT.
 
 ## Error Estimation
 
-`ErrorEstimate()` recomputes from the combined Chebyshev coefficients (DCT of the
-combined tensor values). In practice this may give a **tighter bound** than the
-triangle inequality $\epsilon_f + \epsilon_g$, because cancellation between the
-high-order coefficients of $f$ and $g$ can reduce the estimated tail:
+For dense approximations, `ErrorEstimate()` recomputes the tail diagnostic from
+the combined Chebyshev coefficients. In practice this may be smaller than the
+triangle-inequality estimate $\epsilon_f + \epsilon_g$, because cancellation
+between high-order coefficients can reduce the estimated tail:
 
 ```csharp
 var portfolio = 0.6 * call + 0.4 * put;
 double err = portfolio.ErrorEstimate();
 Console.WriteLine($"Portfolio error estimate: {err:E2}");
 ```
+
+For splines, the diagnostic is the maximum over pieces. For sliders, it is the
+sum of the slide diagnostics. For TT results, `ErrorEstimate()` inspects
+coefficient-core tails, so it is a rank/representation diagnostic rather than a
+rigorous bound for the true function.
 
 ## Serialization
 
@@ -291,12 +309,14 @@ var aligned = ttA + ttB.Reorder(ttA.DimOrder);
 ## Why Pointwise Products are NOT Supported
 
 The product $f \cdot g$ is **not** $\mathbf{v}_f \odot \mathbf{v}_g$ (element-wise product of grid
-values). The product of two polynomials of degree $n$ has degree $2n$, which
-cannot be represented on the same $n$-point grid.
+values). An $n$-node interpolant has degree at most $n-1$ in one dimension, and
+the product of two such polynomials can have degree $2n-2$, which generally
+cannot be represented on the original $n$-point grid.
 
-Only **linear combinations** (addition, subtraction, scalar multiplication) are exact
-on the same grid. Pointwise multiplication of two Chebyshev interpolants requires a
-grid refinement step and is not supported.
+Only **linear combinations** (addition, subtraction, scalar multiplication) are
+exact on the same dense grid. Pointwise multiplication of two Chebyshev
+interpolants requires a grid refinement step and is not supported by the
+arithmetic operators.
 
 > **Workaround for products.**
 > If you need to approximate $f \cdot g$, build a single Chebyshev interpolant
@@ -310,8 +330,9 @@ grid refinement step and is not supported.
   are still not supported.
 - **No cross-type operations** -- you cannot add a `ChebyshevApproximation` to a
   `ChebyshevSpline` or a `ChebyshevSlider`.
-- **Operands must share exact grid parameters** -- domain, node counts, derivative
-  order, and (where applicable) knots or partition must be identical.
+- **Operands must share compatible grid parameters** -- domain and node counts
+  must match, with derivative order, knots, partition, pivot point, or `DimOrder`
+  checked according to the class.
 - **Result has `Function = null`** -- the combined interpolant cannot call `Build()`
   again, since it has no underlying function reference.
 
