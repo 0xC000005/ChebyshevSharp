@@ -132,7 +132,7 @@ Use this body shape for each documentation-audit issue:
 
 | Area | Pages | Status | Issue | PR | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Pilot issue open | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | TBD | Reframe PyChebyshev/MoCaX language for users. |
+| Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Implemented in #151 | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) | Reframed public identity, package description, and validation provenance language. |
 | Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Not started | TBD | TBD | Verify every book, paper, formula, and link. |
 | Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Not started | TBD | TBD | Ensure concepts precede advanced how-tos where useful. |
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Not started | TBD | TBD | Make choice rules intuitive and example-driven. |
@@ -155,6 +155,20 @@ Use this body shape for each documentation-audit issue:
 - 2026-05-08: Opened workflow PR
   [#150](https://github.com/0xC000005/ChebyshevSharp/pull/150) to make this
   file durable in the repository.
+- 2026-05-08: Merged workflow PR
+  [#150](https://github.com/0xC000005/ChebyshevSharp/pull/150), then started
+  pilot implementation branch `docs/audit-public-identity` for
+  [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149).
+- 2026-05-08: Opened pilot implementation PR
+  [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151). Local
+  verification: `git diff --check`, `docfx docs/docfx.json`, `dotnet pack
+  src/ChebyshevSharp --configuration Release --output
+  /tmp/chebsharp-doc-audit-public-identity-pack --verbosity minimal`, and
+  nuspec description inspection.
+- 2026-05-08: PR
+  [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) passed remote
+  `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, `All
+  Tests Passed`, and `codecov/patch`.
 
 ## External Workflow References
 

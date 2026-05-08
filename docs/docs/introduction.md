@@ -79,9 +79,15 @@ For high-dimensional problems where a full tensor grid is infeasible, `Chebyshev
 
 For high-dimensional problems with general cross-variable coupling (where the sliding technique's separability assumption breaks down), `ChebyshevTT` uses Tensor Train decomposition to build from $O(d \cdot n \cdot r^2)$ evaluations instead of $n^d$. Derivatives are computed via finite differences. See [Tensor Train Interpolation](tensor-train.md) for details.
 
-## Relationship to PyChebyshev
+## Validation and Provenance
 
-ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyChebyshev). The Python reference implementation is included as a git submodule at `ref/PyChebyshev/` for cross-validation. Both libraries produce numerically identical results within floating-point tolerance. On low-dimensional problems (1-3D), the C# implementation is 17-42x faster than Python due to eliminated interpreter overhead; see [Performance](performance.md) for benchmarks.
+ChebyshevSharp is validated with a C# regression suite, deterministic property
+tests, package validation, DocFX checks, and selected cross-language reference
+fixtures. The repository includes `ref/PyChebyshev/` for contributor-side
+cross-validation, but public usage does not require Python or the reference
+implementation. See [Testing & Validation](testing-and-validation.md) for local
+quality gates and [Performance](performance.md) for benchmark methodology and
+results.
 
 ## References
 
