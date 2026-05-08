@@ -1950,8 +1950,8 @@ public class ChebyshevTT
                     ?? throw new InvalidOperationException("Failed to deserialize ChebyshevTT state.");
 
         int jsonVersion = state.JsonVersion ?? 1;
-        int[] dimOrder = state.DimOrder ?? Enumerable.Range(0, state.NumDimensions).ToArray();
-        ValidateSerializedState(state, dimOrder);
+        ValidateSerializedState(state, state.DimOrder);
+        int[] dimOrder = state.DimOrder ?? IdentityDimOrder(state.NumDimensions);
 
         var cores = new TensorTrainKernel.TtCore[state.NumDimensions];
         for (int i = 0; i < state.NumDimensions; i++)
@@ -2020,7 +2020,7 @@ public class ChebyshevTT
         return Load(path);
     }
 
-    private static void ValidateSerializedState(TTSerializationState state, int[] dimOrder)
+    private static void ValidateSerializedState(TTSerializationState state, int[]? dimOrder)
     {
         int d = state.NumDimensions;
         if (d <= 0)
@@ -2121,8 +2121,17 @@ public class ChebyshevTT
                 throw new InvalidDataException($"{name}[{i}] must be positive, got {values[i]}.");
     }
 
-    private static void ValidateDimOrder(int[] dimOrder, int numDimensions)
+    private static int[] IdentityDimOrder(int numDimensions)
     {
+        var dimOrder = new int[numDimensions];
+        for (int i = 0; i < dimOrder.Length; i++) dimOrder[i] = i;
+        return dimOrder;
+    }
+
+    private static void ValidateDimOrder(int[]? dimOrder, int numDimensions)
+    {
+        if (dimOrder is null) return;
+
         if (dimOrder.Length != numDimensions)
             throw new InvalidDataException($"DimOrder has length {dimOrder.Length}, expected {numDimensions}.");
 

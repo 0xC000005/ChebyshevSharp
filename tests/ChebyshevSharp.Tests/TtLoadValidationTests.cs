@@ -12,6 +12,12 @@ public class TtLoadValidationTests
         get
         {
             yield return Case("zero dimensions", s => s.NumDimensions = 0);
+            yield return Case("negative dimensions", s => s.NumDimensions = -1);
+            yield return Case("negative dimensions with missing dim order", s =>
+            {
+                s.NumDimensions = -1;
+                s.DimOrder = null;
+            });
             yield return Case("null domain", s => s.Domain = null);
             yield return Case("short domain", s => s.Domain = new[] { new[] { -1.0, 1.0 } });
             yield return Case("null domain row", s => s.Domain = new double[][] { new[] { -1.0, 1.0 }, null! });
