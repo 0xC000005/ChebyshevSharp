@@ -9,7 +9,37 @@ All notable changes to ChebyshevSharp will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+This page is release history, not a tutorial. Older entries may mention port
+phases, parity tags, PyChebyshev, or MoCaX when those details were part of a
+specific release. Current user guidance is organized in the tutorials, concepts,
+how-to guides, and API reference.
+
 ## [Unreleased]
+
+### Documentation
+- Completed the post-`0.13.0` public documentation audit across identity and
+  provenance framing, citation support, navigation, class selection,
+  dense/spline/slider/Tensor Train workflows, algebra and calculus, persistence,
+  validation, contributing, API XML comments, and runnable examples
+  ([#151](https://github.com/0xC000005/ChebyshevSharp/pull/151),
+  [#153](https://github.com/0xC000005/ChebyshevSharp/pull/153),
+  [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155),
+  [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157),
+  [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159),
+  [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161),
+  [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163),
+  [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165),
+  [#167](https://github.com/0xC000005/ChebyshevSharp/pull/167),
+  [#169](https://github.com/0xC000005/ChebyshevSharp/pull/169),
+  [#171](https://github.com/0xC000005/ChebyshevSharp/pull/171),
+  [#173](https://github.com/0xC000005/ChebyshevSharp/pull/173),
+  [#175](https://github.com/0xC000005/ChebyshevSharp/pull/175)).
+- Added a docs-site Examples page and updated the runnable console examples to
+  print accuracy checks against their original functions
+  ([#175](https://github.com/0xC000005/ChebyshevSharp/pull/175)).
+- Added a repository-root changelog entry point so GitHub users can find release
+  history without first opening the documentation site
+  ([#176](https://github.com/0xC000005/ChebyshevSharp/issues/176)).
 
 ## [0.13.0] - 2026-05-08 — Audit-driven correctness and validation hardening
 
