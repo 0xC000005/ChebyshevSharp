@@ -156,8 +156,10 @@ reduces Vega error below 0.1%.
 > **Tensor Train derivatives.** `ChebyshevTT` uses **finite differences** instead of
 > analytical derivatives, because the spectral differentiation matrix requires the
 > full tensor (which TT avoids storing). Central finite differences with step size
-> $h = (b-a) \times 10^{-4}$ provide 4--8 fewer digits of accuracy than spectral
-> derivatives, but are adequate for most financial applications. See
+> $h = (b-a) \times 10^{-4}$ trade exact spectral differentiation for sparse TT
+> storage. Derivative accuracy depends on smoothness, domain scale, rank error,
+> and boundary nudging; validate important Greeks against analytical formulas or
+> held-out finite-difference checks. See
 > [Tensor Train Interpolation](tensor-train.md) for details.
 
 > **Slider cross-group derivatives.** In `ChebyshevSlider`, the additive decomposition

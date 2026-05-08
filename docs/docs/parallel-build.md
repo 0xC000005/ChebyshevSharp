@@ -7,7 +7,7 @@ title: Parallel Build & Progress Reporting
 ChebyshevSharp exposes two constructor-time options on all four interpolant classes:
 
 - `nWorkers` (`int?`): null (sequential, default), `-1` (`Environment.ProcessorCount`), or positive int (`Parallel.For` pool size).
-- `progress` (`IProgress<int>?`): per-evaluation cumulative count for Approx/Spline/Slider; per-sweep for TT.
+- `progress` (`IProgress<int>?`): per-evaluation cumulative count for Approx/Spline/Slider; per-sweep for TT-Cross.
 
 ## Thread-safety contract
 
@@ -36,7 +36,7 @@ double F2(double[] p, object? _)
 
 ## Progress reporting
 
-Progress reports are cumulative integer counts. The total is derivable upfront via the `GetNumEvaluationPoints()` getter (Phase 4) on Approx/Spline/Slider, or `maxSweeps` on TT.
+Progress reports are cumulative integer counts. The total is derivable upfront via the `GetNumEvaluationPoints()` getter on Approx/Spline/Slider. For `ChebyshevTT`, progress is only reported by the TT-Cross path and counts completed sweeps up to `maxSweeps`; TT-SVD and ALS do not currently report progress.
 
 ```csharp
 var counter = new Progress<int>(n => Console.Write($"\r{n} evaluations done"));
@@ -53,4 +53,4 @@ ap.Build();
 
 ## TT and `nWorkers`
 
-`ChebyshevTT` accepts `nWorkers` for API symmetry but ignores it: TT-Cross is an adaptive sampling algorithm, not a pre-grid evaluation, so per-grid parallelism does not apply. `progress` on TT fires once per TT-Cross sweep.
+`ChebyshevTT` accepts `nWorkers` for API symmetry but ignores it: TT-Cross is an adaptive sampling algorithm, not a pre-grid evaluation, so per-grid parallelism does not apply. `progress` on TT fires once per completed TT-Cross sweep and may stop before `maxSweeps` when the tolerance or improvement stopping rule is reached.
