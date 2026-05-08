@@ -27,13 +27,16 @@ public class ChebyshevSlider
     private int[][] _partition = Array.Empty<int[]>();
     private double[] _pivotPoint = Array.Empty<double>();
 
-    /// <summary>The function to approximate. Null after <see cref="Load(string)"/>.</summary>
+    /// <summary>
+    /// Function used by <see cref="Build"/>. Null for objects restored from saved
+    /// numerical state or created by transformation APIs.
+    /// </summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions { get; internal set; }
 
-    /// <summary>Domain bounds for each dimension, as list of [lo, hi].</summary>
+    /// <summary>Domain bounds for each dimension, as <c>[lo, hi]</c> pairs.</summary>
     public double[][] Domain
     {
         get => CloneHelpers.DeepCopy(_domain)!;
@@ -281,6 +284,8 @@ public class ChebyshevSlider
     /// For each slide, dimensions outside the group are fixed at pivot values.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
+    /// <exception cref="InvalidOperationException">If this object has no callable <see cref="Function"/>.</exception>
+    /// <exception cref="ArgumentException">If the function returns NaN or Infinity at the pivot or a slide grid point.</exception>
     public void Build(bool verbose = true)
     {
         if (Function == null)
@@ -393,6 +398,9 @@ public class ChebyshevSlider
     /// <param name="point">Evaluation point inside the full declared domain.</param>
     /// <param name="derivativeOrder">Derivative order for each dimension (0 = function value).</param>
     /// <returns>Approximated function value or derivative.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> or <paramref name="derivativeOrder"/> has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double Eval(double[] point, int[] derivativeOrder)
     {
         if (!Built)
@@ -468,6 +476,9 @@ public class ChebyshevSlider
     /// <param name="point">Evaluation point inside the declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.</param>
     /// <returns>Results for each derivative order.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> or any derivative-order row has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
         if (!Built)
@@ -800,6 +811,7 @@ public class ChebyshevSlider
     /// Save the built slider to a JSON file.
     /// </summary>
     /// <param name="path">Destination file path.</param>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public void Save(string path)
     {
         if (!Built)
@@ -851,7 +863,7 @@ public class ChebyshevSlider
     /// Load a previously saved slider from a JSON file.
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
-    /// <returns>A fully functional slider with Function=null.</returns>
+    /// <returns>A fully functional slider with no callable source function attached.</returns>
     /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevSlider state.</exception>
     public static ChebyshevSlider Load(string path)
     {
@@ -1706,7 +1718,7 @@ public class ChebyshevSlider
     /// <summary>True if <see cref="Build"/>/<see cref="Load"/> completed.</summary>
     public bool IsConstructionFinished() => _isConstructionFinished;
 
-    /// <summary>Returns one of: "function" (Build), "load" (Load).</summary>
+    /// <summary>Returns one of: "function" (Build), "load" (Load), or "clone" (Clone).</summary>
     public string GetConstructorType() => _constructorType;
 
     /// <summary>Per-dimension Chebyshev node counts actually used.</summary>
@@ -1816,7 +1828,7 @@ public class ChebyshevSlider
 
     /// <summary>
     /// Returns a deep copy of this slider. The source <see cref="Function"/>
-    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// callable is not duplicated; clones cannot be rebuilt without re-supplying
     /// the function. All precomputed slides and state are deep-copied.
     /// </summary>
     /// <returns>A fully independent <see cref="ChebyshevSlider"/> with <see cref="Function"/> set to null.</returns>

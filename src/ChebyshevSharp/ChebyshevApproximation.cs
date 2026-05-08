@@ -6,8 +6,9 @@ using ChebyshevSharp.Internal;
 namespace ChebyshevSharp;
 
 /// <summary>
-/// Multi-dimensional Chebyshev tensor interpolation with analytical derivatives.
-/// Uses barycentric interpolation with pre-computed weights.
+/// Dense multi-dimensional Chebyshev interpolation on a full tensor-product grid.
+/// Provides barycentric evaluation and spectral differentiation on the represented
+/// polynomial interpolant.
 /// </summary>
 public class ChebyshevApproximation
 {
@@ -19,13 +20,16 @@ public class ChebyshevApproximation
     private double[][,]? _diffMatrices;
     private double[][]? _diffMatricesTFlat;
 
-    /// <summary>The function to approximate. Null after Load() or FromValues().</summary>
+    /// <summary>
+    /// Function used by <see cref="Build"/>. Null for objects restored from saved
+    /// numerical state or created by value-based/transformation APIs.
+    /// </summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions { get; internal set; }
 
-    /// <summary>Domain bounds for each dimension, as list of [lo, hi].</summary>
+    /// <summary>Domain bounds for each dimension, as <c>[lo, hi]</c> pairs.</summary>
     public double[][] Domain
     {
         get => CloneHelpers.DeepCopy(_domain)!;
@@ -158,7 +162,7 @@ public class ChebyshevApproximation
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
     /// <param name="deferBuild">If true, skip eager node materialization. Call <see cref="SetOriginalFunctionValues"/> to finish construction.</param>
-    /// <param name="nWorkers">Number of parallel workers for Build(): null (sequential), -1 (all cores), or positive int. Mirrors PyChebyshev v0.19 <c>n_workers</c>.</param>
+    /// <param name="nWorkers">Number of parallel workers for Build(): null (sequential), -1 (all cores), or positive int.</param>
     /// <param name="progress">Optional progress reporter; receives cumulative evaluation count 1..N during Build().</param>
     /// <remarks>
     /// When <paramref name="nWorkers"/> is non-null, <paramref name="function"/> may be
@@ -218,7 +222,7 @@ public class ChebyshevApproximation
     /// <param name="maxN">Cap on nodes per dimension during the doubling loop (default 64, must be at least 3).</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order to support (default 2).</param>
     /// <param name="additionalData">Optional user data object threaded through every f(point, data) call during Build.</param>
-    /// <param name="nWorkers">Number of parallel workers for Build(): null (sequential), -1 (all cores), or positive int. Mirrors PyChebyshev v0.19 <c>n_workers</c>.</param>
+    /// <param name="nWorkers">Number of parallel workers for Build(): null (sequential), -1 (all cores), or positive int.</param>
     /// <param name="progress">Optional progress reporter; receives cumulative evaluation count 1..N during Build().</param>
     /// <remarks>
     /// When <paramref name="nWorkers"/> is non-null, <paramref name="function"/> may be
@@ -301,6 +305,8 @@ public class ChebyshevApproximation
     /// builds on the resolved fixed grid.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
+    /// <exception cref="InvalidOperationException">If this object has no callable <see cref="Function"/>.</exception>
+    /// <exception cref="ArgumentException">If the function returns NaN or Infinity at a grid point.</exception>
     public void Build(bool verbose = true)
     {
         if (Function == null)
@@ -433,11 +439,13 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Evaluate using dimensional decomposition with barycentric interpolation.
-    /// Loop-based implementation matching Python eval().
     /// </summary>
     /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Interpolated value or derivative at the query point.</returns>
+    /// <exception cref="InvalidOperationException">If the interpolant has not been built or populated from values.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> or <paramref name="derivativeOrder"/> has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double Eval(double[] point, int[] derivativeOrder)
     {
         if (_tensorValues == null)
@@ -512,6 +520,9 @@ public class ChebyshevApproximation
     /// </summary>
     /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <returns>Interpolated value at the query point.</returns>
+    /// <exception cref="InvalidOperationException">If the interpolant has not been built or populated from values.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> has the wrong length or contains a non-finite value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain.</exception>
     public double Eval(double[] point)
     {
         if (_tensorValues == null)
@@ -523,11 +534,14 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Fully vectorized evaluation using matrix operations.
-    /// Replaces the Python loop with BLAS-style matrix-vector products.
+    /// Uses BLAS-style matrix-vector products where possible.
     /// </summary>
     /// <param name="point">Query point inside the declared domain, one coordinate per dimension.</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Interpolated value or derivative.</returns>
+    /// <exception cref="InvalidOperationException">If the interpolant has not been built or populated from values.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> or <paramref name="derivativeOrder"/> has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double VectorizedEval(double[] point, int[] derivativeOrder)
     {
         if (_tensorValues == null)
@@ -608,6 +622,9 @@ public class ChebyshevApproximation
     /// <param name="points">Points inside the declared domain as double[N][numDimensions].</param>
     /// <param name="derivativeOrder">Derivative order per dimension.</param>
     /// <returns>Results array of length N.</returns>
+    /// <exception cref="InvalidOperationException">If the interpolant has not been built or populated from values.</exception>
+    /// <exception cref="ArgumentException">If a point row or <paramref name="derivativeOrder"/> has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double[] VectorizedEvalBatch(double[][] points, int[] derivativeOrder)
     {
         if (_tensorValues == null)
@@ -682,7 +699,6 @@ public class ChebyshevApproximation
     /// Apply differentiation-matrix passes to the full coefficient tensor (all axes,
     /// shape unchanged). Used to hoist the point-independent part of
     /// <see cref="VectorizedEvalBatch"/> outside the per-point loop.
-    /// Mirrors Python's <c>_apply_derivative_passes</c>.
     /// </summary>
     private double[] ApplyDerivativePasses(double[] tensor, int[] shape, int[] derivativeOrder)
     {
@@ -707,6 +723,9 @@ public class ChebyshevApproximation
     /// <param name="point">Query point inside the declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.</param>
     /// <returns>One result per derivative order.</returns>
+    /// <exception cref="InvalidOperationException">If the interpolant has not been built or populated from values.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> or any derivative-order row has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double[] VectorizedEvalMulti(double[] point, int[][] derivativeOrders)
     {
         if (_tensorValues == null)
@@ -880,8 +899,9 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Get Chebyshev coefficients for a 1D array of values at Type I nodes.
-    /// Public for testing.
     /// </summary>
+    /// <param name="values">Values sampled at one-dimensional Chebyshev Type-I nodes.</param>
+    /// <returns>Chebyshev coefficients in increasing polynomial degree order.</returns>
     public static double[] ChebyshevCoefficients1D(double[] values)
     {
         return BarycentricKernel.ChebyshevCoefficients1D(values);
@@ -1197,7 +1217,8 @@ public class ChebyshevApproximation
     /// <param name="numDimensions">Number of dimensions.</param>
     /// <param name="domain">Lower and upper bounds for each dimension.</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
-    /// <returns>Dictionary with "NodesPerDim", "FullGrid", and "Shape".</returns>
+    /// <returns>A <see cref="NodeInfo"/> containing per-dimension nodes, the full Cartesian grid, and the tensor shape.</returns>
+    /// <exception cref="ArgumentException">If dimensions, domains, or node counts are invalid, or if the full grid is too large to materialize.</exception>
     public static NodeInfo Nodes(int numDimensions, double[][] domain, int[] nNodes)
     {
         ValidateFixedGridArguments(nameof(Nodes), numDimensions, domain, nNodes);
@@ -1239,6 +1260,13 @@ public class ChebyshevApproximation
     /// <summary>
     /// Create an interpolant from pre-computed function values.
     /// </summary>
+    /// <param name="tensorValues">Flat row-major tensor of values sampled on <see cref="Nodes"/>.</param>
+    /// <param name="numDimensions">Number of dimensions.</param>
+    /// <param name="domain">Lower and upper bounds for each dimension.</param>
+    /// <param name="nNodes">Number of Chebyshev nodes per dimension.</param>
+    /// <param name="maxDerivativeOrder">Maximum derivative order to support.</param>
+    /// <returns>A built interpolant with <see cref="Function"/> set to null.</returns>
+    /// <exception cref="ArgumentException">If the tensor length does not match the grid shape or contains NaN/Infinity.</exception>
     public static ChebyshevApproximation FromValues(
         double[] tensorValues,
         int numDimensions,
@@ -1869,7 +1897,7 @@ public class ChebyshevApproximation
     }
 
     // ------------------------------------------------------------------
-    // Phase 4 ergonomics — accessors
+    // Metadata and workflow accessors
     // ------------------------------------------------------------------
 
     /// <summary>Set a free-form descriptor string for this interpolant.</summary>
@@ -1956,8 +1984,8 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Populate this interpolant's tensor values from a precomputed flat array.
-    /// Used after constructing with <c>deferBuild: true</c>. Mirrors the
-    /// numerical pre-computation performed by the <see cref="FromValues"/> factory.
+    /// Used after constructing with <c>deferBuild: true</c>. Performs the same
+    /// numerical pre-computation as the <see cref="FromValues"/> factory.
     /// </summary>
     /// <param name="values">Flat C-order tensor of length nNodes[0]*nNodes[1]*...</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values"/> is null.</exception>
@@ -2051,7 +2079,7 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Returns a deep copy of this approximation. The source <see cref="Function"/>
-    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// callable is not duplicated; clones cannot be rebuilt without re-supplying
     /// the function. All precomputed state, descriptor, derivative-id registry,
     /// and special points are deep-copied.
     /// </summary>
