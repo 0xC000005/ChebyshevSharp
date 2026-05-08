@@ -71,7 +71,7 @@ other numerical core paths should not introduce unexplained surviving mutants.
 ## Release Gate
 
 Publishing to NuGet is tied to GitHub releases. The publish workflow verifies
-that the release tag, such as `v0.13.0`, matches the `<Version>` in
+that the release tag, such as `v0.13.1`, matches the `<Version>` in
 `src/ChebyshevSharp/ChebyshevSharp.csproj` before restore, build, test, pack, and
 `dotnet nuget push`. Documentation-only changes normally do not need a package
 version bump unless they change NuGet-visible metadata or package contents.

@@ -16,6 +16,11 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-05-08 — Documentation audit completion
+
+This patch release packages the post-`0.13.0` documentation audit. It does not
+intentionally change public APIs or numerical behavior.
+
 ### Documentation
 - Completed the post-`0.13.0` public documentation audit across identity and
   provenance framing, citation support, navigation, class selection,
@@ -40,6 +45,14 @@ how-to guides, and API reference.
 - Added a repository-root changelog entry point so GitHub users can find release
   history without first opening the documentation site
   ([#176](https://github.com/0xC000005/ChebyshevSharp/issues/176)).
+- Finalized the persistent documentation-audit ledger so future audit cycles
+  know that the current public documentation queue has been covered and should
+  open a new issue for newly added or materially changed docs surfaces
+  ([#179](https://github.com/0xC000005/ChebyshevSharp/pull/179)).
+
+### Release
+- Advanced package metadata to `0.13.1` and updated package validation to compare
+  this release against `0.13.0`.
 
 ## [0.13.0] - 2026-05-08 — Audit-driven correctness and validation hardening
 
