@@ -172,7 +172,8 @@ Use this body shape for each documentation-audit issue:
 | Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Complete | [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) | [#169](https://github.com/0xC000005/ChebyshevSharp/pull/169) | Public persistence docs now separate full .NET JSON state from `.pcb` limits and fixture provenance. |
 | Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | Complete | [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170) | [#171](https://github.com/0xC000005/ChebyshevSharp/pull/171) | Contributor and validation docs now align community, CI, Codecov, and release gates. |
 | API reference surface | XML docs in `src/`, generated `docs/api/` | Complete | [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172) | [#173](https://github.com/0xC000005/ChebyshevSharp/pull/173) | Public XML docs now describe implementation behavior without maintainer provenance leakage. |
-| Examples and runnable snippets | `examples/`, docs links to examples | In progress | [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174) | TBD | Console examples and docs-site entry points are being checked for copyability, correctness checks, and user-facing flow. |
+| Examples and runnable snippets | `examples/`, docs links to examples | Complete | [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174) | [#175](https://github.com/0xC000005/ChebyshevSharp/pull/175) | Console examples and docs-site entry points now include copyable commands and accuracy checks. |
+| Changelog and release notes | `CHANGELOG.md`, `docs/docs/changelog.md`, release-note links | In progress | [#176](https://github.com/0xC000005/ChebyshevSharp/issues/176) | TBD | Root discoverability, Unreleased coverage, and historical parity/phase framing are being checked. |
 
 ## Session Log
 
@@ -440,6 +441,21 @@ Use this body shape for each documentation-audit issue:
   --no-build --project examples/QuickStart/QuickStart.csproj`, and `dotnet run
   --configuration Release --no-build --project
   examples/TensorTrainHighDim/TensorTrainHighDim.csproj`.
+- 2026-05-08: Merged examples/runnable-snippets PR
+  [#175](https://github.com/0xC000005/ChebyshevSharp/pull/175), closing
+  [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174). Opened
+  [#176](https://github.com/0xC000005/ChebyshevSharp/issues/176) for changelog
+  and release notes.
+- 2026-05-08: Implemented local changelog/release-notes audit for
+  [#176](https://github.com/0xC000005/ChebyshevSharp/issues/176). Evidence:
+  checked the changelog against Keep a Changelog, Semantic Versioning, and
+  Google developer-doc style guidance; verified `v0.13.0` release metadata and
+  the newly referenced docs-audit PRs; added a root `CHANGELOG.md` entry point;
+  populated `Unreleased` with the post-`0.13.0` documentation audit work; and
+  clarified that older phase/parity language is historical release context.
+  Local gates: `git diff --check`, `docfx docs/docfx.json`, and `dotnet build
+  src/ChebyshevSharp/ChebyshevSharp.csproj --framework net10.0 --no-restore
+  --verbosity minimal`.
 
 ## External Workflow References
 
