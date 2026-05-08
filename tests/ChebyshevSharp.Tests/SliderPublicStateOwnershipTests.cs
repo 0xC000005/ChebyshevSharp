@@ -56,6 +56,36 @@ public class SliderPublicStateOwnershipTests
     }
 
     [Fact]
+    public void Build_failure_during_rebuild_preserves_previous_slide_state()
+    {
+        bool failDuringRebuild = false;
+        var slider = new ChebyshevSlider(
+            (p, _) =>
+            {
+                if (!failDuringRebuild)
+                    return p[0] + 2.0 * p[1];
+
+                if (Math.Abs(p[1]) < 1e-14)
+                    return 100.0 + p[0];
+
+                return double.NaN;
+            },
+            numDimensions: 2,
+            domain: new[] { new[] { -1.0, 1.0 }, new[] { -2.0, 2.0 } },
+            nNodes: new[] { 5, 7 },
+            partition: new[] { new[] { 0 }, new[] { 1 } },
+            pivotPoint: new[] { 0.0, 0.0 });
+        slider.Build(verbose: false);
+        double valueBefore = slider.Eval(new[] { -0.5, 0.25 }, new[] { 0, 0 });
+
+        failDuringRebuild = true;
+        Assert.Throws<ArgumentException>(() => slider.Build(verbose: false));
+
+        Assert.True(slider.IsConstructionFinished());
+        Assert.Equal(valueBefore, slider.Eval(new[] { -0.5, 0.25 }, new[] { 0, 0 }), precision: 12);
+    }
+
+    [Fact]
     public void Mutating_public_pivot_snapshot_does_not_change_evaluation_points()
     {
         var slider = BuildSlider();

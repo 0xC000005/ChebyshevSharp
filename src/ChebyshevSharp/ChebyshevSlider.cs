@@ -286,12 +286,10 @@ public class ChebyshevSlider
             throw new InvalidOperationException("Function is null. Cannot build.");
 
         var sw = Stopwatch.StartNew();
-        _cachedErrorEstimate = null;
 
         // Evaluate pivot value
         double pivotValue = Function(_pivotPoint, _additionalData);
         ValidateFinitePivotValue(pivotValue);
-        PivotValue = pivotValue;
 
         int totalEvals = TotalBuildEvals;
         long fullTensor = TensorShape.CheckedProduct(_nNodes, nameof(Build));
@@ -304,7 +302,7 @@ public class ChebyshevSlider
                 $"vs {fullTensor:N0} for full tensor)...");
         }
 
-        Slides = new ChebyshevApproximation[_partition.Length];
+        var builtSlides = new ChebyshevApproximation[_partition.Length];
         int progressOffset = 0;
         for (int slideIdx = 0; slideIdx < _partition.Length; slideIdx++)
         {
@@ -347,7 +345,7 @@ public class ChebyshevSlider
                 TensorShape.CheckedProduct(slideNNodes, nameof(Build)),
                 nameof(Build),
                 slideNNodes));
-            Slides[slideIdx] = slide;
+            builtSlides[slideIdx] = slide;
 
             if (verbose)
             {
@@ -362,13 +360,15 @@ public class ChebyshevSlider
         }
 
         sw.Stop();
+        Slides = builtSlides;
+        PivotValue = pivotValue;
         BuildTime = sw.Elapsed.TotalSeconds;
+        Built = true;
+        _isConstructionFinished = true;
+        _cachedErrorEstimate = null;
 
         if (verbose)
             Console.WriteLine($"Build complete in {BuildTime:F3}s");
-
-        Built = true;
-        _isConstructionFinished = true;
     }
 
     private static void ValidateFinitePivotValue(double value)
