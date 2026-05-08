@@ -17,11 +17,12 @@ issue first, narrow scope, verify against references and implementation, make a
 focused PR, wait for CI, record evidence here, then continue with the next
 surface.
 
-As of the final coverage sweep, all public documentation surfaces listed in the
-queue below have completed at least one focused audit pass. Continue this
-workflow by opening a new issue whenever new public docs are added, release
-content changes materially, or code changes make an existing documentation claim
-stale.
+As of final coverage sweep
+[#179](https://github.com/0xC000005/ChebyshevSharp/pull/179), all public
+documentation surfaces listed in the queue below have completed at least one
+focused audit pass. Continue this workflow by opening a new issue whenever new
+public docs are added, release content changes materially, or code changes make
+an existing documentation claim stale.
 
 ## Documentation Principles
 
@@ -180,7 +181,7 @@ Use this body shape for each documentation-audit issue:
 | API reference surface | XML docs in `src/`, generated `docs/api/` | Complete | [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172) | [#173](https://github.com/0xC000005/ChebyshevSharp/pull/173) | Public XML docs now describe implementation behavior without maintainer provenance leakage. |
 | Examples and runnable snippets | `examples/`, docs links to examples | Complete | [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174) | [#175](https://github.com/0xC000005/ChebyshevSharp/pull/175) | Console examples and docs-site entry points now include copyable commands and accuracy checks. |
 | Changelog and release notes | `CHANGELOG.md`, `docs/docs/changelog.md`, release-note links | Complete | [#176](https://github.com/0xC000005/ChebyshevSharp/issues/176) | [#177](https://github.com/0xC000005/ChebyshevSharp/pull/177) | Root discoverability, Unreleased coverage, and historical parity/phase framing were checked. |
-| Final coverage sweep | Public docs inventory and this workflow ledger | In progress | [#178](https://github.com/0xC000005/ChebyshevSharp/issues/178) | TBD | Current queue coverage is being reconciled against the merged docs inventory. |
+| Final coverage sweep | Public docs inventory and this workflow ledger | Complete | [#178](https://github.com/0xC000005/ChebyshevSharp/issues/178) | [#179](https://github.com/0xC000005/ChebyshevSharp/pull/179) | Current queue coverage was reconciled against the merged docs inventory. |
 
 ## Session Log
 
@@ -476,6 +477,10 @@ Use this body shape for each documentation-audit issue:
   [#177](https://github.com/0xC000005/ChebyshevSharp/pull/177), and added
   continuation guidance for future documentation additions. Local gates:
   `git diff --check` and `docfx docs/docfx.json`.
+- 2026-05-08: Opened final coverage ledger PR
+  [#179](https://github.com/0xC000005/ChebyshevSharp/pull/179) for
+  [#178](https://github.com/0xC000005/ChebyshevSharp/issues/178) and marked the
+  current documentation-audit queue complete as of that PR.
 
 ## External Workflow References
 
