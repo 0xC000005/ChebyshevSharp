@@ -19,7 +19,7 @@ public class ChebyshevApproximation
     private double[][,]? _diffMatrices;
     private double[][]? _diffMatricesTFlat;
 
-    /// <summary>The function to approximate. Null after load or from_values.</summary>
+    /// <summary>The function to approximate. Null after Load() or FromValues().</summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
     /// <summary>Number of input dimensions.</summary>
@@ -854,15 +854,17 @@ public class ChebyshevApproximation
     public double? GetErrorThreshold() => ErrorThreshold;
 
     /// <summary>
-    /// 1-D capacity estimator: the smallest N at which a 1-D Chebyshev build
-    /// over <paramref name="domain"/> hits <paramref name="errorThreshold"/>.
+    /// 1-D capacity estimator: returns the first doubling-loop node count at
+    /// which a 1-D Chebyshev build over <paramref name="domain"/> hits
+    /// <paramref name="errorThreshold"/>, or <paramref name="maxN"/> if the
+    /// threshold is not met before the cap.
     /// Useful as a sizing pass before committing to a multi-dimensional build.
     /// </summary>
     /// <param name="function">Function to approximate; signature f(point[1], data) -&gt; double.</param>
     /// <param name="domain">(lo, hi) bounds for the single dimension.</param>
     /// <param name="errorThreshold">Finite positive target supremum-norm error.</param>
-    /// <param name="maxN">Cap on the returned N. Default 64. If the doubling loop cannot achieve <paramref name="errorThreshold"/> within this cap, returns <paramref name="maxN"/> with BuildWarning set on the temporary internal interpolant.</param>
-    /// <returns>Resolved N on the single dimension.</returns>
+    /// <param name="maxN">Cap on the returned node count. Default 64. If the doubling loop cannot achieve <paramref name="errorThreshold"/> within this cap, returns <paramref name="maxN"/>.</param>
+    /// <returns>Resolved node count on the single dimension.</returns>
     public static int GetOptimalN1(
         Func<double[], object?, double> function,
         (double lo, double hi) domain,
@@ -1942,8 +1944,8 @@ public class ChebyshevApproximation
 
     /// <summary>
     /// Populate this interpolant's tensor values from a precomputed flat array.
-    /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
-    /// the <see cref="FromValues"/> factory.
+    /// Used after constructing with <c>deferBuild: true</c>. Mirrors the
+    /// numerical pre-computation performed by the <see cref="FromValues"/> factory.
     /// </summary>
     /// <param name="values">Flat C-order tensor of length nNodes[0]*nNodes[1]*...</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="values"/> is null.</exception>
@@ -1977,7 +1979,7 @@ public class ChebyshevApproximation
                 _nodeArrays[d] = BarycentricKernel.MakeNodesForDim(_domain[d][0], _domain[d][1], _nNodes[d]);
         }
 
-        // Mirror FromValues precomputation (bit-identical).
+        // Mirror FromValues numerical precomputation.
         _tensorValues = (double[])values.Clone();
 
         _weights = new double[NumDimensions][];

@@ -6,7 +6,11 @@ title: Error Estimation
 
 ## Introduction
 
-After building a Chebyshev interpolant, you often want to know how accurate it is without comparing against the true function at thousands of test points. `ErrorEstimate()` provides an **ex ante** estimate of the interpolation error using only the Chebyshev coefficients already computed during the build step.
+After building a Chebyshev interpolant, you often want to know how accurate it
+is without comparing against the true function at thousands of test points.
+`ErrorEstimate()` provides a convergence diagnostic using the tensor of function
+values already stored by the interpolant. It computes Chebyshev coefficients
+from 1-D slices on demand and caches the resulting estimate.
 
 This is useful for:
 
@@ -29,7 +33,8 @@ cheb.Build(verbose: false);
 Console.WriteLine($"Error estimate: {cheb.ErrorEstimate():E2}");
 ```
 
-No extra function evaluations are needed -- the estimate is computed from the tensor of function values that `Build()` already stored.
+No extra function evaluations are needed -- the estimate is computed from the
+tensor of function values that `Build()` or `FromValues()` already stored.
 
 ## Mathematical Background
 

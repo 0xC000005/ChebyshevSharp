@@ -19,9 +19,10 @@ function evaluation:
 2. **Evaluate externally** -- feed the points to your own pricing engine.
 3. **Load values** -- call `FromValues()` to construct the interpolant.
 
-The resulting object is *fully functional*: evaluation, derivatives,
-integration, rootfinding, optimization, algebra, extrusion/slicing, and
-serialization all work identically to a `Build()`-based interpolant.
+The resulting object is usable for stored-tensor operations: evaluation,
+derivatives, integration, rootfinding, optimization, algebra,
+extrusion/slicing, serialization, and error estimation. It cannot call
+`Build()` again because it does not retain a callable function.
 
 ## Workflow
 
@@ -143,9 +144,10 @@ depends only on the node positions:
 
 The function values appear only in `TensorValues`. The Chebyshev nodes are
 the zeros of $T_n(x)$, mapped to each dimension's domain (Trefethen 2013,
-Ch. 3). Since `FromValues()` computes all of the above from the same node
-formula as `Build()`, the resulting interpolant is **bit-identical** to one
-built the traditional way.
+Ch. 3). Since `FromValues()` computes all numerical pre-computation from the
+same node formula as `Build()`, evaluation and derivative results match a
+`Build()`-based interpolant from the same values. Runtime metadata differs:
+`Function` is `null`, and build timing or evaluation-count metadata may differ.
 
 ## Examples
 
@@ -202,8 +204,8 @@ var loaded = ChebyshevApproximation.Load("my_proxy.json");
 > **Calling `Build()` on a `FromValues` result:**
 > Objects created via `FromValues()` have `Function = null`. To re-build
 > with a different set of values, create a new object via `FromValues()`.
-> To re-build from a callable, assign a function first:
-> `cheb.Function = MyFunc;`, then `cheb.Build()`.
+> To re-build from a callable, create a new `ChebyshevApproximation` or
+> `ChebyshevSpline` with that function and call `Build()` on the new object.
 
 ## Combining with Other Features
 
