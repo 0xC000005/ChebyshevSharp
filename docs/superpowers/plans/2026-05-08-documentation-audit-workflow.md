@@ -166,7 +166,7 @@ Use this body shape for each documentation-audit issue:
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Complete | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | Complete | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
 | Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | Complete | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
-| Slider docs | `slider.md`, `greeks.md`, `performance.md` | Ready for PR | [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) | TBD | Clarified pivot cost, per-slide error diagnostics, cross-group derivative limits, and public benchmark framing. |
+| Slider docs | `slider.md`, `greeks.md`, `performance.md` | In PR | [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) | [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) | Clarified pivot cost, per-slide error diagnostics, cross-group derivative limits, and public benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Not started | TBD | TBD | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Not started | TBD | TBD | Separate mathematical intuition from exact API reference. |
 | Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Not started | TBD | TBD | Public persistence docs vs contributor fixture provenance. |
@@ -306,6 +306,9 @@ Use this body shape for each documentation-audit issue:
   tests passed), `dotnet restore src/ChebyshevSharp/ChebyshevSharp.csproj
   -p:NuGetAudit=false`, and `dotnet format
   src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes`.
+- 2026-05-08: Opened slider workflow PR
+  [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) for
+  [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162).
 
 ## External Workflow References
 
