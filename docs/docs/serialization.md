@@ -8,7 +8,8 @@ ChebyshevSharp provides multiple ways to create and persist interpolants beyond 
 
 ## Save and Load
 
-A built interpolant can be saved to disk and restored later without the original function:
+A built interpolant can be saved to disk and restored later without the original
+function:
 
 ```csharp
 // Save to JSON
@@ -19,26 +20,53 @@ var restored = ChebyshevApproximation.Load("interpolant.json");
 double value = restored.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 0, 0 });
 ```
 
-JSON is the default format. It saves the pre-computed data needed for full-fidelity .NET round trips: nodes, barycentric weights, differentiation matrices, tensor values, domain bounds, node counts, and build metadata where supported. The loaded interpolant is fully functional for evaluation, derivatives, integration, root-finding, and all other operations.
+JSON is the default format. It saves the class-specific numerical state needed
+for .NET round trips: domain, node counts, tensor values or TT cores,
+barycentric data, differentiation matrices, and build metadata where supported.
+Loaded interpolants can evaluate, differentiate, integrate, find roots, optimize,
+compose algebraically, and save again.
 
-Loaded interpolants cannot call `Build()` since they do not retain the original function reference. Pre-transposed differentiation matrices (`DiffMatricesTFlat`) are recomputed on load from the stored differentiation matrices.
+Loaded interpolants cannot call `Build()` since they do not retain the original
+function reference. Pre-transposed differentiation matrices
+(`DiffMatricesTFlat`) are recomputed on load. JSON loads reconstruct them from
+stored differentiation matrices; `.pcb` loads rebuild interpolation helpers
+from the saved domain, node counts, and tensor values.
 
-ChebyshevSharp also supports a portable binary format for dense approximations and compatible splines:
+ChebyshevSharp also supports a portable `.pcb` binary format for dense
+approximations and compatible splines:
 
 ```csharp
 cheb.Save("model.pcb", format: "binary");
 var portable = ChebyshevApproximation.Load("model.pcb");
 ```
 
-`Load()` auto-detects JSON versus `.pcb` by checking the binary magic header. Use JSON for .NET-only round trips and rich metadata. Use `.pcb` for cross-language consumers or long-term archival; it is byte-compatible with PyChebyshev's portable binary format but stores only the grid, domain, and tensor values needed to reconstruct the interpolant. See [Portable Binary Format (.pcb)](binary-format.md) for format details and restrictions.
+Use the matching class's `Load()` method. `ChebyshevApproximation.Load()` and
+`ChebyshevSpline.Load()` auto-detect JSON versus `.pcb` by checking the binary
+magic header; loading a spline `.pcb` through `ChebyshevApproximation.Load()`
+throws a class-tag error.
 
-**Format note:** ChebyshevSharp's JSON format is not Python pickle, and it is not the same as PyChebyshev's JSON/pickle serialization. Use `.pcb` where supported for cross-language binary transfer, or use `FromValues` with exported Type I node positions and function values when binary coverage does not fit your model.
+| Format | Use when | Main limits |
+|---|---|---|
+| JSON | You want full .NET state for the same ChebyshevSharp class. | Not a cross-language schema; no source function is saved. |
+| `.pcb` binary | You need a compact, documented layout for dense approximations or flat-node splines. | No slider or TT support; drops metadata such as build telemetry, descriptors, and `MaxDerivativeOrder`. |
+| `FromValues()` | You have values from another process or language. | Values must be sampled on ChebyshevSharp Type I nodes in row-major order. |
+
+See [Portable Binary Format (.pcb)](binary-format.md) for format details,
+restrictions, fixture provenance, and security notes.
 
 `ChebyshevSpline` also supports `Save` and `Load` with the same JSON format. The serialized file includes all pieces and knot positions. `Nodes()` and `FromValues()` are available for `ChebyshevSpline` as well. See [Piecewise Chebyshev Interpolation](spline.md) for details.
 
-`ChebyshevSlider` supports `Save` and `Load`. The serialized file includes the partition, pivot point, pivot value, and all slide states. `Nodes()` and `FromValues()` are not available for `ChebyshevSlider` — use the constructor and `Build()` workflow instead. See [Sliding Technique](slider.md) for details.
+`ChebyshevSlider` supports JSON `Save` and `Load`. The serialized file includes
+the partition, pivot point, pivot value, and all slide states. `Nodes()` and
+`FromValues()` are not available for `ChebyshevSlider` -- use the constructor
+and `Build()` workflow instead. See [Sliding Technique](slider.md) for details.
 
-`ChebyshevTT` supports `Save` and `Load`. The serialized file includes all coefficient cores, TT ranks, domain, node counts, and build metadata. `Nodes()` and `FromValues()` are available for TT workflows; `FromValues()` compresses the supplied dense tensor via TT-SVD. If the file was saved with a different library version, a `LoadWarning` property is set. See [Tensor Train Interpolation](tensor-train.md) for details.
+`ChebyshevTT` supports JSON `Save` and `Load`. The serialized file includes all
+coefficient cores, TT ranks, domain, node counts, dimension order, and build
+metadata. `Nodes()` and `FromValues()` are available for TT workflows;
+`FromValues()` compresses the supplied dense tensor via TT-SVD. If the file was
+saved with a different library version, a `LoadWarning` property is set. See
+[Tensor Train Interpolation](tensor-train.md) for details.
 
 ## FromValues
 
@@ -106,9 +134,12 @@ $$
 
 These are mapped to the domain $[a, b]$ via the affine transformation $\text{node} = \tfrac{a+b}{2} + \tfrac{b-a}{2}\,x_i$. Nodes are stored in ascending order within each dimension (smallest first).
 
-Type I nodes avoid the endpoints of the interval. This is advantageous when the function has singularities or discontinuities at the boundary [1, Ch. 3].
+Type I nodes avoid the endpoints of the interval. This is advantageous when the
+function has singularities or discontinuities at the boundary [1, Ch. 3].
 
-MoCaX C uses Chebyshev--Lobatto/extrema nodes with endpoints. If your external values come from MoCaX, rebuild them on ChebyshevSharp's Type I nodes or resample before calling `FromValues()`.
+If your external values come from an endpoint-inclusive Chebyshev--Lobatto grid,
+rebuild or resample them on ChebyshevSharp's Type I nodes before calling
+`FromValues()`.
 
 ## References
 

@@ -4,41 +4,51 @@ title: Portable Binary Format (.pcb)
 
 # Portable Binary Format (`.pcb`)
 
-ChebyshevSharp v0.7.0 introduces a portable binary serialization format
-alongside the default JSON format. The goal: let consumers in **C, Rust, Julia,
-or any other language** read ChebyshevSharp interpolants without a .NET runtime.
+`.pcb` is ChebyshevSharp's documented binary layout for dense
+`ChebyshevApproximation` objects and flat-node `ChebyshevSpline` objects. It
+stores the numerical representation needed for evaluation: domain bounds, node
+counts, knots for splines, and row-major tensor values.
 
-The format is byte-for-byte compatible with PyChebyshev v0.14's `.pcb`. Files
-written by either library can be read by the other.
+Use JSON when you need full ChebyshevSharp state. Use `.pcb` when you need a
+compact primitive layout that can be read without .NET-specific JSON classes.
 
 ## When to use which format
 
 | Format | Use when |
 |---|---|
-| **JSON** (default) | .NET-only round-trips; need full fidelity (build telemetry, error threshold metadata) |
-| **Binary** (`.pcb`) | Cross-language consumers; sharing models with C/Rust/Julia code; long-term archival |
+| **JSON** (default) | You need the richest .NET round trip, including build metadata, derivative registries, descriptors, and adaptive-construction metadata where the class supports them. |
+| **Binary** (`.pcb`) | You need a small, documented, primitive layout for dense approximations or flat-node splines. |
 
 ```csharp
-cheb.Save("model.pcb", format: "binary");      // portable
+cheb.Save("model.pcb", format: "binary");      // .pcb
 cheb.Save("model.json");                       // JSON (default)
 cheb.Save("model.json", format: "json");       // explicit
 
-ChebyshevApproximation.Load("model.pcb");      // auto-detects
+var dense = ChebyshevApproximation.Load("model.pcb");
 ```
 
-`Load()` sniffs the first 4 bytes — `b"PCB\x00"` routes to the binary reader,
-anything else to the JSON reader.
+Use the matching class to load the file. `ChebyshevApproximation.Load()` and
+`ChebyshevSpline.Load()` sniff the first four bytes: `PCB\0` routes to the
+binary reader, anything else routes to the JSON reader. If the file is a valid
+`.pcb` for the other class, loading fails with a `class_tag` error instead of
+silently converting it.
 
-## Coverage in v0.7.0
+## Supported Objects
 
 - **`ChebyshevApproximation`** — full support.
-- **`ChebyshevSpline`** — full support, with one restriction: the spline must
-  use **flat** `nNodes` (a single `int` per dim, shared across pieces). Splines
-  built with nested per-piece `nNodes` (the `int[][]` form introduced in Phase
-  1 for special points) cannot be saved as `.pcb` and throw
-  `NotSupportedException`; use JSON for those.
-- **`ChebyshevSlider`**, **`ChebyshevTT`** — JSON only in v0.7.0 (matches
-  PyChebyshev v0.14's restriction for these).
+- **`ChebyshevSpline`** — supported only when every piece shares one positive
+  `nNodes` vector. Splines built with adaptive node counts or nested per-piece
+  `nNodes` throw `NotSupportedException`; save those as JSON.
+- **`ChebyshevSlider`** and **`ChebyshevTT`** — JSON only.
+
+```csharp
+// Adaptive or nested-node splines keep their metadata in JSON.
+spline.Save("spline.json");
+
+// Flat-node splines can also be saved as .pcb.
+spline.Save("spline.pcb", format: "binary");
+var restored = ChebyshevSpline.Load("spline.pcb");
+```
 
 ## Format specification (v1)
 
@@ -137,17 +147,49 @@ These fields are dropped on `format="binary"`:
 |---|---|
 | `Function` | always dropped (also dropped by JSON) |
 | `Weights`, `DiffMatrices` | recomputed on load from `(domain, nNodes)` |
+| Derivative-id registry | rebuilt lazily as derivative IDs are requested |
 | Cached error estimate | recomputed lazily |
-| Build telemetry (`BuildTime`, `NEvaluations`, `Method`) | not preserved (use JSON for full fidelity) |
+| Build telemetry (`BuildTime`, `NEvaluations`) | not preserved |
+| Descriptors and special-point labels | not preserved |
+| Adaptive or nested-node construction intent | unsupported; use JSON |
 | `MaxDerivativeOrder` | resets to default `2` on load |
 
 If you need any of those preserved, use JSON.
 
+## Validation and Error Behavior
+
+The binary reader validates the header and body before constructing the public
+object:
+
+- bad magic, unsupported major versions, and nonzero reserved bytes are rejected
+- wrong class tags are rejected by the class-specific `Load()` method
+- dimensions, domains, node counts, knots, and tensor sizes must be finite and
+  internally consistent
+- truncated files throw `EndOfStreamException`; malformed records usually throw
+  `InvalidDataException`
+
+`PeekFormatVersion(path)` reads only the 12-byte header and returns the major
+version byte for `.pcb` files. It throws for missing files, JSON files, and
+short headers.
+
+## Compatibility Fixtures
+
+The v1 layout is locked by binary fixtures under `tests/fixtures/`. Those
+fixtures validate byte-level compatibility for supported dense and flat-node
+spline cases and give contributors a stable way to detect accidental format
+changes. Regeneration instructions and fixture provenance are maintained in
+`tests/fixtures/REGENERATE.md`.
+
 ## Security
 
-The binary reader does no executable deserialization and reads only primitive
-numbers into ChebyshevSharp data structures. Still treat `.pcb` files from
-untrusted sources as untrusted input: validate provenance when possible and
-load them in an environment with appropriate memory and file-size limits.
-Malformed files are rejected with `InvalidDataException` or standard I/O
-exceptions, but the format is not a security sandbox.
+ChebyshevSharp reads `.pcb` with `BinaryReader` and explicit primitive fields;
+it does not use `BinaryFormatter` or polymorphic object deserialization.
+Microsoft's .NET guidance treats `BinaryFormatter`-style deserialization as
+unsafe for untrusted input because it can instantiate object graphs and cross a
+trust boundary. `.pcb` avoids that object-deserialization model, but it is not a
+security sandbox. Treat files from untrusted sources as untrusted input, verify
+provenance when possible, and load them with appropriate file-size and memory
+limits.
+
+Reference: [Microsoft .NET BinaryFormatter security
+guide](https://learn.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide).

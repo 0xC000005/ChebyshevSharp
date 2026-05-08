@@ -151,7 +151,7 @@ internal static class PcbFormat
         if (raw[0] != Magic[0] || raw[1] != Magic[1] ||
             raw[2] != Magic[2] || raw[3] != Magic[3])
             throw new InvalidDataException(
-                "not a PyChebyshev binary file (bad magic)");
+                "not a .pcb binary file (bad magic)");
 
         byte major = raw[4];
         byte minor = raw[5];
