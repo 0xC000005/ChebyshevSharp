@@ -10,10 +10,14 @@ The **Tensor Train (TT)** format enables Chebyshev interpolation of functions wi
 
 Consider a 5D Black-Scholes pricer $V(S, K, T, \sigma, r)$ with 11 nodes per dimension. A full tensor grid requires $11^5 = 161{,}051$ function evaluations and stores the same number of coefficients. For 7 or more dimensions, the grid size exceeds billions of elements.
 
-The TT decomposition represents the same function as a chain of 3-index cores:
+The TT decomposition represents the sampled tensor as a chain of 3-index cores:
 
 $$
-f(x_1, \ldots, x_d) \approx \sum_{\alpha_0, \ldots, \alpha_d} G_1[\alpha_0, x_1, \alpha_1] \cdot G_2[\alpha_1, x_2, \alpha_2] \cdots G_d[\alpha_{d-1}, x_d, \alpha_d]
+A[i_1, \ldots, i_d] =
+\sum_{\alpha_0, \ldots, \alpha_d}
+G_1[\alpha_0, i_1, \alpha_1] \cdot
+G_2[\alpha_1, i_2, \alpha_2] \cdots
+G_d[\alpha_{d-1}, i_d, \alpha_d]
 $$
 
 where each core $G_k$ has shape $(r_{k-1}, n_k, r_k)$ with $r_0 = r_d = 1$. The integers $r_1, \ldots, r_{d-1}$ are the **TT ranks**, which control approximation quality. For many functions arising in finance, $r \leq 15$ suffices for high accuracy.
@@ -44,13 +48,19 @@ TT-Cross builds the TT decomposition from a subset of function evaluations using
 3. Applies the maxvol algorithm to select the most informative rows (pivot indices)
 4. Updates the TT core and index sets for the next mode
 
-The algorithm converges when the relative approximation error drops below the specified tolerance. An evaluation cache avoids redundant function calls across sweeps.
+The implementation stops when the relative error measured on random grid-index
+checks drops below the requested tolerance, or when the sweep/improvement limits
+are reached. An evaluation cache avoids redundant function calls across sweeps.
 
 **Complexity:** $O(d \cdot n \cdot r^2)$ function evaluations, where $d$ is the number of dimensions, $n$ is the typical node count, and $r$ is the TT rank. For 5D Black-Scholes with rank 15, this is roughly 7,400 evaluations instead of 161,051.
 
 ### TT-SVD
 
-TT-SVD evaluates the function on the full tensor grid, then decomposes it via sequential truncated SVD (Oseledets 2011). This is deterministic and produces the optimal rank-$r$ approximation in the Frobenius norm, but requires $n^d$ function evaluations. Use TT-SVD only when the full grid is feasible (typically $d \leq 6$) and you need a deterministic reference or the best possible accuracy at a given rank.
+TT-SVD evaluates the function on the full tensor grid, then decomposes it via
+sequential truncated SVD (Oseledets 2011). This is deterministic and gives a
+Frobenius-controlled low-rank approximation, but requires $n^d$ function
+evaluations. Use TT-SVD only when the full grid is feasible (typically
+$d \leq 6$) and you need a deterministic reference.
 
 > **Dense-grid guard.**
 > TT-Cross is the production path for high-dimensional tensors. TT-SVD, `FromValues`, and `ToDense()` intentionally validate dense element counts and byte sizes before allocation. A shape such as 35 nodes in 7 dimensions is a reasonable TT-Cross target but an invalid dense materialization target; ChebyshevSharp throws a clear overflow error instead of wrapping fixed-width products or attempting an impossible allocation.
@@ -322,10 +332,13 @@ tighter or looser control.
 The maximum TT rank controls the trade-off between accuracy and cost. Higher rank allows more complex cross-variable interactions to be captured.
 
 - **Separable functions** (e.g., $\sin(x) + \sin(y) + \sin(z)$): rank 2 suffices
-- **Moderate coupling** (e.g., Black-Scholes): rank 10--15 gives sub-percent accuracy
+- **Moderate coupling** (e.g., smooth option-pricing examples): rank 10--15 often gives sub-percent accuracy
 - **Strong coupling** (e.g., $\sin(x \cdot y \cdot z)$): may need rank 20+
 
-TT-Cross adaptively selects the actual rank up to `maxRank` based on the SVD singular value decay. Setting `maxRank` higher than needed does not increase cost significantly -- the adaptive truncation keeps the rank minimal.
+TT-Cross adaptively selects the actual rank up to `maxRank` based on the SVD
+singular value decay. Setting `maxRank` higher than needed can increase work
+because it raises the allowed rank caps, but the adaptive truncation can still
+keep the final ranks below that cap.
 
 ### nNodes
 

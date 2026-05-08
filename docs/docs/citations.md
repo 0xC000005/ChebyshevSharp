@@ -13,6 +13,7 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Trefethen, L. N. (2011). "Six Myths of Polynomial Interpolation and Quadrature." *Mathematics Today*, 47(4), 184-188. [Author bibliography](https://people.maths.ox.ac.uk/trefethen/papers.html).
 - Trefethen, L. N. (2000). *Spectral Methods in MATLAB*. SIAM. DOI: [10.1137/1.9780898719598](https://doi.org/10.1137/1.9780898719598).
 - Trefethen, L. N. (2017). "Lecture 3: Chebyshev Series." Oxford University. [PDF](https://people.maths.ox.ac.uk/trefethen/outline3_2017.pdf).
+- Trefethen, L. N. (2009; revised 2019). "Rootfinding and Minima and Maxima." *Chebfun Guide*. [Guide page](https://www.chebfun.org/docs/guide/guide03.html).
 - Runge, C. (1901). "Uber empirische Funktionen und die Interpolation zwischen aquidistanten Ordinaten." *Zeitschrift fur Mathematik und Physik*, 46, 224-243. [Internet Archive scan](https://archive.org/details/zeitschriftfrma12runggoog).
 - Clenshaw, C. W. and Curtis, A. R. (1960). "A Method for Numerical Integration on an Automatic Computer." *Numerische Mathematik*, 2, 197-205. DOI: [10.1007/BF01386223](https://doi.org/10.1007/BF01386223).
 - Waldvogel, J. (2006). "Fast Construction of the Fejer and Clenshaw-Curtis Quadrature Rules." *BIT Numerical Mathematics*, 46(1), 195-202. DOI: [10.1007/s10543-006-0045-4](https://doi.org/10.1007/s10543-006-0045-4).
@@ -36,12 +37,12 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 
 ## Finance Context
 
-- Ruiz, I. and Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View*. Wiley Finance. ISBN: [978-1-119-79138-6](https://www.wiley-vch.de/de/fachgebiete/finanzen-wirtschaft-recht/machine-learning-for-risk-calculations-978-1-119-79138-6).
+- Ruiz, I. and Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View*. Wiley Finance. ISBN: [978-1-119-79138-6](https://www.wiley-vch.de/en/areas-interest/finance-economics-law/machine-learning-for-risk-calculations-978-1-119-79138-6).
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
 
 ## Node Conventions
 
-- ChebyshevSharp follows PyChebyshev / NumPy [`chebpts1`](https://numpy.org/doc/stable/reference/generated/numpy.polynomial.chebyshev.chebpts1.html): Type I roots, `n` nodes, no endpoints, DCT-II coefficient convention.
-- MoCaX C and Ruiz--Zeron examples use Chebyshev--Lobatto/extrema nodes: `N+1` nodes including endpoints, typically paired with DCT-I / Clenshaw--Curtis conventions.
+- ChebyshevSharp uses Type I roots with `n` nodes and no endpoints. This is the same point set documented by NumPy [`chebpts1`](https://numpy.org/doc/stable/reference/generated/numpy.polynomial.chebyshev.chebpts1.html), and the C# implementation converts values to coefficients with a DCT-II convention.
+- MoCaX source-package checks and Ruiz--Zeron examples use Chebyshev--Lobatto/extrema nodes: `N+1` nodes including endpoints, typically paired with DCT-I / Clenshaw--Curtis conventions.
 - Do not mix value tensors sampled on these grids. Resample or rebuild when moving data between conventions.

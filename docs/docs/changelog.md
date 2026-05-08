@@ -574,7 +574,7 @@ cross-language round-trip guide.
 
 - `ChebyshevTT` -- Phase 4 Tensor Train Chebyshev interpolation for high-dimensional functions (5+ dimensions)
 - TT-Cross decomposition with maxvol pivoting, adaptive rank selection, and evaluation caching
-- TT-SVD decomposition for deterministic, optimal rank-$r$ approximation on small grids
+- TT-SVD decomposition for deterministic Frobenius-controlled approximation on small grids
 - TT API: `Eval`, `EvalBatch` (vectorized), `EvalMulti` (finite-difference derivatives), `ErrorEstimate`, `Save`/`Load`
 - Finite-difference derivatives: central differences for order 1 and 2, mixed partials via 4-point stencil, boundary nudging
 - TT-specific properties: `TtRanks`, `CompressionRatio`, `TotalBuildEvals`

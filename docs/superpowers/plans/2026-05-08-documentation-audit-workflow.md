@@ -132,8 +132,8 @@ Use this body shape for each documentation-audit issue:
 
 | Area | Pages | Status | Issue | PR | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Implemented in #151 | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) | Reframed public identity, package description, and validation provenance language. |
-| Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Not started | TBD | TBD | Verify every book, paper, formula, and link. |
+| Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Complete | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) | Reframed public identity, package description, and validation provenance language. |
+| Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Implemented locally | [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152) | TBD | Verified DOI metadata, link reachability, node-convention source evidence, and math-heavy wording. |
 | Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Not started | TBD | TBD | Ensure concepts precede advanced how-tos where useful. |
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Not started | TBD | TBD | Make choice rules intuitive and example-driven. |
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md` | Not started | TBD | TBD | Check examples, validation, and error language. |
@@ -169,6 +169,18 @@ Use this body shape for each documentation-audit issue:
   [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) passed remote
   `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, `All
   Tests Passed`, and `codecov/patch`.
+- 2026-05-08: Merged pilot PR
+  [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151), closing
+  [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149). Opened next
+  audit issue [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152)
+  for citations, formulas, and source provenance.
+- 2026-05-08: Implemented local citation/provenance audit for
+  [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152). Evidence:
+  C# Type-I/DCT-II and TT finite-difference paths checked against source;
+  PyChebyshev and MoCaX node conventions checked in local upstream source;
+  all DOI records verified through Crossref metadata; scoped external links
+  checked; `git diff --check` passed; `docfx docs/docfx.json` succeeded with
+  restore vulnerability-data warnings only.
 
 ## External Workflow References
 
