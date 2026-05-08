@@ -102,18 +102,16 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 
 | Scenario | Class |
 |----------|-------|
-| Smooth function on a single domain | `ChebyshevApproximation` |
-| Function with known discontinuities or singularities | `ChebyshevSpline` — place knots at trouble points for spectral convergence on each piece |
-| High-dimensional function (6+ dims), additively separable or nearly so | `ChebyshevSlider` — partition dimensions into groups, build cost is sum instead of product |
-| High-dimensional function (5+ dims), general cross-variable coupling | `ChebyshevTT` — Tensor Train decomposition, build cost is $O(d \cdot n \cdot r^2)$ |
+| Smooth function and feasible dense grid | `ChebyshevApproximation` |
+| Known kinks, jumps, barriers, or regime boundaries | `ChebyshevSpline` |
+| High-dimensional function with weak grouped interactions | `ChebyshevSlider` |
+| High-dimensional function with general cross-variable coupling | `ChebyshevTT` |
 
-`ChebyshevSpline` supports the same API shape as `ChebyshevApproximation` (`Eval`, derivatives, batch evaluation, multi-output evaluation, `Save`, `Load`, arithmetic, extrusion, slicing, integration, roots, and optimization). See [Piecewise Chebyshev Interpolation](spline.md) for a full guide.
-
-`ChebyshevSlider` supports `Eval`, `EvalMulti`, error estimation, `Save`, `Load`, integration, roots, optimization, extrusion, slicing, and arithmetic operators. It does not support batch evaluation or the `Nodes()`/`FromValues()` workflow. See [Sliding Technique](slider.md) for a full guide.
-
-`ChebyshevTT` supports `Eval`, `EvalBatch`, `EvalMulti`, finite-difference derivatives, error estimation, `Save`, `Load`, integration, roots, optimization, algebra, extrusion, slicing, rank refinement, and dimension reordering. It intentionally guards dense materialization paths because a full grid can exceed memory even when TT-Cross is feasible. See [Tensor Train Interpolation](tensor-train.md) for a full guide.
-
-For a more detailed decision map, see [Which Class Should I Use?](which-class.md).
+The dense grid size is `prod(n_i)`, so dimension is only a rough guide. A
+3D approximation with many nodes can be larger than a 5D approximation with few
+nodes, and high-dimensional TT-Cross may be feasible even when `ToDense()` is
+not. See [Which Class Should I Use?](which-class.md) for the full decision
+guide and trade-offs.
 
 ## Next Steps
 

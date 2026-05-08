@@ -114,7 +114,7 @@ Building 5D ChebyshevTT (max_rank=15, method='cross')...
 
 ### Using TT-SVD
 
-For small problems where you want deterministic, optimal results:
+For small problems where you want deterministic reference results:
 
 ```csharp
 // 3D function -- small enough for full tensor
