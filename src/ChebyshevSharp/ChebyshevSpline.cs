@@ -500,7 +500,6 @@ public class ChebyshevSpline
                 "This object was created via FromValues() or Load().");
 
         var sw = Stopwatch.StartNew();
-        _cachedErrorEstimate = null;
 
         int totalPieces = NumPieces;
         string totalEvalsText = _nNodes.Any(n => n <= 0)
@@ -512,6 +511,7 @@ public class ChebyshevSpline
                 $"Building {NumDimensions}D Chebyshev Spline " +
                 $"({totalPieces} pieces, {totalEvalsText} total evaluations)...");
 
+        var builtPieces = new ChebyshevApproximation?[totalPieces];
         int flatIdx = 0;
         int progressOffset = 0;
         foreach (var multiIdx in NdIndex(Shape))
@@ -581,7 +581,7 @@ public class ChebyshevSpline
                     TensorShape.CheckedProduct(piece.NNodesStorage, nameof(Build)),
                     nameof(Build),
                     piece.NNodesStorage));
-            Pieces[flatIdx] = piece;
+            builtPieces[flatIdx] = piece;
 
             if (verbose)
                 Console.WriteLine(
@@ -592,8 +592,10 @@ public class ChebyshevSpline
         }
 
         sw.Stop();
+        Pieces = builtPieces;
         BuildTime = sw.Elapsed.TotalSeconds;
         Built = true;
+        _cachedErrorEstimate = null;
 
         if (verbose)
             Console.WriteLine($"Build complete in {BuildTime:F3}s");
