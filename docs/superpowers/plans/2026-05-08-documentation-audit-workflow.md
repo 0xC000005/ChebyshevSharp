@@ -169,8 +169,8 @@ Use this body shape for each documentation-audit issue:
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Complete | [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) | [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) | Clarified pivot cost, per-slide error diagnostics, cross-group derivative limits, and public benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Complete | [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164) | [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165) | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Complete | [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) | [#167](https://github.com/0xC000005/ChebyshevSharp/pull/167) | Qualified exactness, cost, calculus, and edge-case claims. |
-| Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | In progress | [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) | TBD | Local audit implemented; PR pending. |
-| Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | Not started | TBD | TBD | Keep public expectations clear without leaking internal notes. |
+| Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Complete | [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) | [#169](https://github.com/0xC000005/ChebyshevSharp/pull/169) | Public persistence docs now separate full .NET JSON state from `.pcb` limits and fixture provenance. |
+| Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | In progress | [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170) | TBD | Local audit implemented; PR pending. |
 | API reference surface | XML docs in `src/`, generated `docs/api/` | Not started | TBD | TBD | Ensure public XML docs are accurate and not implementation-history heavy. |
 
 ## Session Log
@@ -378,6 +378,26 @@ Use this body shape for each documentation-audit issue:
   --no-restore`, serialization/load/save-focused `dotnet test` filter (`314`
   tests passed), `dotnet restore src/ChebyshevSharp/ChebyshevSharp.csproj
   -p:NuGetAudit=false`, and `dotnet format
+  src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes`.
+- 2026-05-08: Merged serialization/binary-format PR
+  [#169](https://github.com/0xC000005/ChebyshevSharp/pull/169), closing
+  [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168). Opened
+  [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170) for
+  validation and contributing docs.
+- 2026-05-08: Implemented local validation/contributing documentation audit for
+  [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170). Evidence:
+  checked `CONTRIBUTING.md`, `SUPPORT.md`, README contribution links, docs-site
+  contributor/support pages, PR and issue templates, `test.yml`, `docs.yml`,
+  `mutation.yml`, `publish.yml`, `.codecov.yml`, and `stryker-config.json`;
+  verified GitHub Discussions and Issues are enabled; checked GitHub community
+  guidance for contributor guidelines, issue/PR templates, community profiles,
+  and support resources; aligned DocFX/Stryker versions, Codecov patch-gate
+  wording and no-report behavior, mutation workflow expectations, and
+  release-gate language. Local gates: `git diff --check`, `docfx docs/docfx.json`,
+  `dotnet restore
+  src/ChebyshevSharp/ChebyshevSharp.csproj -p:NuGetAudit=false`, `dotnet build
+  src/ChebyshevSharp/ChebyshevSharp.csproj --framework net10.0 --no-restore
+  --verbosity minimal`, and `dotnet format
   src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes`.
 
 ## External Workflow References
