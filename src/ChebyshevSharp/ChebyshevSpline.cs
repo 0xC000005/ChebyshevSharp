@@ -23,13 +23,16 @@ public class ChebyshevSpline
     private int[] _nNodes = Array.Empty<int>();
     private double[][] _knots = Array.Empty<double[]>();
 
-    /// <summary>The function to approximate. Null after Load() or FromValues().</summary>
+    /// <summary>
+    /// Function used by <see cref="Build"/>. Null for objects restored from saved
+    /// numerical state or created by value-based/transformation APIs.
+    /// </summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
     /// <summary>Number of input dimensions.</summary>
     public int NumDimensions { get; internal set; }
 
-    /// <summary>Domain bounds for each dimension, as list of [lo, hi].</summary>
+    /// <summary>Domain bounds for each dimension, as <c>[lo, hi]</c> pairs.</summary>
     public double[][] Domain
     {
         get => CloneHelpers.DeepCopy(_domain)!;
@@ -492,6 +495,8 @@ public class ChebyshevSpline
     /// Build all pieces by evaluating the function on each sub-domain.
     /// </summary>
     /// <param name="verbose">If true, print build progress.</param>
+    /// <exception cref="InvalidOperationException">If this object has no callable <see cref="Function"/>.</exception>
+    /// <exception cref="ArgumentException">If the function returns NaN or Infinity while building a piece.</exception>
     public void Build(bool verbose = true)
     {
         if (Function == null)
@@ -669,6 +674,9 @@ public class ChebyshevSpline
     /// <param name="point">Evaluation point inside the full declared domain.</param>
     /// <param name="derivativeOrder">Derivative order for each dimension (0 = function value).</param>
     /// <returns>Approximated function value or derivative.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If the point or derivative-order shape is invalid, or if a derivative is requested exactly at a knot.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double Eval(double[] point, int[] derivativeOrder)
     {
         if (!Built)
@@ -686,6 +694,9 @@ public class ChebyshevSpline
     /// <param name="point">Evaluation point inside the full declared domain.</param>
     /// <param name="derivativeOrders">Each inner array specifies derivative order per dimension.</param>
     /// <returns>One result per derivative order.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If the point or derivative-order shape is invalid, or if a derivative is requested exactly at a knot.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
         if (!Built)
@@ -704,6 +715,9 @@ public class ChebyshevSpline
     /// <param name="points">Evaluation points inside the declared domain (N x numDimensions).</param>
     /// <param name="derivativeOrder">Derivative order for each dimension.</param>
     /// <returns>Approximated values at each point.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If any point or derivative-order shape is invalid, or if a derivative is requested exactly at a knot.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds <see cref="MaxDerivativeOrder"/>.</exception>
     public double[] EvalBatch(double[][] points, int[] derivativeOrder)
     {
         if (!Built)
@@ -756,6 +770,8 @@ public class ChebyshevSpline
     /// Estimate the supremum-norm interpolation error.
     /// Returns the maximum error estimate across all pieces.
     /// </summary>
+    /// <returns>The maximum per-piece coefficient-decay error estimate.</returns>
+    /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     public double ErrorEstimate()
     {
         if (!Built)
@@ -1430,7 +1446,8 @@ public class ChebyshevSpline
     /// <param name="domain">Lower and upper bounds for each dimension.</param>
     /// <param name="nNodes">Number of Chebyshev nodes per dimension per piece.</param>
     /// <param name="knots">Knot positions for each dimension (may be empty).</param>
-    /// <returns>A SplineNodeInfo with per-piece node info.</returns>
+    /// <returns>A <see cref="SplineNodeInfo"/> with per-piece node info.</returns>
+    /// <exception cref="ArgumentException">If dimensions, domains, knots, or node counts are invalid, or if any piece grid is too large to materialize.</exception>
     public static SplineNodeInfo Nodes(
         int numDimensions, double[][] domain, int[] nNodes, double[][] knots)
     {
@@ -1483,7 +1500,8 @@ public class ChebyshevSpline
     /// <param name="nNodes">Number of Chebyshev nodes per dimension per piece.</param>
     /// <param name="knots">Knot positions for each dimension.</param>
     /// <param name="maxDerivativeOrder">Maximum derivative order (default 2).</param>
-    /// <returns>A fully built spline with Function=null.</returns>
+    /// <returns>A fully built spline with no callable source function attached.</returns>
+    /// <exception cref="ArgumentException">If the piece count or a piece tensor length does not match the spline grid, or if input values are invalid.</exception>
     public static ChebyshevSpline FromValues(
         double[][] pieceValues,
         int numDimensions,
@@ -2366,7 +2384,7 @@ public class ChebyshevSpline
 
     /// <summary>
     /// Iterate over all multi-indices for the given shape in C-order.
-    /// Equivalent to Python's itertools.product(*[range(s) for s in shape]) or np.ndindex(*shape).
+    /// Equivalent to the Cartesian product of <c>range(shape[d])</c> for every dimension.
     /// </summary>
     internal static IEnumerable<int[]> NdIndex(int[] shape)
     {
@@ -2419,7 +2437,7 @@ public class ChebyshevSpline
     // ------------------------------------------------------------------
 
     // ------------------------------------------------------------------
-    // Phase 4 ergonomics — accessors
+    // Metadata and workflow accessors
     // ------------------------------------------------------------------
 
     /// <summary>Set a free-form descriptor string for this spline.</summary>
@@ -2431,7 +2449,7 @@ public class ChebyshevSpline
     /// <summary>True if <see cref="Build"/>/<see cref="FromValues"/>/<see cref="Load"/> completed.</summary>
     public bool IsConstructionFinished() => Built;
 
-    /// <summary>Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load).</summary>
+    /// <summary>Returns one of: "function" (Build), "from_values" (FromValues factory), "load" (Load), or "clone" (Clone).</summary>
     public string GetConstructorType() => _constructorType;
 
     /// <summary>Per-dimension Chebyshev node counts actually used per piece.</summary>
@@ -2682,7 +2700,7 @@ public class ChebyshevSpline
 
     /// <summary>
     /// Returns a deep copy of this spline. The source <see cref="Function"/>
-    /// callable is NOT duplicated — clones cannot be rebuilt without re-supplying
+    /// callable is not duplicated; clones cannot be rebuilt without re-supplying
     /// the function. All precomputed pieces and state are deep-copied.
     /// </summary>
     /// <returns>A fully independent <see cref="ChebyshevSpline"/> with <see cref="Function"/> set to null.</returns>
@@ -2720,7 +2738,7 @@ public class ChebyshevSpline
     }
 
     // ------------------------------------------------------------------
-    // AutoKnots — curvature-spike knot detection (Phase 6 Task 8)
+    // Auto-knot detection
     // ------------------------------------------------------------------
 
     /// <summary>

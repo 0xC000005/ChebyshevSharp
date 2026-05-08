@@ -170,8 +170,8 @@ Use this body shape for each documentation-audit issue:
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Complete | [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164) | [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165) | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Complete | [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) | [#167](https://github.com/0xC000005/ChebyshevSharp/pull/167) | Qualified exactness, cost, calculus, and edge-case claims. |
 | Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Complete | [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) | [#169](https://github.com/0xC000005/ChebyshevSharp/pull/169) | Public persistence docs now separate full .NET JSON state from `.pcb` limits and fixture provenance. |
-| Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | In progress | [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170) | TBD | Local audit implemented; PR pending. |
-| API reference surface | XML docs in `src/`, generated `docs/api/` | Not started | TBD | TBD | Ensure public XML docs are accurate and not implementation-history heavy. |
+| Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | Complete | [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170) | [#171](https://github.com/0xC000005/ChebyshevSharp/pull/171) | Contributor and validation docs now align community, CI, Codecov, and release gates. |
+| API reference surface | XML docs in `src/`, generated `docs/api/` | In progress | [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172) | TBD | Public XML docs are being checked against implementation behavior and generated DocFX output. |
 
 ## Session Log
 
@@ -399,6 +399,27 @@ Use this body shape for each documentation-audit issue:
   src/ChebyshevSharp/ChebyshevSharp.csproj --framework net10.0 --no-restore
   --verbosity minimal`, and `dotnet format
   src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes`.
+- 2026-05-08: Merged validation/contributing PR
+  [#171](https://github.com/0xC000005/ChebyshevSharp/pull/171), closing
+  [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170). Opened
+  [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172) for the API
+  reference surface.
+- 2026-05-08: Implemented local API-reference XML audit for
+  [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172). Evidence:
+  checked public XML comments for dense, spline, slider, and TT classes against
+  source validation paths and generated-reference behavior; removed public
+  PyChebyshev/Python/version provenance from XML comments; clarified finite
+  difference TT derivatives, value-based construction, functionless rebuild
+  limits, domain validation, and dense-materialization warnings; checked
+  Microsoft C# XML documentation guidance. Local gates: `git diff --check`,
+  `dotnet build src/ChebyshevSharp/ChebyshevSharp.csproj --framework net10.0
+  --no-restore --verbosity minimal`, `dotnet build
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0
+  --no-restore --verbosity minimal`, `docfx docs/docfx.json`, focused
+  `dotnet test` filter for FromValues/defer-build/load-validation/out-of-domain
+  and TT behavior (`259` tests passed), and `dotnet format
+  src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes --verbosity
+  minimal`.
 
 ## External Workflow References
 
@@ -408,5 +429,6 @@ Use this body shape for each documentation-audit issue:
 - Google developer documentation style guide: <https://developers.google.com/style/>
 - Google cross-reference guidance: <https://developers.google.com/style/cross-references>
 - Microsoft developer-content guidance: <https://learn.microsoft.com/en-us/style-guide/developer-content/>
+- Microsoft C# XML documentation comments: <https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/recommended-tags>
 - Write the Docs documentation principles: <https://www.writethedocs.org/guide/writing/docs-principles/>
 - The Good Docs Project templates: <https://www.thegooddocsproject.dev/template>

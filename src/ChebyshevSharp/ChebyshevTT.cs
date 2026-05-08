@@ -11,7 +11,7 @@ namespace ChebyshevSharp;
 /// Chebyshev interpolation in Tensor Train (TT) format.
 /// Useful when the dense tensor grid is too large but the sampled tensor has
 /// low numerical TT rank. The default TT-Cross build path samples adaptively;
-/// TT-SVD and ALS are dense-grid reference paths for intentionally small grids.
+/// TT-SVD and ALS are dense-grid alternatives for intentionally small grids.
 /// </summary>
 public class ChebyshevTT
 {
@@ -37,7 +37,7 @@ public class ChebyshevTT
     private double[]? _evaluationPointsCache;
     private readonly Dictionary<Internal.TupleKey, int> _derivativeIdRegistry = new();
     private readonly List<int[]> _registeredDerivativeOrders = new();
-    private readonly int? _nWorkers;   // accepted for API symmetry; ignored (D10).
+    private readonly int? _nWorkers;   // accepted for API symmetry; ignored by TT-Cross.
     private readonly IProgress<int>? _progress;
 
     private int EffectiveMaxDerivativeOrder => Math.Min(_maxDerivativeOrder, 2);
@@ -51,7 +51,7 @@ public class ChebyshevTT
     /// <summary>
     /// Build method that produced the current cores: <c>"cross"</c>, <c>"svd"</c>, or <c>"als"</c>.
     /// <c>null</c> only before <see cref="Build"/> is called or after <see cref="Load"/> from a
-    /// pre-v0.6.0 JSON file that predates this property.
+    /// legacy JSON file that predates this property.
     /// </summary>
     public string? Method { get; private set; }
 
@@ -589,6 +589,13 @@ public class ChebyshevTT
     /// Supports 0 (value), 1 (first), and 2 (second).</param>
     /// <returns>One result per derivative order specification.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
+    /// <exception cref="ArgumentException">If <paramref name="point"/> or a derivative-order row has the wrong length.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">If a point coordinate is outside the declared domain or a derivative order exceeds the supported TT derivative order.</exception>
+    /// <remarks>
+    /// TT derivatives are finite-difference derivatives of the TT interpolant, not
+    /// spectral differentiation-matrix derivatives. Orders greater than 2 are not
+    /// supported by this method.
+    /// </remarks>
     public double[] EvalMulti(double[] point, int[][] derivativeOrders)
     {
         CheckBuilt();
@@ -810,7 +817,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Integration (Phase 5 — PyChebyshev v0.17)
+    // Integration
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -849,7 +856,6 @@ public class ChebyshevTT
         //   - storagePosForBounds: positional with `bounds` (preserves user-sorted order
         //     so bounds[i] still pairs with the storage position derived from sortedUserDims[i]).
         //   - sortedStoragePos: storage-position-ascending, used for chain-walk iteration.
-        // Mirrors Python tensor_train.py:1565-1568 which keeps these two arrays distinct.
         int[] storagePosForBounds;
         int[] sortedStoragePos;
         if (IsIdentityDimOrder())
@@ -866,10 +872,9 @@ public class ChebyshevTT
             Array.Sort(sortedStoragePos);
         }
 
-        // v0.21.1: pre-validate bounds against user-frame domain so error messages
+        // Pre-validate bounds against user-frame domain so error messages
         // reference user-frame dim indices (issue #20). The downstream NormalizeBounds
         // would otherwise report storage-frame indices when _dimOrder is non-identity.
-        // Python source: spec §4.5.
         if (bounds != null && bounds.Length > 0)
         {
             if (bounds.Length != sortedUserDims.Length)
@@ -1049,16 +1054,15 @@ public class ChebyshevTT
     }
 
     /// <summary>
-    /// Construct a partial-integrate result TT, inheriting all Phase 4 ergonomics
-    /// fields (descriptor, additionalData, maxDerivativeOrder) and Method (D3, D6).
-    /// Mirrors <see cref="BuildResultFromCores"/> with extra inheritance.
+    /// Construct a partial-integrate result TT, inheriting metadata fields such as
+    /// descriptor, additionalData, maxDerivativeOrder, and Method.
     /// </summary>
     private ChebyshevTT BuildIntegrateResult(
         Internal.TensorTrainKernel.TtCore[] cores, double[][] newDomain, int[] newNNodes)
     {
         // Use the existing BuildResultFromCores then patch in ergonomics fields.
         var result = BuildResultFromCores(cores, newDomain, newNNodes);
-        // Phase 4 ergonomics passthrough (D6).
+        // Preserve public metadata on the derived result.
         result._descriptor = _descriptor;
         result._additionalData = _additionalData;
         result._maxDerivativeOrder = _maxDerivativeOrder;
@@ -1089,7 +1093,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Roots / Minimize / Maximize (Phase 7 — PyChebyshev v0.21.1)
+    // Roots / Minimize / Maximize
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -1232,7 +1236,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Canonicalization (Phase 2 — PyChebyshev v0.13)
+    // Canonicalization
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -1304,10 +1308,9 @@ public class ChebyshevTT
                 throw new ArgumentException(
                     $"InnerProduct requires matching domain at dim {d}; got [{_domain[d][0]}, {_domain[d][1]}] vs [{other._domain[d][0]}, {other._domain[d][1]}]");
         }
-        // v0.21.1: strict _dimOrder check. Two TTs with different _dimOrder represent
+        // Strict _dimOrder check. Two TTs with different _dimOrder represent
         // the same underlying interpolant under different storage permutations; the
         // raw core-by-core contraction is not the inner product of the interpolants.
-        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:1488-1495.
         if (!_dimOrder.SequenceEqual(other._dimOrder))
             throw new ArgumentException(
                 $"InnerProduct requires matching _dimOrder; " +
@@ -1369,7 +1372,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Static factories (Phase 2 — PyChebyshev v0.18)
+    // Static factories
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -1393,7 +1396,8 @@ public class ChebyshevTT
 
     /// <summary>
     /// Build a TT directly from a precomputed dense tensor (skips function evaluation).
-    /// Uses TT-SVD for compression. The resulting TT has <c>Function = null</c>.
+    /// Uses TT-SVD for compression. The resulting TT cannot be rebuilt or completed
+    /// because no callable source function is attached.
     /// </summary>
     /// <param name="tensorValues">Flat row-major dense tensor of length Π nNodes.</param>
     /// <param name="numDimensions">Number of dimensions.</param>
@@ -1456,7 +1460,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Materialization, extrusion, slicing (Phase 2 — PyChebyshev v0.18)
+    // Materialization, extrusion, slicing
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -1466,7 +1470,7 @@ public class ChebyshevTT
     /// Use sparingly: storage is Π NNodes doubles.
     /// </summary>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
-    /// <exception cref="OverflowException">If Π NNodes * 8 exceeds <c>int.MaxValue</c>.</exception>
+    /// <exception cref="OverflowException">If the full tensor would be too large to materialize as a managed array.</exception>
     public double[] ToDense()
     {
         CheckBuilt();
@@ -1647,7 +1651,7 @@ public class ChebyshevTT
 
     /// <summary>
     /// Internal helper: assemble a fresh ChebyshevTT from a set of coefficient cores.
-    /// Used by Extrude, Slice, and the algebra operators (Tasks 9 + 10).
+    /// Used by Extrude, Slice, and the algebra operators.
     /// </summary>
     internal ChebyshevTT BuildResultFromCores(
         TensorTrainKernel.TtCore[] cores, double[][] newDomain, int[] newNNodes)
@@ -1672,7 +1676,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Scalar algebra (Phase 2 — PyChebyshev v0.18.c)
+    // Scalar algebra
     // ------------------------------------------------------------------
 
     /// <summary>Scalar multiplication: <c>tt * scalar</c>.</summary>
@@ -1743,7 +1747,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Binary algebra (Phase 2 — PyChebyshev v0.18.d)
+    // Binary algebra
     // ------------------------------------------------------------------
 
     /// <summary>Default tolerance for TT-SVD rounding after addition/subtraction.</summary>
@@ -2224,7 +2228,7 @@ public class ChebyshevTT
     }
 
     // ------------------------------------------------------------------
-    // Phase 4 ergonomics — accessors
+    // Metadata and workflow accessors
     // ------------------------------------------------------------------
 
     /// <summary>Set a free-form descriptor string for this tensor train.</summary>
@@ -2297,9 +2301,8 @@ public class ChebyshevTT
                 points[flat * ndim + d] = nodeArrays[d][indices[d]];
         }
 
-        // v0.21.1: permute columns by inverse _dimOrder so column k is the user-frame
+        // Permute columns by inverse _dimOrder so column k is the user-frame
         // k-th coord (matches Approximation/Spline/Slider behavior).
-        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:2775-2800.
         if (!IsIdentityDimOrder())
         {
             var inv = new int[ndim];
@@ -2359,7 +2362,7 @@ public class ChebyshevTT
     internal List<int[]> RegisteredDerivativeOrders => _registeredDerivativeOrders;
 
     // ------------------------------------------------------------------
-    // DimOrder + Reorder (Phase 6 Task 9)
+    // DimOrder + Reorder
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -2390,18 +2393,17 @@ public class ChebyshevTT
         ValidatePositiveRank(rank, nameof(maxRank));
         ValidateNonNegativeFiniteTolerance(tol, nameof(tolerance));
 
-        // Short-circuit: reorder to current dim_order is just a clone (matches Python tensor_train.py:2397).
+        // Short-circuit: reorder to current dim_order is just a clone.
         if (newOrder.SequenceEqual(_dimOrder))
             return Clone();
 
-        // Bubble-sort current_order DIRECTLY into newOrder (Python tensor_train.py:2403-2425).
+        // Bubble-sort current_order directly into newOrder.
         // newOrder is the absolute target: result._dim_order == list(new_order).
         var currentOrder = (int[])_dimOrder.Clone();
         var cores = new Internal.TensorTrainKernel.TtCore[_coeffCores!.Length];
         for (int k = 0; k < cores.Length; k++) cores[k] = _coeffCores[k].Copy();
 
-        // Track domain and nNodes in storage order; swap alongside currentOrder
-        // (Python lines 2421-2422 swap n_nodes/domain in lockstep with currentOrder).
+        // Track domain and nNodes in storage order; swap alongside currentOrder.
         var domain = _domain.Select(d => (double[])d.Clone()).ToArray();
         var nNodes = (int[])_nNodes.Clone();
 
@@ -2419,7 +2421,7 @@ public class ChebyshevTT
             }
         }
 
-        // Sanity check (matches Python's `assert current_order == new_order` at line 2425).
+        // Sanity check that the adjacent swaps reached the requested order.
         if (!currentOrder.SequenceEqual(newOrder))
             throw new InvalidOperationException(
                 "Reorder bubble-sort failed to converge to target permutation");
@@ -2635,7 +2637,7 @@ public class ChebyshevTT
 
     /// <summary>
     /// Returns a deep copy of this tensor train. The source function callable is
-    /// NOT duplicated — clones cannot be rebuilt without re-supplying the function.
+    /// not duplicated; clones cannot be rebuilt without re-supplying the function.
     /// All TT cores and state are deep-copied.
     /// </summary>
     /// <returns>A fully independent <see cref="ChebyshevTT"/>.</returns>
