@@ -16,15 +16,24 @@ These are the **Type I Chebyshev nodes** (roots of the Chebyshev polynomial $T_n
 
 $$\tilde{x}_i = \frac{a + b}{2} + \frac{b - a}{2}\, x_i$$
 
-### Node Convention and Upstream Split
+### Node Convention
 
-ChebyshevSharp intentionally follows PyChebyshev's NumPy `chebpts1` convention: `n` Type I root nodes, no interval endpoints, and a DCT-II coefficient transform. This convention is used by `ErrorEstimate()`, `SobolIndices()`, Fejer-1 integration weights, and TT coefficient cores.
+ChebyshevSharp uses `n` Type I root nodes per dimension, with no interval
+endpoints, and stores the mapped nodes in ascending order. Coefficient-based
+features such as `ErrorEstimate()`, `SobolIndices()`, Fejer-1 integration
+weights, and TT coefficient cores all rely on this same node convention.
 
-The MoCaX C library and the Ruiz--Zeron text use a different valid Chebyshev grid: Chebyshev--Lobatto/extrema nodes
+Endpoint-inclusive Chebyshev--Lobatto grids are also common:
 
 $$y_i = \cos\left(\frac{i\pi}{N}\right), \quad i = 0, \ldots, N,$$
 
-which include both endpoints and naturally pair with DCT-I / Clenshaw--Curtis style formulas. Both grids have logarithmic Lebesgue growth and spectral convergence for analytic functions. They are not storage-compatible: values sampled on a MoCaX Lobatto grid cannot be passed directly to ChebyshevSharp `FromValues()` without resampling onto Type I nodes.
+These grids include both endpoints and naturally pair with DCT-I /
+Clenshaw--Curtis style formulas. Both Type I and Lobatto grids have logarithmic
+Lebesgue growth and spectral convergence for analytic functions, but they are
+not storage-compatible. Values sampled on a Lobatto grid cannot be passed
+directly to ChebyshevSharp `FromValues()` without resampling or rebuilding on
+ChebyshevSharp's Type I nodes. See [Citations](citations.md#node-conventions)
+for the source references behind this convention.
 
 The Lebesgue constant for Chebyshev nodes grows only logarithmically:
 
@@ -48,7 +57,7 @@ A Bernstein ellipse is an ellipse in the complex plane with foci at $x = -1$ and
 
 - $f(x) = e^x$ is **entire** (no singularities) -- $\rho = \infty$, superexponential convergence. In practice, 15 nodes suffice for machine precision on $[-1, 1]$.
 - $f(x) = 1/(1 + 25x^2)$ has **poles at $x = \pm i/5$** -- the Bernstein ellipse must avoid these poles, limiting $\rho$ and slowing convergence. This is the classic Runge function: equidistant interpolation diverges, but Chebyshev interpolation converges steadily.
-- **Black-Scholes option prices** are analytic in all parameters over typical domains (spot, volatility, maturity, rate, strike all bounded away from zero). The effective $\rho$ is large, giving rapid convergence with 10--15 nodes per dimension.
+- **Black-Scholes option prices** are smooth on practical domains bounded away from zero maturity, zero volatility, and payoff kinks. On such domains, the effective $\rho$ is often large, so 10--15 nodes per dimension can be enough for high accuracy.
 
 For functions with singularities or discontinuities on the real interval itself (e.g., $|x|$ at $x = 0$), the Bernstein ellipse collapses ($\rho \to 1$) and convergence becomes algebraic rather than exponential. In such cases, use `ChebyshevSpline` to place knots at the trouble points and recover spectral convergence on each smooth piece -- see [Piecewise Chebyshev Interpolation](spline.md).
 

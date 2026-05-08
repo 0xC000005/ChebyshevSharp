@@ -4,7 +4,8 @@ title: Adaptive Refinement
 
 # Adaptive Refinement
 
-ChebyshevSharp provides adaptive-refinement APIs derived from PyChebyshev v0.20.0 + v0.20.1.
+ChebyshevSharp provides adaptive-refinement APIs for automatically selecting
+piecewise knots and per-dimension node counts.
 
 ## ChebyshevSpline.AutoKnots
 

@@ -25,7 +25,7 @@ f(\mathbf{x}) \approx v + \sum_{i=1}^{k} \bigl[ s_i(\mathbf{x}_{G_i}) - v \bigr]
 $$
 
 where $\mathbf{x}_{G_i}$ denotes the components of $\mathbf{x}$ belonging to group $i$.
-Equivalently, this is $\sum_i s_i(\mathbf{x}_{G_i}) - (k-1)v$, matching the MoCaX C implementation's explicit subtraction of `(num_partial_functions - 1) * reference_value`.
+Equivalently, this is $\sum_i s_i(\mathbf{x}_{G_i}) - (k-1)v$.
 
 ## When to Use Sliding
 

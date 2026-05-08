@@ -56,7 +56,10 @@ For a function analytic in a [Bernstein ellipse](concepts.md#bernstein-ellipse) 
 The practical rule: **if $|c_{n-1}|$ is small, both the truncation and aliasing errors are small, and the interpolant is well-converged.**
 
 > **Warning: Heuristic, not a formal bound.**
-> This estimate is an empirically reliable proxy, not a rigorous upper bound. Ruiz & Zeron (2022, Section 3.4) report that they have never encountered a real-world case where small trailing coefficients failed to indicate convergence. However, pathological functions (e.g., those with singularities just outside the Bernstein ellipse) could have slowly decaying coefficients that make the estimate optimistic. Always validate against known solutions when possible.
+> This estimate is an empirical proxy, not a rigorous upper bound. Slowly
+> decaying coefficients, unresolved oscillations, or aliasing can make the
+> estimate optimistic. Use it as a convergence diagnostic and validate against
+> independent points or known solutions when accuracy matters.
 
 For automatic node selection, ChebyshevSharp does not rely on this coefficient
 proxy alone. Before accepting a candidate auto-N grid, it also evaluates the
