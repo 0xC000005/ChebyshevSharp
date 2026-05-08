@@ -6,7 +6,7 @@ _layout: landing
 
 Multi-dimensional Chebyshev tensor interpolation with analytical derivatives for .NET.
 
-ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyChebyshev), providing fast evaluation of smooth multi-dimensional functions via barycentric interpolation with pre-computed weights.
+ChebyshevSharp builds fast, reusable polynomial surrogates for smooth multi-dimensional functions. Use it when direct model evaluations are expensive but repeated values, derivatives, integrals, roots, or optimizers are needed inside .NET applications.
 
 ## Key Features
 

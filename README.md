@@ -4,14 +4,13 @@
 [![codecov](https://codecov.io/gh/0xC000005/ChebyshevSharp/graph/badge.svg)](https://codecov.io/gh/0xC000005/ChebyshevSharp)
 [![NuGet](https://img.shields.io/nuget/v/ChebyshevSharp.svg)](https://www.nuget.org/packages/ChebyshevSharp)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ChebyshevSharp.svg)](https://www.nuget.org/packages/ChebyshevSharp)
-[![PyChebyshev parity](https://img.shields.io/badge/PyChebyshev_parity-v0.21.1-blue)](https://github.com/0xC000005/PyChebyshev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
 
 Multi-dimensional Chebyshev tensor interpolation with analytical derivatives for .NET.
 
-ChebyshevSharp is a C# port of [PyChebyshev](https://github.com/0xC000005/PyChebyshev), providing fast polynomial evaluation of smooth multi-dimensional functions via barycentric interpolation with pre-computed weights. On low-dimensional problems (1-3D), C# is **17-42x faster** than the Python reference; see [Performance](https://0xc000005.github.io/ChebyshevSharp/docs/performance.html).
+ChebyshevSharp builds reusable polynomial surrogates for smooth multi-dimensional functions. It evaluates values, derivatives, integrals, roots, and optimizers from precomputed Chebyshev data, with dense, piecewise, sliding, and Tensor Train approximations for different dimensional regimes. Benchmarks, validation details, and reference-implementation comparisons are documented in [Performance](https://0xc000005.github.io/ChebyshevSharp/docs/performance.html) and [Testing & Validation](https://0xc000005.github.io/ChebyshevSharp/docs/testing-and-validation.html).
 
 ## Project Links
 
@@ -131,7 +130,7 @@ double[] results = cheb.VectorizedEvalMulti(
 | `ChebyshevTT` | Tensor Train build/eval, finite-difference derivatives, integration, roots, optimization, algebra, slicing/extrusion, reordering, and guarded dense materialization |
 | Validation | xUnit regression suite, deterministic FsCheck properties, Codecov patch gate, package validation, DocFX build, and scheduled/manual mutation testing |
 
-See the [changelog](https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html) for per-release feature parity with PyChebyshev.
+See the [changelog](https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html) for release-by-release changes, fixes, and validation notes.
 
 ## Documentation
 

@@ -11,7 +11,7 @@
     <PyChebyshevParity>0.21.1</PyChebyshevParity>
     <InformationalVersion>$(Version)+pychebyshev.$(PyChebyshevParity)</InformationalVersion>
     <Authors>Max</Authors>
-    <Description>ChebyshevSharp $(Version) — multi-dimensional Chebyshev tensor interpolation for .NET with dense, spline, sliding, and Tensor Train approximations. Feature parity with PyChebyshev v$(PyChebyshevParity), including stricter public validation, exception-safe rebuilds, high-dimensional tensor-size guards, CI/package validation gates, runnable examples, and reorganized documentation.</Description>
+    <Description>ChebyshevSharp $(Version) — multi-dimensional Chebyshev tensor interpolation for .NET with dense, spline, sliding, and Tensor Train approximations, analytical derivatives, serialization, stricter public validation, high-dimensional tensor-size guards, CI/package validation gates, runnable examples, and organized documentation.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/0xC000005/ChebyshevSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/0xC000005/ChebyshevSharp</RepositoryUrl>
