@@ -9,7 +9,7 @@ behavior explicit, tested, and documented.
 
 ## Philosophy
 
-- Preserve PyChebyshev parity unless a C#-specific difference is intentional.
+- Preserve reference behavior when porting or validating upstream behavior.
 - Document convention choices, such as Type I roots versus Lobatto/extrema grids.
 - Prefer clear validation errors over overflow, shape mismatch, or silent
   truncation.
@@ -18,17 +18,19 @@ behavior explicit, tested, and documented.
 ## Issues
 
 Search existing issues, pull requests, and discussions before opening a new one.
-Usage questions belong in GitHub Discussions. Bug reports should include a
-minimal runnable example, ChebyshevSharp version, .NET SDK version, OS, expected
-behavior, and actual behavior.
+Usage questions belong in [GitHub
+Discussions](https://github.com/0xC000005/ChebyshevSharp/discussions). Bug
+reports should include a minimal runnable example, ChebyshevSharp version, .NET
+SDK version, OS, expected behavior, and actual behavior.
 
 Numerical accuracy reports should include the function, domain, node counts,
 construction method, tolerance, and an independent reference value. State whether
 the behavior matches or differs from PyChebyshev when that comparison is
 available.
 
-Security issues should follow the repository `SECURITY.md` file, not public
-issues.
+Security issues should follow the repository
+[`SECURITY.md`](https://github.com/0xC000005/ChebyshevSharp/security/policy)
+file, not public issues.
 
 ## Required Checks
 
@@ -49,7 +51,8 @@ is not already available.
 ## Coverage and Mutation Testing
 
 Codecov enforces a 90% patch-coverage target and allows at most a 1% project
-coverage drop. Add focused tests for modified coverable lines.
+coverage drop. Add focused tests for modified coverable lines, and wait for the
+`codecov/patch` status to appear before merging.
 
 Stryker.NET mutation testing targets high-risk numerical code:
 
@@ -58,8 +61,9 @@ dotnet tool install --global dotnet-stryker --version 4.14.1
 dotnet stryker --config-file stryker-config.json
 ```
 
-Current thresholds are high 80, low 60, break 0. For numerical core changes,
-address surviving mutants in touched code or explain why they are equivalent,
+Current thresholds are high 80, low 60, break 0. The mutation workflow runs
+weekly and can be started manually. For numerical core changes, address
+surviving mutants in touched code or explain why they are equivalent,
 unreachable, or intentionally deferred.
 
 ## Pull Requests

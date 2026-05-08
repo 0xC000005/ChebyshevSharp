@@ -3,10 +3,12 @@ coverage:
     patch:
       default:
         target: 90%
+        if_not_found: success
     project:
       default:
         target: auto
         threshold: 1%
+        if_not_found: success
 
 comment:
   layout: "condensed_header, diff, files"

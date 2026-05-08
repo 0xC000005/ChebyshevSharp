@@ -19,6 +19,7 @@ ChebyshevSharp builds reusable polynomial surrogates for smooth multi-dimensiona
 - [NuGet Package](https://www.nuget.org/packages/ChebyshevSharp)
 - [Changelog](https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html)
 - [Contributing](https://github.com/0xC000005/ChebyshevSharp/blob/main/CONTRIBUTING.md)
+- [Support & Reporting](https://github.com/0xC000005/ChebyshevSharp/blob/main/SUPPORT.md)
 - [Security Policy](https://github.com/0xC000005/ChebyshevSharp/security/policy)
 
 ## Features
@@ -156,8 +157,9 @@ Full documentation is available at **[0xc000005.github.io/ChebyshevSharp](https:
 
 ## Support and Reporting
 
-- Questions and usage problems: start a GitHub Discussion with a small runnable
-  example.
+- Questions and usage problems: start a
+  [GitHub Discussion](https://github.com/0xC000005/ChebyshevSharp/discussions)
+  with a small runnable example.
 - Bugs: use the bug report template and include OS, .NET SDK version,
   ChebyshevSharp version, expected behavior, and actual behavior.
 - Numerical accuracy concerns: use the numerical accuracy template and include

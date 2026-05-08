@@ -6,7 +6,7 @@ easier to review and safer to release.
 
 ## Project Philosophy
 
-- Preserve PyChebyshev parity when porting upstream behavior.
+- Preserve reference behavior when porting or validating upstream behavior.
 - Document deliberate differences, especially mathematical conventions such as
   Type I roots versus Lobatto/extrema grids.
 - Prefer explicit overflow, shape, and domain validation over silent truncation.
@@ -17,7 +17,8 @@ easier to review and safer to release.
 
 Search existing issues, pull requests, and discussions first. If the behavior is
 a usage question, start with the docs pages linked from the README and open a
-GitHub Discussion with the smallest code snippet that shows where you are stuck.
+[GitHub Discussion](https://github.com/0xC000005/ChebyshevSharp/discussions)
+with the smallest code snippet that shows where you are stuck.
 
 For bug reports, include:
 
@@ -30,7 +31,8 @@ For numerical accuracy reports, also include the reference value, how it was
 computed, and whether the problem reproduces with PyChebyshev or another
 independent implementation.
 
-Security reports should not be filed publicly. Follow `SECURITY.md`.
+Security reports should not be filed publicly. Follow
+[`SECURITY.md`](https://github.com/0xC000005/ChebyshevSharp/security/policy).
 
 ## Local Validation
 
@@ -49,7 +51,7 @@ docfx docs/docfx.json
 Install DocFX first if needed:
 
 ```bash
-dotnet tool install --global docfx
+dotnet tool install --global docfx --version 2.78.5
 ```
 
 For targeted iteration:
@@ -66,19 +68,22 @@ Codecov runs on pull requests. The current policy is:
 - `codecov/project` target: automatic baseline with a 1% allowed drop.
 - Modified coverable lines should have focused tests. Do not lower coverage
   thresholds to make a PR pass.
+- Wait for the `codecov/patch` status to appear and pass before merging.
+- Docs-only and community-only PRs should not add fake source edits just to
+  create coverable lines.
 
 Mutation testing uses Stryker.NET for high-risk numerical paths:
 
 ```bash
-dotnet tool install --global dotnet-stryker
+dotnet tool install --global dotnet-stryker --version 4.14.1
 dotnet stryker --config-file stryker-config.json
 ```
 
 The configured Stryker thresholds are high 80, low 60, break 0. Treat mutation
-score as a release-readiness signal for now: changes in tensor shape arithmetic,
-Tensor Train kernels, slicing/extrusion, and other numerical core paths should
-not introduce unexplained surviving mutants or reduce the baseline without a PR
-note.
+score as a release-readiness signal for now. The workflow runs weekly and can be
+started manually. Changes in tensor shape arithmetic, Tensor Train kernels,
+slicing/extrusion, and other numerical core paths should not introduce
+unexplained surviving mutants or reduce the baseline without a PR note.
 
 ## Pull Request Checklist
 
@@ -107,5 +112,7 @@ NuGet-visible metadata must change immediately.
 ## Documentation Style
 
 Keep docs practical and source-backed. Use short examples, define formulas before
-using them, cite papers or upstream source files for algorithms, and call out
-where ChebyshevSharp intentionally differs from PyChebyshev or MoCaX.
+using them, cite papers for mathematical algorithms, and call out where
+ChebyshevSharp intentionally differs from reference implementations. Mention
+PyChebyshev or MoCaX in public docs only for validation provenance, fixture
+regeneration, or a specific compatibility note.

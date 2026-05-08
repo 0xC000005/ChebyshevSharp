@@ -21,6 +21,7 @@ Fixes #
 - [ ] `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage"`
 - [ ] `dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artifacts/packages`
 - [ ] `docfx docs/docfx.json`
+- [ ] `codecov/patch` is passing, or the PR explains why there are no coverable changes
 - [ ] Stryker.NET run or explanation for skipping when numerical core paths changed
 
 ## Numerical/Docs Checklist

@@ -9,7 +9,9 @@ small, reproducible, and explicit about the mathematical expectation.
 
 ## Questions
 
-For usage questions, start a GitHub Discussion and include:
+For usage questions, start a [GitHub
+Discussion](https://github.com/0xC000005/ChebyshevSharp/discussions) and
+include:
 
 - What you are trying to approximate.
 - Which class you are using: `ChebyshevApproximation`, `ChebyshevSpline`,
@@ -19,7 +21,9 @@ For usage questions, start a GitHub Discussion and include:
 
 ## Bugs
 
-Bug reports should include:
+Use the [issue template
+chooser](https://github.com/0xC000005/ChebyshevSharp/issues/new/choose). Bug
+reports should include:
 
 - ChebyshevSharp version and .NET SDK version.
 - Operating system and CPU architecture.
@@ -36,4 +40,5 @@ calculation.
 ## Security
 
 Do not open public issues for security problems. Follow the repository
-`SECURITY.md` file.
+[`SECURITY.md`](https://github.com/0xC000005/ChebyshevSharp/security/policy)
+file.
