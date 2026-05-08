@@ -11,7 +11,7 @@ dotnet add package ChebyshevSharp
 Or add to your `.csproj`:
 
 ```xml
-<PackageReference Include="ChebyshevSharp" Version="0.13.0" />
+<PackageReference Include="ChebyshevSharp" Version="0.13.1" />
 ```
 
 The [BlasSharp.OpenBlas](https://www.nuget.org/packages/BlasSharp.OpenBlas) package is included as a transitive dependency and provides pre-built OpenBLAS binaries for all platforms (Windows, Linux, macOS). No system BLAS installation is required.
