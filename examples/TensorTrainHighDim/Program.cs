@@ -1,5 +1,8 @@
 using ChebyshevSharp;
 
+Console.WriteLine("TensorTrainHighDim: 7D ChebyshevTT with TT-Cross");
+Console.WriteLine();
+
 const int dimensions = 7;
 const int nodesPerDimension = 9;
 
@@ -15,6 +18,7 @@ double[][] domain = Enumerable.Range(0, dimensions)
 
 int[] nNodes = Enumerable.Repeat(nodesPerDimension, dimensions).ToArray();
 long denseValues = nNodes.Aggregate(1L, (acc, n) => checked(acc * n));
+double denseMiB = denseValues * sizeof(double) / (1024.0 * 1024.0);
 
 var tt = new ChebyshevTT(
     function: CoupledModel,
@@ -29,9 +33,12 @@ tt.Build(verbose: false, seed: 123, method: "cross");
 
 double[] point = [0.25, -0.4, 0.1, 0.7, -0.2, 0.3, 0.5];
 double value = tt.Eval(point);
+double exact = CoupledModel(point);
 
-Console.WriteLine($"dense grid would contain {denseValues:N0} values");
+Console.WriteLine($"dense grid would contain {denseValues:N0} doubles (~{denseMiB:F1} MiB)");
 Console.WriteLine($"TT evaluations used: {tt.TotalBuildEvals:N0}");
 Console.WriteLine($"TT ranks: [{string.Join(", ", tt.TtRanks)}]");
 Console.WriteLine($"compression ratio: {tt.CompressionRatio:F1}x");
 Console.WriteLine($"f(point) = {value:F8}");
+Console.WriteLine($"exact f(point) = {exact:F8}");
+Console.WriteLine($"absolute error = {Math.Abs(value - exact):E2}");

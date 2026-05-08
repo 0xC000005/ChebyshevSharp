@@ -4,6 +4,8 @@
       href: introduction.md
     - name: Getting Started
       href: getting-started.md
+    - name: Examples
+      href: examples.md
     - name: Which Class Should I Use?
       href: which-class.md
 

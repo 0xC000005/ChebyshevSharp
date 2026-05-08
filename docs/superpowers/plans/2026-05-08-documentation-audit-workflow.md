@@ -171,7 +171,8 @@ Use this body shape for each documentation-audit issue:
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Complete | [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) | [#167](https://github.com/0xC000005/ChebyshevSharp/pull/167) | Qualified exactness, cost, calculus, and edge-case claims. |
 | Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Complete | [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) | [#169](https://github.com/0xC000005/ChebyshevSharp/pull/169) | Public persistence docs now separate full .NET JSON state from `.pcb` limits and fixture provenance. |
 | Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | Complete | [#170](https://github.com/0xC000005/ChebyshevSharp/issues/170) | [#171](https://github.com/0xC000005/ChebyshevSharp/pull/171) | Contributor and validation docs now align community, CI, Codecov, and release gates. |
-| API reference surface | XML docs in `src/`, generated `docs/api/` | In progress | [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172) | TBD | Public XML docs are being checked against implementation behavior and generated DocFX output. |
+| API reference surface | XML docs in `src/`, generated `docs/api/` | Complete | [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172) | [#173](https://github.com/0xC000005/ChebyshevSharp/pull/173) | Public XML docs now describe implementation behavior without maintainer provenance leakage. |
+| Examples and runnable snippets | `examples/`, docs links to examples | In progress | [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174) | TBD | Console examples and docs-site entry points are being checked for copyability, correctness checks, and user-facing flow. |
 
 ## Session Log
 
@@ -420,6 +421,25 @@ Use this body shape for each documentation-audit issue:
   and TT behavior (`259` tests passed), and `dotnet format
   src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes --verbosity
   minimal`.
+- 2026-05-08: Merged API-reference XML PR
+  [#173](https://github.com/0xC000005/ChebyshevSharp/pull/173), closing
+  [#172](https://github.com/0xC000005/ChebyshevSharp/issues/172). Opened
+  [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174) for examples
+  and runnable snippets.
+- 2026-05-08: Implemented local examples/runnable-snippets audit for
+  [#174](https://github.com/0xC000005/ChebyshevSharp/issues/174). Evidence:
+  checked example structure against Microsoft and Google code-example guidance;
+  added a docs-site Examples page; connected Getting Started and validation
+  docs to the runnable projects; made both console examples print direct
+  accuracy checks against their original functions; and kept the example
+  commands copyable from the repository root. Local gates: `git diff --check`,
+  `docfx docs/docfx.json`, `dotnet format --verify-no-changes --verbosity
+  minimal`, `dotnet build --configuration Release --no-restore --verbosity
+  minimal`, `dotnet test --configuration Release --no-build --verbosity
+  minimal` (`1645` tests passed), `dotnet run --configuration Release
+  --no-build --project examples/QuickStart/QuickStart.csproj`, and `dotnet run
+  --configuration Release --no-build --project
+  examples/TensorTrainHighDim/TensorTrainHighDim.csproj`.
 
 ## External Workflow References
 
