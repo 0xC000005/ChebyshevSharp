@@ -9,9 +9,9 @@ namespace ChebyshevSharp;
 
 /// <summary>
 /// Chebyshev interpolation in Tensor Train (TT) format.
-/// For functions of 5+ dimensions where full tensor interpolation is infeasible.
-/// Uses TT-Cross to build from O(d * n * r^2) function evaluations instead of O(n^d),
-/// then evaluates via TT inner product with Chebyshev polynomial basis.
+/// Useful when the dense tensor grid is too large but the sampled tensor has
+/// low numerical TT rank. The default TT-Cross build path samples adaptively;
+/// TT-SVD and ALS are dense-grid reference paths for intentionally small grids.
 /// </summary>
 public class ChebyshevTT
 {
@@ -116,8 +116,8 @@ public class ChebyshevTT
     /// <param name="additionalData">Optional user data object stored for introspection via <see cref="GetAdditionalData"/>. NOT threaded through build calls (TT function signature has no data arg).</param>
     /// <param name="nWorkers">Accepted for API symmetry with the other classes but
     /// ignored: TT-Cross is adaptive sampling, not pre-grid evaluation. Pass null.</param>
-    /// <param name="progress">Optional progress reporter; receives the cumulative
-    /// sweep count after each TT-Cross sweep.</param>
+    /// <param name="progress">Optional TT-Cross progress reporter; receives the
+    /// cumulative sweep count after each completed sweep.</param>
     /// <remarks>Thread safety: TT-Cross is inherently sequential; <paramref name="nWorkers"/> is accepted but has no effect.</remarks>
     public ChebyshevTT(
         Func<double[], double> function,
@@ -462,15 +462,8 @@ public class ChebyshevTT
                     v[i * rRight + k] = sum;
                 }
 
-            // Chain multiply: newResult[i,k] = sum_j result[i,j] * v[j,k]
-            // But result is 1D (resultRows entries = 1 x resultRows), v is (resultRows x rRight)
-            // After first iteration: result is (1 x rRight), etc.
-            // Actually: result is flat [resultCols], v is [resultCols x rRight]
-            // newResult[k] = sum_j result[j] * v[j * rRight + k]
-            // Wait — let me think about this more carefully.
-            //
-            // Python: result = np.ones((1,1)), then result = result @ v where v is (r_{d-1}, r_d)
-            // So result is always (1, r_d). We track as flat array of length r_d.
+            // Result is a flat row vector of length resultRows. Contract it
+            // with v[resultRows, rRight] to obtain the next rank-space row.
             double[] newResult = new double[rRight];
             for (int k = 0; k < rRight; k++)
             {
@@ -489,7 +482,8 @@ public class ChebyshevTT
 
     /// <summary>
     /// Evaluate at multiple points simultaneously.
-    /// Vectorized TT inner product: 15-20x speedup over calling Eval in a loop.
+    /// Vectorized TT inner product that shares allocation and contraction work
+    /// across query points.
     /// </summary>
     /// <param name="points">Query points inside the declared domain, shape (N, numDimensions).</param>
     /// <returns>Interpolated values, length N.</returns>
@@ -607,7 +601,6 @@ public class ChebyshevTT
         // v0.21.1: race-safe via EvalStorageFrame helper that always operates in
         // storage frame. Public EvalMulti permutes user-frame inputs once into
         // local arrays — no mutation of self._dimOrder.
-        // Python source: ref/PyChebyshev/src/pychebyshev/tensor_train.py:2172-2215.
         double[] storagePoint = point;
         int[][] storageOrders = derivativeOrders;
 
@@ -641,7 +634,6 @@ public class ChebyshevTT
     /// All-zero triggers the value path; otherwise FD machinery.</param>
     /// <returns>Interpolated value (or FD derivative).</returns>
     /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2172-2215</c>.
     /// Does not mutate <see cref="_dimOrder"/>; safe under concurrent invocation.
     /// </remarks>
     private double EvalStorageFrame(double[] storagePoint, int[] derivativeOrderStorage)
@@ -1107,9 +1099,6 @@ public class ChebyshevTT
     /// storage position s; user-frame dim u lives at storage position
     /// Array.IndexOf(_dimOrder, u).
     /// </summary>
-    /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1737-1747</c>.
-    /// </remarks>
     private double[][] UserFrameDomain()
     {
         var result = new double[_numDimensions][];
@@ -1130,7 +1119,6 @@ public class ChebyshevTT
     /// <remarks>
     /// Precondition: this TT must be 1-D. Call Slice() to reduce a multi-D
     /// TT to 1-D before calling this helper.
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1704-1735</c>.
     /// </remarks>
     private ChebyshevApproximation To1DChebyshev()
     {
@@ -1164,7 +1152,6 @@ public class ChebyshevTT
     /// Under non-identity <see cref="DimOrder"/>, dim and fixedDims keys translate
     /// to storage frame transparently inside <see cref="Slice"/> and
     /// <see cref="ToDense"/>.
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1749-1790</c>.
     /// </remarks>
     public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
@@ -1198,9 +1185,6 @@ public class ChebyshevTT
     /// <returns>Tuple of (minimum value, location where minimum is achieved).</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     /// <exception cref="ArgumentException">If validation fails.</exception>
-    /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1792-1831</c>.
-    /// </remarks>
     public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         CheckBuilt();
@@ -1229,9 +1213,6 @@ public class ChebyshevTT
     /// <returns>Tuple of (maximum value, location where maximum is achieved).</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     /// <exception cref="ArgumentException">If validation fails.</exception>
-    /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:1833-1872</c>.
-    /// </remarks>
     public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         CheckBuilt();
@@ -2485,7 +2466,6 @@ public class ChebyshevTT
     /// applied to the dense version of the same function, but skips the O(n^d)
     /// materialization. Under non-identity <see cref="DimOrder"/>, result keys are
     /// translated from storage frame to user frame internally.
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/tensor_train.py:2823-2868</c>.
     /// </remarks>
     public SobolResult SobolIndices()
     {
@@ -2525,7 +2505,7 @@ public class ChebyshevTT
     /// <summary>
     /// Build a TT trying multiple dim orderings, returning the lowest-rank result.
     /// TT-Cross compression depends on dim order; different orderings yield different
-    /// ranks for the same function. Mirrors PyChebyshev <c>tensor_train.py:2687</c>.
+    /// ranks for the same function.
     /// </summary>
     /// <param name="function">f(point) → double in the original (user) dim order.</param>
     /// <param name="numDimensions">Number of input dimensions.</param>

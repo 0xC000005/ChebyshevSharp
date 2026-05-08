@@ -100,6 +100,37 @@ var spline = ChebyshevSpline.FromValues(
 );
 ```
 
+### ChebyshevTT
+
+`ChebyshevTT.FromValues()` compresses a dense value tensor with TT-SVD. It is
+useful when another system has already produced a full Chebyshev grid and you
+want TT storage afterward. It is not a sparse alternative to TT-Cross; the input
+array must still contain every row-major grid value.
+
+```csharp
+using ChebyshevSharp;
+
+var (nodes, shape) = ChebyshevTT.Nodes(2,
+    new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    new[] { 8, 8 });
+
+double[] values = new double[shape[0] * shape[1]];
+for (int i = 0; i < shape[0]; i++)
+    for (int j = 0; j < shape[1]; j++)
+        values[i * shape[1] + j] = Math.Sin(nodes[0][i]) * Math.Cos(nodes[1][j]);
+
+var tt = ChebyshevTT.FromValues(
+    values,
+    numDimensions: 2,
+    domain: new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } },
+    nNodes: shape,
+    maxRank: 6,
+    tolerance: 1e-10);
+```
+
+For high-dimensional models, prefer `new ChebyshevTT(...).Build(method: "cross")`
+unless the dense tensor is intentionally small enough to materialize.
+
 ## Indexing Convention
 
 The tensor entries must satisfy:
@@ -109,9 +140,11 @@ $$
 = f\!\bigl(\texttt{NodesPerDim}[0][i_0],\; \texttt{NodesPerDim}[1][i_1],\; \ldots\bigr)
 $$
 
-The rows of `FullGrid` follow row-major (C-order) enumeration, so iterating
-over `FullGrid` in order and storing the results in a flat `double[]` produces
-the correct tensor layout automatically.
+For `ChebyshevApproximation.Nodes()`, the rows of `FullGrid` follow row-major
+(C-order) enumeration, so iterating over `FullGrid` in order and storing the
+results in a flat `double[]` produces the correct tensor layout automatically.
+For `ChebyshevTT.Nodes()`, construct the same row-major order explicitly by
+making the last index vary fastest, as shown in the TT example above.
 
 > **Warning: Use row-major (C-order) layout.**
 > The flat `double[]` passed to `FromValues()` must be in row-major order
@@ -205,18 +238,25 @@ var loaded = ChebyshevApproximation.Load("my_proxy.json");
 > Objects created via `FromValues()` have `Function = null`. To re-build
 > with a different set of values, create a new object via `FromValues()`.
 > To re-build from a callable, create a new `ChebyshevApproximation` or
-> `ChebyshevSpline` with that function and call `Build()` on the new object.
+> `ChebyshevSpline`, or `ChebyshevTT` with that function and call `Build()` on
+> the new object.
 
 ## Combining with Other Features
 
-Objects created via `FromValues()` support **all** ChebyshevSharp operations:
+Objects created via `FromValues()` support the stored-interpolant operations for
+their class:
 
-- **Evaluation & derivatives** -- `VectorizedEval()`, `VectorizedEvalMulti()`
+- **Evaluation & derivatives** -- for example `VectorizedEval()` /
+  `VectorizedEvalMulti()` on dense interpolants, or `Eval()` / `EvalMulti()` on
+  `ChebyshevTT`
 - **Calculus** -- `Integrate()`, `Roots()`, `Minimize()`, `Maximize()`
 - **Algebra** -- `+`, `-`, `*`, `/` (including with `Build()`-based objects)
 - **Extrusion & slicing** -- `Extrude()`, `Slice()`
 - **Serialization** -- `Save()`, `Load()`
 - **Error estimation** -- `ErrorEstimate()`
+
+Methods that require the original callable function, such as `Build()` or TT
+`RunCompletion()`, are not available on `FromValues()` results.
 
 > **Note:** `ChebyshevSlider` does **not** support `Nodes()` or `FromValues()`.
 > The sliding technique builds a separate low-dimensional interpolant for each
@@ -295,6 +335,29 @@ Each `SplinePieceNodeInfo` contains:
 | `maxDerivativeOrder` | `int` (default 2) | Maximum derivative order |
 
 **Returns** `ChebyshevSpline` with `Function = null`.
+
+### `ChebyshevTT.Nodes()`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `numDimensions` | `int` | Number of dimensions |
+| `domain` | `double[][]` | Bounds per dimension |
+| `nNodes` | `int[]` | Nodes per dimension |
+
+**Returns** `(double[][] nodesPerDim, int[] shape)`.
+
+### `ChebyshevTT.FromValues()`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `tensorValues` | `double[]` | Dense row-major values, length `Product(nNodes)` |
+| `numDimensions` | `int` | Number of dimensions |
+| `domain` | `double[][]` | Bounds per dimension |
+| `nNodes` | `int[]` | Nodes per dimension |
+| `maxRank` | `int` (default 10) | Maximum TT rank |
+| `tolerance` | `double` (default `1e-6`) | Non-negative TT-SVD truncation tolerance |
+
+**Returns** `ChebyshevTT` with no callable function and `Method = "svd"`.
 
 ## See Also
 

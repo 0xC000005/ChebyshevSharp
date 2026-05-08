@@ -185,7 +185,11 @@ tt.Build(verbose: false, seed: 42);
 Console.WriteLine($"TT error estimate: {tt.ErrorEstimate():E2}");
 ```
 
-> **Note:** The TT error estimate measures coefficient truncation within each core but does not capture the TT rank truncation error (the error from approximating a high-rank tensor with a low-rank TT). For TT-Cross, the rank is adaptively chosen, so the rank truncation error is typically small relative to the coefficient truncation error.
+> **Note:** The TT error estimate measures trailing coefficient-core magnitude.
+> It does not capture TT rank truncation error, TT-Cross sampling error, or
+> finite-difference derivative error. Adaptive rank selection helps control
+> the sampled tensor approximation, but it is still a diagnostic rather than a
+> proof of accuracy.
 
 > **Validation tip:** Treat the TT estimate as a diagnostic, not proof of
 > accuracy. It can also be optimistic if the node grid aliases unresolved

@@ -4,7 +4,7 @@ title: Tensor Train Interpolation
 
 # Tensor Train Interpolation
 
-The **Tensor Train (TT)** format enables Chebyshev interpolation of functions with 5 or more dimensions by decomposing the full coefficient tensor into a chain of small 3-index cores. This reduces storage from $O(n^d)$ to $O(d \cdot n \cdot r^2)$, where $r$ is the TT rank, and builds the approximation from $O(d \cdot n \cdot r^2)$ function evaluations instead of the full $n^d$ tensor grid.
+The **Tensor Train (TT)** format represents a high-dimensional Chebyshev tensor as a chain of small 3-index cores. When the sampled tensor has low numerical rank, storage drops from $O(n^d)$ to about $O(d \cdot n \cdot r^2)$, where $r$ is a typical TT rank. The default `Build(method: "cross")` path samples adaptively so it can avoid the full $n^d$ grid; `svd`, `als`, `FromValues`, and `ToDense()` are dense-grid paths for intentionally small tensors.
 
 ## Motivation
 
@@ -20,9 +20,9 @@ G_2[\alpha_1, i_2, \alpha_2] \cdots
 G_d[\alpha_{d-1}, i_d, \alpha_d]
 $$
 
-where each core $G_k$ has shape $(r_{k-1}, n_k, r_k)$ with $r_0 = r_d = 1$. The integers $r_1, \ldots, r_{d-1}$ are the **TT ranks**, which control approximation quality. For many functions arising in finance, $r \leq 15$ suffices for high accuracy.
+where each core $G_k$ has shape $(r_{k-1}, n_k, r_k)$ with $r_0 = r_d = 1$. The integers $r_1, \ldots, r_{d-1}$ are the **TT ranks**, which control both approximation quality and cost. Smooth finance examples often work with moderate ranks, but rank is a property of the sampled function and node grid, not a guarantee from the API. Validate held-out points before relying on a rank choice.
 
-The total storage is $\sum_k r_{k-1} \cdot n_k \cdot r_k$, which is linear in $d$ for bounded rank. For the 5D Black-Scholes example with rank 15, this is roughly 9,000 elements instead of 161,000 -- an 18x compression.
+The total storage is $\sum_k r_{k-1} \cdot n_k \cdot r_k$, which is linear in $d$ when ranks stay bounded. For the 5D Black-Scholes example with rank 15, this is roughly 9,000 elements instead of 161,000 -- an 18x compression.
 
 ## When to Use ChebyshevTT
 
@@ -37,7 +37,7 @@ The total storage is $\sum_k r_{k-1} \cdot n_k \cdot r_k$, which is linear in $d
 
 ## Build Methods
 
-ChebyshevTT supports two decomposition methods:
+`ChebyshevTT.Build(method: ...)` supports three build paths:
 
 ### TT-Cross (default)
 
@@ -48,38 +48,50 @@ TT-Cross builds the TT decomposition from a subset of function evaluations using
 3. Applies the maxvol algorithm to select the most informative rows (pivot indices)
 4. Updates the TT core and index sets for the next mode
 
-The implementation stops when the relative error measured on random grid-index
-checks drops below the requested tolerance, or when the sweep/improvement limits
-are reached. An evaluation cache avoids redundant function calls across sweeps.
+The implementation stops when the relative error measured on a small random set
+of grid-index checks drops below the requested tolerance, or when the
+sweep/improvement limits are reached. This is an internal convergence diagnostic,
+not a certified bound on the continuous function error. An evaluation cache
+avoids redundant function calls across sweeps.
 
-**Complexity:** $O(d \cdot n \cdot r^2)$ function evaluations, where $d$ is the number of dimensions, $n$ is the typical node count, and $r$ is the TT rank. For 5D Black-Scholes with rank 15, this is roughly 7,400 evaluations instead of 161,051.
+**Complexity:** TT-Cross targets about $O(d \cdot n \cdot r^2)$ function evaluations for bounded rank, where $d$ is the number of dimensions, $n$ is the typical node count, and $r$ is the TT rank. The exact count depends on ranks, sweeps, cache reuse, seed, and stopping behavior.
 
 ### TT-SVD
 
 TT-SVD evaluates the function on the full tensor grid, then decomposes it via
 sequential truncated SVD (Oseledets 2011). This is deterministic and gives a
-Frobenius-controlled low-rank approximation, but requires $n^d$ function
-evaluations. Use TT-SVD only when the full grid is feasible (typically
-$d \leq 6$) and you need a deterministic reference.
+Frobenius-controlled low-rank approximation to the sampled tensor, but it
+requires $\prod_i n_i$ function evaluations and dense storage during the build.
+Use TT-SVD only when the full grid is feasible and you need a deterministic
+reference.
+
+### ALS
+
+`Build(method: "als")` is a rank-adaptive alternating least-squares path. It
+materializes the full grid, starts at rank 1, and increases rank until the dense
+grid residual falls below `tolerance` or `maxRank` is reached. If the rank cap
+is reached first, `BuildWarning` is set. Use ALS for small-grid experiments and
+diagnostics, not for high-dimensional production builds.
 
 > **Dense-grid guard.**
-> TT-Cross is the production path for high-dimensional tensors. TT-SVD, `FromValues`, and `ToDense()` intentionally validate dense element counts and byte sizes before allocation. A shape such as 35 nodes in 7 dimensions is a reasonable TT-Cross target but an invalid dense materialization target; ChebyshevSharp throws a clear overflow error instead of wrapping fixed-width products or attempting an impossible allocation.
+> TT-Cross is the production path for high-dimensional tensors. TT-SVD, ALS, `FromValues`, and `ToDense()` intentionally validate dense element counts and byte sizes before allocation. A shape such as 35 nodes in 7 dimensions is a reasonable TT-Cross target but an invalid dense materialization target; ChebyshevSharp throws a clear overflow error instead of wrapping fixed-width products or attempting an impossible allocation.
 
 ## Quick Start
 
 ```csharp
 using ChebyshevSharp;
 
-// 5D Black-Scholes pricer: V(S, K, T, sigma, r)
-double BsPrice(double[] x)
+// 5D smooth pricing-style model: V(S, K, T, sigma, r)
+double SmoothValue(double[] x)
 {
     double S = x[0], K = x[1], T = x[2], sigma = x[3], r = x[4];
-    // ... your pricing model here ...
-    return price;
+    double moneyness = (S - K) / 20.0;
+    double softPayoff = Math.Log(1.0 + Math.Exp(moneyness));
+    return Math.Exp(-r * T) * softPayoff * (1.0 + 0.1 * sigma * S / K);
 }
 
 var tt = new ChebyshevTT(
-    function: BsPrice,
+    function: SmoothValue,
     numDimensions: 5,
     domain: new[] {
         new[] { 80.0, 120.0 },   // Spot
@@ -98,7 +110,9 @@ var tt = new ChebyshevTT(
 tt.Build(verbose: true, seed: 42);
 ```
 
-Build output shows the sweep progress, rank evolution, and compression ratio:
+Verbose build output shows the sweep progress, rank evolution, and compression
+ratio. The exact ranks, timings, and function-evaluation counts depend on the
+function, seed, node counts, rank cap, and stopping path:
 
 ```
 Building 5D ChebyshevTT (max_rank=15, method='cross')...
@@ -128,7 +142,37 @@ var ttSvd = new ChebyshevTT(
 ttSvd.Build(verbose: false, method: "svd");
 ```
 
-TT-SVD is deterministic (no random seed), so it produces identical results across runs. This makes it useful for cross-language validation and regression testing.
+TT-SVD is deterministic (no random seed), so it produces identical results for
+the same platform and numerical libraries up to floating-point linear-algebra
+differences. This makes it useful for small-grid reference builds and regression
+tests.
+
+### Validate a TT-Cross build
+
+Always test a TT-Cross model on points that were not part of the adaptive build.
+This checks the combined effect of node count, rank cap, seed, and tolerance:
+
+```csharp
+double maxRel = 0.0;
+var rng = new Random(123);
+
+for (int i = 0; i < 100; i++)
+{
+    double[] p = new double[5];
+    for (int d = 0; d < 5; d++)
+    {
+        double lo = tt.Domain[d][0], hi = tt.Domain[d][1];
+        p[d] = lo + (hi - lo) * rng.NextDouble();
+    }
+
+    double exact = SmoothValue(p);
+    double approx = tt.Eval(p);
+    if (Math.Abs(exact) > 1e-12)
+        maxRel = Math.Max(maxRel, Math.Abs(approx - exact) / Math.Abs(exact));
+}
+
+Console.WriteLine($"held-out max relative error = {maxRel:E2}");
+```
 
 ## Evaluation
 
@@ -150,7 +194,7 @@ double[,] points = new double[1000, 5];
 double[] values = tt.EvalBatch(points);
 ```
 
-`EvalBatch` vectorizes the contraction across all points, avoiding repeated allocation of intermediate vectors. It is 15--20x faster than calling `Eval` in a loop.
+`EvalBatch` vectorizes the contraction across all points, avoiding repeated allocation of intermediate vectors. It can be materially faster than calling `Eval` in a loop, especially for many points, but benchmark your point count and rank profile before treating the speedup as fixed.
 
 ### Derivatives via finite differences
 
@@ -176,7 +220,12 @@ double[] results = tt.EvalMulti(
 The step size is $h = (b - a) \times 10^{-4}$ per dimension, with automatic boundary nudging when the evaluation point is within $1.5h$ of a domain edge. Maximum supported derivative order per dimension is 2.
 
 > **Finite differences vs analytical derivatives.**
-> Unlike `ChebyshevApproximation`, which computes exact derivatives of the interpolating polynomial via spectral differentiation matrices, `ChebyshevTT` uses finite differences. This is because the spectral differentiation matrix requires the full tensor, which TT avoids storing. The finite-difference approach loses 4--8 digits of accuracy relative to analytical derivatives, but remains adequate for most financial applications where Greeks at 0.01--1% relative error are acceptable.
+> Unlike `ChebyshevApproximation`, which computes derivatives of the
+> interpolating polynomial with spectral differentiation matrices,
+> `ChebyshevTT` uses finite differences on the TT interpolant. The finite
+> difference error depends on the step size, domain scale, smoothness, TT rank
+> truncation, and proximity to the boundary. Validate Greeks against analytical
+> formulas or held-out finite-difference checks when derivative accuracy matters.
 
 ## Error Estimation
 
@@ -187,6 +236,11 @@ double error = tt.ErrorEstimate();
 The error estimate is computed as the sum of $\max |G_k[:, n_k{-}1, :]|$ across all dimensions $k$, where $G_k[:, n_k{-}1, :]$ is the slice of the coefficient core corresponding to the highest-order Chebyshev polynomial. This parallels the DCT-II coefficient decay logic used by `ChebyshevApproximation`, adapted to the TT core structure.
 
 Like the other classes, the result is cached after the first call.
+
+> **Diagnostic scope.**
+> `ErrorEstimate()` checks trailing coefficient-core magnitude. It does not
+> include TT-Cross sampling error, rank truncation error, or finite-difference
+> derivative error. Use it with held-out validation points.
 
 ## Serialization
 
@@ -214,6 +268,8 @@ If the file was saved with a different library version, a `LoadWarning` property
 | `TtRanks` | Actual TT ranks $[1, r_1, \ldots, r_{d-1}, 1]$ after build |
 | `CompressionRatio` | Ratio of full tensor size to TT storage size |
 | `TotalBuildEvals` | Number of function evaluations used during build |
+| `Method` | Build method that produced the current cores: `"cross"`, `"svd"`, or `"als"` |
+| `BuildWarning` | Warning from ALS when `maxRank` is reached before tolerance is satisfied |
 | `LoadWarning` | Version mismatch warning (null if none) |
 
 ## Build Modes
@@ -221,7 +277,7 @@ If the file was saved with a different library version, a `LoadWarning` property
 `Build(method: ...)` accepts three algorithms:
 
 ```csharp
-tt.Build(method: "cross");  // TT-Cross (default): O(d * n * r^2) function evals
+tt.Build(method: "cross");  // TT-Cross (default): sparse adaptive sampling
 tt.Build(method: "svd");    // TT-SVD: full O(n^d) tensor; for validation
 tt.Build(method: "als");    // Alternating LS: rank-adaptive, full-grid evals
 ```
@@ -240,7 +296,8 @@ if (tt.BuildWarning != null)
 
 `RunCompletion(tolerance, maxIter)` runs fixed-rank ALS sweeps on an
 already-built TT. Rank is preserved; only per-core coefficients are refined.
-Requires `Function != null` (so it cannot be called on a TT loaded from disk).
+It requires the original callable function, so it cannot be called on a TT
+loaded from disk or created with `FromValues()`.
 
 ```csharp
 tt.Build(method: "cross", tolerance: 1e-3, maxRank: 5);
@@ -281,6 +338,10 @@ var tt = ChebyshevTT.FromValues(dense, 2,
     new[] { new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 } }, new[] { 8, 8 },
     maxRank: 10, tolerance: 1e-6);
 ```
+
+`FromValues` compresses an already materialized dense tensor with TT-SVD. It is
+not a sparse sampling path and should be used only when the full value array is
+deliberately feasible.
 
 ## Materialization — `ToDense`
 
@@ -331,9 +392,9 @@ tighter or looser control.
 
 The maximum TT rank controls the trade-off between accuracy and cost. Higher rank allows more complex cross-variable interactions to be captured.
 
-- **Separable functions** (e.g., $\sin(x) + \sin(y) + \sin(z)$): rank 2 suffices
-- **Moderate coupling** (e.g., smooth option-pricing examples): rank 10--15 often gives sub-percent accuracy
-- **Strong coupling** (e.g., $\sin(x \cdot y \cdot z)$): may need rank 20+
+- **Separable or nearly additive functions** often need low rank.
+- **Moderate coupling** may need ranks around 10--15 in smooth option-pricing-style examples.
+- **Strong or localized coupling** may need higher rank, more sweeps, more nodes, or a different approximation strategy.
 
 TT-Cross adaptively selects the actual rank up to `maxRank` based on the SVD
 singular value decay. Setting `maxRank` higher than needed can increase work
@@ -342,15 +403,15 @@ keep the final ranks below that cap.
 
 ### nNodes
 
-Node counts follow the same guidelines as `ChebyshevApproximation`: 7--15 nodes per dimension for smooth functions. The Chebyshev spectral convergence guarantee applies within each core, so adding nodes improves accuracy exponentially for analytic functions.
+Node counts follow the same guidelines as `ChebyshevApproximation`: 7--15 nodes per dimension is often a useful starting range for smooth functions. For analytic functions, polynomial interpolation can converge rapidly as nodes increase, but TT accuracy also depends on rank truncation and TT-Cross sampling. If increasing `nNodes` does not improve held-out error, inspect `maxRank`, `tolerance`, and seed sensitivity.
 
 ### tolerance
 
-The convergence tolerance for TT-Cross (default $10^{-6}$). The algorithm stops when the relative approximation error (measured at random test points) drops below this threshold. Lower tolerance may require more sweeps and higher effective rank.
+The convergence tolerance for TT-Cross (default $10^{-6}$). The algorithm stops when its internal relative error diagnostic on random grid-index checks drops below this threshold. Lower tolerance may require more sweeps and higher effective rank, and it does not replace held-out validation on physical points.
 
 ### seed
 
-The random seed for TT-Cross initialization (default: system random). Setting a fixed seed ensures reproducible builds. Different seeds may produce slightly different TT ranks and accuracy, but all should converge to comparable quality.
+The random seed for TT-Cross initialization (default: system random). Setting a fixed seed makes the adaptive sampling path reproducible. Different seeds may produce different ranks and held-out errors; retry seeds when ranks are near `maxRank` or validation error is unstable.
 
 ## Theory
 
@@ -362,7 +423,7 @@ $$A[i_1, \ldots, i_d] = G_1[i_1] \cdot G_2[i_2] \cdots G_d[i_d]$$
 
 where each $G_k[i_k]$ is an $r_{k-1} \times r_k$ matrix (a slice of the 3-index core along the node axis). The boundary conditions $r_0 = r_d = 1$ ensure the product yields a scalar.
 
-The TT ranks $r_k$ measure the entanglement between the first $k$ and the remaining $d - k$ dimensions. For a function that factors as $f(x_1, \ldots, x_d) = g(x_1, \ldots, x_k) \cdot h(x_{k+1}, \ldots, x_d)$, the rank $r_k = 1$. Additive separability gives $r_k = 2$ (one component for each addend plus a coupling term). General functions have higher rank.
+The TT ranks $r_k$ measure the coupling between the first $k$ and the remaining $d - k$ dimensions in the sampled tensor. For a function that factors as $f(x_1, \ldots, x_d) = g(x_1, \ldots, x_k) \cdot h(x_{k+1}, \ldots, x_d)$, the rank across that split is 1. Additive or weakly coupled structure usually gives low rank; general functions can require higher rank.
 
 ### Maxvol algorithm
 
@@ -388,3 +449,5 @@ See [Citations](citations.md) for the references used by this page.
 4. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Chapter 6.
 5. Savostyanov, D. V. & Oseledets, I. V. (2011). "Fast adaptive interpolation of multi-dimensional arrays in tensor train format." *7th International Workshop on Multidimensional Systems*, pp. 1--8.
 6. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
+7. Bigoni, D., Engsig-Karup, A. P. & Marzouk, Y. M. (2016). "Spectral Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 38(4):A2405--A2439.
+8. Glau, K., Kressner, D. & Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv:1902.04367.

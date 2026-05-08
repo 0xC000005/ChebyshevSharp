@@ -116,15 +116,23 @@ Evaluation involves summing the contributions of each slide (one `VectorizedEval
 
 ## ChebyshevTT Performance
 
-`ChebyshevTT` uses TT-Cross to build from $O(d \cdot n \cdot r^2)$ function evaluations instead of the full $n^d$ tensor grid. Evaluation contracts Chebyshev polynomial basis vectors against the TT coefficient cores with cost $O(d \cdot n \cdot r^2)$ per point.
+`ChebyshevTT` uses TT-Cross to target about $O(d \cdot n \cdot r^2)$ function evaluations for bounded-rank tensors instead of the full $n^d$ grid. Evaluation contracts Chebyshev polynomial basis vectors against the TT coefficient cores with cost proportional to $\sum_k r_{k-1} n_k r_k$ per point.
 
-**Build cost comparison** (5D, 11 nodes per dim):
+**Build cost comparison** (5D, 11 nodes per dim, bounded rank):
 - Full tensor (`ChebyshevApproximation`): 161,051 evaluations
-- TT-Cross (rank 15): ~7,400 evaluations (22x fewer)
+- TT-Cross: targets far fewer evaluations when the sampled tensor has low TT rank
 
-**Eval cost:** For typical financial applications (d = 5--10, n = 7--15, r = 5--15), evaluation takes 1--10 microseconds per point. The cores are small enough that the computation is CPU-cache-bound rather than BLAS-bound. GPU acceleration is not beneficial at these sizes -- kernel launch overhead would dominate the actual computation.
+The exact TT-Cross count depends on the function, seed, rank cap, sweep limit,
+internal random grid checks, and evaluation-cache reuse. Inspect
+`TotalBuildEvals`, `TtRanks`, and held-out error for the model you built.
 
-**Batch eval:** `EvalBatch` vectorizes the contraction across all points, providing 15--20x speedup over calling `Eval` in a loop. This is valuable for Monte Carlo or grid-based downstream calculations.
+**Eval cost:** For moderate ranks, TT evaluation is usually dominated by small
+rank-space contractions rather than dense BLAS calls. Benchmark latency on the
+target hardware when TT evaluation sits in a Monte Carlo or calibration loop.
+
+**Batch eval:** `EvalBatch` vectorizes the contraction across all points and
+can reduce allocation and loop overhead compared with repeated `Eval` calls.
+The speedup depends on point count, node counts, and TT ranks.
 
 **When to use TT vs. Slider:** If the function is nearly additively separable, `ChebyshevSlider` provides analytical derivatives and simpler error analysis. If cross-variable coupling is significant (e.g., $S \cdot \sigma$ interactions in Black-Scholes), `ChebyshevTT` captures it through higher TT rank at the cost of finite-difference derivatives.
 

@@ -25,6 +25,7 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 
 - Oseledets, I. V. (2011). "Tensor-Train Decomposition." *SIAM Journal on Scientific Computing*, 33(5), 2295-2317. DOI: [10.1137/090752286](https://doi.org/10.1137/090752286).
 - Oseledets, I. V. and Tyrtyshnikov, E. E. (2010). "TT-cross approximation for multidimensional arrays." *Linear Algebra and its Applications*, 432(1), 70-88. DOI: [10.1016/j.laa.2009.07.024](https://doi.org/10.1016/j.laa.2009.07.024).
+- Bigoni, D., Engsig-Karup, A. P., and Marzouk, Y. M. (2016). "Spectral Tensor-Train Decomposition." *SIAM Journal on Scientific Computing*, 38(4), A2405-A2439. DOI: [10.1137/15M1036919](https://doi.org/10.1137/15M1036919).
 - Goreinov, S. A., Tyrtyshnikov, E. E., and Zamarashkin, N. L. (1997). "A theory of pseudoskeleton approximations." *Linear Algebra and its Applications*, 261(1-3), 1-21. DOI: [10.1016/S0024-3795(96)00301-1](https://doi.org/10.1016/S0024-3795%2896%2900301-1).
 - Goreinov, S. A. and Tyrtyshnikov, E. E. (2001). "The Maximal-Volume Concept in Approximation by Low-Rank Matrices." *Contemporary Mathematics*, 280, 47-52. DOI: [10.1090/conm/280/4620](https://doi.org/10.1090/conm/280/4620).
 - Goreinov, S. A., Zamarashkin, N. L., and Tyrtyshnikov, E. E. (1997). "Pseudo-skeleton Approximations by Matrices of Maximal Volume." *Mathematical Notes*, 62(4), 515-519. DOI: [10.1007/BF02358985](https://doi.org/10.1007/BF02358985).
