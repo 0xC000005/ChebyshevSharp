@@ -98,6 +98,9 @@ The same workflow is available as a runnable console project:
 dotnet run --project examples/QuickStart/QuickStart.csproj
 ```
 
+See [Examples](examples.md) for the high-dimensional Tensor Train example and
+guidance on when to run the example projects.
+
 ## Choosing the Right Class
 
 | Scenario | Class |

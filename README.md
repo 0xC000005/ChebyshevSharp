@@ -84,6 +84,9 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 ```
 
+The examples print accuracy checks against the original function so you can
+verify the local build and see how dense and TT-Cross workflows differ.
+
 ## Classes
 
 | Class | Use case | Build cost |

@@ -24,6 +24,9 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 ```
 
+The [Examples](examples.md) page explains what each project is meant to validate
+and how the output should be interpreted.
+
 CI runs the examples in the validation job. The test matrix pins the selected
 SDK inside each job: .NET 8 builds the library target, and .NET 10 runs the
 full xUnit suite with coverage upload.
