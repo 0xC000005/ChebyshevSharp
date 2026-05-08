@@ -135,8 +135,8 @@ Use this body shape for each documentation-audit issue:
 | Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Complete | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) | Reframed public identity, package description, and validation provenance language. |
 | Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Complete | [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152) | [#153](https://github.com/0xC000005/ChebyshevSharp/pull/153) | Verified DOI metadata, link reachability, node-convention source evidence, and math-heavy wording. |
 | Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Complete | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155) | Concepts now precede advanced how-tos; orphan pages are represented in the TOC. |
-| Class-selection journey | `docs/docs/which-class.md`, class pages | In PR | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
-| Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md` | Not started | TBD | TBD | Check examples, validation, and error language. |
+| Class-selection journey | `docs/docs/which-class.md`, class pages | Complete | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
+| Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | In PR | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
 | Spline docs | `spline.md`, calculus interactions | Not started | TBD | TBD | Clarify piecewise behavior, knots, discontinuities, Sobol limits. |
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Not started | TBD | TBD | Clarify workflow and benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Not started | TBD | TBD | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
@@ -208,6 +208,24 @@ Use this body shape for each documentation-audit issue:
 - 2026-05-08: Opened class-selection PR
   [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) for
   [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156).
+- 2026-05-08: Merged class-selection PR
+  [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157), closing
+  [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156). Opened
+  [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) for the dense
+  approximation workflow.
+- 2026-05-08: Implemented local dense approximation audit for
+  [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158). Evidence:
+  checked `ChebyshevApproximation` auto-N, `GetOptimalN1`, `Nodes`,
+  `FromValues`, `ErrorEstimate`, and `SetOriginalFunctionValues` source; checked
+  `ErrorThresholdTests`, `FromValuesTests`, `CoverageGapTests`, and
+  `ErrorEstimateConsumerTests`; verified Type-I node convention against current
+  NumPy `chebpts1` docs and public XML documentation structure against
+  Microsoft C# XML docs. Local gates: `git diff --check`,
+  `docfx docs/docfx.json`, CI-style targeted `dotnet test` filter
+  (`120` tests passed), and `dotnet format --verify-no-changes`.
+- 2026-05-08: Opened dense approximation PR
+  [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) for
+  [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158).
 
 ## External Workflow References
 

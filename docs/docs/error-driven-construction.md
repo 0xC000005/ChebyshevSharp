@@ -1,11 +1,17 @@
+---
+title: Error-Driven Construction
+---
+
 # Error-Driven Construction
 
-`ChebyshevApproximation` and `ChebyshevSpline` accept an `errorThreshold`
-parameter that drives an automatic node-count selection loop. Pass `null` for
-each dimension you want auto-sized; the build doubles the worst-contributing
-dim each iteration until both the coefficient-tail estimate and an off-grid
-validation pass are at or below `errorThreshold` (or `maxN` is reached, in which
-case `BuildWarning` is set).
+`ChebyshevApproximation` and `ChebyshevSpline` can choose node counts from an
+`errorThreshold`. Pass `null` for each dimension you want auto-sized. The build
+starts auto-sized dimensions at 3 nodes, evaluates the dense grid, and doubles
+the worst-contributing growable dimension until both the coefficient-tail
+estimate and an off-grid validation pass are at or below `errorThreshold`.
+
+If every auto-sized dimension reaches `maxN` first, the build returns the best
+interpolant it constructed and sets `BuildWarning`.
 
 `errorThreshold` must be finite and greater than zero. Use `maxN` to cap
 runtime, not `NaN`, infinity, zero, or a negative threshold.
@@ -46,7 +52,8 @@ int n = ChebyshevApproximation.GetOptimalN1(
     function: (x, _) => Math.Sin(x[0]),
     domain: (-1.0, 1.0),
     errorThreshold: 1e-8);
-// n is the smallest N at which a 1-D Chebyshev build hits 1e-8.
+// n is the first doubling-loop candidate that satisfies the threshold,
+// or maxN if the threshold is not met before the cap.
 ```
 
 ## Acceptance Check
@@ -56,6 +63,9 @@ Before auto-N accepts a candidate grid, ChebyshevSharp evaluates the original
 function on denser Type-I probe nodes along each auto-sized dimension and
 compares those values with the interpolant. This catches aliasing cases where
 the last coefficient is accidentally small on an under-resolved grid.
+
+The validation pass adds function evaluations to `NEvaluations`, so an auto-N
+build can report more evaluations than the final dense grid size alone.
 
 ## Spline Per-Piece Threshold
 

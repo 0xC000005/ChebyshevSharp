@@ -7,6 +7,11 @@ title: Adaptive Refinement
 ChebyshevSharp provides adaptive-refinement APIs for automatically selecting
 piecewise knots and per-dimension node counts.
 
+For smooth dense-grid interpolation, start with
+[Error-Driven Construction](error-driven-construction.md). It describes the
+`ChebyshevApproximation` auto-node loop controlled by `errorThreshold`, `maxN`,
+and nullable entries in `nNodes`.
+
 ## ChebyshevSpline.AutoKnots
 
 Auto-place knots at function kinks via a curvature-spike scan. Useful for piecewise-smooth functions like `|x|`, `max(0, x)`, or piecewise polynomials.
