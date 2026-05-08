@@ -23,7 +23,7 @@ public class ChebyshevSpline
     private int[] _nNodes = Array.Empty<int>();
     private double[][] _knots = Array.Empty<double[]>();
 
-    /// <summary>The function to approximate. Null after load or from_values.</summary>
+    /// <summary>The function to approximate. Null after Load() or FromValues().</summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
     /// <summary>Number of input dimensions.</summary>
@@ -832,10 +832,10 @@ public class ChebyshevSpline
     /// Functionally equivalent to passing the same values as knots to a regular constructor.
     /// </summary>
     /// <remarks>
-    /// Python's <c>ChebyshevApproximation(special_points=...)</c> returns a
-    /// <c>ChebyshevSpline</c> at construction time.  C# constructors cannot return a
-    /// different type; this static factory is the C#-idiomatic equivalent.
-    /// Exactly one of <paramref name="nNodesNested"/>, <paramref name="nNodes"/>, or
+    /// Declaring special points changes the representation from one dense
+    /// tensor to a piecewise spline, so this factory returns an unbuilt
+    /// <see cref="ChebyshevSpline"/> directly. Exactly one of
+    /// <paramref name="nNodesNested"/>, <paramref name="nNodes"/>, or
     /// <paramref name="errorThreshold"/> must be supplied.
     /// </remarks>
     /// <param name="function">Function to approximate.</param>
@@ -2549,8 +2549,8 @@ public class ChebyshevSpline
 
     /// <summary>
     /// Populate this spline's tensor values from a precomputed flat array.
-    /// Used after constructing with <c>deferBuild: true</c>. Bit-identical to
-    /// the <c>FromValues</c> factory.
+    /// Used after constructing with <c>deferBuild: true</c>. Uses the same
+    /// per-piece construction path as the <c>FromValues</c> factory.
     /// Values are concatenated in flat piece-index C-order: piece 0 values first, then piece 1, etc.
     /// </summary>
     /// <param name="values">Flat array concatenating all pieces' values in piece-flat-index order.</param>
@@ -2722,8 +2722,8 @@ public class ChebyshevSpline
     // ------------------------------------------------------------------
 
     /// <summary>
-    /// Auto-place knots at function kinks via a curvature-spike scan, then build the
-    /// resulting <see cref="ChebyshevSpline"/>. Mirrors PyChebyshev <c>spline.py:2111</c>.
+    /// Heuristically place knots at curvature spikes, then build the resulting
+    /// <see cref="ChebyshevSpline"/>.
     /// </summary>
     /// <param name="function">f(point, additionalData) → double; must return finite at every scan point.</param>
     /// <param name="numDimensions">Number of input dimensions.</param>
@@ -2738,7 +2738,7 @@ public class ChebyshevSpline
     /// <param name="nWorkers">See <see cref="ChebyshevSpline"/> ctor.</param>
     /// <param name="progress">See <see cref="ChebyshevSpline"/> ctor.</param>
     /// <param name="verbose">If true, print scan progress.</param>
-    /// <returns>A built ChebyshevSpline with the discovered knots.</returns>
+    /// <returns>A built ChebyshevSpline with the discovered candidate knots.</returns>
     /// <remarks>
     /// When <paramref name="nWorkers"/> is non-null, <paramref name="function"/> may be
     /// invoked concurrently from multiple threads. Functions that capture mutable state

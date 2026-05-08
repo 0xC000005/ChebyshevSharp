@@ -30,6 +30,9 @@ surface.
   reference docs and runnable code examples are the foundation.
 - Use The Good Docs Project templates as sanity checks for README, concepts,
   how-to guides, reference pages, and contribution material.
+- Treat examples as first-class documentation. A page is not complete just
+  because it is correct; each audit must ask whether a small, current C#
+  example would help the reader choose or use the feature.
 
 ## Source Hierarchy
 
@@ -56,7 +59,10 @@ Public user-facing pages should answer:
 - What problem does this solve?
 - When should a user choose this class or method?
 - What are the important mathematical and numerical assumptions?
+- Does the page need a derivation, proof sketch, formula breakdown, or citation
+  to make the mathematical claim defensible?
 - What is the smallest correct C# example?
+- Would an additional practical example prevent a likely user mistake?
 - What errors or limitations should a user expect?
 
 Contributor or maintainer pages may discuss:
@@ -89,16 +95,32 @@ For each documentation surface:
    history. Move or rewrite misplaced content.
 6. Verify citations: every cited paper/book/link must exist, support the claim,
    and be used with consistent author-year prose.
-7. Verify examples: examples must compile mentally from public API names and
-   should be runnable when feasible.
-8. Run documentation validation:
+7. Verify mathematical explanations: for formulas, convergence claims,
+   interpolation rules, tensor-rank statements, quadrature, derivatives, roots,
+   or error estimates, decide whether the page needs a derivation, proof sketch,
+   formula breakdown, or stronger citation. Add it when it helps users trust or
+   correctly apply the feature; keep full proofs in concept/reference pages
+   instead of crowding quickstarts.
+8. Verify and improve examples:
+   - examples must compile mentally from public API names and should be
+     runnable when feasible
+   - concept/how-to pages should include the smallest useful C# example for the
+     main workflow
+   - add an example when the API has common traps, such as node conventions,
+     knot placement, tensor-train dense materialization, `FromValues()` rebuild
+     limits, or domain validation
+   - prefer a concrete numerical example over prose when it explains behavior
+     more clearly
+   - avoid redundant examples when a nearby linked page already covers the same
+     workflow well
+9. Run documentation validation:
    - `docfx docs/docfx.json`
    - targeted `dotnet test` when examples or behavior claims depend on tests
    - `dotnet run --project examples/...` when changing runnable examples
    - link checks when adding or changing external links
-9. Open a focused PR. Include issue link, pages changed, references checked, and
+10. Open a focused PR. Include issue link, pages changed, references checked, and
    commands run.
-10. After merge, update this file's ledger with issue, PR, status, evidence, and
+11. After merge, update this file's ledger with issue, PR, status, evidence, and
     any follow-up issue.
 
 ## Issue Template for Audit Cycles
@@ -117,6 +139,8 @@ Use this body shape for each documentation-audit issue:
 - [ ] Verify implementation and tests behind behavior claims.
 - [ ] Verify citations and external links.
 - [ ] Check examples and commands.
+- [ ] Decide whether formulas need explanation, proof sketches, or citations.
+- [ ] Add or improve examples where they would materially reduce user mistakes.
 - [ ] Improve flow, headings, and cross-links.
 - [ ] Run DocFX and any relevant code/test commands.
 
@@ -124,7 +148,11 @@ Use this body shape for each documentation-audit issue:
 - Public pages explain user value before provenance.
 - Maintainer/provenance details are moved or clearly scoped.
 - Citations and links support the claims they appear near.
+- Mathematical claims have enough explanation, citation support, or proof
+  sketch for the target page type.
 - Examples use current C# API names and are copyable.
+- Important workflows have practical examples unless a nearby linked page
+  already provides the right one.
 - Verification commands are listed in the PR.
 ```
 
@@ -136,8 +164,8 @@ Use this body shape for each documentation-audit issue:
 | Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Complete | [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152) | [#153](https://github.com/0xC000005/ChebyshevSharp/pull/153) | Verified DOI metadata, link reachability, node-convention source evidence, and math-heavy wording. |
 | Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Complete | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155) | Concepts now precede advanced how-tos; orphan pages are represented in the TOC. |
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Complete | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
-| Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | In PR | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
-| Spline docs | `spline.md`, calculus interactions | Not started | TBD | TBD | Clarify piecewise behavior, knots, discontinuities, Sobol limits. |
+| Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | Complete | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
+| Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | Implemented locally | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | TBD | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Not started | TBD | TBD | Clarify workflow and benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Not started | TBD | TBD | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Not started | TBD | TBD | Separate mathematical intuition from exact API reference. |
@@ -226,6 +254,32 @@ Use this body shape for each documentation-audit issue:
 - 2026-05-08: Opened dense approximation PR
   [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) for
   [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158).
+- 2026-05-08: Merged dense approximation PR
+  [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159), closing
+  [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158). Opened
+  [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) for the spline
+  workflow.
+- 2026-05-08: Strengthened the audit workflow so every documentation pass must
+  explicitly decide whether the page needs more mathematical explanation, a
+  proof sketch, citation support, or practical examples. This follows the
+  NumPy documentation-maintenance pattern of prioritizing technical
+  inaccuracies while also filling usage-example and broader tutorial/how-to
+  gaps.
+- 2026-05-08: Implemented local spline workflow audit for
+  [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160). Evidence:
+  checked `ChebyshevSpline` routing, knot-boundary derivative rejection,
+  `WithSpecialPoints`, `AutoKnots`, `Nodes`, `FromValues`, serialization,
+  `ErrorEstimate`, integration, roots, and optimization against source and
+  spline-related tests; removed public PyChebyshev positioning from
+  special-points docs and XML comments; corrected an `O(1/n^2)` explanation
+  and per-piece bound wording; made examples more copyable. Local gates:
+  `git diff --check`, `docfx docs/docfx.json`, `dotnet restore
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj -p:TargetFramework=net10.0`,
+  `dotnet build tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj
+  --framework net10.0 --no-restore`, spline-focused `dotnet test` filter
+  (`400` tests passed), `dotnet restore src/ChebyshevSharp/ChebyshevSharp.csproj`,
+  and `dotnet format src/ChebyshevSharp/ChebyshevSharp.csproj
+  --verify-no-changes --no-restore`.
 
 ## External Workflow References
 

@@ -4,8 +4,8 @@ title: Adaptive Refinement
 
 # Adaptive Refinement
 
-ChebyshevSharp provides adaptive-refinement APIs for automatically selecting
-piecewise knots and per-dimension node counts.
+ChebyshevSharp provides adaptive-refinement APIs for selecting piecewise knots
+and per-dimension node counts.
 
 For smooth dense-grid interpolation, start with
 [Error-Driven Construction](error-driven-construction.md). It describes the
@@ -14,7 +14,10 @@ and nullable entries in `nNodes`.
 
 ## ChebyshevSpline.AutoKnots
 
-Auto-place knots at function kinks via a curvature-spike scan. Useful for piecewise-smooth functions like `|x|`, `max(0, x)`, or piecewise polynomials.
+`AutoKnots` builds a `ChebyshevSpline` after scanning each dimension for
+second-difference spikes with the other dimensions fixed at their midpoints.
+It is a heuristic for candidate knot placement, not a proof that every
+non-smooth point has been found.
 
 ```csharp
 double F(double[] p, object? _) => Math.Abs(p[0]);
@@ -24,7 +27,10 @@ var sp = ChebyshevSpline.AutoKnots(F, 1,
 // Discovers a knot near x=0; the resulting Spline has 2 pieces.
 ```
 
-Tuning parameters: `thresholdFactor` (default 5.0), `maxKnotsPerDim` (default 5), `nScanPoints` (default 200).
+Tuning parameters: `thresholdFactor` (default 5.0), `maxKnotsPerDim` (default
+5), and `nScanPoints` (default 200). Set `maxKnotsPerDim: 0` to disable
+auto-knot insertion and build a single-piece spline. Always inspect
+`sp.Knots` and validate held-out points after using the scan.
 
 ## SobolIndices
 
