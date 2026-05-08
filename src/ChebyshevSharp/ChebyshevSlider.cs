@@ -16,7 +16,8 @@ namespace ChebyshevSharp;
 /// <remarks>
 /// This trades accuracy for dramatically reduced build cost: instead of
 /// evaluating f at n₁ × n₂ × … × nₐ grid points (exponential), the slider
-/// evaluates at n₁ × n₂ + n₃ × n₄ + … (sum of products within each group).
+/// evaluates the pivot once and then evaluates n₁ × n₂ + n₃ × n₄ + …
+/// slide-grid points (sum of products within each group).
 /// Reference: Ruiz &amp; Zeron (2022), Ch. 7.
 /// </remarks>
 public class ChebyshevSlider
@@ -26,7 +27,7 @@ public class ChebyshevSlider
     private int[][] _partition = Array.Empty<int[]>();
     private double[] _pivotPoint = Array.Empty<double>();
 
-    /// <summary>The function to approximate. Null after load.</summary>
+    /// <summary>The function to approximate. Null after <see cref="Load(string)"/>.</summary>
     public Func<double[], object?, double>? Function { get; internal set; }
 
     /// <summary>Number of input dimensions.</summary>
@@ -298,7 +299,7 @@ public class ChebyshevSlider
         {
             Console.WriteLine(
                 $"Building {NumDimensions}D Chebyshev Slider " +
-                $"({_partition.Length} slides, {totalEvals:N0} evaluations " +
+                $"({_partition.Length} slides, {totalEvals:N0} slide-grid evaluations " +
                 $"vs {fullTensor:N0} for full tensor)...");
         }
 
@@ -355,7 +356,7 @@ public class ChebyshevSlider
                     slideNNodes);
                 Console.WriteLine(
                     $"  Slide {slideIdx + 1}/{_partition.Length}: " +
-                    $"dims [{string.Join(", ", group)}], {slideEvals:N0} evals");
+                    $"dims [{string.Join(", ", group)}], {slideEvals:N0} slide-grid evals");
             }
         }
 
@@ -504,7 +505,7 @@ public class ChebyshevSlider
     }
 
     // ------------------------------------------------------------------
-    // Integration (Phase 5 — PyChebyshev v0.17)
+    // Integration
     // ------------------------------------------------------------------
 
     /// <summary>
@@ -749,7 +750,7 @@ public class ChebyshevSlider
         result.DimToSlide = BuildDimToSlide(newPartitionArr);
         result.Built = true;
         result.BuildTime = 0.0;
-        // Inherit Phase 4 ergonomics fields per spec D7 (descriptor + additionalData
+        // Inherit ergonomics fields (descriptor + additionalData
         // pass through; derivative-id registry is intentionally NOT copied).
         SliderInheritErgonomics(result);
         return result;
@@ -759,7 +760,7 @@ public class ChebyshevSlider
     /// Copy descriptor, additionalData, _maxDerivativeOrder (already done via property),
     /// and _constructorType from this Slider to <paramref name="target"/>.
     /// The derivative-id registry is intentionally NOT copied — partial-integrate
-    /// results have a different dim space (Python <c>slider.py:1130-1131</c>, spec D7).
+    /// results have a different dimension space.
     /// </summary>
     private void SliderInheritErgonomics(ChebyshevSlider target)
     {
@@ -769,7 +770,10 @@ public class ChebyshevSlider
         target._constructorType = _constructorType;
     }
 
-    /// <summary>Total number of function evaluations used during build.</summary>
+    /// <summary>
+    /// Total slide-grid evaluations used during build. <see cref="Build(bool)"/>
+    /// also evaluates the pivot once.
+    /// </summary>
     public int TotalBuildEvals
     {
         get
@@ -1378,7 +1382,6 @@ public class ChebyshevSlider
     /// <remarks>
     /// Precondition: this Slider must be 1-D (NumDimensions == 1). Call Slice()
     /// to reduce a multi-D Slider to 1-D before calling this helper.
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1138-1176</c>.
     /// </remarks>
     private ChebyshevApproximation To1DChebyshev()
     {
@@ -1414,9 +1417,6 @@ public class ChebyshevSlider
     /// <returns>Sorted real root locations in the physical domain. Empty if no roots.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     /// <exception cref="ArgumentException">If <paramref name="dim"/> or <paramref name="fixedDims"/> validation fails.</exception>
-    /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1178-1224</c>.
-    /// </remarks>
     public double[] Roots(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         if (!Built)
@@ -1442,9 +1442,6 @@ public class ChebyshevSlider
     /// location is its coordinate in the target dimension.</returns>
     /// <exception cref="InvalidOperationException">If <see cref="Build"/> has not been called.</exception>
     /// <exception cref="ArgumentException">If validation fails.</exception>
-    /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1226-1264</c>.
-    /// </remarks>
     public (double value, double location) Minimize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         if (!Built)
@@ -1462,9 +1459,6 @@ public class ChebyshevSlider
     /// Find the maximum value of the slider along a specified dimension.
     /// See <see cref="Minimize"/> for parameter details.
     /// </summary>
-    /// <remarks>
-    /// Python source: <c>ref/PyChebyshev/src/pychebyshev/slider.py:1266-1283</c>.
-    /// </remarks>
     public (double value, double location) Maximize(int? dim = null, Dictionary<int, double>? fixedDims = null)
     {
         if (!Built)
@@ -1675,7 +1669,7 @@ public class ChebyshevSlider
             $"ChebyshevSlider ({NumDimensions}D, {_partition.Length} slides, {status})",
             $"  Partition: {partitionStr}",
             $"  Pivot:     {pivotStr}",
-            $"  Nodes:     {nodesStr} ({totalSlideEvals:N0} vs {fullTensorEvals:N0} full tensor)",
+            $"  Nodes:     {nodesStr} ({totalSlideEvals:N0} slide-grid evals vs {fullTensorEvals:N0} full tensor)",
             $"  Domain:    {domainStr}",
         };
 
@@ -1691,7 +1685,7 @@ public class ChebyshevSlider
                     nameof(ToString));
                 lines.Add(
                     $"    [{i}] dims [{string.Join(", ", group)}]: " +
-                    $"{slideEvals:N0} evals, " +
+                    $"{slideEvals:N0} slide-grid evals, " +
                     $"built in {Slides[i].BuildTime:F3}s");
             }
         }
@@ -1700,7 +1694,7 @@ public class ChebyshevSlider
     }
 
     // ------------------------------------------------------------------
-    // Phase 4 ergonomics — accessors
+    // Ergonomics accessors
     // ------------------------------------------------------------------
 
     /// <summary>Set a free-form descriptor string for this slider.</summary>

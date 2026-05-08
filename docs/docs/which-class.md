@@ -64,8 +64,11 @@ where `k_i` is the number of interior knots in dimension `i`.
 Slider replaces one full grid with a sum of smaller group grids:
 
 $$
-\sum_g \prod_{i \in g} n_i
+1 + \sum_g \prod_{i \in g} n_i
 $$
+
+The leading `1` is the pivot evaluation. The public `TotalBuildEvals` property
+reports only the slide-grid sum.
 
 TT-Cross avoids dense-grid materialization and targets approximately
 `O(d * n * r^2)` function evaluations for bounded rank `r`, but rank growth,

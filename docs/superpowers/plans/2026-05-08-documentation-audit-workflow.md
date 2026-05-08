@@ -165,8 +165,8 @@ Use this body shape for each documentation-audit issue:
 | Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Complete | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155) | Concepts now precede advanced how-tos; orphan pages are represented in the TOC. |
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Complete | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | Complete | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
-| Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | In PR | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
-| Slider docs | `slider.md`, `greeks.md`, `performance.md` | Not started | TBD | TBD | Clarify workflow and benchmark framing. |
+| Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | Complete | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
+| Slider docs | `slider.md`, `greeks.md`, `performance.md` | In PR | [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) | [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) | Clarified pivot cost, per-slide error diagnostics, cross-group derivative limits, and public benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Not started | TBD | TBD | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Not started | TBD | TBD | Separate mathematical intuition from exact API reference. |
 | Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Not started | TBD | TBD | Public persistence docs vs contributor fixture provenance. |
@@ -283,6 +283,32 @@ Use this body shape for each documentation-audit issue:
 - 2026-05-08: Opened spline workflow PR
   [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) for
   [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160).
+- 2026-05-08: Merged spline workflow PR
+  [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161), closing
+  [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160). Opened
+  [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) for the slider
+  workflow.
+- 2026-05-08: Implemented local slider workflow audit for
+  [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162). Evidence:
+  checked `ChebyshevSlider.Build`, `TotalBuildEvals`, `Eval`, `EvalMulti`,
+  `ErrorEstimate`, integration, roots, optimization, serialization, algebra,
+  and validation against source and slider-related tests; verified anchored
+  decomposition/pivot sensitivity against Zhang, Choi, and Karniadakis (2011);
+  removed public Python-source provenance from slider XML comments; reframed
+  performance wording away from public reference-implementation positioning;
+  and clarified that slider error estimates are per-slide diagnostics, not
+  decomposition-error bounds. Local gates: `git diff --check`,
+  `docfx docs/docfx.json`, `dotnet restore
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj -p:TargetFramework=net10.0
+  -p:NuGetAudit=false`, `dotnet build
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0
+  --no-restore`, slider/Greeks/calculus-focused `dotnet test` filter (`277`
+  tests passed), `dotnet restore src/ChebyshevSharp/ChebyshevSharp.csproj
+  -p:NuGetAudit=false`, and `dotnet format
+  src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes`.
+- 2026-05-08: Opened slider workflow PR
+  [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) for
+  [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162).
 
 ## External Workflow References
 

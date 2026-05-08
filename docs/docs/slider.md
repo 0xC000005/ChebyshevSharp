@@ -10,7 +10,7 @@ The **Sliding Technique** enables Chebyshev approximation of high-dimensional fu
 
 A full tensor Chebyshev interpolant on $n$ dimensions with $m$ nodes per dimension requires $m^n$ function evaluations. For $n = 10$ and $m = 11$, that is over 25 billion evaluations — clearly infeasible.
 
-The sliding technique partitions the dimensions into small groups and builds a separate Chebyshev interpolant (a **slide**) for each group, with all other dimensions fixed at a **pivot point**. The total cost becomes the *sum* of the group grid sizes rather than their *product*.
+The sliding technique partitions the dimensions into small groups and builds a separate Chebyshev interpolant (a **slide**) for each group, with all other dimensions fixed at a **pivot point**. The source-function call count becomes one pivot evaluation plus the *sum* of the group grid sizes, rather than the full tensor *product*.
 
 ## Algorithm
 
@@ -26,6 +26,11 @@ $$
 
 where $\mathbf{x}_{G_i}$ denotes the components of $\mathbf{x}$ belonging to group $i$.
 Equivalently, this is $\sum_i s_i(\mathbf{x}_{G_i}) - (k-1)v$.
+
+This is a first-order anchored decomposition over the chosen groups. Related
+anchored-ANOVA work shows that the anchor point can strongly affect accuracy
+[4], so treat `pivotPoint` as a modelling choice and validate points away from
+that pivot.
 
 ## When to Use Sliding
 
@@ -98,9 +103,14 @@ slider.Build();
 
 ```csharp
 // Full tensor: 12 * 12 * 8 * 8 = 9,216 evaluations
-// Sliding:     12*12 + 8 + 8   = 160 evaluations  (57x fewer)
+// Sliding slides: 12*12 + 8 + 8 = 160 slide-grid evaluations
+// Build also evaluates the pivot once, so source calls are 161.
 Console.WriteLine($"Slider build evaluations: {slider.TotalBuildEvals}");
 ```
+
+`TotalBuildEvals` reports only the slide-grid evaluations. Add one more source
+call for the pivot value when estimating total build-time calls to your
+function.
 
 ### Multi-output evaluation
 
@@ -116,6 +126,11 @@ double[] results = slider.EvalMulti(
     }
 );
 ```
+
+`EvalMulti` is a convenience API for requesting several derivative orders with
+one validation pass. Unlike dense `VectorizedEvalMulti`, it evaluates each
+requested order through the relevant slide rather than sharing a full-tensor
+barycentric contraction.
 
 ## Derivatives
 
@@ -144,11 +159,17 @@ This is mathematically correct for the sliding approximation, but may differ fro
 double err = slider.ErrorEstimate();
 ```
 
-For additively separable functions, the error estimate accurately reflects the total error. For coupled functions, the actual error may be larger due to the sliding approximation itself.
+For exactly additively separable functions, this is the relevant interpolation
+diagnostic. For coupled functions, the actual error may be larger because the
+decomposition itself cannot represent cross-group interaction terms.
 
 ### Accuracy near and far from pivot
 
-The sliding approximation is most accurate near the pivot point. As the evaluation point moves away from the pivot in multiple dimensions simultaneously, cross-coupling errors accumulate. For strongly coupled functions like Black-Scholes, errors of 20--50% at domain boundaries have been observed.
+The sliding approximation is usually most accurate near the pivot point. As the
+evaluation point moves away from the pivot in multiple groups simultaneously,
+cross-coupling errors can accumulate. Always validate with held-out points,
+especially near domain boundaries and in regions where several grouped variables
+move together.
 
 ## Serialization
 
@@ -199,7 +220,7 @@ Both operands must have the same dimensions, domain, node counts, **partition**,
 |----------|-------|-----------|
 | Smooth function, low dimensions (1--5D) | `ChebyshevApproximation` | $\prod_i n_i$ |
 | Function with discontinuities/singularities | `ChebyshevSpline` | $\text{pieces} \times \prod_i n_i$ |
-| High dimensions, additively separable | `ChebyshevSlider` | $\sum_g \prod_{i \in g} n_i$ |
+| High dimensions, additively separable | `ChebyshevSlider` | $1 + \sum_g \prod_{i \in g} n_i$ source calls |
 | High dimensions, general coupling | [`ChebyshevTT`](tensor-train.md) | $O(d \cdot n \cdot r^2)$ |
 
 > **Method availability.**
@@ -213,3 +234,4 @@ Both operands must have the same dimensions, domain, node counts, **partition**,
 1. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
 2. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
 3. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance.
+4. Zhang, Z., Choi, M. & Karniadakis, G. E. (2011). "Anchor Points Matter in ANOVA Decomposition." In *Spectral and High Order Methods for Partial Differential Equations*, Lecture Notes in Computational Science and Engineering 76, 347-355.
