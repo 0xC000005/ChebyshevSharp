@@ -910,8 +910,9 @@ public class ChebyshevSpline
     /// Save the built spline to a file.
     /// </summary>
     /// <param name="path">Destination file path.</param>
-    /// <param name="format">"json" (default) or "binary". Binary requires
-    /// flat (non-nested) nNodes — throws NotSupportedException otherwise.</param>
+    /// <param name="format">"json" (default) or "binary". Binary writes the
+    /// documented .pcb primitive layout and requires shared flat, non-nested
+    /// nNodes across all pieces.</param>
     public void Save(string path, string format = "json")
     {
         if (!Built)
@@ -1011,12 +1012,13 @@ public class ChebyshevSpline
         => Internal.PcbFormat.PeekFormatVersion(path);
 
     /// <summary>
-    /// Load a previously saved spline from a file.
-    /// Auto-detects binary (.pcb magic) vs JSON format.
+    /// Load a previously saved spline from a file. Auto-detects binary
+    /// (.pcb magic) vs JSON format.
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored spline.</returns>
-    /// <exception cref="InvalidDataException">If the file contains a malformed ChebyshevSpline state.</exception>
+    /// <exception cref="InvalidDataException">If a .pcb file has a non-spline class tag
+    /// or if the serialized state is malformed.</exception>
     public static ChebyshevSpline Load(string path)
     {
         if (Internal.PcbFormat.IsBinary(path))

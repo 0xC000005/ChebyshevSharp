@@ -895,8 +895,8 @@ public class ChebyshevApproximation
     /// Save the built interpolant to a file.
     /// </summary>
     /// <param name="path">Destination file path.</param>
-    /// <param name="format">"json" (default) or "binary". Binary is the
-    /// portable .pcb format readable by C/Rust/Julia consumers.</param>
+    /// <param name="format">"json" (default) or "binary". Binary writes the
+    /// documented .pcb primitive layout for dense approximations.</param>
     public void Save(string path, string format = "json")
     {
         if (_tensorValues == null)
@@ -969,11 +969,13 @@ public class ChebyshevApproximation
         => Internal.PcbFormat.PeekFormatVersion(path);
 
     /// <summary>
-    /// Load a previously saved interpolant. Auto-detects JSON vs binary .pcb
-    /// by sniffing the first 4 bytes for the b"PCB\0" magic.
+    /// Load a previously saved dense interpolant. Auto-detects JSON vs binary
+    /// .pcb by sniffing the first 4 bytes for the PCB\0 magic.
     /// </summary>
     /// <param name="path">Path to the saved file.</param>
     /// <returns>The restored interpolant.</returns>
+    /// <exception cref="InvalidDataException">If a .pcb file has a non-approximation class tag
+    /// or if the serialized state is malformed.</exception>
     public static ChebyshevApproximation Load(string path)
     {
         if (Internal.PcbFormat.IsBinary(path))

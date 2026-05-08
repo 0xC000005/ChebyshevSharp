@@ -168,8 +168,8 @@ Use this body shape for each documentation-audit issue:
 | Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | Complete | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Complete | [#162](https://github.com/0xC000005/ChebyshevSharp/issues/162) | [#163](https://github.com/0xC000005/ChebyshevSharp/pull/163) | Clarified pivot cost, per-slide error diagnostics, cross-group derivative limits, and public benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Complete | [#164](https://github.com/0xC000005/ChebyshevSharp/issues/164) | [#165](https://github.com/0xC000005/ChebyshevSharp/pull/165) | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
-| Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | In progress | [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) | TBD | Local audit implemented; PR pending. |
-| Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | Not started | TBD | TBD | Public persistence docs vs contributor fixture provenance. |
+| Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Complete | [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166) | [#167](https://github.com/0xC000005/ChebyshevSharp/pull/167) | Qualified exactness, cost, calculus, and edge-case claims. |
+| Serialization and binary format | `serialization.md`, `binary-format.md`, fixture docs | In progress | [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) | TBD | Local audit implemented; PR pending. |
 | Validation and contributing docs | `testing-and-validation.md`, `.github/`, contribution docs | Not started | TBD | TBD | Keep public expectations clear without leaking internal notes. |
 | API reference surface | XML docs in `src/`, generated `docs/api/` | Not started | TBD | TBD | Ensure public XML docs are accurate and not implementation-history heavy. |
 
@@ -358,6 +358,27 @@ Use this body shape for each documentation-audit issue:
   src/ChebyshevSharp/ChebyshevSharp.csproj -p:NuGetAudit=false`, and
   `dotnet format src/ChebyshevSharp/ChebyshevSharp.csproj
   --verify-no-changes`.
+- 2026-05-08: Merged algebra/calculus/special-operations PR
+  [#167](https://github.com/0xC000005/ChebyshevSharp/pull/167), closing
+  [#166](https://github.com/0xC000005/ChebyshevSharp/issues/166). Opened
+  [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168) for
+  serialization and binary-format docs.
+- 2026-05-08: Implemented local serialization/binary-format documentation audit
+  for [#168](https://github.com/0xC000005/ChebyshevSharp/issues/168).
+  Evidence: checked JSON and .pcb save/load paths for approximation, spline,
+  slider, and TT against source and persistence tests; verified .pcb security
+  framing against Microsoft's BinaryFormatter security guidance; reframed
+  public docs around supported objects, dropped state, class-tag loading,
+  validation behavior, and contributor fixture provenance; removed a public
+  PyChebyshev-only bad-magic error message. Local gates: `git diff --check`,
+  `docfx docs/docfx.json`, `dotnet restore
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj -p:TargetFramework=net10.0
+  -p:NuGetAudit=false`, `dotnet build
+  tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0
+  --no-restore`, serialization/load/save-focused `dotnet test` filter (`314`
+  tests passed), `dotnet restore src/ChebyshevSharp/ChebyshevSharp.csproj
+  -p:NuGetAudit=false`, and `dotnet format
+  src/ChebyshevSharp/ChebyshevSharp.csproj --verify-no-changes`.
 
 ## External Workflow References
 
