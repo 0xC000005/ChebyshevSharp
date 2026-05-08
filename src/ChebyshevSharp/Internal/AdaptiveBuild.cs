@@ -166,6 +166,11 @@ internal static class AdaptiveBuild
                 double expected = function(point, approx.AdditionalData);
                 evaluations++;
                 double actual = approx.VectorizedEval(point, derivativeOrder);
+                if (!double.IsFinite(expected))
+                    throw new ArgumentException(
+                        "function returned non-finite values during adaptive validation; " +
+                        "build cannot proceed with NaN/Infinity in validation samples");
+
                 double diff = Math.Abs(expected - actual);
                 if (diff > maxErr)
                     maxErr = diff;

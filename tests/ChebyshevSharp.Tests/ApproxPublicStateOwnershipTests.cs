@@ -182,6 +182,61 @@ public class ApproxPublicStateOwnershipTests
     }
 
     [Fact]
+    public void Build_failure_during_adaptive_rebuild_preserves_previous_state()
+    {
+        bool failDuringRebuild = false;
+        int rebuildCalls = 0;
+        var approx = new ChebyshevApproximation(
+            (p, _) =>
+            {
+                if (!failDuringRebuild)
+                    return p[0];
+
+                rebuildCalls++;
+                if (rebuildCalls <= 3)
+                    return 100.0 + p[0];
+
+                throw new InvalidOperationException("validation failed");
+            },
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: null,
+            errorThreshold: 1e-6);
+        approx.Build(verbose: false);
+        double valueBefore = approx.Eval(new[] { 0.25 }, new[] { 0 });
+        int[] nNodesBefore = approx.NNodes;
+
+        failDuringRebuild = true;
+        Assert.Throws<InvalidOperationException>(() => approx.Build(verbose: false));
+
+        Assert.True(approx.IsConstructionFinished());
+        Assert.Equal(nNodesBefore, approx.NNodes);
+        Assert.Equal(valueBefore, approx.Eval(new[] { 0.25 }, new[] { 0 }), precision: 12);
+    }
+
+    [Fact]
+    public void Adaptive_build_rejects_non_finite_validation_values()
+    {
+        int calls = 0;
+        var approx = new ChebyshevApproximation(
+            (p, _) =>
+            {
+                calls++;
+                return calls <= 3 ? p[0] : double.NaN;
+            },
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: null,
+            errorThreshold: 1e-6);
+
+        var ex = Assert.Throws<ArgumentException>(() => approx.Build(verbose: false));
+
+        Assert.Contains("non-finite", ex.Message);
+        Assert.False(approx.IsConstructionFinished());
+        Assert.Null(approx.TensorValues);
+    }
+
+    [Fact]
     public void GetSpecialPoints_returns_snapshots_for_loaded_metadata()
     {
         string path = Path.GetTempFileName();

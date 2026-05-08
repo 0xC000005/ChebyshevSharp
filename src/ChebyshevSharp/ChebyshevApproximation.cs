@@ -310,11 +310,45 @@ public class ChebyshevApproximation
 
         if (OriginalNNodes.Length > 0 && OriginalNNodes.Any(n => n == null))
         {
-            AdaptiveBuild.RunDoublingLoop(this, verbose);
+            var candidate = CreateAdaptiveBuildCandidate();
+            AdaptiveBuild.RunDoublingLoop(candidate, verbose);
+            CommitAdaptiveBuildState(candidate);
             return;
         }
 
         BuildFixedGrid(verbose);
+    }
+
+    private ChebyshevApproximation CreateAdaptiveBuildCandidate()
+    {
+        return new ChebyshevApproximation(
+            Function!,
+            NumDimensions,
+            _domain,
+            nNodes: OriginalNNodes,
+            errorThreshold: ErrorThreshold,
+            maxN: MaxN,
+            maxDerivativeOrder: MaxDerivativeOrder,
+            additionalData: _additionalData,
+            nWorkers: _nWorkers,
+            progress: _progress);
+    }
+
+    private void CommitAdaptiveBuildState(ChebyshevApproximation candidate)
+    {
+        _nNodes = candidate._nNodes;
+        _nodeArrays = candidate._nodeArrays;
+        _tensorValues = candidate._tensorValues;
+        _weights = candidate._weights;
+        _diffMatrices = candidate._diffMatrices;
+        _diffMatricesTFlat = candidate._diffMatricesTFlat;
+        NEvaluations = candidate.NEvaluations;
+        BuildTime = candidate.BuildTime;
+        BuildWarning = candidate.BuildWarning;
+        _cachedErrorEstimate = candidate._cachedErrorEstimate;
+        _evaluationPointsCache = null;
+        _isConstructionFinished = candidate._isConstructionFinished;
+        _constructorType = "function";
     }
 
     /// <summary>
