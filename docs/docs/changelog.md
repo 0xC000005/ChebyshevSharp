@@ -11,14 +11,253 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Public evaluation APIs now reject finite out-of-domain query points across `ChebyshevApproximation`, `ChebyshevSpline`, `ChebyshevSlider`, and `ChebyshevTT` instead of silently extrapolating.
-- `ChebyshevSpline.SobolIndices()` now includes between-piece variance and interval-membership interactions instead of aggregating only independent per-piece Sobol energies ([#83](https://github.com/0xC000005/ChebyshevSharp/issues/83)).
-- `ChebyshevSpline.AutoKnots()` now validates public `domain` and `numNodes` arguments before scanning the user function ([#85](https://github.com/0xC000005/ChebyshevSharp/issues/85)).
-- DocFX API metadata is now generated under an ignored build folder instead of tracked `docs/api` YAML, preventing local source-path churn during docs verification ([#87](https://github.com/0xC000005/ChebyshevSharp/issues/87)).
+## [0.13.0] - 2026-05-08 — Audit-driven correctness and validation hardening
 
-### CI
-- GitHub Actions workflows now pin reusable actions to full-length commit SHAs for reproducible workflow execution ([#89](https://github.com/0xC000005/ChebyshevSharp/issues/89)).
+This release collects the post-0.12.0 audit fixes. It is primarily a
+backward-compatible correctness release, but users may see stricter exceptions
+for invalid inputs that were previously accepted, extrapolated, or surfaced as
+implementation-level exceptions.
+
+The summary sections below describe user-visible impact. The traceability
+inventories at the end of this release section cover the 83 audit pull requests
+merged after `v0.12.0`, this release-preparation pull request, and the 35 issues
+closed in the post-0.12.0 release window.
+
+### Upgrade Notes
+- No public APIs were intentionally removed in this release.
+- Invalid domains, dimensions, scalar controls, derivative orders, malformed
+  load data, and out-of-domain evaluation points may now throw earlier with
+  public argument exceptions instead of producing extrapolated values,
+  inconsistent state, or lower-level runtime exceptions.
+
+### Changed
+- Public evaluation now rejects out-of-domain points across dense, spline,
+  slider, and Tensor Train interpolants instead of silently extrapolating
+  ([#74](https://github.com/0xC000005/ChebyshevSharp/pull/74),
+  [#76](https://github.com/0xC000005/ChebyshevSharp/pull/76)).
+- Public scalar algebra now rejects `NaN`, infinity, zero divisors, and null
+  operands consistently before producing invalid interpolant state
+  ([#129](https://github.com/0xC000005/ChebyshevSharp/pull/129),
+  [#131](https://github.com/0xC000005/ChebyshevSharp/pull/131)).
+- Runtime evaluation, derivative registries, and serialized derivative metadata
+  now enforce configured `maxDerivativeOrder` bounds
+  ([#123](https://github.com/0xC000005/ChebyshevSharp/pull/123),
+  [#125](https://github.com/0xC000005/ChebyshevSharp/pull/125)).
+- NuGet package validation now compares this release against `0.12.0`.
+
+### Fixed
+- Adaptive auto-N construction now validates off-grid convergence more robustly,
+  rejects non-finite validation samples, and commits rebuilt approximation state
+  only after the full adaptive loop succeeds
+  ([#41](https://github.com/0xC000005/ChebyshevSharp/pull/41),
+  [#147](https://github.com/0xC000005/ChebyshevSharp/pull/147)).
+- Dense, spline, slider, and Tensor Train builders now reject non-finite build
+  values and invalid numeric controls earlier, with public argument exceptions
+  instead of delayed internal failures.
+- `ChebyshevSpline.Build()`, `ChebyshevSlider.Build()`, and adaptive
+  `ChebyshevApproximation.Build()` now publish replacement state atomically, so
+  failed rebuilds preserve the previous built interpolant
+  ([#143](https://github.com/0xC000005/ChebyshevSharp/pull/143),
+  [#145](https://github.com/0xC000005/ChebyshevSharp/pull/145),
+  [#147](https://github.com/0xC000005/ChebyshevSharp/pull/147)).
+- Public state accessors now return snapshots rather than mutable live arrays,
+  including domains, node counts, tensor values, special points, cached
+  evaluation points, and result wrapper records
+  ([#75](https://github.com/0xC000005/ChebyshevSharp/pull/75),
+  [#77](https://github.com/0xC000005/ChebyshevSharp/pull/77),
+  [#78](https://github.com/0xC000005/ChebyshevSharp/pull/78),
+  [#79](https://github.com/0xC000005/ChebyshevSharp/pull/79),
+  [#80](https://github.com/0xC000005/ChebyshevSharp/pull/80),
+  [#81](https://github.com/0xC000005/ChebyshevSharp/pull/81),
+  [#82](https://github.com/0xC000005/ChebyshevSharp/pull/82)).
+- JSON and `.pcb` loaders now reject malformed dimensions, tensor lengths,
+  oversized binary declarations, invalid spline/slider/TT state, and legacy TT
+  dimension metadata before materializing inconsistent objects
+  ([#72](https://github.com/0xC000005/ChebyshevSharp/pull/72),
+  [#117](https://github.com/0xC000005/ChebyshevSharp/pull/117),
+  [#141](https://github.com/0xC000005/ChebyshevSharp/pull/141)).
+- `ChebyshevSpline.SobolIndices()` now includes between-piece variance and
+  interval-membership interactions instead of only aggregating independent
+  per-piece Sobol energies ([#84](https://github.com/0xC000005/ChebyshevSharp/pull/84)).
+- `ChebyshevSpline.AutoKnots()` now validates public inputs before scanning the
+  user function ([#86](https://github.com/0xC000005/ChebyshevSharp/pull/86)).
+- Spline calculus and batch evaluation now reject derivative requests at knot
+  boundaries and handle jump root detection more consistently.
+- Tensor Train validation now rejects zero-dimensional grids, invalid auto-order
+  inputs, invalid round tolerances, non-finite build values, and build calls
+  without a source function at the public boundary
+  ([#121](https://github.com/0xC000005/ChebyshevSharp/pull/121),
+  [#127](https://github.com/0xC000005/ChebyshevSharp/pull/127),
+  [#135](https://github.com/0xC000005/ChebyshevSharp/pull/135)).
+- Tensor Train lifecycle and ownership fixes preserve unbuilt clone state,
+  isolate extrusion/slicing result cores from source cores, and repair reduced
+  QR handling for wide matrices
+  ([#137](https://github.com/0xC000005/ChebyshevSharp/pull/137),
+  [#139](https://github.com/0xC000005/ChebyshevSharp/pull/139)).
+- Deferred construction, integration results, slider derived results, fixture
+  generation, and legacy JSON migration fixtures now preserve their intended
+  construction and metadata contracts.
+
+### Documentation
+- README and docs now distinguish value-only evaluation benchmarks from
+  price-plus-Greeks benchmarks and record benchmark provenance
+  ([#107](https://github.com/0xC000005/ChebyshevSharp/pull/107),
+  [#109](https://github.com/0xC000005/ChebyshevSharp/pull/109),
+  [#111](https://github.com/0xC000005/ChebyshevSharp/pull/111)).
+- Package snippets and current guides now use C# API names and document JSON
+  plus portable `.pcb` serialization ([#113](https://github.com/0xC000005/ChebyshevSharp/pull/113)).
+- DocFX API metadata is generated into ignored build output instead of tracked
+  source files, preventing local source-path churn during docs verification
+  ([#88](https://github.com/0xC000005/ChebyshevSharp/pull/88)).
+
+### CI and Security
+- GitHub Actions are pinned to full-length commit SHAs, DocFX and Stryker tool
+  versions are pinned, and the SDK matrix explicitly selects the requested SDK
+  ([#90](https://github.com/0xC000005/ChebyshevSharp/pull/90),
+  [#103](https://github.com/0xC000005/ChebyshevSharp/pull/103),
+  [#105](https://github.com/0xC000005/ChebyshevSharp/pull/105)).
+- CI now audits transitive NuGet dependencies across target frameworks and
+  keeps main branch merges behind required test and Codecov patch gates
+  ([#115](https://github.com/0xC000005/ChebyshevSharp/pull/115)).
+
+### Complete PR Inventory
+- Release metadata and changelog:
+  [#148](https://github.com/0xC000005/ChebyshevSharp/pull/148).
+- Documentation, community, and benchmarks:
+  [#30](https://github.com/0xC000005/ChebyshevSharp/pull/30),
+  [#31](https://github.com/0xC000005/ChebyshevSharp/pull/31),
+  [#32](https://github.com/0xC000005/ChebyshevSharp/pull/32),
+  [#44](https://github.com/0xC000005/ChebyshevSharp/pull/44),
+  [#88](https://github.com/0xC000005/ChebyshevSharp/pull/88),
+  [#101](https://github.com/0xC000005/ChebyshevSharp/pull/101),
+  [#107](https://github.com/0xC000005/ChebyshevSharp/pull/107),
+  [#109](https://github.com/0xC000005/ChebyshevSharp/pull/109),
+  [#111](https://github.com/0xC000005/ChebyshevSharp/pull/111),
+  [#113](https://github.com/0xC000005/ChebyshevSharp/pull/113).
+- CI, dependency, package, and security gates:
+  [#33](https://github.com/0xC000005/ChebyshevSharp/pull/33),
+  [#34](https://github.com/0xC000005/ChebyshevSharp/pull/34),
+  [#90](https://github.com/0xC000005/ChebyshevSharp/pull/90),
+  [#103](https://github.com/0xC000005/ChebyshevSharp/pull/103),
+  [#105](https://github.com/0xC000005/ChebyshevSharp/pull/105),
+  [#115](https://github.com/0xC000005/ChebyshevSharp/pull/115),
+  [#117](https://github.com/0xC000005/ChebyshevSharp/pull/117).
+- `ChebyshevApproximation`, adaptive build, and evaluation validation:
+  [#35](https://github.com/0xC000005/ChebyshevSharp/pull/35),
+  [#38](https://github.com/0xC000005/ChebyshevSharp/pull/38),
+  [#41](https://github.com/0xC000005/ChebyshevSharp/pull/41),
+  [#43](https://github.com/0xC000005/ChebyshevSharp/pull/43),
+  [#45](https://github.com/0xC000005/ChebyshevSharp/pull/45),
+  [#46](https://github.com/0xC000005/ChebyshevSharp/pull/46),
+  [#62](https://github.com/0xC000005/ChebyshevSharp/pull/62),
+  [#63](https://github.com/0xC000005/ChebyshevSharp/pull/63),
+  [#64](https://github.com/0xC000005/ChebyshevSharp/pull/64),
+  [#71](https://github.com/0xC000005/ChebyshevSharp/pull/71),
+  [#74](https://github.com/0xC000005/ChebyshevSharp/pull/74),
+  [#76](https://github.com/0xC000005/ChebyshevSharp/pull/76),
+  [#77](https://github.com/0xC000005/ChebyshevSharp/pull/77),
+  [#81](https://github.com/0xC000005/ChebyshevSharp/pull/81),
+  [#147](https://github.com/0xC000005/ChebyshevSharp/pull/147).
+- Core numerical tests and fixture provenance:
+  [#36](https://github.com/0xC000005/ChebyshevSharp/pull/36),
+  [#37](https://github.com/0xC000005/ChebyshevSharp/pull/37),
+  [#39](https://github.com/0xC000005/ChebyshevSharp/pull/39),
+  [#40](https://github.com/0xC000005/ChebyshevSharp/pull/40),
+  [#93](https://github.com/0xC000005/ChebyshevSharp/pull/93),
+  [#95](https://github.com/0xC000005/ChebyshevSharp/pull/95),
+  [#97](https://github.com/0xC000005/ChebyshevSharp/pull/97),
+  [#99](https://github.com/0xC000005/ChebyshevSharp/pull/99).
+- `ChebyshevSpline` validation, calculus, Sobol, and rebuild lifecycle:
+  [#47](https://github.com/0xC000005/ChebyshevSharp/pull/47),
+  [#52](https://github.com/0xC000005/ChebyshevSharp/pull/52),
+  [#53](https://github.com/0xC000005/ChebyshevSharp/pull/53),
+  [#54](https://github.com/0xC000005/ChebyshevSharp/pull/54),
+  [#55](https://github.com/0xC000005/ChebyshevSharp/pull/55),
+  [#56](https://github.com/0xC000005/ChebyshevSharp/pull/56),
+  [#57](https://github.com/0xC000005/ChebyshevSharp/pull/57),
+  [#59](https://github.com/0xC000005/ChebyshevSharp/pull/59),
+  [#60](https://github.com/0xC000005/ChebyshevSharp/pull/60),
+  [#78](https://github.com/0xC000005/ChebyshevSharp/pull/78),
+  [#84](https://github.com/0xC000005/ChebyshevSharp/pull/84),
+  [#86](https://github.com/0xC000005/ChebyshevSharp/pull/86),
+  [#143](https://github.com/0xC000005/ChebyshevSharp/pull/143).
+- `ChebyshevSlider` validation, derived results, ownership, and rebuild lifecycle:
+  [#48](https://github.com/0xC000005/ChebyshevSharp/pull/48),
+  [#51](https://github.com/0xC000005/ChebyshevSharp/pull/51),
+  [#68](https://github.com/0xC000005/ChebyshevSharp/pull/68),
+  [#69](https://github.com/0xC000005/ChebyshevSharp/pull/69),
+  [#70](https://github.com/0xC000005/ChebyshevSharp/pull/70),
+  [#79](https://github.com/0xC000005/ChebyshevSharp/pull/79),
+  [#145](https://github.com/0xC000005/ChebyshevSharp/pull/145).
+- `ChebyshevTT` validation, rank controls, load state, clone state, and core ownership:
+  [#42](https://github.com/0xC000005/ChebyshevSharp/pull/42),
+  [#49](https://github.com/0xC000005/ChebyshevSharp/pull/49),
+  [#50](https://github.com/0xC000005/ChebyshevSharp/pull/50),
+  [#65](https://github.com/0xC000005/ChebyshevSharp/pull/65),
+  [#66](https://github.com/0xC000005/ChebyshevSharp/pull/66),
+  [#67](https://github.com/0xC000005/ChebyshevSharp/pull/67),
+  [#75](https://github.com/0xC000005/ChebyshevSharp/pull/75),
+  [#121](https://github.com/0xC000005/ChebyshevSharp/pull/121),
+  [#127](https://github.com/0xC000005/ChebyshevSharp/pull/127),
+  [#135](https://github.com/0xC000005/ChebyshevSharp/pull/135),
+  [#137](https://github.com/0xC000005/ChebyshevSharp/pull/137),
+  [#139](https://github.com/0xC000005/ChebyshevSharp/pull/139),
+  [#141](https://github.com/0xC000005/ChebyshevSharp/pull/141).
+- Shared public validation, file boundaries, result wrappers, and algebra contracts:
+  [#58](https://github.com/0xC000005/ChebyshevSharp/pull/58),
+  [#72](https://github.com/0xC000005/ChebyshevSharp/pull/72),
+  [#80](https://github.com/0xC000005/ChebyshevSharp/pull/80),
+  [#82](https://github.com/0xC000005/ChebyshevSharp/pull/82),
+  [#119](https://github.com/0xC000005/ChebyshevSharp/pull/119),
+  [#123](https://github.com/0xC000005/ChebyshevSharp/pull/123),
+  [#125](https://github.com/0xC000005/ChebyshevSharp/pull/125),
+  [#129](https://github.com/0xC000005/ChebyshevSharp/pull/129),
+  [#131](https://github.com/0xC000005/ChebyshevSharp/pull/131),
+  [#133](https://github.com/0xC000005/ChebyshevSharp/pull/133).
+
+### Resolved Issue Inventory
+- Public evaluation and ownership audit:
+  [#61](https://github.com/0xC000005/ChebyshevSharp/issues/61),
+  [#73](https://github.com/0xC000005/ChebyshevSharp/issues/73).
+- Spline correctness and validation:
+  [#83](https://github.com/0xC000005/ChebyshevSharp/issues/83),
+  [#85](https://github.com/0xC000005/ChebyshevSharp/issues/85),
+  [#142](https://github.com/0xC000005/ChebyshevSharp/issues/142).
+- Documentation, CI, security, package, and branch-protection work:
+  [#87](https://github.com/0xC000005/ChebyshevSharp/issues/87),
+  [#89](https://github.com/0xC000005/ChebyshevSharp/issues/89),
+  [#91](https://github.com/0xC000005/ChebyshevSharp/issues/91),
+  [#102](https://github.com/0xC000005/ChebyshevSharp/issues/102),
+  [#104](https://github.com/0xC000005/ChebyshevSharp/issues/104),
+  [#106](https://github.com/0xC000005/ChebyshevSharp/issues/106),
+  [#108](https://github.com/0xC000005/ChebyshevSharp/issues/108),
+  [#110](https://github.com/0xC000005/ChebyshevSharp/issues/110),
+  [#112](https://github.com/0xC000005/ChebyshevSharp/issues/112),
+  [#114](https://github.com/0xC000005/ChebyshevSharp/issues/114),
+  [#116](https://github.com/0xC000005/ChebyshevSharp/issues/116).
+- Test precision, fixture provenance, and stale tooling:
+  [#92](https://github.com/0xC000005/ChebyshevSharp/issues/92),
+  [#94](https://github.com/0xC000005/ChebyshevSharp/issues/94),
+  [#96](https://github.com/0xC000005/ChebyshevSharp/issues/96),
+  [#98](https://github.com/0xC000005/ChebyshevSharp/issues/98),
+  [#100](https://github.com/0xC000005/ChebyshevSharp/issues/100).
+- Shared validation, file boundaries, derivative bounds, and algebra contracts:
+  [#118](https://github.com/0xC000005/ChebyshevSharp/issues/118),
+  [#122](https://github.com/0xC000005/ChebyshevSharp/issues/122),
+  [#124](https://github.com/0xC000005/ChebyshevSharp/issues/124),
+  [#128](https://github.com/0xC000005/ChebyshevSharp/issues/128),
+  [#130](https://github.com/0xC000005/ChebyshevSharp/issues/130),
+  [#132](https://github.com/0xC000005/ChebyshevSharp/issues/132).
+- Tensor Train validation, rounding, lifecycle, load-state, and ownership:
+  [#120](https://github.com/0xC000005/ChebyshevSharp/issues/120),
+  [#126](https://github.com/0xC000005/ChebyshevSharp/issues/126),
+  [#134](https://github.com/0xC000005/ChebyshevSharp/issues/134),
+  [#136](https://github.com/0xC000005/ChebyshevSharp/issues/136),
+  [#138](https://github.com/0xC000005/ChebyshevSharp/issues/138),
+  [#140](https://github.com/0xC000005/ChebyshevSharp/issues/140).
+- Exception-safe rebuild lifecycle:
+  [#144](https://github.com/0xC000005/ChebyshevSharp/issues/144),
+  [#146](https://github.com/0xC000005/ChebyshevSharp/issues/146).
 
 ## [0.12.0] - 2026-05-02 — Quality and documentation hardening ([#25](https://github.com/0xC000005/ChebyshevSharp/pull/25), [#26](https://github.com/0xC000005/ChebyshevSharp/pull/26), [#27](https://github.com/0xC000005/ChebyshevSharp/pull/27), [#28](https://github.com/0xC000005/ChebyshevSharp/pull/28))
 
