@@ -10,11 +10,14 @@ Chebyshev interpolation converges **exponentially** for smooth (analytic) functi
 
 **Jump discontinuities.** For a function $f$ with a jump discontinuity at $c \in (a, b)$, the Chebyshev interpolant converges only as $O(1/n)$ pointwise away from $c$ (Trefethen 2013, Ch. 9). Near $c$, oscillations persist regardless of how many nodes you add -- this is the classical **Gibbs phenomenon**.
 
-**Kinks.** For a function that is continuous but whose derivative is discontinuous at $c$ -- for example $|x|$ at $x = 0$ or a call payoff $\max(S - K, 0)$ at $S = K$ -- the situation is better but still algebraic: convergence is $O(1/n^2)$ instead of exponential. This means that increasing the node count from 15 to 30 only halves the error, rather than reducing it by orders of magnitude as it would for a smooth function.
+**Kinks.** For a function that is continuous but whose derivative is discontinuous at $c$ -- for example $|x|$ at $x = 0$ or a call payoff $\max(S - K, 0)$ at $S = K$ -- the situation is better but still algebraic: convergence is $O(1/n^2)$ instead of exponential. This means that increasing the node count from 15 to 30 only reduces the error by about a factor of four, rather than by orders of magnitude as it would for a smooth function.
 
 > **Example: Interpolating $|x|$ on $[-1, 1]$**
 >
-> With global Chebyshev interpolation, the error near $x = 0$ plateaus at approximately $0.01$ regardless of whether you use 10, 20, or 40 nodes. This is exactly the algebraic $O(1/n^2)$ convergence rate -- the spectral advantage of Chebyshev is lost.
+> With global Chebyshev interpolation, adding more nodes improves the result
+> only algebraically near $x = 0$. Doubling the node count reduces an
+> $O(1/n^2)$ error by about a factor of four, not by the orders of magnitude
+> expected for a smooth analytic function.
 
 In quantitative finance this problem is ubiquitous: option payoffs have kinks at strike prices, barrier levels, and exercise boundaries. Applying global Chebyshev interpolation to such functions wastes nodes fighting the Gibbs oscillations instead of refining the smooth parts of the function.
 
@@ -49,15 +52,17 @@ $$
 E_k \leq \frac{2 M_k}{\rho_k^n (\rho_k - 1)}
 $$
 
-where $M_k = \max_{z \in \mathcal{E}_{\rho_k}} |f(z)|$ on that piece's Bernstein ellipse. Because pieces cover disjoint sub-domains, the overall interpolation error is:
+where $M_k = \max_{z \in \mathcal{E}_{\rho_k}} |f(z)|$ on that piece's Bernstein ellipse. Because pieces cover disjoint sub-domains, the actual spline error is the maximum of the actual piece errors, and the per-piece bounds give:
 
 $$
-\| f - \mathcal{S}_n f \|_\infty = \max_k \, E_k
+\| f - \mathcal{S}_n f \|_\infty \leq \max_k \, E_k
 $$
 
 This is exponential in $n$ -- **spectral convergence is restored**.
 
-> **Book reference:** The Chebyshev Spline technique is described in Section 3.8 of Ruiz & Zeron (2022). The book demonstrates that pricing a European call near the strike kink requires 95 nodes with global Chebyshev but only 25 nodes (split into two pieces at $K$) with a Chebyshev spline -- same accuracy, 4x fewer evaluations.
+> **Book reference:** The Chebyshev spline technique is described in Section
+> 3.8 of Ruiz & Zeron (2022), including option-pricing examples where splitting
+> at payoff kinks reduces the number of nodes needed for a target accuracy.
 
 ## Quick Start
 
@@ -95,19 +100,10 @@ Console.WriteLine($"Error estimate: {error:E2}");
 Console.WriteLine(spline);
 ```
 
-Output:
-
-```
-ChebyshevSpline (2D, built)
-  Nodes:       [15, 15] per piece
-  Knots:       [[100], []]
-  Pieces:      2 (2 x 1)
-  Build:       0.003s (450 function evals)
-  Domain:      [80, 120] x [0.25, 1]
-  Error est:   1.23E-10
-```
-
-With global `ChebyshevApproximation` on the same domain, you would need approximately 95 nodes to achieve similar accuracy. The spline uses 2 pieces of 15 nodes each (450 total evaluations vs. 9,025).
+This spline uses two pieces of shape `15 x 15`, so it evaluates the function at
+`2 * 15 * 15 = 450` points. A global `ChebyshevApproximation` with `N` nodes per
+dimension evaluates `N * N` points on this two-dimensional domain; if the strike
+kink forces `N` upward, the dense global grid becomes expensive quickly.
 
 ## Choosing Knots
 
@@ -124,7 +120,10 @@ Place knots at the locations where the function is **non-smooth**:
 
 - **Only add knots where the function is non-smooth.** For smooth functions, knots provide no benefit -- you pay extra build cost for no accuracy gain.
 - **More knots = more pieces = more build evaluations.** Each dimension with $k_d$ interior knots creates $k_d + 1$ sub-intervals. The total number of pieces is the Cartesian product $\prod_d (k_d + 1)$.
-- **Knots must be known a priori.** `ChebyshevSpline` does not detect singularities automatically; you must specify where they are.
+- **Constructor knots are explicit.** The standard `ChebyshevSpline`
+  constructor does not search for singularities. If you do not know the knot
+  locations, use [Adaptive Refinement](adaptive-refinement.md) for the
+  heuristic `AutoKnots` scan, then validate the resulting knots.
 
 ### Multiple knots in one dimension
 
@@ -375,7 +374,7 @@ var loaded = ChebyshevSpline.Load("payoff_spline.json");
 double val = loaded.Eval(new[] { 110.0, 0.5 }, new[] { 0, 0 });
 ```
 
-All piece data is preserved: nodes, weights, differentiation matrices, and tensor values. The original function is **not** saved -- only the numerical data needed for evaluation. A loaded spline has `Function = null` and cannot call `Build()` again without assigning a new function.
+All piece data is preserved: nodes, weights, differentiation matrices, and tensor values. The original function is **not** saved -- only the numerical data needed for evaluation. A loaded spline has `Function = null` and cannot call `Build()` again; create a new `ChebyshevSpline` when you need to rebuild from a callable.
 
 ## Nodes and FromValues
 
@@ -424,7 +423,7 @@ var spline = ChebyshevSpline.FromValues(
 );
 ```
 
-`FromValues` produces a result identical to `Build()` -- all pre-computed data (weights, differentiation matrices) depends only on the node positions.
+`FromValues` performs the same numerical pre-computation as `Build()` for each piece. Evaluation and derivative results match a `Build()`-based spline from the same piece values, while function and build metadata differ.
 
 ## When to Use ChebyshevSpline
 
@@ -445,7 +444,9 @@ Use `ChebyshevSpline` when:
 Do **not** use `ChebyshevSpline` when:
 
 - The function is smooth everywhere -- a plain `ChebyshevApproximation` is simpler and equally accurate.
-- You do not know where the singularities are -- the spline cannot detect them for you.
+- You cannot validate candidate singularities. `AutoKnots` can suggest knots
+  from a midpoint curvature scan, but explicit knots are more reliable when the
+  non-smooth locations are known.
 - The dimension count is high -- each piece requires a full tensor grid, so the build cost grows as $\text{num\_pieces} \times \prod_d n_d$. Many knots in many dimensions creates many pieces: 3 knots in each of 4 dimensions means $4^4 = 256$ pieces.
 
 ## References
