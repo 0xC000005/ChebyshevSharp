@@ -49,6 +49,36 @@ public class SplinePublicStateOwnershipTests
     }
 
     [Fact]
+    public void Build_failure_during_rebuild_preserves_previous_piece_state()
+    {
+        bool failDuringRebuild = false;
+        var spline = new ChebyshevSpline(
+            (p, _) =>
+            {
+                if (!failDuringRebuild)
+                    return p[0];
+
+                return p[0] < 0.0
+                    ? 100.0 + p[0]
+                    : double.NaN;
+            },
+            numDimensions: 1,
+            domain: new[] { new[] { -1.0, 1.0 } },
+            nNodes: new[] { 5 },
+            knots: new[] { new[] { 0.0 } });
+        spline.Build(verbose: false);
+        double leftBefore = spline.Eval(new[] { -0.5 }, new[] { 0 });
+        double rightBefore = spline.Eval(new[] { 0.5 }, new[] { 0 });
+
+        failDuringRebuild = true;
+        Assert.Throws<ArgumentException>(() => spline.Build(verbose: false));
+
+        Assert.True(spline.IsConstructionFinished());
+        Assert.Equal(leftBefore, spline.Eval(new[] { -0.5 }, new[] { 0 }), precision: 12);
+        Assert.Equal(rightBefore, spline.Eval(new[] { 0.5 }, new[] { 0 }), precision: 12);
+    }
+
+    [Fact]
     public void Internal_storage_accessors_remain_live_while_public_properties_snapshot()
     {
         var spline = new ChebyshevSpline();
