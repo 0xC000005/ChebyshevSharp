@@ -133,8 +133,8 @@ Use this body shape for each documentation-audit issue:
 | Area | Pages | Status | Issue | PR | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Complete | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) | Reframed public identity, package description, and validation provenance language. |
-| Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Implemented locally | [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152) | TBD | Verified DOI metadata, link reachability, node-convention source evidence, and math-heavy wording. |
-| Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Not started | TBD | TBD | Ensure concepts precede advanced how-tos where useful. |
+| Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Complete | [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152) | [#153](https://github.com/0xC000005/ChebyshevSharp/pull/153) | Verified DOI metadata, link reachability, node-convention source evidence, and math-heavy wording. |
+| Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Implemented locally | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | TBD | Ensure concepts precede advanced how-tos where useful. |
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Not started | TBD | TBD | Make choice rules intuitive and example-driven. |
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md` | Not started | TBD | TBD | Check examples, validation, and error language. |
 | Spline docs | `spline.md`, calculus interactions | Not started | TBD | TBD | Clarify piecewise behavior, knots, discontinuities, Sobol limits. |
@@ -181,6 +181,17 @@ Use this body shape for each documentation-audit issue:
   all DOI records verified through Crossref metadata; scoped external links
   checked; `git diff --check` passed; `docfx docs/docfx.json` succeeded with
   restore vulnerability-data warnings only.
+- 2026-05-08: Merged citation/provenance PR
+  [#153](https://github.com/0xC000005/ChebyshevSharp/pull/153), closing
+  [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152). Opened
+  [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) for
+  documentation navigation and learning flow.
+- 2026-05-08: Implemented local navigation audit for
+  [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154). Evidence:
+  compared `docs/docs/toc.yml` against all `docs/docs/*.md` source pages;
+  found `advanced-usage.md` missing from the TOC; moved concept pages before
+  how-to guides; clarified the landing-page and getting-started next-step
+  paths.
 
 ## External Workflow References
 

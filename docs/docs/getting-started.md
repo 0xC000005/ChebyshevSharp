@@ -117,14 +117,15 @@ For a more detailed decision map, see [Which Class Should I Use?](which-class.md
 
 ## Next Steps
 
-- [Mathematical Concepts](concepts.md) — theory behind Chebyshev interpolation, Bernstein ellipse, spectral convergence
 - [Which Class Should I Use?](which-class.md) — decision guide for dense, spline, sliding, and TT approximations
+- [Mathematical Concepts](concepts.md) — theory behind Chebyshev interpolation, Bernstein ellipse, spectral convergence
+- [Error-Driven Construction](error-driven-construction.md) — select node counts based on measured error
 - [Piecewise Chebyshev Interpolation](spline.md) — handling discontinuities with ChebyshevSpline
 - [Sliding Technique](slider.md) — high-dimensional approximation with ChebyshevSlider
 - [Tensor Train Interpolation](tensor-train.md) — high-dimensional approximation with general coupling via ChebyshevTT
-- [Advanced Usage](advanced-usage.md) — batch/multi eval, extrusion, slicing, arithmetic operators
 - [Computing Greeks](greeks.md) — analytical derivatives for option Greeks
 - [Calculus](calculus.md) — integration, root-finding, minimization, maximization
+- [Advanced Usage](advanced-usage.md) — batch/multi eval, extrusion, slicing, arithmetic operators
 - [Error Estimation](error-estimation.md) — measuring interpolation accuracy via DCT-II
 - [Serialization & Construction](serialization.md) — `Save`, `Load`, `FromValues`, `Nodes`
 - [Performance](performance.md) — BLAS integration and benchmark results

@@ -52,16 +52,16 @@ double dfdx = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 
 ## Where to Go Next
 
-| Need | Start here |
+| Path | Start here |
 |------|------------|
-| First working interpolant | [Getting Started](docs/getting-started.md) |
-| Choose between dense, spline, slider, and TT | [Which Class Should I Use?](docs/which-class.md) |
-| Understand convergence and derivatives | [Mathematical Concepts](docs/concepts.md) |
-| Build high-dimensional coupled approximations | [Tensor Train Interpolation](docs/tensor-train.md) |
-| Validate changes locally | [Testing & Validation](docs/testing-and-validation.md) |
-| Report bugs or ask for help | [Support & Reporting](docs/support.md) |
-| Contribute code or docs | [Contributing](docs/contributing.md) |
-| Check algorithm sources | [Citations](docs/citations.md) |
+| Build your first interpolant | [Getting Started](docs/getting-started.md) |
+| Choose an approximation family | [Which Class Should I Use?](docs/which-class.md) |
+| Understand the numerical assumptions | [Mathematical Concepts](docs/concepts.md) |
+| Improve accuracy or handle kinks | [Error-Driven Construction](docs/error-driven-construction.md), then [Piecewise Chebyshev Interpolation](docs/spline.md) |
+| Work in higher dimensions | [Sliding Technique](docs/slider.md) or [Tensor Train Interpolation](docs/tensor-train.md) |
+| Use saved or external function values | [Serialization & Construction](docs/serialization.md) and [Pre-computed Values](docs/from-values.md) |
+| Validate or contribute changes | [Testing & Validation](docs/testing-and-validation.md), [Support & Reporting](docs/support.md), and [Contributing](docs/contributing.md) |
+| Check mathematical sources | [Citations](docs/citations.md) |
 
 ## API Reference
 
