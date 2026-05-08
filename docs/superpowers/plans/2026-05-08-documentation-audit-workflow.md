@@ -165,7 +165,7 @@ Use this body shape for each documentation-audit issue:
 | Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Complete | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155) | Concepts now precede advanced how-tos; orphan pages are represented in the TOC. |
 | Class-selection journey | `docs/docs/which-class.md`, class pages | Complete | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | [#157](https://github.com/0xC000005/ChebyshevSharp/pull/157) | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md`, `error-estimation.md` | Complete | [#158](https://github.com/0xC000005/ChebyshevSharp/issues/158) | [#159](https://github.com/0xC000005/ChebyshevSharp/pull/159) | Dense auto-N, FromValues, and error-estimation wording now matches source and tests. |
-| Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | Implemented locally | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | TBD | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
+| Spline docs | `spline.md`, `special-points.md`, `adaptive-refinement.md`, calculus interactions | In PR | [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160) | [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) | Public wording now distinguishes explicit knots from heuristic AutoKnots; examples and spline XML docs were checked against source/tests. |
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Not started | TBD | TBD | Clarify workflow and benchmark framing. |
 | Tensor Train docs | `tensor-train.md`, TT sections in related pages | Not started | TBD | TBD | Explain TT intuition, rank tradeoffs, dense-materialization limits. |
 | Algebra/calculus/special operations | `algebra.md`, `calculus.md`, `extrude-slice.md`, `special-points.md` | Not started | TBD | TBD | Separate mathematical intuition from exact API reference. |
@@ -280,6 +280,9 @@ Use this body shape for each documentation-audit issue:
   (`400` tests passed), `dotnet restore src/ChebyshevSharp/ChebyshevSharp.csproj`,
   and `dotnet format src/ChebyshevSharp/ChebyshevSharp.csproj
   --verify-no-changes --no-restore`.
+- 2026-05-08: Opened spline workflow PR
+  [#161](https://github.com/0xC000005/ChebyshevSharp/pull/161) for
+  [#160](https://github.com/0xC000005/ChebyshevSharp/issues/160).
 
 ## External Workflow References
 
