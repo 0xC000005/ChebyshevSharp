@@ -134,8 +134,8 @@ Use this body shape for each documentation-audit issue:
 | --- | --- | --- | --- | --- | --- |
 | Public identity and provenance framing | `README.md`, `docs/index.md`, `docs/docs/introduction.md`, `docs/docs/getting-started.md`, package metadata | Complete | [#149](https://github.com/0xC000005/ChebyshevSharp/issues/149) | [#151](https://github.com/0xC000005/ChebyshevSharp/pull/151) | Reframed public identity, package description, and validation provenance language. |
 | Citation style and mathematical source support | `docs/docs/citations.md`, `docs/docs/concepts.md`, math-heavy pages | Complete | [#152](https://github.com/0xC000005/ChebyshevSharp/issues/152) | [#153](https://github.com/0xC000005/ChebyshevSharp/pull/153) | Verified DOI metadata, link reachability, node-convention source evidence, and math-heavy wording. |
-| Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Implemented locally | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | TBD | Ensure concepts precede advanced how-tos where useful. |
-| Class-selection journey | `docs/docs/which-class.md`, class pages | Not started | TBD | TBD | Make choice rules intuitive and example-driven. |
+| Navigation and learning flow | `docs/toc.yml`, `docs/docs/toc.yml`, landing pages | Complete | [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154) | [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155) | Concepts now precede advanced how-tos; orphan pages are represented in the TOC. |
+| Class-selection journey | `docs/docs/which-class.md`, class pages | Implemented locally | [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) | TBD | Choice rules are now cost-aware, implementation-checked, and linked to validation guides. |
 | Dense approximation docs | `getting-started.md`, `adaptive-refinement.md`, `error-driven-construction.md`, `from-values.md` | Not started | TBD | TBD | Check examples, validation, and error language. |
 | Spline docs | `spline.md`, calculus interactions | Not started | TBD | TBD | Clarify piecewise behavior, knots, discontinuities, Sobol limits. |
 | Slider docs | `slider.md`, `greeks.md`, `performance.md` | Not started | TBD | TBD | Clarify workflow and benchmark framing. |
@@ -192,6 +192,19 @@ Use this body shape for each documentation-audit issue:
   found `advanced-usage.md` missing from the TOC; moved concept pages before
   how-to guides; clarified the landing-page and getting-started next-step
   paths.
+- 2026-05-08: Merged navigation PR
+  [#155](https://github.com/0xC000005/ChebyshevSharp/pull/155), closing
+  [#154](https://github.com/0xC000005/ChebyshevSharp/issues/154). Opened
+  [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156) for the
+  class-selection journey.
+- 2026-05-08: Implemented local class-selection audit for
+  [#156](https://github.com/0xC000005/ChebyshevSharp/issues/156). Evidence:
+  checked class-specific method claims against `ChebyshevApproximation`,
+  `ChebyshevSpline`, `ChebyshevSlider`, and `ChebyshevTT` source; clarified
+  dense-grid, spline-piece, slider-group, and TT-Cross cost rules; replaced a
+  remaining TT-SVD "optimal" phrase with deterministic-reference wording;
+  `git diff --check`, `docfx docs/docfx.json`, and the explicit
+  `tests/ChebyshevSharp.Tests` project test command passed.
 
 ## External Workflow References
 
