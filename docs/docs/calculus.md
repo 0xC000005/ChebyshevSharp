@@ -127,7 +127,7 @@ For `ChebyshevSpline`, optimization searches each piece independently and return
 | Roots | Yes | Yes | Yes | Yes |
 | Minimize / Maximize | Yes | Yes | Yes | Yes |
 
-For `ChebyshevSlider` and `ChebyshevTT`, roots and optimization reduce the requested dimension to a 1-D interpolant by slicing all other dimensions, then delegate to `ChebyshevApproximation`. For TT this materializes only the reduced 1-D slice, not the original dense grid.
+For `ChebyshevSlider` and `ChebyshevTT`, roots and optimization reduce the requested dimension to a 1-D interpolant by slicing all other dimensions, then delegate to `ChebyshevApproximation`. For sliders this evaluates a 1-D proxy of the sliding approximation. For TT this materializes only the reduced 1-D slice, not the original dense grid.
 
 ## References
 
@@ -157,11 +157,12 @@ double result = (double)slider.Integrate();
 var partial = (ChebyshevSlider)slider.Integrate(dims: new[] { 1 });
 ```
 
-The integration is exact for the spectrally-resolved part of each slide. Per-slide
-classification: a slide whose group is fully covered by `dims` collapses into the
-new pivot value; a slide whose group is partially covered is reduced via
-`ChebyshevApproximation.Integrate`; a slide whose group is disjoint from `dims`
-passes through with a partition-of-unity shift.
+The integration is exact for the spectrally-resolved part of each slide and
+integrates the sliding approximation, not any cross-group coupling missed by the
+decomposition. Per-slide classification: a slide whose group is fully covered by
+`dims` collapses into the new pivot value; a slide whose group is partially
+covered is reduced via `ChebyshevApproximation.Integrate`; a slide whose group
+is disjoint from `dims` passes through with a partition-of-unity shift.
 
 ## TT Integration (v0.9.0)
 

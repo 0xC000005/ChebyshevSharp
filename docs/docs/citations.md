@@ -34,6 +34,7 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 
 - Sobol, I. M. (2001). "Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates." *Mathematics and Computers in Simulation*, 55(1-3), 271-280. DOI: [10.1016/S0378-4754(00)00270-6](https://doi.org/10.1016/S0378-4754%2800%2900270-6).
 - Saltelli, A., Annoni, P., Azzini, I., Campolongo, F., Ratto, M., and Tarantola, S. (2010). "Variance Based Sensitivity Analysis of Model Output. Design and Estimator for the Total Sensitivity Index." *Computer Physics Communications*, 181(2), 259-270. DOI: [10.1016/j.cpc.2009.09.018](https://doi.org/10.1016/j.cpc.2009.09.018).
+- Zhang, Z., Choi, M., and Karniadakis, G. E. (2011). "Anchor Points Matter in ANOVA Decomposition." In *Spectral and High Order Methods for Partial Differential Equations*, Lecture Notes in Computational Science and Engineering 76, 347-355. DOI: [10.1007/978-3-642-15337-2_32](https://doi.org/10.1007/978-3-642-15337-2_32).
 
 ## Finance Context
 

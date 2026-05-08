@@ -22,7 +22,8 @@ For a 5D function $V(S, K, T, \sigma, r)$:
 | Vega  | `[0, 0, 0, 1, 0]` | $\partial V / \partial \sigma$ |
 | Rho   | `[0, 0, 0, 0, 1]` | $\partial V / \partial r$ |
 
-Any combination is valid up to `MaxDerivativeOrder`. For example, cross-gamma
+For dense approximations and splines, any combination is valid up to
+`MaxDerivativeOrder`. For example, cross-gamma
 $\partial^2 V / \partial S \, \partial \sigma$ would be `[1, 0, 0, 1, 0]`:
 
 ```csharp
@@ -163,7 +164,9 @@ reduces Vega error below 0.1%.
 > means that derivatives with respect to variables in **different groups** are exactly
 > zero. For example, if dimensions 0--1 form one group and dimensions 2--4 form another,
 > then $\partial^2 V / \partial x_0 \, \partial x_2 = 0$ identically. Only derivatives
-> within the same group are non-trivial.
+> within the same group are non-trivial. `EvalMulti` is available on sliders for
+> convenience, but it is not the dense `VectorizedEvalMulti` shared-contraction path.
+> See [Sliding Technique](slider.md#derivatives).
 
 ## References
 
