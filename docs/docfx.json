@@ -41,7 +41,7 @@
     "globalMetadata": {
       "_appName": "ChebyshevSharp",
       "_appTitle": "ChebyshevSharp",
-      "_appFooter": "ChebyshevSharp — Multi-dimensional Chebyshev tensor interpolation for .NET",
+      "_appFooter": "ChebyshevSharp &mdash; Multi-dimensional Chebyshev tensor interpolation for .NET &middot; <a href=\"https://github.com/0xC000005/ChebyshevSharp\">GitHub</a> &middot; <a href=\"https://www.nuget.org/packages/ChebyshevSharp\">NuGet</a> &middot; <a href=\"https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html\">Release Notes</a> &middot; <a href=\"https://github.com/0xC000005/ChebyshevSharp/issues/new/choose\">Issues</a> &middot; <a href=\"https://0xc000005.github.io/ChebyshevSharp/docs/contributing.html\">Contributing</a>",
       "_enableSearch": true,
       "_gitContribute": {
         "repo": "https://github.com/0xC000005/ChebyshevSharp",

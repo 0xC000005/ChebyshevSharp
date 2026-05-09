@@ -16,6 +16,11 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Documentation
+- Improved documentation-site navigation by promoting release notes, adding a
+  project-links page, exposing a top-level GitHub repository link, and adding
+  footer links for GitHub, NuGet, issues, release notes, and contributing.
+
 ## [0.13.1] - 2026-05-08 — Documentation audit completion
 
 This patch release packages the post-`0.13.0` documentation audit. It does not
