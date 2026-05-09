@@ -59,9 +59,11 @@
       href: binary-format.md
     - name: Testing & Validation
       href: testing-and-validation.md
+    - name: Project Links
+      href: project.md
     - name: Support & Reporting
       href: support.md
     - name: Contributing
       href: contributing.md
-    - name: Changelog
+    - name: Release Notes
       href: changelog.md

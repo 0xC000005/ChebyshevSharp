@@ -5,3 +5,9 @@
 - name: API Reference
   href: api/
   homepage: api/ChebyshevSharp.yml
+- name: Release Notes
+  href: docs/changelog.md
+- name: Project
+  href: docs/project.md
+- name: GitHub Repo
+  href: https://github.com/0xC000005/ChebyshevSharp

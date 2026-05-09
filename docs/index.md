@@ -62,6 +62,16 @@ double dfdx = cheb.VectorizedEval(new[] { 0.5, 0.3 }, new[] { 1, 0 });
 | Use saved or external function values | [Serialization & Construction](docs/serialization.md) and [Pre-computed Values](docs/from-values.md) |
 | Validate or contribute changes | [Testing & Validation](docs/testing-and-validation.md), [Support & Reporting](docs/support.md), and [Contributing](docs/contributing.md) |
 | Check mathematical sources | [Citations](docs/citations.md) |
+| Check release history | [Release Notes](docs/changelog.md) |
+
+## Project Links
+
+- [GitHub repository](https://github.com/0xC000005/ChebyshevSharp) - source code,
+  pull requests, issues, and CI history.
+- [NuGet package](https://www.nuget.org/packages/ChebyshevSharp) - installable
+  package and published versions.
+- [Project links](docs/project.md) - releases, support, reporting, and
+  contribution entry points.
 
 ## API Reference
 
