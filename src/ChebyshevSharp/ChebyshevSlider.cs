@@ -298,7 +298,7 @@ public class ChebyshevSlider
         ValidateFinitePivotValue(pivotValue);
 
         int totalEvals = TotalBuildEvals;
-        long fullTensor = TensorShape.CheckedProduct(_nNodes, nameof(Build));
+        string fullTensor = FormatFullTensorEvalCount(_nNodes);
 
         if (verbose)
         {
@@ -1624,7 +1624,7 @@ public class ChebyshevSlider
     {
         string status = Built ? "built" : "not built";
         int totalSlideEvals = TotalBuildEvals;
-        long fullTensorEvals = TensorShape.CheckedProduct(_nNodes, nameof(ToString));
+        string fullTensorEvals = FormatFullTensorEvalCount(_nNodes);
 
         const int maxDisplay = 6;
 
@@ -1703,6 +1703,13 @@ public class ChebyshevSlider
         }
 
         return string.Join("\n", lines);
+    }
+
+    private static string FormatFullTensorEvalCount(int[] nNodes)
+    {
+        return TensorShape.TryCheckedProduct(nNodes, out long product)
+            ? $"{product:N0}"
+            : $">{long.MaxValue:N0}";
     }
 
     // ------------------------------------------------------------------

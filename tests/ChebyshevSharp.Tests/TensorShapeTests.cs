@@ -37,6 +37,26 @@ public class TensorShapeTests
     }
 
     [Fact]
+    public void TryCheckedProduct_Returns_True_When_Product_Fits()
+    {
+        bool fits = TensorShape.TryCheckedProduct(new[] { 3, 5, 7 }, out long product);
+
+        Assert.True(fits);
+        Assert.Equal(105L, product);
+    }
+
+    [Fact]
+    public void TryCheckedProduct_Returns_False_When_Product_Exceeds_Long_MaxValue()
+    {
+        bool fits = TensorShape.TryCheckedProduct(
+            new[] { int.MaxValue, int.MaxValue, int.MaxValue },
+            out long product);
+
+        Assert.False(fits);
+        Assert.Equal(long.MaxValue, product);
+    }
+
+    [Fact]
     public void ProductAtMost_Returns_Product_When_At_Or_Below_Cap()
     {
         long product = TensorShape.ProductAtMost(new[] { 4, 5, 6 }, 120);
