@@ -16,17 +16,30 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-05-11 — Slider high-dimensional diagnostic overflow fix
+
+This patch release fixes a `ChebyshevSlider` overflow in high-dimensional
+partitioned builds and publishes the documentation navigation improvements
+merged after `0.13.1`.
+
 ### Fixed
 - `ChebyshevSlider.Build()` no longer overflows full-grid diagnostic arithmetic
   for high-dimensional partitioned sliders whose per-slide grids are tractable
-  ([#182](https://github.com/0xC000005/ChebyshevSharp/issues/182)).
+  ([#182](https://github.com/0xC000005/ChebyshevSharp/issues/182),
+  [#183](https://github.com/0xC000005/ChebyshevSharp/pull/183)).
 - `ChebyshevSlider.ToString()` now reports oversized full-tensor comparisons
-  without throwing for valid slider decompositions.
+  without throwing for valid slider decompositions
+  ([#183](https://github.com/0xC000005/ChebyshevSharp/pull/183)).
 
 ### Documentation
 - Improved documentation-site navigation by promoting release notes, adding a
   project-links page, exposing a top-level GitHub repository link, and adding
-  footer links for GitHub, NuGet, issues, release notes, and contributing.
+  footer links for GitHub, NuGet, issues, release notes, and contributing
+  ([#181](https://github.com/0xC000005/ChebyshevSharp/pull/181)).
+
+### Release
+- Advanced package metadata to `0.13.2` and updated package validation to
+  compare this release against `0.13.1`.
 
 ## [0.13.1] - 2026-05-08 — Documentation audit completion
 
