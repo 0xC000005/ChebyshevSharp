@@ -11,28 +11,36 @@ internal static class TensorShape
     public static long CheckedProduct(IEnumerable<int> shape, string name)
     {
         int[] dims = shape as int[] ?? shape.ToArray();
-        long product = 1;
-        try
-        {
-            checked
-            {
-                foreach (int dim in dims)
-                {
-                    if (dim <= 0)
-                        throw new ArgumentException(
-                            $"{name} dimensions must be positive, got [{string.Join(",", dims)}].",
-                            nameof(shape));
-                    product *= dim;
-                }
-            }
-        }
-        catch (OverflowException ex)
-        {
+        if (!TryCheckedProductCore(dims, name, out long product))
             throw new OverflowException(
-                $"{name} shape [{string.Join(",", dims)}] exceeds long.MaxValue.", ex);
-        }
+                $"{name} shape [{string.Join(",", dims)}] exceeds long.MaxValue.");
 
         return product;
+    }
+
+    public static bool TryCheckedProduct(IEnumerable<int> shape, out long product) =>
+        TryCheckedProductCore(shape, "Shape", out product);
+
+    private static bool TryCheckedProductCore(IEnumerable<int> shape, string name, out long product)
+    {
+        int[] dims = shape as int[] ?? shape.ToArray();
+        product = 1;
+        foreach (int dim in dims)
+        {
+            if (dim <= 0)
+                throw new ArgumentException(
+                    $"{name} dimensions must be positive, got [{string.Join(",", dims)}].",
+                    nameof(shape));
+            if (product > long.MaxValue / dim)
+            {
+                product = long.MaxValue;
+                return false;
+            }
+
+            product *= dim;
+        }
+
+        return true;
     }
 
     public static long ProductAtMost(IEnumerable<int> shape, long cap)

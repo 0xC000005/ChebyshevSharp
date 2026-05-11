@@ -16,6 +16,13 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Fixed
+- `ChebyshevSlider.Build()` no longer overflows full-grid diagnostic arithmetic
+  for high-dimensional partitioned sliders whose per-slide grids are tractable
+  ([#182](https://github.com/0xC000005/ChebyshevSharp/issues/182)).
+- `ChebyshevSlider.ToString()` now reports oversized full-tensor comparisons
+  without throwing for valid slider decompositions.
+
 ### Documentation
 - Improved documentation-site navigation by promoting release notes, adding a
   project-links page, exposing a top-level GitHub repository link, and adding

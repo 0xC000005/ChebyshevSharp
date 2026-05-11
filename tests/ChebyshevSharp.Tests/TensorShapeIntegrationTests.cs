@@ -119,6 +119,45 @@ public class TensorShapeIntegrationTests
         Assert.Contains("46341", ex.Message);
     }
 
+    [Fact]
+    public void Slider_Build_Allows_HighDimensional_Partitioned_Grid()
+    {
+        var slider = CreateHighDimensionalPartitionedSlider();
+        var pivot = new double[35];
+
+        Assert.Equal(15449, slider.TotalBuildEvals);
+        Assert.Contains($">{long.MaxValue:N0} full tensor", slider.ToString());
+
+        slider.Build(verbose: false);
+
+        Assert.Equal(0.0, slider.Eval(pivot, new int[35]), 12);
+        Assert.Contains($"{15449:N0} slide-grid evals", slider.ToString());
+        Assert.Contains($">{long.MaxValue:N0} full tensor", slider.ToString());
+    }
+
+    [Fact]
+    public void Slider_Build_Verbose_Allows_HighDimensional_Partitioned_Grid()
+    {
+        var slider = CreateHighDimensionalPartitionedSlider();
+        using var output = new StringWriter();
+        TextWriter original = Console.Out;
+
+        try
+        {
+            Console.SetOut(output);
+            slider.Build(verbose: true);
+        }
+        finally
+        {
+            Console.SetOut(original);
+        }
+
+        string log = output.ToString();
+        Assert.Contains($"{15449:N0} slide-grid evaluations", log);
+        Assert.Contains($">{long.MaxValue:N0} for full tensor", log);
+        Assert.True(slider.Built);
+    }
+
     [Theory]
     [InlineData("take")]
     [InlineData("tensordot")]
@@ -147,5 +186,36 @@ public class TensorShapeIntegrationTests
             operation == "tensordot" ? "TensordotVector" : "MatmulAlongAxis",
             ex.Message);
         Assert.Contains("46341", ex.Message);
+    }
+
+    private static ChebyshevSlider CreateHighDimensionalPartitionedSlider()
+    {
+        const int numDimensions = 35;
+        int[] nNodes = Enumerable.Repeat(7, numDimensions).ToArray();
+        double[][] domain = Enumerable.Range(0, numDimensions)
+            .Select(_ => new[] { -50.0, 50.0 })
+            .ToArray();
+        int[][] partition =
+        [
+            [0, 1, 2, 3],
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15],
+            [16],
+            [17, 18, 19],
+            [20, 21, 22, 23],
+            [24, 25, 26],
+            [27, 28, 29, 30],
+            [31, 32, 33],
+            [34],
+        ];
+
+        return new ChebyshevSlider(
+            (x, _) => x.Sum(),
+            numDimensions,
+            domain,
+            nNodes,
+            partition,
+            new double[numDimensions]);
     }
 }
