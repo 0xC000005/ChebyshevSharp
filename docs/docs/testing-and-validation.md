@@ -6,7 +6,7 @@ Run the standard validation suite before opening a PR:
 dotnet restore
 dotnet format --verify-no-changes --verbosity minimal
 dotnet build --configuration Release --no-restore
-dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage"
+dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true
 dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artifacts/packages
 docfx docs/docfx.json
 ```
@@ -21,6 +21,7 @@ Run examples when changing public workflows:
 
 ```bash
 dotnet run --project examples/QuickStart/QuickStart.csproj
+dotnet run --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 ```
 
@@ -29,7 +30,10 @@ and how the output should be interpreted.
 
 CI runs the examples in the validation job. The test matrix pins the selected
 SDK inside each job: .NET 8 builds the library target, and .NET 10 runs the
-full xUnit suite with coverage upload.
+full xUnit suite with coverage upload. VSTest parallelization is disabled for
+the xUnit suite because several legacy verbose-output tests capture
+`Console.Out`; running those tests concurrently with other verbose builds can
+produce nondeterministic writer-disposal failures.
 
 ## CI Gates
 
