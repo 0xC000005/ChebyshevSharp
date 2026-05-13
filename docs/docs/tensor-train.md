@@ -24,6 +24,22 @@ where each core $G_k$ has shape $(r_{k-1}, n_k, r_k)$ with $r_0 = r_d = 1$. The 
 
 The total storage is $\sum_k r_{k-1} \cdot n_k \cdot r_k$, which is linear in $d$ when ranks stay bounded. For the 5D Black-Scholes example with rank 15, this is roughly 9,000 elements instead of 161,000 -- an 18x compression.
 
+### Mental model
+
+Think of each TT core as a local lookup table for one dimension plus two small
+rank links to its neighbors:
+
+```text
+        rank r1        rank r2                 rank r(d-1)
+[1 x n1 x r1] -- [r1 x n2 x r2] -- ... -- [r(d-1) x nd x 1]
+      G1                 G2                            Gd
+```
+
+Evaluation builds the Chebyshev basis vector for each physical coordinate,
+contracts it into the matching core, then multiplies the resulting small matrices
+from left to right. Low rank means that the function's cross-variable structure
+can pass through those rank links without materializing the full tensor grid.
+
 ## When to Use ChebyshevTT
 
 | Scenario | Recommended class |
@@ -108,6 +124,17 @@ var tt = new ChebyshevTT(
 
 // Build with TT-Cross (default)
 tt.Build(verbose: true, seed: 42);
+
+double[] point = [100.0, 100.0, 0.5, 0.25, 0.05];
+double exact = SmoothValue(point);
+double approx = tt.Eval(point);
+
+Console.WriteLine($"f(point) = {approx:F8}");
+Console.WriteLine($"exact    = {exact:F8}");
+Console.WriteLine($"abs err  = {Math.Abs(approx - exact):E2}");
+Console.WriteLine($"TT ranks = [{string.Join(", ", tt.TtRanks)}]");
+Console.WriteLine($"evals    = {tt.TotalBuildEvals:N0}");
+Console.WriteLine($"storage  = {tt.CompressionRatio:F1}x compression");
 ```
 
 Verbose build output shows the sweep progress, rank evolution, and compression
@@ -125,6 +152,11 @@ Building 5D ChebyshevTT (max_rank=15, method='cross')...
   TT ranks: [1, 5, 10, 8, 5, 1]
   Compression: 161,051 -> 8,855 elements (18.2x)
 ```
+
+Read the first run as a diagnostic, not a certificate. Useful signs are ranks
+well below `maxRank`, held-out errors that match your tolerance requirements, and
+stable results when you retry a few seeds. A rank vector pinned near
+`maxRank` or seed-sensitive validation error means the model is not yet tuned.
 
 ### Using TT-SVD
 
@@ -173,6 +205,16 @@ for (int i = 0; i < 100; i++)
 
 Console.WriteLine($"held-out max relative error = {maxRel:E2}");
 ```
+
+Use this validation loop as the acceptance gate:
+
+1. Fix a seed while tuning so changes are comparable.
+2. Check held-out value error on physical points, not only grid-index checks.
+3. Inspect `TtRanks`; ranks at or near `maxRank` usually mean the cap is active.
+4. Increase `nNodes` only when node resolution is the bottleneck. If error does
+   not improve, rank or sampling is likely the limiting factor.
+5. Retry several seeds before publishing a TT-Cross model whose error is close to
+   the acceptance threshold.
 
 ## Evaluation
 
@@ -412,6 +454,17 @@ The convergence tolerance for TT-Cross (default $10^{-6}$). The algorithm stops 
 ### seed
 
 The random seed for TT-Cross initialization (default: system random). Setting a fixed seed makes the adaptive sampling path reproducible. Different seeds may produce different ranks and held-out errors; retry seeds when ranks are near `maxRank` or validation error is unstable.
+
+## Troubleshooting
+
+| Symptom | Likely cause | First action |
+|---------|--------------|--------------|
+| Held-out error is high and ranks are near `maxRank` | Rank cap is active | Raise `maxRank`, then check whether error falls for the same seed |
+| Held-out error is high but ranks are low | Node resolution or sampling path may be limiting | Increase `nNodes`; if error is seed-sensitive, retry seeds or increase `maxSweeps` |
+| `ErrorEstimate()` is small but held-out error is not | Trailing coefficient-core diagnostic misses TT-Cross sampling or rank truncation error | Trust held-out validation over `ErrorEstimate()` |
+| Different seeds give materially different errors | Adaptive cross pivots are unstable for this function/rank cap | Run a small seed sweep and choose parameters that are robust, not just the best seed |
+| Dense methods throw overflow or allocation errors | `svd`, `als`, `FromValues`, or `ToDense()` need the full tensor | Use `Build(method: "cross")` or reduce the dense problem size |
+| Greeks are noisy near boundaries | TT derivatives use finite differences on the interpolant | Validate derivative order, compare against analytical checks, and avoid relying on boundary-adjacent finite differences |
 
 ## Theory
 
