@@ -32,6 +32,21 @@ anchored-ANOVA work shows that the anchor point can strongly affect accuracy
 [4], so treat `pivotPoint` as a modelling choice and validate points away from
 that pivot.
 
+### Mental model
+
+```text
+full point x = [x0 x1 | x2 x3 | x4 x5]
+                 slide 0   slide 1   slide 2
+
+pivot z fixes every coordinate outside the active slide.
+Each slide learns how its own group changes the pivot value.
+The final value adds those group effects together.
+```
+
+This is why Slider is fast: the build cost is a sum of group grids. It is also
+why Slider is a modelling approximation: interactions between two different
+groups are not represented.
+
 ## When to Use Sliding
 
 Sliding works well when:
@@ -48,8 +63,25 @@ Sliding does **not** work well when:
 > **Alternative: Tensor Train.**
 > For general (non-separable) high-dimensional functions, consider `ChebyshevTT`. TT-Cross captures cross-variable coupling that the sliding decomposition misses, at the cost of using finite differences for derivatives instead of analytical spectral differentiation. See [Tensor Train Interpolation](tensor-train.md).
 
-> **Choosing the partition.**
-> Group variables that have strong non-linear interactions together. For example, if $f = x_1^3 x_2^2 + x_3$, group $(x_1, x_2)$ in one slide and $x_3$ in another.
+## Choosing a Partition
+
+The partition is part of the model, not just a performance setting. Use this
+workflow before trusting a slider in production:
+
+1. Start from domain knowledge. Put variables with known multiplicative,
+   nonlinear, or regime-dependent interactions in the same group.
+2. Keep groups as small as accuracy allows. A group with dimensions
+   `(0, 1, 2)` costs `n0 * n1 * n2` evaluations for that slide.
+3. Validate away from the pivot, especially near corners where several groups
+   move at once.
+4. If held-out error is high but each slide's `ErrorEstimate()` is low, suspect
+   missing cross-group interaction and regroup variables.
+5. If regrouping makes one group too large, compare against
+   [`ChebyshevTT`](tensor-train.md), which can represent general coupling with
+   adaptive rank instead of an explicit partition.
+
+For example, if $f = x_1^3 x_2^2 + x_3$, group $(x_1, x_2)$ in one slide and
+$x_3$ in another.
 
 ## Usage
 
@@ -111,6 +143,38 @@ Console.WriteLine($"Slider build evaluations: {slider.TotalBuildEvals}");
 `TotalBuildEvals` reports only the slide-grid evaluations. Add one more source
 call for the pivot value when estimating total build-time calls to your
 function.
+
+### Validate the partition
+
+Always compare the slider against the original function on points that were not
+used during the build. Test points that move several groups at once, because
+those are the cases most likely to expose missing cross-group terms:
+
+```csharp
+double maxAbs = 0.0;
+var rng = new Random(123);
+
+for (int i = 0; i < 100; i++)
+{
+    double[] p = new double[4];
+    for (int d = 0; d < 4; d++)
+    {
+        double lo = slider.Domain[d][0], hi = slider.Domain[d][1];
+        p[d] = lo + (hi - lo) * rng.NextDouble();
+    }
+
+    double exact = G(p, null);
+    double approx = slider.Eval(p, new[] { 0, 0, 0, 0 });
+    maxAbs = Math.Max(maxAbs, Math.Abs(approx - exact));
+}
+
+Console.WriteLine($"held-out max abs error = {maxAbs:E2}");
+Console.WriteLine($"slide interpolation diagnostic = {slider.ErrorEstimate():E2}");
+```
+
+The runnable `examples/SliderPartitionValidation` project compares a good
+pairwise partition with an intentionally weak singleton partition. It is the
+best starting point for adapting this validation pattern.
 
 ### Multi-output evaluation
 

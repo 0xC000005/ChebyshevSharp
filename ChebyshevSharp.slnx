@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/examples/">
     <Project Path="examples/QuickStart/QuickStart.csproj" />
+    <Project Path="examples/SliderPartitionValidation/SliderPartitionValidation.csproj" />
     <Project Path="examples/TensorTrainHighDim/TensorTrainHighDim.csproj" />
   </Folder>
 </Solution>
