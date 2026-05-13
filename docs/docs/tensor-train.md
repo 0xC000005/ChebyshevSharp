@@ -40,6 +40,77 @@ contracts it into the matching core, then multiplies the resulting small matrice
 from left to right. Low rank means that the function's cross-variable structure
 can pass through those rank links without materializing the full tensor grid.
 
+### Additive 3D example
+
+For the same additive function:
+
+$$
+f(x_1, x_2, x_3) = \sin(x_1) + \cos(x_2) + \tan(x_3)
+$$
+
+Tensor Train starts from a different mental object than Slider. Slider builds
+separate slices through a pivot. TT behaves as if there were one full Chebyshev
+value tensor, then stores that tensor in compressed chain form.
+
+With Chebyshev nodes $x_{1,i}$, $x_{2,j}$, and $x_{3,k}$, the dense sampled
+tensor would be:
+
+$$
+A[i,j,k] = f(x_{1,i}, x_{2,j}, x_{3,k})
+$$
+
+With 20 nodes per dimension, that dense tensor has shape `20 x 20 x 20` and
+contains 8,000 values. TT replaces that block with three linked cores:
+
+```text
+G1 has shape [1,  n1, r1]
+G2 has shape [r1, n2, r2]
+G3 has shape [r2, n3, 1]
+```
+
+An entry of the sampled tensor is reconstructed by multiplying through the
+chain:
+
+$$
+A[i,j,k] \approx G_1[:,i,:]\,G_2[:,j,:]\,G_3[:,k,:]
+$$
+
+The ranks $r_1$ and $r_2$ are the information channels between dimensions. For
+an additive function such as `sin(x1) + cos(x2) + tan(x3)`, the ranks can stay
+small. For a coupled function such as `sin(x1 * x2) + tan(x3)`, TT can still
+represent the `x1`-`x2` interaction by using a larger rank between the first two
+parts of the chain.
+
+There are two ways to get the decomposition:
+
+```text
+TT-SVD:
+  Build the full Chebyshev tensor A first.
+  Compress A into TT cores with sequential SVDs.
+  Use only when the full tensor is intentionally small.
+
+TT-Cross:
+  Do not build the full tensor.
+  Sample selected Chebyshev grid points.
+  Adaptively discover TT cores from those samples.
+  Use this for high-dimensional builds.
+```
+
+After fitting, evaluating at a physical point $(a,b,c)$ works as:
+
+```text
+1. Build Chebyshev basis vectors T(a), T(b), T(c).
+2. Contract T(a) into G1 to get a small matrix M1.
+3. Contract T(b) into G2 to get a small matrix M2.
+4. Contract T(c) into G3 to get a small matrix M3.
+5. Multiply M1 * M2 * M3 to get the scalar interpolated value.
+```
+
+So Slider evaluates by adding pivot-corrected slide values, while TT evaluates
+by contracting a compressed tensor chain. Slider is best when you can defend the
+partition; TT is best when cross-variable interactions matter and the numerical
+TT ranks remain moderate.
+
 ## When to Use ChebyshevTT
 
 | Scenario | Recommended class |

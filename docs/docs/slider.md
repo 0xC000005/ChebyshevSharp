@@ -47,6 +47,57 @@ This is why Slider is fast: the build cost is a sum of group grids. It is also
 why Slider is a modelling approximation: interactions between two different
 groups are not represented.
 
+### Additive 3D example
+
+For a separable function such as:
+
+$$
+f(x_1, x_2, x_3) = \sin(x_1) + \cos(x_2) + \tan(x_3)
+$$
+
+use a domain that stays away from the singularities of `tan`, for example
+`[-1, 1]` in each dimension. With pivot $\mathbf{z} = (0, 0, 0)$ and singleton
+partition `[[0], [1], [2]]`, Slider does not build one 3D tensor. It builds
+three 1D Chebyshev interpolants:
+
+```text
+s1(x1): vary x1, hold x2 = 0, x3 = 0
+s2(x2): vary x2, hold x1 = 0, x3 = 0
+s3(x3): vary x3, hold x1 = 0, x2 = 0
+```
+
+The stored pivot value is:
+
+$$
+v = f(0, 0, 0)
+$$
+
+After fitting, evaluating at $(a, b, c)$ means:
+
+$$
+f(a,b,c) \approx v + [s_1(a)-v] + [s_2(b)-v] + [s_3(c)-v]
+$$
+
+or equivalently:
+
+$$
+f(a,b,c) \approx s_1(a) + s_2(b) + s_3(c) - 2v
+$$
+
+So with 20 nodes per dimension:
+
+```text
+Dense 3D Chebyshev tensor: 20 * 20 * 20 = 8,000 source calls
+Slider singleton slides:   20 + 20 + 20 + 1 pivot = 61 source calls
+```
+
+For this additive function, the singleton partition matches the function
+structure. The remaining error is ordinary 1D Chebyshev interpolation error
+inside `sin`, `cos`, and `tan`. If the function were
+$\sin(x_1 x_2) + \tan(x_3)$ instead, singleton slides would miss the
+$x_1 x_2$ coupling; use partition `[[0, 1], [2]]` or compare against
+[`ChebyshevTT`](tensor-train.md).
+
 ## When to Use Sliding
 
 Sliding works well when:
