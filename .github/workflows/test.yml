@@ -35,6 +35,7 @@ jobs:
       - name: Run examples
         run: |
           dotnet run --configuration Release --no-build --project examples/QuickStart/QuickStart.csproj
+          dotnet run --configuration Release --no-build --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
           dotnet run --configuration Release --no-build --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 
       - name: Pack with package validation
@@ -90,7 +91,7 @@ jobs:
 
       - name: Run tests
         if: matrix.run-tests == true
-        run: dotnet test ${{ matrix.project }} --framework ${{ matrix.target-framework }} --no-build --verbosity normal --collect:"XPlat Code Coverage"
+        run: dotnet test ${{ matrix.project }} --framework ${{ matrix.target-framework }} --no-build --verbosity normal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true
 
       - name: Upload coverage to Codecov
         if: matrix.upload-coverage == true

@@ -4,7 +4,7 @@ title: Examples
 
 # Examples
 
-The repository includes two runnable console projects. They are intended to be
+The repository includes three runnable console projects. They are intended to be
 small enough to read in one sitting and concrete enough to verify that the local
 toolchain, package reference, and public API are working.
 
@@ -12,6 +12,7 @@ Run the examples from the repository root:
 
 ```bash
 dotnet run --project examples/QuickStart/QuickStart.csproj
+dotnet run --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 ```
 
@@ -27,6 +28,22 @@ dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 
 Use this example before adapting the larger snippets in
 [Getting Started](getting-started.md).
+
+## SliderPartitionValidation
+
+`examples/SliderPartitionValidation` demonstrates the high-dimensional Slider
+workflow:
+
+1. Define an 8D model with known pairwise interactions.
+2. Build one `ChebyshevSlider` with the correct pair grouping.
+3. Build a second slider with an intentionally weak singleton grouping.
+4. Compare build costs against the dense grid size.
+5. Validate both sliders on held-out points and compare a derivative.
+
+Use this example when deciding whether a proposed partition is a modelling
+assumption you can defend. A small `ErrorEstimate()` does not prove the partition
+captures cross-group interactions; held-out points far from the pivot are the
+more important check.
 
 ## TensorTrainHighDim
 
