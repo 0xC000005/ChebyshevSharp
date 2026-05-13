@@ -26,7 +26,8 @@ or numerical behavior.
 - Added `examples/SliderPartitionValidation`, a runnable 8D Slider example that
   compares a correct pairwise partition against an intentionally weak singleton
   partition and shows why held-out validation matters
-  ([#185](https://github.com/0xC000005/ChebyshevSharp/issues/185)).
+  ([#185](https://github.com/0xC000005/ChebyshevSharp/issues/185),
+  [#188](https://github.com/0xC000005/ChebyshevSharp/pull/188)).
 - Expanded the Slider guide with a pivot/slide mental model, a practical
   partition-selection workflow, and held-out validation code for detecting
   missing cross-group interactions.
