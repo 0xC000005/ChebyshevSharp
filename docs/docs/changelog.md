@@ -16,6 +16,34 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-05-13 — High-dimensional documentation examples
+
+This patch release packages high-dimensional documentation improvements for
+`ChebyshevSlider` and `ChebyshevTT`. It does not intentionally change public API
+or numerical behavior.
+
+### Documentation
+- Added `examples/SliderPartitionValidation`, a runnable 8D Slider example that
+  compares a correct pairwise partition against an intentionally weak singleton
+  partition and shows why held-out validation matters
+  ([#185](https://github.com/0xC000005/ChebyshevSharp/issues/185)).
+- Expanded the Slider guide with a pivot/slide mental model, a practical
+  partition-selection workflow, and held-out validation code for detecting
+  missing cross-group interactions.
+- Improved the Tensor Train guide with a core-chain mental model, a complete
+  first example that builds, evaluates, validates, and prints ranks/compression,
+  plus a TT-Cross acceptance checklist and troubleshooting table.
+
+### CI
+- Runs the .NET 10 xUnit suite with VSTest parallelization disabled because
+  existing verbose-output tests capture `Console.Out`; this avoids
+  nondeterministic writer-disposal failures in CI while preserving full test
+  coverage.
+
+### Release
+- Advanced package metadata to `0.13.3` and updated package validation to
+  compare this release against `0.13.2`.
+
 ## [0.13.2] - 2026-05-11 — Slider high-dimensional diagnostic overflow fix
 
 This patch release fixes a `ChebyshevSlider` overflow in high-dimensional
