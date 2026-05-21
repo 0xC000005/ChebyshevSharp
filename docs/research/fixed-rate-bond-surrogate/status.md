@@ -130,6 +130,7 @@ Continue Phase 9 on `phase9-maturity-special-points`: harden the maturity-specia
 - Plan: [Phase 9 Maturity Special Points Plan](plans/phase-9-maturity-special-points.md).
 - Implementation plan path: `docs/superpowers/plans/2026-05-21-phase9-maturity-special-points.md`.
 - Report draft: [Phase 9 Report: Maturity Special Points](reports/phase-9-maturity-special-points.md).
+- Phase PR: [#200](https://github.com/0xC000005/ChebyshevSharp/pull/200).
 - Working branch: `phase9-maturity-special-points`.
 - Scope boundary: test maturity special points, schedule-aware routing, and automatic detector candidates before adding reusable library-level APIs.
 - Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.

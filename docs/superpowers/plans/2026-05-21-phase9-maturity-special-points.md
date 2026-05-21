@@ -205,7 +205,7 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
 git diff --check
 ```
 
-- [ ] **Step 6: Open one coherent Phase 9 PR**
+- [x] **Step 6: Open one coherent Phase 9 PR**
 
 Only after local exit gates pass, open one PR for Phase 9. Do not create separate PRs for skeleton, inventory, candidates, and docs.
 
