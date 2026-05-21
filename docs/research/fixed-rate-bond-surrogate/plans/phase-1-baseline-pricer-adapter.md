@@ -73,6 +73,6 @@
 - [x] Run `dotnet build --no-restore`.
 - [x] Run `dotnet test`.
 - [x] Run `docfx docs/docfx.json`.
-- [ ] Commit with `feat: add fixed-rate bond reference pricer harness`.
-- [ ] Push `bond-surrogate-research`.
+- [x] Commit with `feat: add fixed-rate bond reference pricer harness`.
+- [x] Push `bond-surrogate-research`.
 - [ ] Comment on issue `#191` with the commit, tests, and Phase 1 report path.

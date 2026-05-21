@@ -12,6 +12,8 @@ Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
 Working branch: `bond-surrogate-research`
 
+Active phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192)
+
 ## Confidentiality Guardrail
 
 Do not mention proprietary systems, proprietary interface names, internal product names, or private object models in code, docs, reports, issues, PRs, branch names, or commits.
@@ -59,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Commit and push the Phase 1 baseline adapter/report, then open one coherent Phase 1 PR. Do not start Phase 2 implementation until the Phase 1 PR is reviewed, merged or explicitly closed, and the tracking issue/status file record the outcome. Phase 2 planning notes may be drafted only if they do not create a second PR or distract from closing the active phase.
+Monitor Phase 1 PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192), address CI/review feedback in that PR, and record the outcome. Do not start Phase 2 implementation until the Phase 1 PR is reviewed, merged or explicitly closed, and the tracking issue/status file record the outcome. Phase 2 planning notes may be drafted only if they do not create a second PR or distract from closing the active phase.
 
 ## Phase 1 Notes
 
@@ -69,6 +71,7 @@ Commit and push the Phase 1 baseline adapter/report, then open one coherent Phas
 - Optional cross-check path: Python QuantLib through `uv`.
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 5 tests with 0 failures.
 - Full verification run: `dotnet build --no-restore` passed with 0 warnings/errors; `dotnet test` passed 1654 tests with 0 failures; all examples ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192).
 
 ## Notes for Future Sessions
 
