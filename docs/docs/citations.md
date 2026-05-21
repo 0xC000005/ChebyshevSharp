@@ -43,6 +43,21 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
 
+## Fixed-Income Baseline Libraries
+
+- QLNet project. "QLNet C# Library." GitHub repository and documentation site. [Repository](https://github.com/amaggiulli/QLNet); [project site](https://amaggiulli.github.io/QLNet/).
+- QLNet quick-start guide. Installation instructions for NuGet and source builds. [Quick-start](https://amaggiulli.github.io/QLNet/docs/quick-start-guide/).
+- QLNet `FixedRateBond` source. Public constructors for fixed-rate bonds with schedules, coupon rates, day counters, payment conventions, redemption, and issue dates. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/Bonds/FixedRateBond.cs).
+- QLNet `DiscountingBondEngine` source. Bond engine that discounts future bond cashflows with a `YieldTermStructure`. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Pricingengines/Bond/Discountingbondengine.cs).
+- QuantLib-Python documentation. Bond pricing engine examples including `DiscountingBondEngine(discountCurve)`. [Bond pricing engines](https://quantlib-python-docs.readthedocs.io/en/latest/pricing_engines/bonds.html).
+- NuGet Gallery. `QuantLib` package metadata and thread-safety notes for the C# wrapper. [QuantLib package](https://www.nuget.org/packages/QuantLib/).
+
+## Public Market Data Sources
+
+- Board of Governors of the Federal Reserve System. "Yield Curve Models and Data: Nominal Yield Curve." [Data page](https://www.federalreserve.gov/data/nominal-yield-curve.htm).
+- U.S. Department of the Treasury. "Treasury Daily Interest Rate XML Feed." [Feed documentation](https://home.treasury.gov/treasury-daily-interest-rate-xml-feed).
+- Federal Reserve Bank of New York. "SOFR Averages and Index Data." [Data page](https://www.newyorkfed.org/markets/reference-rates/sofr-averages-and-index).
+
 ## Node Conventions
 
 - ChebyshevSharp uses Type I roots with `n` nodes and no endpoints. This is the same point set documented by NumPy [`chebpts1`](https://numpy.org/doc/stable/reference/generated/numpy.polynomial.chebyshev.chebpts1.html), and the C# implementation converts values to coefficients with a DCT-II convention.
