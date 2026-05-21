@@ -82,8 +82,8 @@
 - [x] Run `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`.
 - [x] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj`.
 - [x] Run `docfx docs/docfx.json`.
-- [ ] Commit Phase 2 work.
-- [ ] Push `bond-surrogate-research`.
+- [x] Commit Phase 2 work.
+- [x] Push `bond-surrogate-research`.
 - [ ] Open one coherent Phase 2 PR only after the exit gate is satisfied locally.
 - [ ] Keep Phase 2 review fixes inside that same PR; do not open Phase 3 PRs or implementation PRs while it is open.
 - [ ] Wait for required CI/review feedback, then merge the Phase 2 PR or explicitly close it without merge.
