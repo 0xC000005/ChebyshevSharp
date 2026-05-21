@@ -10,9 +10,11 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `bond-surrogate-research`
+Working branch: `phase7-bond-structured-alternatives`
 
-Last completed phase PR: [#195](https://github.com/0xC000005/ChebyshevSharp/pull/195), merged on 2026-05-21 as `c44278a`.
+Last completed phase PR: [#196](https://github.com/0xC000005/ChebyshevSharp/pull/196), merged on 2026-05-21 as `74a8d8a`.
+
+Last completed phase-closeout PR: [#197](https://github.com/0xC000005/ChebyshevSharp/pull/197), merged on 2026-05-21 as `55bcb4d`.
 
 ## Confidentiality Guardrail
 
@@ -38,7 +40,7 @@ Use generic public terms:
 | 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Realistic dense-curve baseline | Complete | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
 | 6. Naive dense-baseline surrogate discovery | Complete | Dense-baseline naive TT/Slider failure evidence and maturity-smoothness evidence documented |
-| 7. Structured alternatives benchmark | Planned | Controlled alternatives compared against the Phase 6 evidence bank |
+| 7. Structured alternatives benchmark | Complete locally; PR pending | Controlled alternatives compared against the Phase 6 evidence bank |
 | 8. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
 | 9. Maturity splitting and adaptive knots | Not started | No split vs 1Y vs 0.5Y vs schedule-aware/adaptive split comparison completed |
 | 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
@@ -63,7 +65,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Start Phase 7 from fresh `origin/main` using [Phase 7 Structured Alternatives Benchmark Plan](plans/phase-7-structured-alternatives.md). The phase should compare controlled modelling alternatives against the Phase 6 evidence bank. Do not implement a final production architecture in Phase 7; measure first.
+Open the Phase 7 PR from `phase7-bond-structured-alternatives`, review CI and code-review feedback, and merge only after the phase report and tests are accepted. The next modelling phase should then make an explicit design decision between high-dimensional piecewise/special-point support, true historical PCA/factor calibration, and analytical coupon decomposition.
 
 ## Phase 6 Notes
 
@@ -91,9 +93,19 @@ Start Phase 7 from fresh `origin/main` using [Phase 7 Structured Alternatives Be
 ## Phase 7 Notes
 
 - Plan: [Phase 7 Structured Alternatives Benchmark Plan](plans/phase-7-structured-alternatives.md).
+- Report draft: [Phase 7 Report: Structured Alternatives](reports/phase-7-structured-alternatives.md).
+- Phase PR: [#198](https://github.com/0xC000005/ChebyshevSharp/pull/198).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4511793914).
 - Scope boundary: compare fixes against the Phase 6 evidence bank without claiming a final bond-pricer replacement design.
 - Required wrapper contract: every tested candidate must be callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`, even if the implementation internally routes, buckets, partitions, or ignores unsupported coordinates.
-- Candidate families to measure first: stronger global TT settings, TT auto-ordering, Sobol/pruning diagnostics without dropping wrapper inputs, grouped Slider partitions, and maturity-aware/bucketed routing.
+- Candidate families measured: stronger global TT settings, TT auto-ordering, grouped Slider partitions, level/slope/curvature curve-factor compression, 1Y bucketed curve-factor routing, and 0.5Y semiannual bucketed curve-factor routing.
+- Fresh benchmark command: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives`.
+- Current result: stronger global TT improves Phase 6 PV error but still has max clone maturity-sensitivity relative error `256.28%` and coupon-maturity mixed relative error `80.99%`.
+- Grouped Slider reduces PV error versus the Phase 6 singleton Slider, but max clone maturity-sensitivity relative error remains `327.65%` and coupon-maturity mixed relative error remains `75.20%`.
+- Curve-factor tensor is the strongest common-practice candidate: max PV relative error is `4.70%` on arbitrary clone points and `0.59%` on factor-aligned points. This supports factor-space compression for factor-like scenario sets, but not a general arbitrary 60-pillar clone.
+- 0.5Y semiannual bucketed curve-factor routing improves maturity-sensitivity error versus the 1Y bucket and global factor tensor, but remaining derivative and mixed-term errors are too large for a faithful risk clone.
+- Phase 7 decision: stop treating larger global TT/Slider tuning as the main route. The next design phase should evaluate true high-dimensional piecewise/special-point support and analytical coupon decomposition as explicit designs.
+- Local verification: focused Phase 7 tests passed 3 tests; fixed-rate bond slice passed 59 tests; Release build passed with 0 warnings/errors; DocFX passed with 0 warnings/errors; Release tests passed 1708 tests; `git diff --check` passed; private-name scan matched only existing guardrail/checklist text.
 
 ## Phase 5 Notes
 

@@ -41,10 +41,11 @@ the full-wrapper input boundary visible.
    - Record build evaluations, ranks, PV errors, and sensitivity errors.
    - Use this as the controlled "try harder globally" baseline.
 
-2. **TT dimension ordering and Sobol diagnostics**
+2. **TT dimension ordering diagnostics**
    - Test `WithAutoOrder()` or explicit orderings as a modelling variant.
-   - Use Sobol outputs diagnostically, but do not drop wrapper inputs unless the
-     wrapper still accepts the full 62D vector and documents the internal policy.
+   - Use ordering/Sobol outputs diagnostically, but do not drop wrapper inputs
+     unless the wrapper still accepts the full 62D vector and documents the
+     internal policy.
 
 3. **Grouped Slider partitions**
    - Compare singleton Slider against partitions that group interacting
@@ -64,16 +65,38 @@ the full-wrapper input boundary visible.
 
 ## Tasks
 
-- [ ] Create a fresh Phase 7 branch from `origin/main`.
-- [ ] Add tests that load the Phase 6 evidence thresholds and require each
+- [x] Create a fresh Phase 7 branch from `origin/main`.
+- [x] Add tests that load the Phase 6 evidence thresholds and require each
   candidate report to include the full 62D wrapper contract.
-- [ ] Implement one candidate family at a time with deterministic validation
+- [x] Implement one candidate family at a time with deterministic validation
   points and no private/proprietary references.
-- [ ] Update the Phase 7 report after each candidate with measured errors,
+- [x] Update the Phase 7 report after each candidate with measured errors,
   build cost, and interpretation.
 - [ ] Keep the tracking issue updated after each coherent candidate result.
-- [ ] Stop after the benchmark comparison; do not merge a final architecture
+- [x] Stop after the benchmark comparison; do not merge a final architecture
   without a separate design decision.
+
+## Local Outcome
+
+The Phase 7 benchmark compares six candidates:
+
+- stronger global TT;
+- auto-ordered global TT;
+- grouped Slider;
+- level/slope/curvature curve-factor tensor;
+- 1Y bucketed curve-factor tensor;
+- 0.5Y semiannual bucketed curve-factor tensor.
+
+The strongest common-practice result is the curve-factor tensor. It reaches
+`0.59%` max PV relative error on factor-aligned validation points and `4.70%`
+on arbitrary Phase 6 clone points. This supports factor-space compression as a
+useful tutorial path, while showing that projection error remains when the
+public input is an arbitrary 60-pillar bump vector.
+
+The 0.5Y bucketed factor tensor improves maturity-sensitivity error relative to
+the 1Y bucket, but derivative and mixed-term errors remain too large. The next
+phase should make an explicit design decision between true high-dimensional
+piecewise/special-point support and analytical coupon decomposition.
 
 ## Exit Gate
 
