@@ -12,7 +12,7 @@ Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
 Working branch: `bond-surrogate-research`
 
-Last completed phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192), merged on 2026-05-21 as `3d1518f`.
+Last completed phase PR: [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193), merged on 2026-05-21 as `052eb82`.
 
 ## Confidentiality Guardrail
 
@@ -33,7 +33,7 @@ Use generic public terms:
 | --- | --- | --- |
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
-| 2. Data fixture pipeline | In progress | Public curve fixture generated, pinned, and documented; no live downloads in CI |
+| 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Not started | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Monitor Phase 2 PR [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193), address review/CI feedback inside that PR, and merge or explicitly close it before starting Phase 3 implementation.
+Prepare and execute Phase 3 smoothness diagnostics. Phase 3 should identify PV, slope, DV01, coupon, and maturity smoothness behavior against the public fixed-rate bond reference pricer before any surrogate redesign is implemented.
 
 ## Phase PR Cadence Gate
 
@@ -93,6 +93,8 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504300102).
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 27 tests with 0 failures.
 - Local closeout verification: private-name scan produced only guardrail/search-term matches; fixture regeneration matched the committed JSON byte-for-byte; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1676 tests with 0 failures; local coverage inspection found no uncovered or partial lines in `MarketData.cs`; the fixed-rate bond example ran against the pinned fixture; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- CI/review outcome: PR [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193) merged on 2026-05-21 after required checks passed, including `All Tests Passed` and `codecov/patch`. Codecov reported that all modified and coverable lines were covered by tests.
+- Merge commit: `052eb82`.
 - Official source checks completed:
   - Federal Reserve nominal yield curve page confirms the data are fitted nominal yield-curve parameters and smoothed yields from 1961 to present, and that the model is a staff research product rather than an official statistical release.
   - Federal Reserve CSV schema confirms `SVENYXX` are continuously compounded zero-coupon yields, `SVENPYXX` are coupon-equivalent par yields, `SVENFXX` are continuously compounded instantaneous forwards, and `SVEN1FXX` are coupon-equivalent one-year forwards.
