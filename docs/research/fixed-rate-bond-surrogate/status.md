@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Open one coherent Phase 2 PR after the local exit gate recorded in [the Phase 2 plan](plans/phase-2-public-data-fixtures.md). Keep all Phase 2 review fixes in that PR until it is merged or explicitly closed.
+Monitor Phase 2 PR [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193), address review/CI feedback inside that PR, and merge or explicitly close it before starting Phase 3 implementation.
 
 ## Phase PR Cadence Gate
 
@@ -89,6 +89,8 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Optional refresh tool: `tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py`.
 - C# fixture loader: `examples/FixedRateBondSurrogate/MarketData.cs`.
 - Implementation commit: `35f9c33`.
+- Phase PR: [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504300102).
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 26 tests with 0 failures.
 - Local closeout verification: private-name scan produced only guardrail/search-term matches; fixture regeneration matched the committed JSON byte-for-byte; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1675 tests with 0 failures; the fixed-rate bond example ran against the pinned fixture; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Official source checks completed:
