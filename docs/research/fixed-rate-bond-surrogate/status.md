@@ -12,7 +12,7 @@ Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
 Working branch: `bond-surrogate-research`
 
-Last completed phase PR: [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194), merged on 2026-05-21 as `396684d`.
+Last completed phase PR: [#195](https://github.com/0xC000005/ChebyshevSharp/pull/195), merged on 2026-05-21 as `c44278a`.
 
 ## Confidentiality Guardrail
 
@@ -35,7 +35,7 @@ Use generic public terms:
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
-| 4. Reproduce surrogate problem | In progress | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
+| 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
 | 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
 | 7. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should build the first full PV TT and Slider surrogates against the public baseline and test whether acceptable PV can coexist with unacceptable DV01, coupon, maturity, or mixed-term errors.
+Prepare Phase 5 analytic coupon decomposition. Phase 5 should compare the direct full-PV surrogate against a principal/annuity decomposition so coupon is no longer a tensor dimension.
 
 ## Phase 4 Notes
 
@@ -75,6 +75,8 @@ Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should bui
 - Scope boundary: build direct full-PV surrogates first. Do not implement analytic coupon decomposition, maturity splitting, or adaptive splitting until later phases so the reproduction isolates the problem before proposing fixes.
 - Preliminary findings: TensorTrain max PV relative error is 0.35% on the compact validation set, while maturity-slope relative error reaches 398.88%, rate-coupon mixed relative error reaches 23.62%, and rate-maturity mixed relative error reaches 150.84%. Slider is weaker on this partition, including 100% relative error for the reported mixed terms.
 - Local verification: private-name scan produced only guardrail/search-term matches; focused Phase 4 tests passed 3 tests; focused coverage found no missing lines in `SurrogateReproduction.cs`; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1686 tests with 0 failures; the Release `--surrogate-reproduction` example ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- CI/review outcome: PR [#195](https://github.com/0xC000005/ChebyshevSharp/pull/195) merged on 2026-05-21 after required checks passed, including `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, and `All Tests Passed`.
+- Merge commit: `c44278a`.
 
 ## Phase PR Cadence Gate
 

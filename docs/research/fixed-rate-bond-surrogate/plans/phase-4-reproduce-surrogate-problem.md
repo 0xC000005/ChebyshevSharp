@@ -112,4 +112,4 @@
   - `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction`
   - `docfx docs/docfx.json`
 - [x] Open exactly one Phase 4 PR after local verification.
-- [ ] Do not begin Phase 5 implementation until the Phase 4 PR is merged or explicitly closed.
+- [x] Do not begin Phase 5 implementation until the Phase 4 PR is merged or explicitly closed.
