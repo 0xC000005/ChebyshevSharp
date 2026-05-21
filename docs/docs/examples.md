@@ -19,6 +19,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --analytic-coupon-decomposition
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
@@ -177,6 +178,22 @@ The factor tensor performs well on factor-aligned scenarios, while arbitrary
 60-pillar bump vectors still expose projection error. The bucketed variants
 test the Phase 6 maturity-smoothness hypothesis, but they do not by themselves
 make the mixed sensitivities reliable.
+
+Run the analytic coupon decomposition mode to test the fixed-rate bond identity
+used by the next modelling phase:
+
+```text
+PV(curve, coupon, T) = PrincipalPV(curve, T) + coupon * AnnuityPV(curve, T)
+```
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --analytic-coupon-decomposition
+```
+
+This mode keeps the full 62-coordinate public wrapper but builds internal
+principal and annuity models without coupon as a tensor coordinate. The result
+is useful for deciding whether coupon should be analytical in a tutorial model;
+it does not remove the separate maturity-smoothness problem.
 
 To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
 run:

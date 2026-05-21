@@ -59,6 +59,8 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - QuantLib-Python documentation. Bond pricing engine examples including `DiscountingBondEngine(discountCurve)`. [Bond pricing engines](https://quantlib-python-docs.readthedocs.io/en/latest/pricing_engines/bonds.html).
 - QuantLib Guide. "Vanilla bonds." Examples of fixed-rate bond pricing, yield, duration, and convexity calculations. [Guide page](https://www.quantlibguide.com/Vanilla%20bonds.html).
 - NuGet Gallery. `QuantLib` package metadata and thread-safety notes for the C# wrapper. [QuantLib package](https://www.nuget.org/packages/QuantLib/).
+- OpenGamma Strata API. `FixedCouponBond` definition describing fixed periodic coupon payments and final nominal payment. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/product/bond/FixedCouponBond.html).
+- OpenGamma Strata API. `DiscountingFixedCouponBondProductPricer` present-value and sensitivity methods for fixed coupon bonds. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/pricer/bond/DiscountingFixedCouponBondProductPricer.html).
 - OpenGamma. "Strata Analytics: Curve Calibration & Bucketed PV01 Calculation." Public terminology for bucketed PV01, bucketed delta, rate sensitivities, and key-rate duration. [Article](https://opengamma.com/strata-and-multi-curve-calibration-and-bucketed-pv01/).
 - OpenGamma Strata API. `pv01CalibratedBucketed` and `pv01MarketQuoteBucketed` definitions distinguishing calibrated-curve-node and market-quote one-basis-point sensitivity. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/measure/dsf/DsfTradeCalculations.html).
 

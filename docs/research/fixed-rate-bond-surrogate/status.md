@@ -10,11 +10,9 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `phase7-bond-structured-alternatives`
+Working branch: `phase8-analytic-coupon-decomposition`
 
-Last completed phase PR: [#196](https://github.com/0xC000005/ChebyshevSharp/pull/196), merged on 2026-05-21 as `74a8d8a`.
-
-Last completed phase-closeout PR: [#197](https://github.com/0xC000005/ChebyshevSharp/pull/197), merged on 2026-05-21 as `55bcb4d`.
+Last completed phase PR: [#198](https://github.com/0xC000005/ChebyshevSharp/pull/198), merged on 2026-05-21 as `22331ea`.
 
 ## Confidentiality Guardrail
 
@@ -40,9 +38,9 @@ Use generic public terms:
 | 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Realistic dense-curve baseline | Complete | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
 | 6. Naive dense-baseline surrogate discovery | Complete | Dense-baseline naive TT/Slider failure evidence and maturity-smoothness evidence documented |
-| 7. Structured alternatives benchmark | Complete locally; PR pending | Controlled alternatives compared against the Phase 6 evidence bank |
-| 8. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
-| 9. Maturity splitting and adaptive knots | Not started | No split vs 1Y vs 0.5Y vs schedule-aware/adaptive split comparison completed |
+| 7. Structured alternatives benchmark | Complete | Controlled alternatives compared against the Phase 6 evidence bank |
+| 8. Analytic coupon decomposition | Complete; PR ready to merge | Principal/annuity surrogate comparison completed |
+| 9. Maturity splitting and adaptive knots | Deferred | No split vs 1Y vs 0.5Y vs schedule-aware/adaptive split comparison completed |
 | 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
 | 11. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
@@ -65,7 +63,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Open the Phase 7 PR from `phase7-bond-structured-alternatives`, review CI and code-review feedback, and merge only after the phase report and tests are accepted. The next modelling phase should then make an explicit design decision between high-dimensional piecewise/special-point support, true historical PCA/factor calibration, and analytical coupon decomposition.
+Merge Phase 8 PR [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199) after final review. Then start Phase 9 planning for maturity special points, schedule-aware routing, and automatic kink detection.
 
 ## Phase 6 Notes
 
@@ -96,6 +94,7 @@ Open the Phase 7 PR from `phase7-bond-structured-alternatives`, review CI and co
 - Report draft: [Phase 7 Report: Structured Alternatives](reports/phase-7-structured-alternatives.md).
 - Phase PR: [#198](https://github.com/0xC000005/ChebyshevSharp/pull/198).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4511793914).
+- Merge outcome: PR [#198](https://github.com/0xC000005/ChebyshevSharp/pull/198) merged into `main` on 2026-05-21 with merge commit `22331ea87f274b320b01bc6cacacbdce2eff8fbd`.
 - Scope boundary: compare fixes against the Phase 6 evidence bank without claiming a final bond-pricer replacement design.
 - Required wrapper contract: every tested candidate must be callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`, even if the implementation internally routes, buckets, partitions, or ignores unsupported coordinates.
 - Candidate families measured: stronger global TT settings, TT auto-ordering, grouped Slider partitions, level/slope/curvature curve-factor compression, 1Y bucketed curve-factor routing, and 0.5Y semiannual bucketed curve-factor routing.
@@ -106,6 +105,24 @@ Open the Phase 7 PR from `phase7-bond-structured-alternatives`, review CI and co
 - 0.5Y semiannual bucketed curve-factor routing improves maturity-sensitivity error versus the 1Y bucket and global factor tensor, but remaining derivative and mixed-term errors are too large for a faithful risk clone.
 - Phase 7 decision: stop treating larger global TT/Slider tuning as the main route. The next design phase should evaluate true high-dimensional piecewise/special-point support and analytical coupon decomposition as explicit designs.
 - Local verification: focused Phase 7 tests passed 3 tests; fixed-rate bond slice passed 59 tests; Release build passed with 0 warnings/errors; DocFX passed with 0 warnings/errors; Release tests passed 1708 tests; `git diff --check` passed; private-name scan matched only existing guardrail/checklist text.
+- CI outcome: `.NET 10 tests`, `.NET 8 library build`, `All Tests Passed`, `Format, Pack, and Docs`, and `codecov/patch` passed before merge.
+
+## Phase 8 Notes
+
+- Plan: [Phase 8 Analytic Coupon Decomposition Plan](plans/phase-8-analytic-coupon-decomposition.md).
+- Report draft: [Phase 8 Report: Analytic Coupon Decomposition](reports/phase-8-analytic-coupon-decomposition.md).
+- Phase PR: [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4512018897).
+- Scope boundary: validate and benchmark analytic coupon recombination; keep automatic kink detection and library-level special-point routing for Phase 9.
+- Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`, even when coupon is removed internally.
+- Core formula: `PV(curve, coupon, T) = PrincipalPV(curve, T) + coupon * AnnuityPV(curve, T)`.
+- Coupon-linearity identity result: max absolute error `8.526513E-014` and max relative error `0.000000%` over 19 clone/factor validation points.
+- Candidate families measured: exact decomposition oracle, global decomposed TT, curve-factor decomposed tensor, 1Y bucketed decomposed factor tensor, and 0.5Y semiannual bucketed decomposed factor tensor.
+- Current result: global decomposed TT still has max clone PV relative error `14.34%`, maturity-sensitivity relative error `456.94%`, and coupon-maturity mixed relative error `51.28%`; removing coupon alone does not solve the global clone problem.
+- Curve-factor decomposed tensor matches Phase 7 factor-space PV behavior while reducing build evaluations from `675` to `270`; max factor-aligned PV relative error remains `0.59%`.
+- 0.5Y semiannual bucketed decomposed factor routing keeps max factor-aligned PV relative error at `0.58%` but leaves coupon-maturity mixed relative error `56.94%`, so maturity nonsmoothness remains a Phase 9 problem.
+- Local verification: focused Phase 8 tests passed 3 tests; focused Phase 8 coverage showed no missing or partial lines in `AnalyticCouponDecompositionBenchmark.cs`; fixed-rate bond slice passed 62 tests; analytic-coupon example ran and printed the report table; Release build passed with 0 warnings/errors; DocFX passed with 0 warnings/errors; Release tests passed 1711 tests; `git diff --check` passed; private-name scan matched only existing guardrail/checklist text.
+- CI outcome before merge: `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, `All Tests Passed`, and `codecov/patch` passed on the amended Phase 8 commit.
 
 ## Phase 5 Notes
 
