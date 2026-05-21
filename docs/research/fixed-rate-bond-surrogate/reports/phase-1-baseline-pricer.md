@@ -61,7 +61,7 @@ Passed: 16, Failed: 0, Skipped: 0
 Full verification:
 
 ```bash
-rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md docs/docs/testing-and-validation.md .github/workflows/test.yml ChebyshevSharp.slnx
+rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md docs/docs/testing-and-validation.md .github/workflows/test.yml ChebyshevSharp.slnx
 git diff --check
 dotnet restore
 dotnet format --verify-no-changes --verbosity minimal

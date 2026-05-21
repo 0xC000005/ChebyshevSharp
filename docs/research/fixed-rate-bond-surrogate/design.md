@@ -303,7 +303,17 @@ Exit gate: report identifies whether PV, slope, and sensitivities are smooth or 
 
 Exit gate: a report either reproduces the observed failure or explains why the local model does not.
 
-### Phase 5: Analytic Coupon Decomposition
+### Phase 5: Realistic Dense-Curve Baseline
+
+- Add a dense direct zero-rate fixture suitable for a semiannual 30Y fixed-rate bond.
+- Prefer sampling the Federal Reserve fitted zero-yield parameters over linearly filling a sparse annual curve.
+- Expose the exact QLNet day-count, calendar, schedule, business-day, interpolation, and compounding conventions.
+- Validate that the baseline has sensible cashflows, price level, coupon ordering, notional scaling, and deterministic fixture regeneration.
+- Stop here before any further surrogate work if the baseline itself is not credible.
+
+Exit gate: the default example uses a dense semiannual public fixture, the convention assumptions are explicit, and fixed-rate bond tests verify the exact baseline.
+
+### Phase 6: Analytic Coupon Decomposition
 
 - Build principal and annuity surrogates over `(curve bumps, maturity)`.
 - Compare against the full PV surrogate.
@@ -315,7 +325,7 @@ d2PV / dr_i dc = N * dA / dr_i
 
 Exit gate: report shows whether removing coupon as a tensor dimension improves PV and sensitivity stability.
 
-### Phase 6: Maturity Splitting
+### Phase 7: Maturity Splitting
 
 - Compare no split, 1Y buckets, 0.5Y buckets, and schedule-boundary-aware buckets.
 - Use half-open intervals except the final bucket.
@@ -323,7 +333,7 @@ Exit gate: report shows whether removing coupon as a tensor dimension improves P
 
 Exit gate: choose the simplest maturity split that meets validation thresholds, or document why adaptive splitting is required.
 
-### Phase 7: Adaptive Splitting Research
+### Phase 8: Adaptive Splitting Research
 
 - Prototype only after fixed splits are tested.
 - Use second-difference spikes, coefficient-tail diagnostics, and held-out validation error as candidate split signals.
@@ -331,7 +341,7 @@ Exit gate: choose the simplest maturity split that meets validation thresholds, 
 
 Exit gate: decision on whether ChebyshevSharp needs a future `PiecewiseChebyshevTT` or selected-dimension auto-splitting API.
 
-### Phase 8: Tutorial and Documentation
+### Phase 9: Tutorial and Documentation
 
 - Add a finance tutorial explaining the restricted product, exact formula, Chebyshev model choices, and validation results.
 - Explain that the baseline price is trusted because it comes from an established open-source financial library, while the Chebyshev object is only a surrogate for that pricing function.
@@ -342,7 +352,7 @@ Exit gate: decision on whether ChebyshevSharp needs a future `PiecewiseChebyshev
 
 Exit gate: documentation is public-safe, reproducible, and useful as a tutorial.
 
-### Phase 9: Library Improvement Issues
+### Phase 10: Library Improvement Issues
 
 Open follow-up issues only after evidence supports them:
 

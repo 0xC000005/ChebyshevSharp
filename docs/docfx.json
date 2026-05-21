@@ -29,7 +29,9 @@
     "resource": [
       {
         "files": [
-          "images/**"
+          "images/**",
+          "research/**/images/**",
+          "research/**/data/**"
         ]
       }
     ],

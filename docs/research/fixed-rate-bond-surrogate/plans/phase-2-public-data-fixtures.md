@@ -74,7 +74,7 @@
 
 ## Task 5: Verification and Phase Closeout
 
-- [x] Run `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md`.
+- [x] Run `rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md`.
 - [x] Run `uv run tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py --help`.
 - [x] Run the refresh script for `--curve-date 2026-05-15` and verify the committed fixture is reproducible.
 - [x] Run `dotnet format --verify-no-changes --verbosity minimal`.

@@ -24,7 +24,15 @@ DEFAULT_OUTPUT = (
     / "Data"
     / "fed-nominal-yield-curve-2026-05-15.json"
 )
+DENSE_SEMIANNUAL_OUTPUT = (
+    Path(__file__).resolve().parents[2]
+    / "examples"
+    / "FixedRateBondSurrogate"
+    / "Data"
+    / "fed-nominal-yield-curve-semiannual-2026-05-15.json"
+)
 SELECTED_MATURITIES = (1, 2, 3, 5, 7, 10, 20, 30)
+SVENSSON_PARAMETER_FIELDS = ("BETA0", "BETA1", "BETA2", "BETA3", "TAU1", "TAU2")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -42,24 +50,51 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=DEFAULT_OUTPUT,
-        help=f"Output JSON path. Default: {DEFAULT_OUTPUT}",
+        default=None,
+        help=(
+            "Output JSON path. Defaults to the selected fixture path "
+            f"({DEFAULT_OUTPUT} or {DENSE_SEMIANNUAL_OUTPUT})."
+        ),
+    )
+    parser.add_argument(
+        "--density",
+        choices=("selected-annual", "semiannual-svensson"),
+        default="selected-annual",
+        help=(
+            "selected-annual writes the published annual SVENY fields used by the compact "
+            "surrogate reproduction. semiannual-svensson samples the fitted Fed curve every "
+            "six months from the published Svensson-style parameters."
+        ),
     )
     parser.add_argument(
         "--download-date",
         default=dt.date.today().isoformat(),
         help="Download date to record in YYYY-MM-DD form. Defaults to today's date.",
     )
+    parser.add_argument(
+        "--input-csv",
+        type=Path,
+        default=None,
+        help="Optional local Federal Reserve CSV path. When omitted, the script downloads the CSV.",
+    )
     args = parser.parse_args(argv)
 
-    rows = list(fetch_rows(FED_NOMINAL_YIELD_CURVE_CSV))
-    row = select_curve_row(rows, args.curve_date)
-    download_date = dt.date.fromisoformat(args.download_date)
-    fixture = build_fixture(row, download_date)
+    output = args.output
+    if output is None:
+        output = DENSE_SEMIANNUAL_OUTPUT if args.density == "semiannual-svensson" else DEFAULT_OUTPUT
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(fixture, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {args.output}")
+    rows = (
+        list(read_rows(args.input_csv.read_text(encoding="utf-8-sig")))
+        if args.input_csv is not None
+        else list(fetch_rows(FED_NOMINAL_YIELD_CURVE_CSV))
+    )
+    row = select_curve_row(rows, args.curve_date, args.density)
+    download_date = dt.date.fromisoformat(args.download_date)
+    fixture = build_fixture(row, download_date, args.density)
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(fixture, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {output}")
     return 0
 
 
@@ -74,13 +109,21 @@ def fetch_rows(url: str) -> Iterable[dict[str, str]]:
     with urllib.request.urlopen(request, timeout=60) as response:
         text = response.read().decode("utf-8-sig")
 
+    yield from read_rows(text)
+
+
+def read_rows(text: str) -> Iterable[dict[str, str]]:
     lines = text.splitlines()
     header_index = next(i for i, line in enumerate(lines) if line.startswith("Date,"))
     yield from csv.DictReader(lines[header_index:])
 
 
-def select_curve_row(rows: list[dict[str, str]], curve_date: str) -> dict[str, str]:
-    complete_rows = [row for row in rows if is_complete_zero_curve_row(row)]
+def select_curve_row(
+    rows: list[dict[str, str]],
+    curve_date: str,
+    density: str,
+) -> dict[str, str]:
+    complete_rows = [row for row in rows if is_complete_zero_curve_row(row, density)]
 
     if curve_date == "latest":
         if not complete_rows:
@@ -94,11 +137,18 @@ def select_curve_row(rows: list[dict[str, str]], curve_date: str) -> dict[str, s
     raise ValueError(f"No complete zero-yield row found for {curve_date}.")
 
 
-def is_complete_zero_curve_row(row: dict[str, str]) -> bool:
-    return all(parse_optional_float(row.get(field_name(year))) is not None for year in SELECTED_MATURITIES)
+def is_complete_zero_curve_row(row: dict[str, str], density: str) -> bool:
+    required_fields = [field_name(year) for year in SELECTED_MATURITIES]
+    if density == "semiannual-svensson":
+        required_fields += list(SVENSSON_PARAMETER_FIELDS)
+
+    return all(parse_optional_float(row.get(field)) is not None for field in required_fields)
 
 
-def build_fixture(row: dict[str, str], download_date: dt.date) -> dict[str, object]:
+def build_fixture(row: dict[str, str], download_date: dt.date, density: str) -> dict[str, object]:
+    if density == "semiannual-svensson":
+        return build_dense_semiannual_fixture(row, download_date)
+
     curve_date = row["Date"]
     points = [
         {
@@ -132,6 +182,103 @@ def build_fixture(row: dict[str, str], download_date: dt.date) -> dict[str, obje
         "original_fields": [field_name(year) for year in SELECTED_MATURITIES],
         "points": points,
     }
+
+
+def build_dense_semiannual_fixture(row: dict[str, str], download_date: dt.date) -> dict[str, object]:
+    curve_date = row["Date"]
+    valuation_date = dt.date.fromisoformat(curve_date)
+    parameters = {
+        field: parse_required_float(row[field])
+        for field in SVENSSON_PARAMETER_FIELDS
+    }
+    points = []
+
+    for months in range(6, 361, 6):
+        pillar_date = add_months(valuation_date, months)
+        maturity_years = (pillar_date - valuation_date).days / 365.0
+        points.append(
+            {
+                "maturity_years": maturity_years,
+                "maturity_months": months,
+                "field": f"SVENY_SVENSSON_{months:04d}M",
+                "zero_yield_percent": round(svensson_zero_yield_percent(maturity_years, parameters), 10),
+            }
+        )
+
+    return {
+        "name": "Federal Reserve nominal zero yield curve, semiannual Svensson sample",
+        "fixture_id": f"fed-nominal-yield-curve-semiannual-{curve_date}",
+        "source": {
+            "institution": "Board of Governors of the Federal Reserve System",
+            "source_url": FED_NOMINAL_YIELD_CURVE_CSV,
+            "source_page": "https://www.federalreserve.gov/data/nominal-yield-curve.htm",
+            "download_date": download_date.isoformat(),
+            "curve_date": curve_date,
+            "source_note": (
+                "Federal Reserve nominal yield curve staff research product; "
+                "not an official statistical release. Semiannual points are derived from "
+                "the published fitted nominal yield-curve parameters for the pinned curve date "
+                "using Actual/365 year fractions to the pillar dates."
+            ),
+        },
+        "instrument_family": "hypothetical_treasury_zero_coupon_yield",
+        "rate_kind": "zero_coupon_yield",
+        "units": "percent",
+        "compounding": "continuous",
+        "day_count": "Actual/365",
+        "interpolation": (
+            "semiannual Svensson parameter sample; QLNet example linearly interpolates "
+            "zero rates between sampled pillars"
+        ),
+        "original_fields": list(SVENSSON_PARAMETER_FIELDS)
+        + [field_name(year) for year in range(1, 31)],
+        "source_model": {
+            "family": "Svensson fitted nominal zero-yield curve",
+            "formula": (
+                "beta0 + beta1*L(t,tau1) + beta2*(L(t,tau1)-exp(-t/tau1)) + "
+                "beta3*(L(t,tau2)-exp(-t/tau2)), L(t,tau)=(1-exp(-t/tau))/(t/tau)"
+            ),
+            "time_variable": "Actual/365 year fraction from curve_date to the semiannual pillar date",
+            "parameters": parameters,
+        },
+        "points": points,
+    }
+
+
+def svensson_zero_yield_percent(maturity_years: float, parameters: dict[str, float]) -> float:
+    tau1 = parameters["TAU1"]
+    tau2 = parameters["TAU2"]
+    loading1 = exponential_loading(maturity_years, tau1)
+    loading2 = exponential_loading(maturity_years, tau2)
+
+    return (
+        parameters["BETA0"]
+        + parameters["BETA1"] * loading1
+        + parameters["BETA2"] * (loading1 - math.exp(-maturity_years / tau1))
+        + parameters["BETA3"] * (loading2 - math.exp(-maturity_years / tau2))
+    )
+
+
+def exponential_loading(maturity_years: float, tau: float) -> float:
+    x = maturity_years / tau
+    return (1.0 - math.exp(-x)) / x
+
+
+def add_months(date: dt.date, months: int) -> dt.date:
+    month_index = date.month - 1 + months
+    year = date.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(date.day, days_in_month(year, month))
+    return dt.date(year, month, day)
+
+
+def days_in_month(year: int, month: int) -> int:
+    if month == 12:
+        next_month = dt.date(year + 1, 1, 1)
+    else:
+        next_month = dt.date(year, month + 1, 1)
+
+    return (next_month - dt.timedelta(days=1)).day
 
 
 def field_name(year: int) -> str:

@@ -69,7 +69,7 @@
 
 ## Task 5: Commit Phase 1 Increment
 
-- [x] Run `rg -n "VTA|proprietary|internal product|private object" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate`.
+- [x] Run `rg -n "PRIVATE_NAME|proprietary|internal product|private object" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate`.
 - [x] Run `dotnet build --no-restore`.
 - [x] Run `dotnet test`.
 - [x] Run `docfx docs/docfx.json`.

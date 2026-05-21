@@ -17,6 +17,8 @@ dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
 ## QuickStart
@@ -71,11 +73,63 @@ a public fixed-rate bond tutorial. It currently prices a restricted regular
 fixed-rate bullet bond against a pinned Federal Reserve nominal-yield-curve
 fixture:
 
-1. Load `Data/fed-nominal-yield-curve-2026-05-15.json`.
+1. Load `Data/fed-nominal-yield-curve-semiannual-2026-05-15.json`.
 2. Price it with QLNet through a small `IFixedRateBondReferencePricer` boundary.
-3. Report the curve fixture, curve date, dirty price, clean price, accrued
-   amount, NPV, and cashflow count.
+3. Report the curve fixture, curve date, curve-pillar count, conventions, dirty
+   price, clean price, accrued amount, NPV, and cashflow count.
 4. Keep the direct zero-rate curve separate from later Chebyshev surrogates.
+
+### QLNet-backed reference pricer
+
+The baseline is QLNet, not an in-repository bond-pricing implementation. The
+example code only adapts a compact research input into QLNet objects:
+
+```text
+FixedRateBondRequest
+  -> QLNet Schedule
+  -> QLNet FixedRateBond
+  -> QLNet InterpolatedZeroCurve<Linear>
+  -> QLNet DiscountingBondEngine
+  -> FixedRateBondResult
+```
+
+This boundary is intentional. The case study is about learning a fast
+Chebyshev approximation of a trusted pricing function, not about replacing
+fixed-income conventions, schedule generation, accrued-interest logic, or
+discounting rules. Future TensorTrain and Slider experiments should treat
+`IFixedRateBondReferencePricer.Price()` as the ground-truth black box, then
+measure where a surrogate reproduces PV, DV01, coupon sensitivity, maturity
+sensitivity, and mixed terms.
+
+The current baseline assumptions are deliberately narrow:
+
+- fixed-rate bullet bond;
+- valuation date equals effective date;
+- semiannual coupon schedule;
+- 30/360 USA coupon day count;
+- U.S. Government Bond calendar;
+- Modified Following business-day adjustment;
+- backward schedule generation;
+- direct zero-rate curve with Actual/365 Fixed timing;
+- continuous annual compounding and linear zero-rate interpolation;
+- redemption of `100.0`;
+- no amortization, callability, ex-coupon handling, stubs, or arbitrary
+  settlement-date modelling.
+
+These assumptions make the example reproducible and auditable. They are also
+the eligibility domain for later Chebyshev surrogate validation; outside this
+domain, the correct reference remains the underlying fixed-income pricer.
+
+The default run uses a 30-year semiannual 4.5% coupon bullet bond with
+61 zero-rate pillars: the valuation-date anchor plus 60 semiannual points from
+0.5Y to 30Y. The semiannual fixture is derived from the Federal Reserve fitted
+nominal yield-curve parameters for the pinned curve date, using Actual/365
+year fractions to match the QLNet dated zero curve. The compact annual fixture
+remains available for the earlier surrogate reproduction experiment.
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
+```
 
 Run the diagnostics mode to inspect baseline coupon linearity, zero-pillar
 DV01, and maturity-date spike candidates before fitting a Chebyshev surrogate:
@@ -92,11 +146,36 @@ PV, zero-pillar DV01, coupon, maturity, and mixed finite-difference errors:
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
 ```
 
+Run the naive discovery mode to use the dense fixture, estimate why the full
+dense tensor is infeasible, and compare full-input 62D TensorTrain and Slider
+probes before any decomposition or maturity splitting:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
+```
+
+The naive discovery report also prints structural sanity checks. For example,
+a bond maturing at the 10Y curve pillar should have zero direct sensitivity to
+the 30Y zero-rate pillar under the current direct-zero interpolation setup. If
+that check fails, the surrogate is inventing post-maturity curve exposure before
+any finer modelling question matters.
+
+To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
+run:
+
+```bash
+python tools/PlotFixedRateBondEvidence/plot_phase6_maturity.py
+```
+
+The script invokes the example's `--naive-maturity-scan-csv` mode, writes the
+deterministic CSV under `docs/research/fixed-rate-bond-surrogate/data/`, and
+renders an SVG under `docs/research/fixed-rate-bond-surrogate/images/`.
+
 This example is intentionally restricted. It is a baseline for later surrogate
 validation, not a general fixed-income library. It does not download market data
 at runtime; the optional refresh script under
-`tools/RefreshFixedRateBondMarketData/` regenerates the pinned JSON fixture from
-the Federal Reserve public CSV. The research notes in
+`tools/RefreshFixedRateBondMarketData/` regenerates the pinned JSON fixtures
+from the Federal Reserve public CSV. The research notes in
 `docs/research/fixed-rate-bond-surrogate/` track formulas, data provenance,
 citations, source limitations, and validation results as the workflow progresses.
 

@@ -12,7 +12,7 @@ Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
 Working branch: `bond-surrogate-research`
 
-Last completed phase PR: [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194), merged on 2026-05-21 as `396684d`.
+Last completed phase PR: [#195](https://github.com/0xC000005/ChebyshevSharp/pull/195), merged on 2026-05-21 as `c44278a`.
 
 ## Confidentiality Guardrail
 
@@ -35,18 +35,20 @@ Use generic public terms:
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
-| 4. Reproduce surrogate problem | In progress | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
-| 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
-| 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
-| 7. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
-| 8. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
-| 9. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
+| 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
+| 5. Realistic dense-curve baseline | Complete locally | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
+| 6. Naive dense-baseline surrogate discovery | In progress | Dense-baseline naive TT/Slider and maturity-smoothness evidence documented |
+| 7. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
+| 8. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
+| 9. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
+| 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
+| 11. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
 
 Last checked: 2026-05-20.
 
-- Branch/worktree: `bond-surrogate-research` at `/tmp/ChebyshevSharp-worktrees/fixed-rate-bond-surrogate`.
+- Branch/worktree: `bond-surrogate-research` at `/home/max/Documents/ChebyshevSharp/.worktrees/bond-surrogate-research`.
 - Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191).
 - Python tooling: `uv 0.9.2` at `/home/max/.local/bin/uv`; Python `3.13.9`.
 - Python data stack smoke: `uv run --with pandas --with pandas-datareader --with requests ...` imports `pandas`, `pandas_datareader`, and `requests`.
@@ -61,7 +63,42 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should build the first full PV TT and Slider surrogates against the public baseline and test whether acceptable PV can coexist with unacceptable DV01, coupon, maturity, or mixed-term errors.
+Run Phase 6 naive dense-baseline surrogate discovery. Start from the QLNet-backed dense baseline and collect evidence for or against naive full-PV Chebyshev modelling. Stop after documenting the naive failure modes; do not implement analytic coupon decomposition, maturity splitting, adaptive splitting, or portfolio-specific modelling in this phase.
+
+## Phase 6 Notes
+
+- Plan: [Phase 6 Naive Surrogate Discovery Implementation Plan](plans/phase-6-naive-surrogate-discovery.md).
+- Report draft: [Phase 6 Report: Naive Dense-Baseline Surrogate Discovery](reports/phase-6-naive-surrogate-discovery.md).
+- Scope boundary: this is a discovery phase. It may build naive TT/Slider models, but it must not implement the next modelling fix.
+- Conceptual inputs are curve, coupon, maturity, and notional. Chebyshev dimensions count scalar coordinates, so the dense fixture creates 60 curve-bump dimensions; excluding notional, the naive full-PV surrogate is 62-dimensional.
+- Correction: selected-pillar surrogate inputs are not faithful evidence for the clone objective. All Phase 6 and later surrogate tests must expose the full 62-coordinate input at the wrapper boundary, even if an internal model partitions, routes, or ignores some coordinates.
+- Evidence targets: full dense tensor infeasibility, naive TT/Slider PV error, zero-pillar DV01 error, coupon and maturity finite-difference error, rate-coupon/rate-maturity/coupon-maturity/rate-rate mixed terms, structural post-maturity support checks, and maturity-date second-difference spikes.
+- Implementation files: `examples/FixedRateBondSurrogate/NaiveSurrogateDiscovery.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondNaiveSurrogateDiscoveryTests.cs`.
+- First measured result: a dense full tensor would need `3^62 = 381,520,424,476,945,831,628,649,898,809` nodes even with only three nodes per scalar coordinate.
+- Corrected full-input naive probe: all 60 semiannual zero-rate bumps plus coupon and maturity, with no decomposition or bucket splitting.
+- Preliminary findings from `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery`: TensorTrain max PV relative error `17.72%`, maturity-sensitivity relative error `461.43%`, and coupon-maturity mixed relative error `49.10%`; Slider max PV relative error `92.64%`, maturity-sensitivity relative error `154.35%`, and coupon-maturity mixed relative error `100.00%`.
+- Structural support checks now pass: a 10Y bond has zero baseline, TT, and numerical-zero Slider sensitivity to the unsupported 30Y zero-rate pillar; the unsupported 20Y-30Y rate-rate mixed sensitivity is also zero. This narrows the naive failure to PV, maturity sensitivity, coupon/coupon-maturity behaviour, and difficult active-pillar DV01 rather than a blanket curve-support bug.
+- The maturity scan found one-day slope flips around schedule-boundary candidates, with the current largest local second difference near the 2039-11-15 semiannual boundary at `2039-11-11`: left slope/year `-2.650493E+000`, right slope/year `2.825619E-002`, and second difference `7.339039E-003`.
+- Maturity schedule-sensitivity evidence is reproducible: `tools/PlotFixedRateBondEvidence/plot_phase6_maturity.py` regenerates `docs/research/fixed-rate-bond-surrogate/data/phase-6-maturity-scan.csv` and `docs/research/fixed-rate-bond-surrogate/images/phase-6-maturity-sensitivity.svg`.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondNaiveSurrogateDiscoveryTests"` passed 6 tests with 0 failures.
+- Fixed-rate bond test slice run: `dotnet test --filter "FullyQualifiedName~FixedRateBond"` passed 55 tests with 0 failures.
+- Local closeout checks so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1703 tests with 0 failures; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed; private-name scan matched only pre-existing guardrail/search-term text.
+- Superseded tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509528109) recorded the earlier selected-pillar probe and should not be used as clone evidence.
+- Correction tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509648601).
+
+## Phase 5 Notes
+
+- Plan: [Phase 5 Realistic Baseline Implementation Plan](plans/phase-5-realistic-baseline.md).
+- Report draft: [Phase 5 Report: Realistic Baseline](reports/phase-5-realistic-baseline.md).
+- Scope boundary: do not implement analytic coupon decomposition, maturity splitting, adaptive splitting, or new Chebyshev surrogate fixes in this phase.
+- New dense fixture: `examples/FixedRateBondSurrogate/Data/fed-nominal-yield-curve-semiannual-2026-05-15.json`.
+- Data method: sample the Federal Reserve fitted nominal zero-yield curve every six months from the published `BETA0`, `BETA1`, `BETA2`, `BETA3`, `TAU1`, and `TAU2` parameters for 2026-05-15, using the same Actual/365 year fraction that QLNet uses for the dated zero curve.
+- Baseline conventions are exposed from `QlNetFixedRateBondReferencePricer.SupportedConventions`: United States Government Bond calendar, semiannual schedule, 30/360 USA coupon day count, Actual/365 Fixed curve day count, Modified Following business-day adjustment, backward schedule generation, linear zero-rate interpolation, continuous annual compounding, and 100 redemption.
+- Default example now prices a regular 30Y 4.5% coupon bullet from the dense fixture. It uses 61 curve pillars and produces 61 cashflows, dirty price `89.26423408`, clean price `89.26423408`, and zero accrued amount at valuation/effective date.
+- Added baseline hardening tests for manual linear zero-rate interpolation and six public Treasury auction sanity checks across 2Y, 3Y, 5Y, 7Y, 10Y, and 30Y notes/bonds. The QLNet continuous-zero approximation prices all six auction examples within `0.10` to `0.20` price points, which is sufficient for a convention sanity check rather than an exact Treasury-yield formula clone.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBond"` passed 50 tests with 0 failures.
+- Fixture regeneration checks using `--input-csv /tmp/feds200628.csv` matched both the dense semiannual fixture and the existing annual fixture byte-for-byte.
+- Closeout verification: private-name scan found only guardrail/search-term text; stale Phase 5/deleted-worktree scan found no matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1699 tests with 0 failures; the Release default example ran against the dense baseline; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed.
 
 ## Phase 4 Notes
 
@@ -73,8 +110,10 @@ Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should bui
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504622669).
 - Data-source decision: use the pinned Federal Reserve nominal zero-yield fixture for deterministic tests and documentation. Yahoo Finance, FRED, and live Federal Reserve downloads remain optional future refresh paths; no API key or live download is required for this phase.
 - Scope boundary: build direct full-PV surrogates first. Do not implement analytic coupon decomposition, maturity splitting, or adaptive splitting until later phases so the reproduction isolates the problem before proposing fixes.
-- Preliminary findings: TensorTrain max PV relative error is 0.35% on the compact validation set, while maturity-slope relative error reaches 398.88%, rate-coupon mixed relative error reaches 23.62%, and rate-maturity mixed relative error reaches 150.84%. Slider is weaker on this partition, including 100% relative error for the reported mixed terms.
+- Preliminary findings: TensorTrain max PV relative error is 0.35% on the compact validation set, while maturity-sensitivity relative error reaches 398.88%, rate-coupon mixed relative error reaches 23.62%, and rate-maturity mixed relative error reaches 150.84%. Slider is weaker on this partition, including 100% relative error for the reported mixed terms.
 - Local verification: private-name scan produced only guardrail/search-term matches; focused Phase 4 tests passed 3 tests; focused coverage found no missing lines in `SurrogateReproduction.cs`; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1686 tests with 0 failures; the Release `--surrogate-reproduction` example ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- CI/review outcome: PR [#195](https://github.com/0xC000005/ChebyshevSharp/pull/195) merged on 2026-05-21 after required checks passed, including `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, and `All Tests Passed`.
+- Merge commit: `c44278a`.
 
 ## Phase PR Cadence Gate
 

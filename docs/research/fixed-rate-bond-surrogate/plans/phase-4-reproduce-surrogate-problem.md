@@ -56,7 +56,7 @@
   - maturity years in `[8.0, 12.0]`.
 - [x] Convert point coordinates to `FixedRateBondRequest` by applying bump dimensions to the Fed zero curve, setting coupon directly, and mapping maturity years to `valuationDate.AddDays(Math.Round(365.25 * maturityYears))`.
 - [x] Add validation points from a deterministic set: center, rate corners, high coupon, low coupon, near maturity endpoints, and deterministic scenario points.
-- [x] Add baseline finite-difference helpers for PV, zero-pillar DV01, coupon derivative, maturity slope, rate-coupon mixed derivative, and rate-maturity mixed derivative.
+- [x] Add baseline finite-difference helpers for PV, zero-pillar DV01, coupon derivative, maturity sensitivity, rate-coupon mixed derivative, and rate-maturity mixed derivative.
 - [x] Run the focused test and verify the failures move from missing type to missing model construction.
 
 ## Task 3: Build TT and Slider Full-PV Surrogates
@@ -72,7 +72,7 @@
   - absolute and relative PV error,
   - zero-pillar DV01 error,
   - coupon derivative error,
-  - maturity slope error,
+  - maturity sensitivity error,
   - rate-coupon mixed derivative error,
   - rate-maturity mixed derivative error.
 - [x] Run the focused test and fix only this experiment code until it passes.
@@ -90,7 +90,7 @@
   - PV error,
   - zero-pillar DV01,
   - coupon derivative,
-  - maturity slope,
+  - maturity sensitivity,
   - mixed finite differences.
 - [x] Explain why this phase intentionally uses a full-PV tensor before testing the later analytic coupon decomposition.
 - [x] Cite only verified public sources and local ChebyshevSharp docs where needed.
@@ -102,7 +102,7 @@
 - Modify this plan file as steps complete.
 
 - [x] Run private-name scan:
-  - `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`
+  - `rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`
 - [x] Run focused tests:
   - `dotnet test --filter "FullyQualifiedName~FixedRateBondSurrogateReproductionTests"`
 - [x] Run full verification:
@@ -112,4 +112,4 @@
   - `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction`
   - `docfx docs/docfx.json`
 - [x] Open exactly one Phase 4 PR after local verification.
-- [ ] Do not begin Phase 5 implementation until the Phase 4 PR is merged or explicitly closed.
+- [x] Do not begin Phase 5 implementation until the Phase 4 PR is merged or explicitly closed.

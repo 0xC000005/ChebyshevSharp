@@ -100,7 +100,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 
 Measured on 9 deterministic validation points:
 
-| Model | Build evals | Max PV rel. error | Max maturity-slope rel. error | Max rate-coupon mixed rel. error | Max rate-maturity mixed rel. error |
+| Model | Build evals | Max PV rel. error | Max maturity-sensitivity rel. error | Max rate-coupon mixed rel. error | Max rate-maturity mixed rel. error |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | TensorTrain | 408 | 0.35% | 398.88% | 23.62% | 150.84% |
 | Slider | 135 | 6.94% | 381.98% | 100.00% | 100.00% |
@@ -118,7 +118,7 @@ Additional TensorTrain sensitivity errors:
 
 The compact TensorTrain result reproduces the central concern: the direct
 full-PV surrogate can produce a low PV error while some derivative-like
-quantities, especially maturity slope and mixed terms, remain weak. This does
+quantities, especially maturity sensitivity and mixed terms, remain weak. This does
 not prove TensorTrain is unsuitable; it shows that the direct full-PV tensor is
 not enough evidence for risk accuracy.
 
