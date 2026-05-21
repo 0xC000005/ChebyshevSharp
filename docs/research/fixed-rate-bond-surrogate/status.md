@@ -41,7 +41,7 @@ Use generic public terms:
 | 7. Structured alternatives benchmark | Complete | Controlled alternatives compared against the Phase 6 evidence bank |
 | 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
 | 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
-| 10. Schedule-aware high-dimensional router | In progress | Router prototype, one-sided split diagnostics, and public-API decision implemented locally |
+| 10. Schedule-aware high-dimensional router | Complete; PR ready | Router prototype, one-sided split diagnostics, and public-API decision implemented in PR #201 |
 | 11. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
 | 12. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
