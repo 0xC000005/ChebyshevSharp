@@ -12,7 +12,7 @@ Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
 Working branch: `bond-surrogate-research`
 
-Last completed phase PR: [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193), merged on 2026-05-21 as `052eb82`.
+Last completed phase PR: [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194), merged on 2026-05-21 as `396684d`.
 
 ## Confidentiality Guardrail
 
@@ -34,7 +34,7 @@ Use generic public terms:
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
-| 3. Smoothness diagnostics | In progress | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
+| 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
 | 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Monitor Phase 3 PR [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194), address review/CI feedback inside that PR, and merge or explicitly close it before starting Phase 4 implementation.
+Prepare and execute Phase 4 surrogate reproduction. Phase 4 should build the first full PV TT and Slider surrogates against the public baseline and test whether acceptable PV can coexist with unacceptable DV01, coupon, maturity, or mixed-term errors.
 
 ## Phase PR Cadence Gate
 
@@ -111,6 +111,8 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504452110).
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"` passed 7 tests with 0 failures.
 - Local closeout verification: private-name scan produced only guardrail/search-term matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1683 tests with 0 failures; local coverage inspection found no uncovered or partial lines in `SmoothnessDiagnostics.cs`; the only uncovered `Program.cs` line in the full report is the unchanged console entrypoint; both fixed-rate bond example modes ran successfully; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- CI/review outcome: PR [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194) merged on 2026-05-21 after required checks passed, including `All Tests Passed` and `codecov/patch`. Codecov reported that all modified and coverable lines were covered by tests.
+- Merge commit: `396684d`.
 - Diagnostics command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
 - Preliminary findings: coupon second differences are near numerical zero, 10Y is the largest zero-pillar DV01 for the 10Y bond, 20Y/30Y DV01 are zero under the current interpolation support, the diagnostics records 25 rate-bump slice points, and maturity-date slices show daily second-difference spikes near schedule-boundary regions.
 
