@@ -37,6 +37,12 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Saltelli, A., Annoni, P., Azzini, I., Campolongo, F., Ratto, M., and Tarantola, S. (2010). "Variance Based Sensitivity Analysis of Model Output. Design and Estimator for the Total Sensitivity Index." *Computer Physics Communications*, 181(2), 259-270. DOI: [10.1016/j.cpc.2009.09.018](https://doi.org/10.1016/j.cpc.2009.09.018).
 - Zhang, Z., Choi, M., and Karniadakis, G. E. (2011). "Anchor Points Matter in ANOVA Decomposition." In *Spectral and High Order Methods for Partial Differential Equations*, Lecture Notes in Computational Science and Engineering 76, 347-355. DOI: [10.1007/978-3-642-15337-2_32](https://doi.org/10.1007/978-3-642-15337-2_32).
 
+## Piecewise Smoothness and Numerical Differentiation
+
+- Chebfun project. "First steps in Chebfun." *Chebfun Guide*. [Guide page](https://www.chebfun.org/docs/guide/guide01.html).
+- Chebfun project. "Edge detection in Chebfun." *Chebfun Examples*. [Example](https://www.chebfun.org/examples/approx/EdgeDetection.html).
+- SciPy project. "Finite Difference Differentiation." *SciPy API Reference*. [Documentation](https://docs.scipy.org/doc/scipy/reference/differentiate.html).
+
 ## Finance Context
 
 - Ruiz, I. and Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View*. Wiley Finance. ISBN: [978-1-119-79138-6](https://www.wiley-vch.de/en/areas-interest/finance-economics-law/machine-learning-for-risk-calculations-978-1-119-79138-6).
