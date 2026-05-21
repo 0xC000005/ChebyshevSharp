@@ -34,7 +34,7 @@ Use generic public terms:
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
-| 3. Smoothness diagnostics | Planned | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
+| 3. Smoothness diagnostics | In progress | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
 | 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Execute the Phase 3 smoothness diagnostics from [the Phase 3 plan](plans/phase-3-smoothness-diagnostics.md). Phase 3 should identify PV, slope, DV01, coupon, and maturity smoothness behavior against the public fixed-rate bond reference pricer before any surrogate redesign is implemented.
+Finish Phase 3 verification and closeout for the smoothness diagnostics from [the Phase 3 plan](plans/phase-3-smoothness-diagnostics.md). Phase 3 identifies coupon linearity, zero-pillar DV01 support, and maturity-date spike candidates against the public fixed-rate bond reference pricer before any surrogate redesign is implemented.
 
 ## Phase PR Cadence Gate
 
@@ -100,6 +100,16 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
   - Federal Reserve CSV schema confirms `SVENYXX` are continuously compounded zero-coupon yields, `SVENPYXX` are coupon-equivalent par yields, `SVENFXX` are continuously compounded instantaneous forwards, and `SVEN1FXX` are coupon-equivalent one-year forwards.
   - Treasury XML feed remains a later par-yield source, not the first direct-zero fixture.
   - New York Fed SOFR remains a later overnight-rate source, not the first term zero-curve fixture.
+
+## Phase 3 Notes
+
+- Plan: [Phase 3 Smoothness Diagnostics Implementation Plan](plans/phase-3-smoothness-diagnostics.md).
+- Report draft: [Phase 3 Report: Smoothness Diagnostics](reports/phase-3-smoothness-diagnostics.md).
+- Implementation files: `examples/FixedRateBondSurrogate/SmoothnessDiagnostics.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondSmoothnessDiagnosticsTests.cs`.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"` passed 5 tests with 0 failures.
+- Local closeout verification: private-name scan produced only guardrail/search-term matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1681 tests with 0 failures; both fixed-rate bond example modes ran successfully; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Diagnostics command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
+- Preliminary findings: coupon second differences are near numerical zero, 10Y is the largest zero-pillar DV01 for the 10Y bond, 20Y/30Y DV01 are zero under the current interpolation support, the diagnostics records 25 rate-bump slice points, and maturity-date slices show daily second-difference spikes near schedule-boundary regions.
 
 ## Notes for Future Sessions
 

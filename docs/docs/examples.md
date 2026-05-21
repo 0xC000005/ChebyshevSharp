@@ -15,6 +15,7 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
 ```
 
 ## QuickStart
@@ -74,6 +75,13 @@ fixture:
 3. Report the curve fixture, curve date, dirty price, clean price, accrued
    amount, NPV, and cashflow count.
 4. Keep the direct zero-rate curve separate from later Chebyshev surrogates.
+
+Run the diagnostics mode to inspect baseline coupon linearity, zero-pillar
+DV01, and maturity-date spike candidates before fitting a Chebyshev surrogate:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
+```
 
 This example is intentionally restricted. It is a baseline for later surrogate
 validation, not a general fixed-income library. It does not download market data

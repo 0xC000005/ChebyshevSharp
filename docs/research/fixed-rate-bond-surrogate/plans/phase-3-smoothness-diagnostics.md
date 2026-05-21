@@ -81,69 +81,68 @@ Use this as a breakpoint signal, not as proof of a true discontinuity.
 
 ## Task 1: Finite-Difference and Bump Helpers
 
-- [ ] Create `SmoothnessDiagnostics.cs` records:
+- [x] Create `SmoothnessDiagnostics.cs` records:
   - `RateSensitivityPoint`
   - `CouponSlicePoint`
   - `MaturitySlicePoint`
   - `SmoothnessDiagnosticReport`
-- [ ] Add helper methods:
+- [x] Add helper methods:
   - `BumpZeroRate(FixedRateBondRequest request, int pillarIndex, double bump)`
   - `WithCoupon(FixedRateBondRequest request, double coupon)`
   - `WithMaturity(FixedRateBondRequest request, DateTime maturityDate)`
-- [ ] Add derivative helpers for rate, coupon, rate-coupon mixed derivative, and date-based maturity slope.
-- [ ] Reject invalid central stencils with clear exceptions rather than silently clamping.
+- [x] Add derivative helpers for rate, coupon, rate-coupon mixed derivative, and date-based maturity slope.
+- [x] Reject invalid central stencils with clear exceptions rather than silently clamping.
 
 ## Task 2: Baseline Slice Generators
 
-- [ ] Add `SmoothnessDiagnostics.RunDefault(IFixedRateBondReferencePricer pricer)` that loads the Phase 2 fixture and builds the regular 10Y request.
-- [ ] Generate coupon slices at `0%`, `2%`, `4.5%`, `8%`, and `12%`.
-- [ ] Generate zero-rate bump slices for selected pillars `1Y`, `5Y`, `10Y`, `20Y`, and `30Y` over `[-150, -75, 0, 75, 150]` basis points.
-- [ ] Generate maturity-date slices around semiannual schedule boundaries from 2Y through 5Y with daily points in a `[-7,+7]` day window.
-- [ ] Record cashflow count, coupon cashflow count, dirty price, clean price, accrued amount, first future cashflow date, and final cashflow date for every maturity point.
+- [x] Add `SmoothnessDiagnostics.RunDefault(IFixedRateBondReferencePricer pricer)` that loads the Phase 2 fixture and builds the regular 10Y request.
+- [x] Generate coupon slices at `0%`, `2%`, `4.5%`, `8%`, and `12%`.
+- [x] Generate zero-rate bump slices for selected pillars `1Y`, `5Y`, `10Y`, `20Y`, and `30Y` over `[-150, -75, 0, 75, 150]` basis points.
+- [x] Generate maturity-date slices around semiannual schedule boundaries from 2Y through 5Y with daily points in a `[-7,+7]` day window.
+- [x] Record cashflow count, coupon cashflow count, dirty price, clean price, accrued amount, first future cashflow date, and final cashflow date for every maturity point.
 
 ## Task 3: Regression Tests
 
-- [ ] Add `Coupon_slice_has_near_zero_second_difference`.
-- [ ] Add `Rate_bump_slice_is_finite_and_locally_smooth_for_supported_pillars`.
-- [ ] Add `Pillars_without_cashflow_interpolation_support_have_zero_dv01`.
-- [ ] Add `Maturity_slice_records_schedule_count_changes_near_boundaries`.
-- [ ] Add `Diagnostics_mode_writes_summary_without_live_downloads`.
-- [ ] Run `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"`.
+- [x] Add `Coupon_slice_has_near_zero_second_difference`.
+- [x] Add `Rate_bump_slice_is_finite_and_locally_smooth_for_supported_pillars`.
+- [x] Add `Pillars_without_cashflow_interpolation_support_have_zero_dv01`.
+- [x] Add `Maturity_slice_records_schedule_count_changes_near_boundaries`.
+- [x] Add `Diagnostics_mode_writes_summary_without_live_downloads`.
+- [x] Run `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"`.
 
 ## Task 4: Example Diagnostics Mode
 
-- [ ] Update `Program.cs` so `dotnet run --project examples/FixedRateBondSurrogate -- --diagnostics` prints a compact deterministic summary.
-- [ ] Keep default `dotnet run --project examples/FixedRateBondSurrogate` output unchanged except for intentional formatting improvements.
-- [ ] Include top maturity spike candidates and the largest absolute zero-pillar DV01 values in the diagnostics output.
-- [ ] Do not write generated CSV/JSON artifacts by default.
+- [x] Update `Program.cs` so `dotnet run --project examples/FixedRateBondSurrogate -- --diagnostics` prints a compact deterministic summary.
+- [x] Keep default `dotnet run --project examples/FixedRateBondSurrogate` output unchanged except for intentional formatting improvements.
+- [x] Include top maturity spike candidates and the largest absolute zero-pillar DV01 values in the diagnostics output.
+- [x] Do not write generated CSV/JSON artifacts by default.
 
 ## Task 5: Phase Report and Status
 
-- [ ] Create `phase-3-smoothness-diagnostics.md` with:
+- [x] Create `phase-3-smoothness-diagnostics.md` with:
   - exact fixture and baseline pricer used;
   - finite-difference step sizes and stencil rules;
   - coupon linearity table;
   - rate-bump smoothness table;
   - maturity boundary table with cashflow-count changes;
   - conclusion on whether PV, slope, DV01, coupon sensitivity, and maturity sensitivity are smooth or piecewise smooth.
-- [ ] Update `status.md` with Phase 3 status, files changed, commands run, and next task.
-- [ ] Add citations only for public references actually used in the report.
-- [ ] Confirm no proprietary names or private details are introduced.
+- [x] Update `status.md` with Phase 3 status, files changed, commands run, and next task.
+- [x] Add citations only for public references actually used in the report.
+- [x] Confirm no proprietary names or private details are introduced.
 
 ## Task 6: Verification and Phase Closeout
 
-- [ ] Run `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`.
-- [ ] Run focused Phase 3 tests.
-- [ ] Run `dotnet format --verify-no-changes --verbosity minimal`.
-- [ ] Run `dotnet build --configuration Release --no-restore`.
-- [ ] Run `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`.
-- [ ] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj`.
-- [ ] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
-- [ ] Run `docfx docs/docfx.json`.
+- [x] Run `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`.
+- [x] Run focused Phase 3 tests.
+- [x] Run `dotnet format --verify-no-changes --verbosity minimal`.
+- [x] Run `dotnet build --configuration Release --no-restore`.
+- [x] Run `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`.
+- [x] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj`.
+- [x] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
+- [x] Run `docfx docs/docfx.json`.
 - [ ] Commit Phase 3 work.
 - [ ] Push `bond-surrogate-research`.
 - [ ] Open one coherent Phase 3 PR only after the local exit gate is satisfied.
 - [ ] Keep Phase 3 review fixes inside that same PR; do not start Phase 4 implementation while it is open.
 - [ ] Wait for CI/review feedback, then merge the Phase 3 PR or explicitly close it without merge.
 - [ ] Record the PR outcome in `status.md` and tracking issue `#191` before starting Phase 4.
-
