@@ -30,6 +30,18 @@ public sealed record FixedRateBondResult(
     double SettlementValue,
     IReadOnlyList<CashflowInfo> Cashflows);
 
+public sealed record FixedRateBondConventionSummary(
+    string Calendar,
+    string ScheduleFrequency,
+    string CouponDayCount,
+    string CurveDayCount,
+    string BusinessDayConvention,
+    string DateGeneration,
+    bool EndOfMonth,
+    string CurveInterpolation,
+    string CurveCompounding,
+    double Redemption);
+
 public interface IFixedRateBondReferencePricer
 {
     FixedRateBondResult Price(FixedRateBondRequest request);
@@ -37,6 +49,18 @@ public interface IFixedRateBondReferencePricer
 
 public sealed class QlNetFixedRateBondReferencePricer : IFixedRateBondReferencePricer
 {
+    public static FixedRateBondConventionSummary SupportedConventions { get; } = new(
+        Calendar: "UnitedStates.GovernmentBond",
+        ScheduleFrequency: "Semiannual",
+        CouponDayCount: "30/360 USA",
+        CurveDayCount: "Actual/365 Fixed",
+        BusinessDayConvention: "ModifiedFollowing",
+        DateGeneration: "Backward",
+        EndOfMonth: false,
+        CurveInterpolation: "linear zero-rate interpolation",
+        CurveCompounding: "continuous annual",
+        Redemption: 100.0);
+
     public FixedRateBondResult Price(FixedRateBondRequest request)
     {
         Validate(request);

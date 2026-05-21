@@ -71,11 +71,22 @@ a public fixed-rate bond tutorial. It currently prices a restricted regular
 fixed-rate bullet bond against a pinned Federal Reserve nominal-yield-curve
 fixture:
 
-1. Load `Data/fed-nominal-yield-curve-2026-05-15.json`.
+1. Load `Data/fed-nominal-yield-curve-semiannual-2026-05-15.json`.
 2. Price it with QLNet through a small `IFixedRateBondReferencePricer` boundary.
-3. Report the curve fixture, curve date, dirty price, clean price, accrued
-   amount, NPV, and cashflow count.
+3. Report the curve fixture, curve date, curve-pillar count, conventions, dirty
+   price, clean price, accrued amount, NPV, and cashflow count.
 4. Keep the direct zero-rate curve separate from later Chebyshev surrogates.
+
+The default run uses a 30-year semiannual 4.5% coupon bullet bond with
+61 zero-rate pillars: the valuation-date anchor plus 60 semiannual points from
+0.5Y to 30Y. The semiannual fixture is derived from the Federal Reserve fitted
+nominal yield-curve parameters for the pinned curve date, using Actual/365
+year fractions to match the QLNet dated zero curve. The compact annual fixture
+remains available for the earlier surrogate reproduction experiment.
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
+```
 
 Run the diagnostics mode to inspect baseline coupon linearity, zero-pillar
 DV01, and maturity-date spike candidates before fitting a Chebyshev surrogate:
@@ -95,8 +106,8 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 This example is intentionally restricted. It is a baseline for later surrogate
 validation, not a general fixed-income library. It does not download market data
 at runtime; the optional refresh script under
-`tools/RefreshFixedRateBondMarketData/` regenerates the pinned JSON fixture from
-the Federal Reserve public CSV. The research notes in
+`tools/RefreshFixedRateBondMarketData/` regenerates the pinned JSON fixtures
+from the Federal Reserve public CSV. The research notes in
 `docs/research/fixed-rate-bond-surrogate/` track formulas, data provenance,
 citations, source limitations, and validation results as the workflow progresses.
 

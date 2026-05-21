@@ -26,16 +26,25 @@ public static class FixedRateBondExample
 
     private static void RunPricingExample(TextWriter output)
     {
-        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDefaultCurveFixture();
-        FixedRateBondRequest request = FixedRateBondMarketData.RegularTenYearFromFixture(fixture);
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
+        FixedRateBondRequest request = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
         IFixedRateBondReferencePricer pricer = new QlNetFixedRateBondReferencePricer();
         FixedRateBondResult result = pricer.Price(request);
+        FixedRateBondConventionSummary conventions = QlNetFixedRateBondReferencePricer.SupportedConventions;
 
         output.WriteLine("Fixed-rate bond reference pricer");
         output.WriteLine();
         output.WriteLine($"Curve fixture : {fixture.FixtureId}");
         output.WriteLine($"Curve date    : {fixture.Source.CurveDate:yyyy-MM-dd}");
         output.WriteLine($"Curve source  : {fixture.Source.Institution}");
+        output.WriteLine($"Curve pillars : {request.ZeroCurve.Count}");
+        output.WriteLine();
+        output.WriteLine("Conventions");
+        output.WriteLine($"Calendar       : {conventions.Calendar}");
+        output.WriteLine($"Schedule       : {conventions.ScheduleFrequency}, {conventions.DateGeneration}");
+        output.WriteLine($"Day counts     : coupon {conventions.CouponDayCount}, curve {conventions.CurveDayCount}");
+        output.WriteLine($"Business days  : {conventions.BusinessDayConvention}");
+        output.WriteLine($"Curve method   : {conventions.CurveInterpolation}, {conventions.CurveCompounding}");
         output.WriteLine();
         output.WriteLine($"Valuation date : {request.ValuationDate:yyyy-MM-dd}");
         output.WriteLine($"Effective date : {request.EffectiveDate:yyyy-MM-dd}");

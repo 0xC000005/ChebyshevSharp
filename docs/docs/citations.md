@@ -61,6 +61,8 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 ## Public Market Data Sources
 
 - Board of Governors of the Federal Reserve System. "Yield Curve Models and Data: Nominal Yield Curve." [Data page](https://www.federalreserve.gov/data/nominal-yield-curve.htm).
+- Gürkaynak, R. S., Sack, B., and Wright, J. H. (2006). "The U.S. Treasury Yield Curve: 1961 to the Present." Federal Reserve FEDS 2006-28. [Paper](https://www.federalreserve.gov/pubs/feds/2006/200628/200628pap.pdf).
+- U.S. Department of the Treasury. "Treasury Auction Results: 30-Year Bond, CUSIP 912810UU0." May 13, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260513_2.pdf).
 - U.S. Department of the Treasury. "Treasury Daily Interest Rate XML Feed." [Feed documentation](https://home.treasury.gov/treasury-daily-interest-rate-xml-feed).
 - Federal Reserve Bank of New York. "SOFR Averages and Index Data." [Data page](https://www.newyorkfed.org/markets/reference-rates/sofr-averages-and-index).
 

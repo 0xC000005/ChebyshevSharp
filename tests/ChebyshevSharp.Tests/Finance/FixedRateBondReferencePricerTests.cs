@@ -86,10 +86,12 @@ public sealed class FixedRateBondReferencePricerTests
 
         string output = writer.ToString();
         Assert.Contains("Fixed-rate bond reference pricer", output);
-        Assert.Contains("Curve fixture : fed-nominal-yield-curve-2026-05-15", output);
+        Assert.Contains("Curve fixture : fed-nominal-yield-curve-semiannual-2026-05-15", output);
         Assert.Contains("Curve date    : 2026-05-15", output);
-        Assert.Contains("Dirty price    : 98.53533001", output);
-        Assert.Contains("Cashflows      : 21", output);
+        Assert.Contains("Curve pillars : 61", output);
+        Assert.Contains("Day counts     : coupon 30/360 USA, curve Actual/365 Fixed", output);
+        Assert.Contains("Dirty price    : 89.26423408", output);
+        Assert.Contains("Cashflows      : 61", output);
     }
 
     [Fact]

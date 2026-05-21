@@ -1,0 +1,431 @@
+{
+  "name": "Federal Reserve nominal zero yield curve, semiannual Svensson sample",
+  "fixture_id": "fed-nominal-yield-curve-semiannual-2026-05-15",
+  "source": {
+    "institution": "Board of Governors of the Federal Reserve System",
+    "source_url": "https://www.federalreserve.gov/data/yield-curve-tables/feds200628.csv",
+    "source_page": "https://www.federalreserve.gov/data/nominal-yield-curve.htm",
+    "download_date": "2026-05-20",
+    "curve_date": "2026-05-15",
+    "source_note": "Federal Reserve nominal yield curve staff research product; not an official statistical release. Semiannual points are derived from the published fitted nominal yield-curve parameters for the pinned curve date using Actual/365 year fractions to the pillar dates."
+  },
+  "instrument_family": "hypothetical_treasury_zero_coupon_yield",
+  "rate_kind": "zero_coupon_yield",
+  "units": "percent",
+  "compounding": "continuous",
+  "day_count": "Actual/365",
+  "interpolation": "semiannual Svensson parameter sample; QLNet example linearly interpolates zero rates between sampled pillars",
+  "original_fields": [
+    "BETA0",
+    "BETA1",
+    "BETA2",
+    "BETA3",
+    "TAU1",
+    "TAU2",
+    "SVENY01",
+    "SVENY02",
+    "SVENY03",
+    "SVENY04",
+    "SVENY05",
+    "SVENY06",
+    "SVENY07",
+    "SVENY08",
+    "SVENY09",
+    "SVENY10",
+    "SVENY11",
+    "SVENY12",
+    "SVENY13",
+    "SVENY14",
+    "SVENY15",
+    "SVENY16",
+    "SVENY17",
+    "SVENY18",
+    "SVENY19",
+    "SVENY20",
+    "SVENY21",
+    "SVENY22",
+    "SVENY23",
+    "SVENY24",
+    "SVENY25",
+    "SVENY26",
+    "SVENY27",
+    "SVENY28",
+    "SVENY29",
+    "SVENY30"
+  ],
+  "source_model": {
+    "family": "Svensson fitted nominal zero-yield curve",
+    "formula": "beta0 + beta1*L(t,tau1) + beta2*(L(t,tau1)-exp(-t/tau1)) + beta3*(L(t,tau2)-exp(-t/tau2)), L(t,tau)=(1-exp(-t/tau))/(t/tau)",
+    "time_variable": "Actual/365 year fraction from curve_date to the semiannual pillar date",
+    "parameters": {
+      "BETA0": 0.00247503258041149,
+      "BETA1": 3.7934754064652,
+      "BETA2": -354.625103073832,
+      "BETA3": 366.605482495496,
+      "TAU1": 15.0859145397712,
+      "TAU2": 15.3066563316375
+    }
+  },
+  "points": [
+    {
+      "maturity_years": 0.5041095890410959,
+      "maturity_months": 6,
+      "field": "SVENY_SVENSSON_0006M",
+      "zero_yield_percent": 3.8445346964
+    },
+    {
+      "maturity_years": 1.0,
+      "maturity_months": 12,
+      "field": "SVENY_SVENSSON_0012M",
+      "zero_yield_percent": 3.8924992577
+    },
+    {
+      "maturity_years": 1.5041095890410958,
+      "maturity_months": 18,
+      "field": "SVENY_SVENSSON_0018M",
+      "zero_yield_percent": 3.9413119518
+    },
+    {
+      "maturity_years": 2.0027397260273974,
+      "maturity_months": 24,
+      "field": "SVENY_SVENSSON_0024M",
+      "zero_yield_percent": 3.9895344732
+    },
+    {
+      "maturity_years": 2.506849315068493,
+      "maturity_months": 30,
+      "field": "SVENY_SVENSSON_0030M",
+      "zero_yield_percent": 4.0381206057
+    },
+    {
+      "maturity_years": 3.0027397260273974,
+      "maturity_months": 36,
+      "field": "SVENY_SVENSSON_0036M",
+      "zero_yield_percent": 4.0856554622
+    },
+    {
+      "maturity_years": 3.506849315068493,
+      "maturity_months": 42,
+      "field": "SVENY_SVENSSON_0042M",
+      "zero_yield_percent": 4.1336241348
+    },
+    {
+      "maturity_years": 4.002739726027397,
+      "maturity_months": 48,
+      "field": "SVENY_SVENSSON_0048M",
+      "zero_yield_percent": 4.1803804675
+    },
+    {
+      "maturity_years": 4.506849315068493,
+      "maturity_months": 54,
+      "field": "SVENY_SVENSSON_0054M",
+      "zero_yield_percent": 4.227397128
+    },
+    {
+      "maturity_years": 5.002739726027397,
+      "maturity_months": 60,
+      "field": "SVENY_SVENSSON_0060M",
+      "zero_yield_percent": 4.2730714057
+    },
+    {
+      "maturity_years": 5.506849315068493,
+      "maturity_months": 66,
+      "field": "SVENY_SVENSSON_0066M",
+      "zero_yield_percent": 4.3188521008
+    },
+    {
+      "maturity_years": 6.005479452054795,
+      "maturity_months": 72,
+      "field": "SVENY_SVENSSON_0072M",
+      "zero_yield_percent": 4.3634308415
+    },
+    {
+      "maturity_years": 6.50958904109589,
+      "maturity_months": 78,
+      "field": "SVENY_SVENSSON_0078M",
+      "zero_yield_percent": 4.4077326245
+    },
+    {
+      "maturity_years": 7.005479452054795,
+      "maturity_months": 84,
+      "field": "SVENY_SVENSSON_0084M",
+      "zero_yield_percent": 4.4505112459
+    },
+    {
+      "maturity_years": 7.50958904109589,
+      "maturity_months": 90,
+      "field": "SVENY_SVENSSON_0090M",
+      "zero_yield_percent": 4.4931398839
+    },
+    {
+      "maturity_years": 8.005479452054795,
+      "maturity_months": 96,
+      "field": "SVENY_SVENSSON_0096M",
+      "zero_yield_percent": 4.5341888559
+    },
+    {
+      "maturity_years": 8.509589041095891,
+      "maturity_months": 102,
+      "field": "SVENY_SVENSSON_0102M",
+      "zero_yield_percent": 4.5749825584
+    },
+    {
+      "maturity_years": 9.005479452054795,
+      "maturity_months": 108,
+      "field": "SVENY_SVENSSON_0108M",
+      "zero_yield_percent": 4.6141590389
+    },
+    {
+      "maturity_years": 9.509589041095891,
+      "maturity_months": 114,
+      "field": "SVENY_SVENSSON_0114M",
+      "zero_yield_percent": 4.6529882307
+    },
+    {
+      "maturity_years": 10.008219178082191,
+      "maturity_months": 120,
+      "field": "SVENY_SVENSSON_0120M",
+      "zero_yield_percent": 4.6903819201
+    },
+    {
+      "maturity_years": 10.512328767123288,
+      "maturity_months": 126,
+      "field": "SVENY_SVENSSON_0126M",
+      "zero_yield_percent": 4.7271398703
+    },
+    {
+      "maturity_years": 11.008219178082191,
+      "maturity_months": 132,
+      "field": "SVENY_SVENSSON_0132M",
+      "zero_yield_percent": 4.762253207
+    },
+    {
+      "maturity_years": 11.512328767123288,
+      "maturity_months": 138,
+      "field": "SVENY_SVENSSON_0138M",
+      "zero_yield_percent": 4.79686991
+    },
+    {
+      "maturity_years": 12.008219178082191,
+      "maturity_months": 144,
+      "field": "SVENY_SVENSSON_0144M",
+      "zero_yield_percent": 4.8298481795
+    },
+    {
+      "maturity_years": 12.512328767123288,
+      "maturity_months": 150,
+      "field": "SVENY_SVENSSON_0150M",
+      "zero_yield_percent": 4.8622704829
+    },
+    {
+      "maturity_years": 13.008219178082191,
+      "maturity_months": 156,
+      "field": "SVENY_SVENSSON_0156M",
+      "zero_yield_percent": 4.8930714059
+    },
+    {
+      "maturity_years": 13.512328767123288,
+      "maturity_months": 162,
+      "field": "SVENY_SVENSSON_0162M",
+      "zero_yield_percent": 4.9232658637
+    },
+    {
+      "maturity_years": 14.01095890410959,
+      "maturity_months": 168,
+      "field": "SVENY_SVENSSON_0168M",
+      "zero_yield_percent": 4.9520202894
+    },
+    {
+      "maturity_years": 14.515068493150684,
+      "maturity_months": 174,
+      "field": "SVENY_SVENSSON_0174M",
+      "zero_yield_percent": 4.9799645816
+    },
+    {
+      "maturity_years": 15.01095890410959,
+      "maturity_months": 180,
+      "field": "SVENY_SVENSSON_0180M",
+      "zero_yield_percent": 5.0063483051
+    },
+    {
+      "maturity_years": 15.515068493150684,
+      "maturity_months": 186,
+      "field": "SVENY_SVENSSON_0186M",
+      "zero_yield_percent": 5.0320475306
+    },
+    {
+      "maturity_years": 16.01095890410959,
+      "maturity_months": 192,
+      "field": "SVENY_SVENSSON_0192M",
+      "zero_yield_percent": 5.0562272283
+    },
+    {
+      "maturity_years": 16.515068493150686,
+      "maturity_months": 198,
+      "field": "SVENY_SVENSSON_0198M",
+      "zero_yield_percent": 5.0796934611
+    },
+    {
+      "maturity_years": 17.01095890410959,
+      "maturity_months": 204,
+      "field": "SVENY_SVENSSON_0204M",
+      "zero_yield_percent": 5.1016867893
+    },
+    {
+      "maturity_years": 17.515068493150686,
+      "maturity_months": 210,
+      "field": "SVENY_SVENSSON_0210M",
+      "zero_yield_percent": 5.1229434296
+    },
+    {
+      "maturity_years": 18.013698630136986,
+      "maturity_months": 216,
+      "field": "SVENY_SVENSSON_0216M",
+      "zero_yield_percent": 5.1428850163
+    },
+    {
+      "maturity_years": 18.517808219178082,
+      "maturity_months": 222,
+      "field": "SVENY_SVENSSON_0222M",
+      "zero_yield_percent": 5.1619592771
+    },
+    {
+      "maturity_years": 19.013698630136986,
+      "maturity_months": 228,
+      "field": "SVENY_SVENSSON_0228M",
+      "zero_yield_percent": 5.1796669106
+    },
+    {
+      "maturity_years": 19.517808219178082,
+      "maturity_months": 234,
+      "field": "SVENY_SVENSSON_0234M",
+      "zero_yield_percent": 5.1966062272
+    },
+    {
+      "maturity_years": 20.013698630136986,
+      "maturity_months": 240,
+      "field": "SVENY_SVENSSON_0240M",
+      "zero_yield_percent": 5.2122367474
+    },
+    {
+      "maturity_years": 20.517808219178082,
+      "maturity_months": 246,
+      "field": "SVENY_SVENSSON_0246M",
+      "zero_yield_percent": 5.2270895261
+    },
+    {
+      "maturity_years": 21.013698630136986,
+      "maturity_months": 252,
+      "field": "SVENY_SVENSSON_0252M",
+      "zero_yield_percent": 5.2406935494
+    },
+    {
+      "maturity_years": 21.517808219178082,
+      "maturity_months": 258,
+      "field": "SVENY_SVENSSON_0258M",
+      "zero_yield_percent": 5.2535140203
+    },
+    {
+      "maturity_years": 22.016438356164382,
+      "maturity_months": 264,
+      "field": "SVENY_SVENSSON_0264M",
+      "zero_yield_percent": 5.265208974
+    },
+    {
+      "maturity_years": 22.52054794520548,
+      "maturity_months": 270,
+      "field": "SVENY_SVENSSON_0270M",
+      "zero_yield_percent": 5.276050834
+    },
+    {
+      "maturity_years": 23.016438356164382,
+      "maturity_months": 276,
+      "field": "SVENY_SVENSSON_0276M",
+      "zero_yield_percent": 5.2857684222
+    },
+    {
+      "maturity_years": 23.52054794520548,
+      "maturity_months": 282,
+      "field": "SVENY_SVENSSON_0282M",
+      "zero_yield_percent": 5.2947000519
+    },
+    {
+      "maturity_years": 24.016438356164382,
+      "maturity_months": 288,
+      "field": "SVENY_SVENSSON_0288M",
+      "zero_yield_percent": 5.302570655
+    },
+    {
+      "maturity_years": 24.52054794520548,
+      "maturity_months": 294,
+      "field": "SVENY_SVENSSON_0294M",
+      "zero_yield_percent": 5.3096579849
+    },
+    {
+      "maturity_years": 25.016438356164382,
+      "maturity_months": 300,
+      "field": "SVENY_SVENSSON_0300M",
+      "zero_yield_percent": 5.3157476787
+    },
+    {
+      "maturity_years": 25.52054794520548,
+      "maturity_months": 306,
+      "field": "SVENY_SVENSSON_0306M",
+      "zero_yield_percent": 5.3210589482
+    },
+    {
+      "maturity_years": 26.019178082191782,
+      "maturity_months": 312,
+      "field": "SVENY_SVENSSON_0312M",
+      "zero_yield_percent": 5.3254576292
+    },
+    {
+      "maturity_years": 26.523287671232875,
+      "maturity_months": 318,
+      "field": "SVENY_SVENSSON_0318M",
+      "zero_yield_percent": 5.3290581623
+    },
+    {
+      "maturity_years": 27.019178082191782,
+      "maturity_months": 324,
+      "field": "SVENY_SVENSSON_0324M",
+      "zero_yield_percent": 5.3317870335
+    },
+    {
+      "maturity_years": 27.523287671232875,
+      "maturity_months": 330,
+      "field": "SVENY_SVENSSON_0330M",
+      "zero_yield_percent": 5.3337525957
+    },
+    {
+      "maturity_years": 28.019178082191782,
+      "maturity_months": 336,
+      "field": "SVENY_SVENSSON_0336M",
+      "zero_yield_percent": 5.334908317
+    },
+    {
+      "maturity_years": 28.523287671232875,
+      "maturity_months": 342,
+      "field": "SVENY_SVENSSON_0342M",
+      "zero_yield_percent": 5.3353104913
+    },
+    {
+      "maturity_years": 29.019178082191782,
+      "maturity_months": 348,
+      "field": "SVENY_SVENSSON_0348M",
+      "zero_yield_percent": 5.3349636022
+    },
+    {
+      "maturity_years": 29.523287671232875,
+      "maturity_months": 354,
+      "field": "SVENY_SVENSSON_0354M",
+      "zero_yield_percent": 5.3338741198
+    },
+    {
+      "maturity_years": 30.02191780821918,
+      "maturity_months": 360,
+      "field": "SVENY_SVENSSON_0360M",
+      "zero_yield_percent": 5.3320833655
+    }
+  ]
+}

@@ -36,17 +36,18 @@ Use generic public terms:
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
-| 5. Analytic coupon decomposition | Planned | Principal/annuity surrogate comparison completed |
-| 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
-| 7. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
-| 8. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
-| 9. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
+| 5. Realistic dense-curve baseline | Complete locally | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
+| 6. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
+| 7. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
+| 8. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
+| 9. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
+| 10. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
 
 Last checked: 2026-05-20.
 
-- Branch/worktree: `bond-surrogate-research` at `/tmp/ChebyshevSharp-worktrees/fixed-rate-bond-surrogate`.
+- Branch/worktree: `bond-surrogate-research` at `/home/max/Documents/ChebyshevSharp/.worktrees/bond-surrogate-research`.
 - Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191).
 - Python tooling: `uv 0.9.2` at `/home/max/.local/bin/uv`; Python `3.13.9`.
 - Python data stack smoke: `uv run --with pandas --with pandas-datareader --with requests ...` imports `pandas`, `pandas_datareader`, and `requests`.
@@ -61,13 +62,21 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Prepare Phase 5 analytic coupon decomposition. Phase 5 should compare the direct full-PV surrogate against a principal/annuity decomposition so coupon is no longer a tensor dimension.
+Finish Phase 5 realistic dense-curve baseline hardening. Stop after the baseline is ready; do not resume analytic coupon decomposition, maturity splitting, adaptive splitting, or any surrogate implementation until explicitly requested.
 
 ## Phase 5 Notes
 
-- Plan: [Phase 5 Analytic Coupon Decomposition Implementation Plan](plans/phase-5-analytic-coupon-decomposition.md).
-- Baseline idea: derive `Principal(curve, T)` and `Annuity(curve, T)` from the QLNet reference pricer, then reconstruct `PV = Principal + coupon * Annuity`.
-- Scope boundary: do not introduce maturity splitting in Phase 5. Keep the same compact curve/maturity domain as Phase 4 so any change in metrics is attributable primarily to removing coupon from the tensor.
+- Plan: [Phase 5 Realistic Baseline Implementation Plan](plans/phase-5-realistic-baseline.md).
+- Report draft: [Phase 5 Report: Realistic Baseline](reports/phase-5-realistic-baseline.md).
+- Scope boundary: do not implement analytic coupon decomposition, maturity splitting, adaptive splitting, or new Chebyshev surrogate fixes in this phase.
+- New dense fixture: `examples/FixedRateBondSurrogate/Data/fed-nominal-yield-curve-semiannual-2026-05-15.json`.
+- Data method: sample the Federal Reserve fitted nominal zero-yield curve every six months from the published `BETA0`, `BETA1`, `BETA2`, `BETA3`, `TAU1`, and `TAU2` parameters for 2026-05-15, using the same Actual/365 year fraction that QLNet uses for the dated zero curve.
+- Baseline conventions are exposed from `QlNetFixedRateBondReferencePricer.SupportedConventions`: United States Government Bond calendar, semiannual schedule, 30/360 USA coupon day count, Actual/365 Fixed curve day count, Modified Following business-day adjustment, backward schedule generation, linear zero-rate interpolation, continuous annual compounding, and 100 redemption.
+- Default example now prices a regular 30Y 4.5% coupon bullet from the dense fixture. It uses 61 curve pillars and produces 61 cashflows, dirty price `89.26423408`, clean price `89.26423408`, and zero accrued amount at valuation/effective date.
+- Added baseline hardening tests for manual linear zero-rate interpolation and a public Treasury auction sanity check. The auction check uses Treasury result `R_20260513_2` for CUSIP `912810UU0`: 5% coupon, 2056-05-15 maturity, 5.046% high yield, and price `99.292811`. The QLNet continuous-zero approximation prices within `0.10` price points, which is sufficient for a convention sanity check rather than an exact Treasury-yield formula clone.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBond"` passed 45 tests with 0 failures.
+- Fixture regeneration checks using `--input-csv /tmp/feds200628.csv` matched both the dense semiannual fixture and the existing annual fixture byte-for-byte.
+- Closeout verification: private-name scan found only guardrail/search-term text; stale Phase 5/deleted-worktree scan found no matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1694 tests with 0 failures; the Release default example ran against the dense baseline; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed.
 
 ## Phase 4 Notes
 

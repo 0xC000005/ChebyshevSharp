@@ -25,13 +25,41 @@ public sealed record YieldCurveSourceMetadata(
     [property: JsonPropertyName("source_note")] string SourceNote);
 
 public sealed record YieldCurvePoint(
-    [property: JsonPropertyName("maturity_years")] int MaturityYears,
+    [property: JsonPropertyName("maturity_years")] double MaturityYears,
     [property: JsonPropertyName("field")] string Field,
-    [property: JsonPropertyName("zero_yield_percent")] double ZeroYieldPercent);
+    [property: JsonPropertyName("zero_yield_percent")] double ZeroYieldPercent)
+{
+    [JsonPropertyName("maturity_months")]
+    public int? ExplicitMaturityMonths { get; init; }
+
+    [JsonIgnore]
+    public int MaturityMonths
+    {
+        get
+        {
+            if (ExplicitMaturityMonths is { } months)
+            {
+                return months;
+            }
+
+            double monthsFromYears = MaturityYears * 12.0;
+            double rounded = Math.Round(monthsFromYears);
+            if (Math.Abs(monthsFromYears - rounded) > 1e-9)
+            {
+                throw new InvalidDataException(
+                    $"Maturity {MaturityYears}Y cannot be represented as a whole number of months.");
+            }
+
+            return checked((int)rounded);
+        }
+    }
+}
 
 public static class FixedRateBondMarketData
 {
     public const string DefaultFixtureFileName = "fed-nominal-yield-curve-2026-05-15.json";
+    public const string DenseSemiannualFixtureFileName =
+        "fed-nominal-yield-curve-semiannual-2026-05-15.json";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -41,6 +69,12 @@ public static class FixedRateBondMarketData
     public static YieldCurveFixture LoadDefaultCurveFixture()
     {
         string path = Path.Combine(AppContext.BaseDirectory, "Data", DefaultFixtureFileName);
+        return LoadCurveFixture(path);
+    }
+
+    public static YieldCurveFixture LoadDenseSemiannualCurveFixture()
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "Data", DenseSemiannualFixtureFileName);
         return LoadCurveFixture(path);
     }
 
@@ -71,7 +105,7 @@ public static class FixedRateBondMarketData
         foreach (YieldCurvePoint point in fixture.Points)
         {
             pillars.Add(new ZeroRatePillar(
-                valuationDate.Date.AddYears(point.MaturityYears),
+                valuationDate.Date.AddMonths(point.MaturityMonths),
                 PercentToDecimal(point.ZeroYieldPercent)));
         }
 
@@ -89,6 +123,22 @@ public static class FixedRateBondMarketData
             ValuationDate: curveDate,
             EffectiveDate: curveDate,
             MaturityDate: curveDate.AddYears(10),
+            Coupon: coupon,
+            Notional: notional,
+            ZeroCurve: ToZeroRatePillars(fixture, curveDate));
+    }
+
+    public static FixedRateBondRequest RegularThirtyYearFromDenseFixture(
+        YieldCurveFixture fixture,
+        double coupon = 0.045,
+        double notional = 100.0)
+    {
+        DateTime curveDate = fixture.Source.CurveDate.Date;
+
+        return new FixedRateBondRequest(
+            ValuationDate: curveDate,
+            EffectiveDate: curveDate,
+            MaturityDate: curveDate.AddYears(30),
             Coupon: coupon,
             Notional: notional,
             ZeroCurve: ToZeroRatePillars(fixture, curveDate));
@@ -116,10 +166,11 @@ public static class FixedRateBondMarketData
             throw new InvalidDataException("The fixture must contain at least one curve point.");
         }
 
-        int previousMaturity = 0;
+        int previousMaturityMonths = 0;
         foreach (YieldCurvePoint point in fixture.Points)
         {
-            if (point.MaturityYears <= previousMaturity)
+            int maturityMonths = point.MaturityMonths;
+            if (maturityMonths <= previousMaturityMonths)
             {
                 throw new InvalidDataException("Curve maturities must be strictly increasing.");
             }
@@ -129,16 +180,28 @@ public static class FixedRateBondMarketData
                 throw new InvalidDataException("Curve yields must be finite.");
             }
 
-            string expectedField = $"SVENY{point.MaturityYears:00}";
-            if (point.Field != expectedField)
+            if (!point.Field.StartsWith("SVENY", StringComparison.Ordinal))
             {
-                throw new InvalidDataException($"Expected field {expectedField} for {point.MaturityYears}Y point.");
+                throw new InvalidDataException($"Expected an SVENY-style zero-yield field for {point.MaturityYears}Y point.");
             }
 
-            previousMaturity = point.MaturityYears;
+            if (maturityMonths % 12 == 0 && IsLegacyAnnualField(point.Field))
+            {
+                int maturityYears = maturityMonths / 12;
+                string expectedField = $"SVENY{maturityYears:00}";
+                if (point.Field != expectedField)
+                {
+                    throw new InvalidDataException($"Expected field {expectedField} for {maturityYears}Y point.");
+                }
+            }
+
+            previousMaturityMonths = maturityMonths;
         }
     }
 
     private static double PercentToDecimal(double percent)
         => percent / 100.0;
+
+    private static bool IsLegacyAnnualField(string field)
+        => field.Length == 7 && field.All(char.IsAsciiLetterOrDigit);
 }
