@@ -36,11 +36,11 @@ Use generic public terms:
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
-| 5. Realistic dense-curve baseline | Complete locally | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
-| 6. Naive dense-baseline surrogate discovery | In progress | Dense-baseline naive TT/Slider and maturity-smoothness evidence documented |
-| 7. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
-| 8. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
-| 9. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
+| 5. Realistic dense-curve baseline | Complete | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
+| 6. Naive dense-baseline surrogate discovery | Complete | Dense-baseline naive TT/Slider failure evidence and maturity-smoothness evidence documented |
+| 7. Structured alternatives benchmark | Planned | Controlled alternatives compared against the Phase 6 evidence bank |
+| 8. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
+| 9. Maturity splitting and adaptive knots | Not started | No split vs 1Y vs 0.5Y vs schedule-aware/adaptive split comparison completed |
 | 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
 | 11. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
@@ -48,7 +48,7 @@ Use generic public terms:
 
 Last checked: 2026-05-20.
 
-- Branch/worktree: `bond-surrogate-research` at `/home/max/Documents/ChebyshevSharp/.worktrees/bond-surrogate-research`.
+- Last completed branch/PR: `bond-surrogate-research`, PR [#196](https://github.com/0xC000005/ChebyshevSharp/pull/196), merged into `main` on 2026-05-21.
 - Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191).
 - Python tooling: `uv 0.9.2` at `/home/max/.local/bin/uv`; Python `3.13.9`.
 - Python data stack smoke: `uv run --with pandas --with pandas-datareader --with requests ...` imports `pandas`, `pandas_datareader`, and `requests`.
@@ -63,12 +63,13 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Run Phase 6 naive dense-baseline surrogate discovery. Start from the QLNet-backed dense baseline and collect evidence for or against naive full-PV Chebyshev modelling. Stop after documenting the naive failure modes; do not implement analytic coupon decomposition, maturity splitting, adaptive splitting, or portfolio-specific modelling in this phase.
+Start Phase 7 from fresh `origin/main` using [Phase 7 Structured Alternatives Benchmark Plan](plans/phase-7-structured-alternatives.md). The phase should compare controlled modelling alternatives against the Phase 6 evidence bank. Do not implement a final production architecture in Phase 7; measure first.
 
 ## Phase 6 Notes
 
 - Plan: [Phase 6 Naive Surrogate Discovery Implementation Plan](plans/phase-6-naive-surrogate-discovery.md).
 - Report draft: [Phase 6 Report: Naive Dense-Baseline Surrogate Discovery](reports/phase-6-naive-surrogate-discovery.md).
+- Merge outcome: PR [#196](https://github.com/0xC000005/ChebyshevSharp/pull/196) merged into `main` on 2026-05-21 with merge commit `74a8d8abb2e36018a2d362cd94cca223f6de2ef0`.
 - Scope boundary: this is a discovery phase. It may build naive TT/Slider models, but it must not implement the next modelling fix.
 - Conceptual inputs are curve, coupon, maturity, and notional. Chebyshev dimensions count scalar coordinates, so the dense fixture creates 60 curve-bump dimensions; excluding notional, the naive full-PV surrogate is 62-dimensional.
 - Correction: selected-pillar surrogate inputs are not faithful evidence for the clone objective. All Phase 6 and later surrogate tests must expose the full 62-coordinate input at the wrapper boundary, even if an internal model partitions, routes, or ignores some coordinates.
@@ -85,6 +86,14 @@ Run Phase 6 naive dense-baseline surrogate discovery. Start from the QLNet-backe
 - Local closeout checks so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1703 tests with 0 failures; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed; private-name scan matched only pre-existing guardrail/search-term text.
 - Superseded tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509528109) recorded the earlier selected-pillar probe and should not be used as clone evidence.
 - Correction tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509648601).
+- Closeout tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4510805560).
+
+## Phase 7 Notes
+
+- Plan: [Phase 7 Structured Alternatives Benchmark Plan](plans/phase-7-structured-alternatives.md).
+- Scope boundary: compare fixes against the Phase 6 evidence bank without claiming a final bond-pricer replacement design.
+- Required wrapper contract: every tested candidate must be callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`, even if the implementation internally routes, buckets, partitions, or ignores unsupported coordinates.
+- Candidate families to measure first: stronger global TT settings, TT auto-ordering, Sobol/pruning diagnostics without dropping wrapper inputs, grouped Slider partitions, and maturity-aware/bucketed routing.
 
 ## Phase 5 Notes
 
