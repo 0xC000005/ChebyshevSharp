@@ -145,6 +145,7 @@ Continue Phase 9 on `phase9-maturity-special-points`: harden the maturity-specia
 - Fixed-rate bond test slice run: `dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBond" --verbosity minimal` passed 70 tests with 0 failures.
 - Benchmark command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points`.
 - Local verification so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `docfx docs/docfx.json` passed with 0 warnings/errors; Release tests passed 1719 tests; `git diff --check` passed.
+- CI outcome on PR #200: `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, and `All Tests Passed` passed; Dependabot was skipped.
 
 ## Phase 5 Notes
 
