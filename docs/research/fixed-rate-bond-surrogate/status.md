@@ -48,7 +48,9 @@ Last checked: 2026-05-20.
 - Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191).
 - Python tooling: `uv 0.9.2` at `/home/max/.local/bin/uv`; Python `3.13.9`.
 - Python data stack smoke: `uv run --with pandas --with pandas-datareader --with requests ...` imports `pandas`, `pandas_datareader`, and `requests`.
+- Python baseline candidate smoke: `uv run --with QuantLib ...` imports QuantLib `1.42.1`.
 - .NET tooling: SDK `10.0.107`; DocFX `2.78.4`.
+- .NET baseline candidate smoke: temporary NuGet restore installed QLNet `1.13.1` successfully.
 - Baseline tests: `dotnet test` passed 1649 tests with 0 failures from the workflow worktree.
 - Baseline build: `dotnet build --no-restore` succeeded with 0 warnings and 0 errors.
 - Documentation build: `docfx docs/docfx.json` succeeded with 0 warnings and 0 errors.
