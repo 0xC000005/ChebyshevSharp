@@ -39,10 +39,32 @@ public sealed class FixedRateBondNaiveSurrogateDiscoveryTests
             Assert.Contains(model.Metrics, metric => metric.Name == "PV");
             Assert.Contains(model.Metrics, metric => metric.Name == "10Y zero-pillar DV01");
             Assert.Contains(model.Metrics, metric => metric.Name == "30Y zero-pillar DV01");
-            Assert.Contains(model.Metrics, metric => metric.Name == "maturity slope");
+            Assert.Contains(model.Metrics, metric => metric.Name == "maturity sensitivity");
             Assert.Contains(model.Metrics, metric => metric.Name == "coupon-maturity mixed");
+            Assert.Contains(model.Metrics, metric => metric.Name == "20Y-30Y rate-rate mixed");
             Assert.All(model.Metrics, AssertFiniteMetric);
         });
+    }
+
+    [Fact]
+    public void Default_report_includes_post_maturity_sanity_checks()
+    {
+        NaiveSurrogateDiscoveryReport report = NaiveSurrogateDiscovery.RunDefault(Pricer);
+
+        NaiveSurrogateSanityCheck postMaturityDv01 = Assert.Single(
+            report.SanityChecks,
+            check => check.Name == "10Y bond / 30Y zero-pillar DV01");
+        Assert.Equal("post-maturity curve support", postMaturityDv01.Category);
+        Assert.True(Math.Abs(postMaturityDv01.BaselineValue) <= postMaturityDv01.BaselineTolerance);
+        Assert.All(postMaturityDv01.ModelValues, value =>
+        {
+            Assert.True(double.IsFinite(value.Value));
+            Assert.True(double.IsFinite(value.AbsoluteError));
+        });
+
+        Assert.Contains(
+            report.SanityChecks,
+            check => check.Name == "10Y bond / 20Y-30Y rate-rate mixed");
     }
 
     [Fact]
@@ -74,6 +96,7 @@ public sealed class FixedRateBondNaiveSurrogateDiscoveryTests
         Assert.Contains("TensorTrain", output);
         Assert.Contains("Slider", output);
         Assert.Contains("coupon-maturity mixed", output);
+        Assert.Contains("Structural sanity checks", output);
         Assert.Contains("Top maturity spike candidates", output);
     }
 

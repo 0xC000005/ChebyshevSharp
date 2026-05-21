@@ -120,7 +120,7 @@ Results so far:
 Closeout verification:
 
 ```bash
-rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md
+rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md
 dotnet format --verify-no-changes --verbosity minimal
 dotnet build --configuration Release --no-restore
 dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true

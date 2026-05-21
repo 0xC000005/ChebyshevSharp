@@ -153,6 +153,12 @@ probes before any decomposition or maturity splitting:
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
 ```
 
+The naive discovery report also prints structural sanity checks. For example,
+a bond maturing at the 10Y curve pillar should have zero direct sensitivity to
+the 30Y zero-rate pillar under the current direct-zero interpolation setup. If
+that check fails, the surrogate is inventing post-maturity curve exposure before
+any finer modelling question matters.
+
 This example is intentionally restricted. It is a baseline for later surrogate
 validation, not a general fixed-income library. It does not download market data
 at runtime; the optional refresh script under

@@ -90,7 +90,7 @@ Use this as a breakpoint signal, not as proof of a true discontinuity.
   - `BumpZeroRate(FixedRateBondRequest request, int pillarIndex, double bump)`
   - `WithCoupon(FixedRateBondRequest request, double coupon)`
   - `WithMaturity(FixedRateBondRequest request, DateTime maturityDate)`
-- [x] Add derivative helpers for rate, coupon, rate-coupon mixed derivative, and date-based maturity slope.
+- [x] Add derivative helpers for rate, coupon, rate-coupon mixed derivative, and date-based maturity sensitivity.
 - [x] Reject invalid central stencils with clear exceptions rather than silently clamping.
 
 ## Task 2: Baseline Slice Generators
@@ -132,7 +132,7 @@ Use this as a breakpoint signal, not as proof of a true discontinuity.
 
 ## Task 6: Verification and Phase Closeout
 
-- [x] Run `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`.
+- [x] Run `rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`.
 - [x] Run focused Phase 3 tests.
 - [x] Run `dotnet format --verify-no-changes --verbosity minimal`.
 - [x] Run `dotnet build --configuration Release --no-restore`.

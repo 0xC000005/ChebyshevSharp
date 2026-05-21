@@ -166,14 +166,14 @@ public static class FixedRateBondExample
         foreach (NaiveSurrogateModelSummary model in report.Models)
         {
             NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
-            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity slope");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity sensitivity");
             NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
 
             output.WriteLine(
                 $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
                 $"build seconds {model.BuildSeconds:F3}, " +
                 $"PV rel max {pv.MaxRelativeError:P2}, " +
-                $"maturity slope rel max {maturity.MaxRelativeError:P2}, " +
+                $"maturity sensitivity rel max {maturity.MaxRelativeError:P2}, " +
                 $"coupon-maturity mixed rel max {couponMaturity.MaxRelativeError:P2}");
 
             foreach (NaiveSurrogateMetricSummary metric in model.Metrics)
@@ -181,6 +181,21 @@ public static class FixedRateBondExample
                 output.WriteLine(
                     $"  {metric.Name,-24} abs max {metric.MaxAbsoluteError,12:E6} " +
                     $"rel max {metric.MaxRelativeError,12:P2} worst {metric.WorstPointName}");
+            }
+        }
+
+        output.WriteLine();
+        output.WriteLine("Structural sanity checks");
+        foreach (NaiveSurrogateSanityCheck check in report.SanityChecks)
+        {
+            output.WriteLine(
+                $"{check.Name}: baseline {check.BaselineValue:E6} " +
+                $"tolerance {check.BaselineTolerance:E1}");
+            foreach (NaiveSurrogateSanityModelValue modelValue in check.ModelValues)
+            {
+                output.WriteLine(
+                    $"  {modelValue.ModelName,-11} value {modelValue.Value,12:E6} " +
+                    $"abs error {modelValue.AbsoluteError,12:E6}");
             }
         }
 

@@ -13,8 +13,8 @@ infeasibility of a full dense Chebyshev tensor over the dense curve fixture.
 Then run naive full-PV TensorTrain and Slider comparisons whose public callable
 input is the full 62-coordinate vector: 60 curve-bump coordinates plus coupon
 and maturity. Report PV, DV01, coupon,
-maturity, and mixed finite-difference errors, plus maturity-date smoothness
-diagnostics.
+maturity sensitivity, and mixed finite-difference errors, plus structural
+post-maturity support checks and maturity-date smoothness diagnostics.
 
 **Tech stack:** C#/.NET 10 example project, QLNet reference pricer,
 ChebyshevSharp `ChebyshevTT`, ChebyshevSharp `ChebyshevSlider`, xUnit, pinned
@@ -38,6 +38,17 @@ Federal Reserve dense zero-curve fixture, DocFX research docs.
   justifies it, but tests and reports must state that distinction explicitly.
 - Treat user hypotheses as unproven until measured: DV01 weakness, mixed-term
   weakness, and maturity non-smoothness must be supported by local evidence.
+- Use "maturity sensitivity" for `dPV/dT`, where `T` is the contractual
+  maturity parameter and the valuation date is fixed. Do not call this theta or
+  roll-down.
+- Keep direct zero-pillar DV01 separate from bootstrapped market-quote DV01.
+  This phase bumps direct zero-rate nodes in the pinned curve fixture.
+- The naive TT should remain a full-input, low-node, canonical-order TT-Cross
+  probe. Do not use `WithAutoOrder()`, Sobol pruning, decomposition, or maturity
+  buckets until the naive failure evidence is recorded.
+- The naive Slider should remain a full-input singleton-partition contrast case.
+  Its low build evaluation count is expected because it builds 62 one-dimensional
+  slides with 3 nodes each.
 
 ## Tasks
 
@@ -51,6 +62,8 @@ Federal Reserve dense zero-curve fixture, DocFX research docs.
 - [x] Run the focused Phase 6 tests and CLI mode. Record the actual metrics in
   the Phase 6 report.
 - [x] Update `status.md`, public examples, and the meta issue with the evidence.
+- [x] Add risk-terminology citations and post-maturity support checks after the
+  full-input correction.
 - [x] Run closeout verification before calling the phase complete.
 
 ## Exit Gate
@@ -61,7 +74,8 @@ The phase is complete when the repo contains a deterministic report answering:
 2. whether naive TT and Slider reproduce PV;
 3. whether DV01 errors are acceptable or problematic;
 4. whether coupon/maturity/rate mixed terms are weak;
-5. whether the baseline maturity scan shows slope or second-difference spikes;
-6. what evidence should drive the next modelling phase.
+5. whether unsupported post-maturity direct-zero sensitivities are zero;
+6. whether the baseline maturity scan shows sensitivity or second-difference spikes;
+7. what evidence should drive the next modelling phase.
 
 Stop at this gate. Do not implement the next modelling approach in this phase.

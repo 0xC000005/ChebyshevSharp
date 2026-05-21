@@ -177,7 +177,7 @@ public static class FixedRateBondSurrogateExperiment
             ("5Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 1, RateBpStep)),
             ("10Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 2, RateBpStep)),
             ("coupon derivative", (f, point) => FirstDerivative(f, point, CouponDimension, CouponStep)),
-            ("maturity slope", (f, point) => FirstDerivative(f, point, MaturityDimension, MaturityYearStep)),
+            ("maturity sensitivity", (f, point) => FirstDerivative(f, point, MaturityDimension, MaturityYearStep)),
             ("rate-coupon mixed", (f, point) => MixedDerivative(f, point, 2, RateBpStep, CouponDimension, CouponStep)),
             ("rate-maturity mixed", (f, point) => MixedDerivative(f, point, 2, RateBpStep, MaturityDimension, MaturityYearStep)),
         };

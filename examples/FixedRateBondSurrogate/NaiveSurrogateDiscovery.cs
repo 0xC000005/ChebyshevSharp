@@ -32,6 +32,21 @@ public sealed record NaiveSurrogateModelSummary(
     double BuildSeconds,
     IReadOnlyList<NaiveSurrogateMetricSummary> Metrics);
 
+public sealed record NaiveSurrogateSanityModelValue(
+    string ModelName,
+    double Value,
+    double AbsoluteError);
+
+public sealed record NaiveSurrogateSanityCheck(
+    string Name,
+    string Category,
+    string TestPoint,
+    string ExpectedBehavior,
+    double BaselineValue,
+    double BaselineTolerance,
+    IReadOnlyList<NaiveSurrogateSanityModelValue> ModelValues,
+    string Interpretation);
+
 public sealed record NaiveMaturitySpikeCandidate(
     DateTime BoundaryDate,
     int OffsetDays,
@@ -51,6 +66,7 @@ public sealed record NaiveSurrogateDiscoveryReport(
     IReadOnlyList<int> CurvePillarMonths,
     IReadOnlyList<SurrogateValidationPoint> ValidationPoints,
     IReadOnlyList<NaiveSurrogateModelSummary> Models,
+    IReadOnlyList<NaiveSurrogateSanityCheck> SanityChecks,
     IReadOnlyList<NaiveMaturitySpikeCandidate> TopMaturitySpikeCandidates);
 
 public static class NaiveSurrogateDiscovery
@@ -85,8 +101,14 @@ public static class NaiveSurrogateDiscovery
         IReadOnlyList<SurrogateValidationPoint> validationPoints = BuildValidationPoints(adapter);
         Func<double[], double> fullPv = point => adapter.Price(point);
 
-        NaiveSurrogateModelSummary ttSummary = BuildTensorTrainSummary(fullPv, validationPoints);
-        NaiveSurrogateModelSummary sliderSummary = BuildSliderSummary(fullPv, validationPoints);
+        BuiltNaiveModel[] builtModels =
+        [
+            BuildTensorTrainModel(fullPv, validationPoints),
+            BuildSliderModel(fullPv, validationPoints),
+        ];
+        IReadOnlyList<NaiveSurrogateSanityCheck> sanityChecks = BuildSanityChecks(
+            fullPv,
+            builtModels);
         IReadOnlyList<NaiveMaturitySpikeCandidate> maturitySpikes = BuildMaturitySpikeCandidates(
             pricer,
             baseRequest);
@@ -98,7 +120,8 @@ public static class NaiveSurrogateDiscovery
             Dimensions: dimensions,
             CurvePillarMonths: curvePillarMonths,
             ValidationPoints: validationPoints,
-            Models: [ttSummary, sliderSummary],
+            Models: builtModels.Select(model => model.Summary).ToArray(),
+            SanityChecks: sanityChecks,
             TopMaturitySpikeCandidates: maturitySpikes);
     }
 
@@ -203,7 +226,7 @@ public static class NaiveSurrogateDiscovery
         return point;
     }
 
-    private static NaiveSurrogateModelSummary BuildTensorTrainSummary(
+    private static BuiltNaiveModel BuildTensorTrainModel(
         Func<double[], double> fullPv,
         IReadOnlyList<SurrogateValidationPoint> validationPoints)
     {
@@ -220,15 +243,16 @@ public static class NaiveSurrogateDiscovery
         tt.Build(verbose: false, seed: 20260521, method: "cross");
         sw.Stop();
 
-        return new NaiveSurrogateModelSummary(
+        var summary = new NaiveSurrogateModelSummary(
             ModelName: "TensorTrain",
             InputDimensionCount: TotalDimensionCount,
             BuildEvaluations: tt.TotalBuildEvals,
             BuildSeconds: sw.Elapsed.TotalSeconds,
             Metrics: SummarizeMetrics(fullPv, tt.Eval, validationPoints));
+        return new BuiltNaiveModel(summary, tt.Eval);
     }
 
-    private static NaiveSurrogateModelSummary BuildSliderSummary(
+    private static BuiltNaiveModel BuildSliderModel(
         Func<double[], double> fullPv,
         IReadOnlyList<SurrogateValidationPoint> validationPoints)
     {
@@ -247,12 +271,15 @@ public static class NaiveSurrogateDiscovery
 
         slider.Build(verbose: false);
 
-        return new NaiveSurrogateModelSummary(
+        double EvalSlider(double[] point) => slider.Eval(point, new int[TotalDimensionCount]);
+
+        var summary = new NaiveSurrogateModelSummary(
             ModelName: "Slider",
             InputDimensionCount: TotalDimensionCount,
             BuildEvaluations: slider.TotalBuildEvals,
             BuildSeconds: slider.BuildTime,
-            Metrics: SummarizeMetrics(fullPv, point => slider.Eval(point, new int[TotalDimensionCount]), validationPoints));
+            Metrics: SummarizeMetrics(fullPv, EvalSlider, validationPoints));
+        return new BuiltNaiveModel(summary, EvalSlider);
     }
 
     private static IReadOnlyList<NaiveSurrogateMetricSummary> SummarizeMetrics(
@@ -269,11 +296,12 @@ public static class NaiveSurrogateDiscovery
             ("20Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(240), RateBpStep)),
             ("30Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(360), RateBpStep)),
             ("coupon derivative", (f, point) => FirstDerivative(f, point, CouponDimension, CouponStep)),
-            ("maturity slope", (f, point) => FirstDerivative(f, point, MaturityDimension, MaturityYearStep)),
+            ("maturity sensitivity", (f, point) => FirstDerivative(f, point, MaturityDimension, MaturityYearStep)),
             ("10Y rate-coupon mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(120), RateBpStep, CouponDimension, CouponStep)),
             ("30Y rate-coupon mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(360), RateBpStep, CouponDimension, CouponStep)),
             ("10Y rate-maturity mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(120), RateBpStep, MaturityDimension, MaturityYearStep)),
             ("30Y rate-maturity mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(360), RateBpStep, MaturityDimension, MaturityYearStep)),
+            ("20Y-30Y rate-rate mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(240), RateBpStep, CurveDimensionForMonths(360), RateBpStep)),
             ("coupon-maturity mixed", (f, point) => MixedDerivative(f, point, CouponDimension, CouponStep, MaturityDimension, MaturityYearStep)),
         };
 
@@ -336,6 +364,79 @@ public static class NaiveSurrogateDiscovery
             WorstPointName: worstPointName,
             ExpectedAtWorstPoint: expectedAtWorst,
             ActualAtWorstPoint: actualAtWorst);
+    }
+
+    private static IReadOnlyList<NaiveSurrogateSanityCheck> BuildSanityChecks(
+        Func<double[], double> baseline,
+        IReadOnlyList<BuiltNaiveModel> models)
+    {
+        double[] tenYearBond = Point(0.045, 10.0, _ => 0.0);
+
+        return
+        [
+            BuildSanityCheck(
+                "10Y bond / 30Y zero-pillar DV01",
+                "post-maturity curve support",
+                "coupon 4.5%, maturity 10Y, all curve bumps 0",
+                "A 30Y zero-rate bump has no interpolation support for a bond maturing at the 10Y pillar.",
+                f => FirstDerivative(f, tenYearBond, CurveDimensionForMonths(360), RateBpStep),
+                baseline,
+                models,
+                baselineTolerance: 1e-10,
+                interpretation:
+                    "The baseline price scan must be flat. A nonzero naive surrogate value means the global approximation leaked long-end curve dependence into an unsupported tenor."),
+            BuildSanityCheck(
+                "10Y bond / 20Y-30Y rate-rate mixed",
+                "post-maturity curve support",
+                "coupon 4.5%, maturity 10Y, all curve bumps 0",
+                "Two unsupported post-maturity zero-rate nodes should have zero second mixed sensitivity.",
+                f => MixedDerivative(
+                    f,
+                    tenYearBond,
+                    CurveDimensionForMonths(240),
+                    RateBpStep,
+                    CurveDimensionForMonths(360),
+                    RateBpStep),
+                baseline,
+                models,
+                baselineTolerance: 1e-10,
+                interpretation:
+                    "This is a structural support check, not a claim that every rate-rate cross term is zero. Active neighboring pillars can interact through interpolation and discount-factor curvature."),
+        ];
+    }
+
+    private static NaiveSurrogateSanityCheck BuildSanityCheck(
+        string name,
+        string category,
+        string testPoint,
+        string expectedBehavior,
+        Func<Func<double[], double>, double> compute,
+        Func<double[], double> baseline,
+        IReadOnlyList<BuiltNaiveModel> models,
+        double baselineTolerance,
+        string interpretation)
+    {
+        double baselineValue = compute(baseline);
+        NaiveSurrogateSanityModelValue[] modelValues = models
+            .Select(model =>
+            {
+                double value = compute(model.Eval);
+                return new NaiveSurrogateSanityModelValue(
+                    model.Summary.ModelName,
+                    value,
+                    Math.Abs(value - baselineValue));
+            })
+            .ToArray();
+
+        return new NaiveSurrogateSanityCheck(
+            Name: name,
+            Category: category,
+            TestPoint: testPoint,
+            ExpectedBehavior: expectedBehavior,
+            BaselineValue: baselineValue,
+            BaselineTolerance: baselineTolerance,
+            ModelValues: modelValues,
+            Interpretation: interpretation);
     }
 
     private static IReadOnlyList<NaiveMaturitySpikeCandidate> BuildMaturitySpikeCandidates(
@@ -477,4 +578,8 @@ public static class NaiveSurrogateDiscovery
             };
         }
     }
+
+    private sealed record BuiltNaiveModel(
+        NaiveSurrogateModelSummary Summary,
+        Func<double[], double> Eval);
 }

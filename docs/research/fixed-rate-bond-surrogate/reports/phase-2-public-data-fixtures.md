@@ -73,7 +73,7 @@ The tests verify:
 Local closeout checks:
 
 ```bash
-rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md
+rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md
 uv run tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py --help
 uv run tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py --curve-date 2026-05-15 --download-date 2026-05-20 --output /tmp/fed-nominal-yield-curve-2026-05-15.json
 cmp -s examples/FixedRateBondSurrogate/Data/fed-nominal-yield-curve-2026-05-15.json /tmp/fed-nominal-yield-curve-2026-05-15.json

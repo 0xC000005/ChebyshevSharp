@@ -94,11 +94,65 @@ d2PV / dr_i dT
 d2PV / dc dT
 ```
 
+Terminology used in this report:
+
+| Quantity | Report label | Meaning |
+| --- | --- | --- |
+| `dPV / dr_i` | zero-pillar DV01 | Direct zero-rate pillar sensitivity per 1 bp coordinate move. |
+| `dPV / dc` | coupon derivative | PV sensitivity to the annual coupon-rate coordinate. |
+| `dPV / dT` | maturity sensitivity | PV sensitivity to contractual maturity with valuation date fixed. |
+| `d2PV / dr_i dc` | rate-coupon mixed | Cross sensitivity between one zero-rate pillar and coupon. |
+| `d2PV / dr_i dT` | rate-maturity mixed | Cross sensitivity between one zero-rate pillar and maturity. |
+| `d2PV / dc dT` | coupon-maturity mixed | Cross sensitivity between coupon and maturity. |
+| `d2PV / dr_i dr_j` | rate-rate mixed | Curve-node cross sensitivity. |
+
 Rate coordinates are basis-point bump coordinates, so the reported
-zero-pillar derivative is directly price change per 1 bp coordinate step.
-Maturity uses a seven-day finite-difference step. Relative errors use a small
-floor; extremely large relative errors often mean the baseline quantity is
-near zero, so max absolute error must be read alongside max relative error.
+zero-pillar DV01 is the price sensitivity to a one-basis-point shift in one
+direct zero-rate pillar. OpenGamma/Strata uses related language for bucketed
+PV01, bucketed delta, rate sensitivities, and key-rate duration, and separates
+calibrated-curve-node PV01 from market-quote PV01. This phase uses the former
+kind of direct-zero node sensitivity, not a bootstrapped market-quote DV01.
+
+The quantity previously called "maturity slope" is now labelled **maturity
+sensitivity**:
+
+```text
+dPV / dT
+```
+
+It is the finite-difference sensitivity of dirty PV to the contractual maturity
+parameter with the valuation date fixed and the cashflow schedule regenerated.
+It is not theta, carry, or roll-down, because time is not advanced. Maturity
+uses a seven-day finite-difference step. Relative errors use a small floor;
+extremely large relative errors often mean the baseline quantity is near zero,
+so max absolute error must be read alongside max relative error.
+
+Rate-rate mixed terms are expected to be zero only when the two bumped curve
+nodes have no interpolation support on the same remaining cashflow discount
+factor. In this semiannual fixture, the measured `20Y-30Y` mixed check is
+structurally zero at the validation points. That should not be generalized to
+arbitrary curve grids, interpolators, or cashflow dates.
+
+## Naive Model Configuration
+
+The TensorTrain probe is a valid full-input TT-Cross build over all 62 user
+coordinates, using `nNodes = 3`, `maxRank = 6`, and the canonical dimension
+order. It intentionally does not use `WithAutoOrder()`, Sobol pruning, maturity
+splitting, or analytic coupon decomposition; those are later modelling choices,
+not the naive global baseline.
+
+The Slider probe is also a valid 62D `ChebyshevSlider`, but its partition is
+the singleton decomposition:
+
+```text
+[[6M], [1Y], ..., [30Y], [coupon], [maturity]]
+```
+
+With three Chebyshev nodes per singleton slide, the build cost is only
+`62 * 3 = 186` function evaluations. That low cost is exactly the point of the
+contrast case. It is an anchored additive approximation, so cross-group mixed
+derivatives are zero by construction and cross-variable interactions are not
+represented unless interacting variables are grouped in the same slide.
 
 ## Results
 
@@ -110,7 +164,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 
 Measured on 12 deterministic validation points:
 
-| Model | Build evals | Max PV rel. error | Max maturity-slope rel. error | Max coupon-maturity mixed rel. error |
+| Model | Build evals | Max PV rel. error | Max maturity-sensitivity rel. error | Max coupon-maturity mixed rel. error |
 | --- | ---: | ---: | ---: | ---: |
 | TensorTrain | 5274 | 17.72% | 461.43% | 49.10% |
 | Slider | 186 | 92.64% | 154.35% | 100.00% |
@@ -123,8 +177,9 @@ Selected TensorTrain errors:
 | coupon derivative | `1.721368E+002` | 17.57% | `n8` |
 | 10Y zero-pillar DV01 | `6.001897E-002` | very large, baseline near zero at worst point | `n12` |
 | 30Y zero-pillar DV01 | `6.056521E-002` | 100.00% | `n4` |
-| maturity slope | `3.880240E+000` | 461.43% | `n10` |
+| maturity sensitivity | `3.880240E+000` | 461.43% | `n10` |
 | 10Y rate-maturity mixed | `1.311026E-001` | very large, baseline near zero at worst point | `n11` |
+| 20Y-30Y rate-rate mixed | `0.000000E+000` | 0.00% | `n12` |
 | coupon-maturity mixed | `2.547448E+001` | 49.10% | `n6` |
 
 Selected Slider errors:
@@ -133,10 +188,47 @@ Selected Slider errors:
 | --- | ---: | ---: | --- |
 | PV | `6.865510E+001` | 92.64% | `n5` |
 | coupon derivative | `9.010148E+002` | 423.05% | `n5` |
-| maturity slope | `7.757617E+000` | 154.35% | `n5` |
+| maturity sensitivity | `7.757617E+000` | 154.35% | `n5` |
 | 10Y rate-coupon mixed | `3.621014E-002` | 100.00% | `n6` |
 | 10Y rate-maturity mixed | `1.311016E-001` | 100.00% | `n11` |
+| 20Y-30Y rate-rate mixed | `1.421085E-014` | 0.01% | `n6` |
 | coupon-maturity mixed | `9.184798E+001` | 100.00% | `n5` |
+
+## Structural Sanity Checks
+
+The baseline and surrogates are also tested on support checks that should be
+obvious to a risk manager before looking at interpolation error metrics.
+
+| Check | Baseline | TensorTrain | Slider | Interpretation |
+| --- | ---: | ---: | ---: | --- |
+| 10Y bond / 30Y zero-pillar DV01 | `0.000000E+000` | `0.000000E+000` | `-7.105427E-015` | A 30Y direct-zero bump has no support for a bond maturing at the 10Y pillar. |
+| 10Y bond / 20Y-30Y rate-rate mixed | `0.000000E+000` | `0.000000E+000` | `0.000000E+000` | Unsupported post-maturity rate-rate cross sensitivity is zero. |
+
+These checks pass. The naive global failure is therefore not a blanket
+"surrogates ignore maturity" problem. It is more specific: the low-node global
+TT and singleton Slider are weak on PV, maturity sensitivity, coupon
+derivative, DV01 at difficult validation points, and cross terms involving
+coupon or maturity.
+
+## Additional Sanity Checks to Keep
+
+Future phases should keep adding cheap structural checks before tuning the
+surrogate:
+
+- coupon monotonicity: for positive remaining cashflows, dirty PV should
+  increase when coupon increases;
+- notional scaling: doubling notional should double PV and first-order
+  sensitivities;
+- rate direction: a positive parallel zero-rate bump should not increase the
+  price of a positive-cashflow fixed-rate bond;
+- unsupported tenor checks: any zero-rate pillar with no interpolation support
+  on remaining cashflows should have zero direct-zero DV01;
+- active support checks: active nearby curve nodes may have nonzero DV01 and,
+  under some interpolators or cashflow dates, nonzero rate-rate cross terms;
+- finite-difference stability: PV, DV01, and cross-term conclusions should be
+  checked against at least one smaller and one larger bump size;
+- boundary checks: coupons and maturities near the domain limits should not be
+  silently clamped or interpreted as evidence for interior accuracy.
 
 ## Maturity Smoothness Evidence
 
@@ -161,7 +253,7 @@ cashflow schedule and can flip local one-day slopes around schedule boundaries.
 The naive dense tensor is not a viable baseline because the scalar dimension
 count is too high. The full-input low-node TensorTrain is computationally
 feasible but already weak on this discovery set: PV reaches 17.72% relative
-error, and maturity slope and mixed terms are much worse. The full-input
+error, and maturity sensitivity and mixed terms are much worse. The full-input
 singleton Slider is very cheap to build, but the approximation is too weak for
 the clone objective because it discards the interactions between curve, coupon,
 and maturity.
@@ -169,3 +261,9 @@ and maturity.
 This is enough evidence to justify testing more structured modelling next, but
 not enough to pick the final approach. The next phase should compare fixes
 against these measured failure modes rather than assume a solution in advance.
+
+## References
+
+- OpenGamma Strata bucketed PV01 article: <https://opengamma.com/strata-and-multi-curve-calibration-and-bucketed-pv01/>
+- OpenGamma Strata PV01 API docs: <https://strata.opengamma.io/apidocs/com/opengamma/strata/measure/dsf/DsfTradeCalculations.html>
+- QuantLib Guide vanilla bonds: <https://www.quantlibguide.com/Vanilla%20bonds.html>
