@@ -28,11 +28,11 @@
 - Create: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondSurrogateReproductionTests.cs`
 - Create later: `examples/FixedRateBondSurrogate/SurrogateReproduction.cs`
 
-- [ ] Add tests that call `FixedRateBondSurrogateExperiment.RunDefault(new QlNetFixedRateBondReferencePricer())`.
-- [ ] Assert the report contains two model summaries named `TensorTrain` and `Slider`.
-- [ ] Assert every metric is finite, every validation point is inside the configured domain, and build evaluation counts are positive.
-- [ ] Assert the selected 20Y and 30Y pillars are not part of Phase 4's compact curve input set for the ten-year example, because Phase 3 showed they have zero direct support in the current interpolation setup.
-- [ ] Run:
+- [x] Add tests that call `FixedRateBondSurrogateExperiment.RunDefault(new QlNetFixedRateBondReferencePricer())`.
+- [x] Assert the report contains two model summaries named `TensorTrain` and `Slider`.
+- [x] Assert every metric is finite, every validation point is inside the configured domain, and build evaluation counts are positive.
+- [x] Assert the selected 20Y and 30Y pillars are not part of Phase 4's compact curve input set for the ten-year example, because Phase 3 showed they have zero direct support in the current interpolation setup.
+- [x] Run:
   - `dotnet test --filter "FullyQualifiedName~FixedRateBondSurrogateReproductionTests"`
   - Expected: fail because `FixedRateBondSurrogateExperiment` does not exist.
 
@@ -41,41 +41,41 @@
 **Files:**
 - Create: `examples/FixedRateBondSurrogate/SurrogateReproduction.cs`
 
-- [ ] Define immutable records:
+- [x] Define immutable records:
   - `SurrogateInputDimension`
   - `SurrogateValidationPoint`
   - `SurrogateMetricSummary`
   - `SurrogateModelSummary`
   - `SurrogateExperimentReport`
-- [ ] Define `FixedRateBondSurrogateExperiment.RunDefault(IFixedRateBondReferencePricer pricer)`.
-- [ ] Use dimensions:
+- [x] Define `FixedRateBondSurrogateExperiment.RunDefault(IFixedRateBondReferencePricer pricer)`.
+- [x] Use dimensions:
   - 1Y zero-rate bump in `[-150, 150]` bp,
   - 5Y zero-rate bump in `[-150, 150]` bp,
   - 10Y zero-rate bump in `[-150, 150]` bp,
   - coupon in `[0.00, 0.12]`,
   - maturity years in `[8.0, 12.0]`.
-- [ ] Convert point coordinates to `FixedRateBondRequest` by applying bump dimensions to the Fed zero curve, setting coupon directly, and mapping maturity years to `valuationDate.AddDays(Math.Round(365.25 * maturityYears))`.
-- [ ] Add validation points from a deterministic set: center, rate corners, high coupon, low coupon, near maturity endpoints, and a small seeded random set.
-- [ ] Add baseline finite-difference helpers for PV, zero-pillar DV01, coupon derivative, maturity slope, rate-coupon mixed derivative, and rate-maturity mixed derivative.
-- [ ] Run the focused test and verify the failures move from missing type to missing model construction.
+- [x] Convert point coordinates to `FixedRateBondRequest` by applying bump dimensions to the Fed zero curve, setting coupon directly, and mapping maturity years to `valuationDate.AddDays(Math.Round(365.25 * maturityYears))`.
+- [x] Add validation points from a deterministic set: center, rate corners, high coupon, low coupon, near maturity endpoints, and deterministic scenario points.
+- [x] Add baseline finite-difference helpers for PV, zero-pillar DV01, coupon derivative, maturity slope, rate-coupon mixed derivative, and rate-maturity mixed derivative.
+- [x] Run the focused test and verify the failures move from missing type to missing model construction.
 
 ## Task 3: Build TT and Slider Full-PV Surrogates
 
 **Files:**
 - Modify: `examples/FixedRateBondSurrogate/SurrogateReproduction.cs`
 
-- [ ] Build a `ChebyshevTT` over the five-dimensional full-PV function with `method: "cross"`, deterministic seed, modest node counts, and a rank cap suitable for CI.
-- [ ] Build a `ChebyshevSlider` over the same function with partition `[[0, 1, 2], [3], [4]]` and pivot at the domain midpoint.
-- [ ] Evaluate each model at the deterministic validation points.
-- [ ] Compute model-side finite differences using the same step sizes as the baseline, with central differences where the shifted point stays inside the domain and one-sided differences near boundaries.
-- [ ] Fill summary metrics for:
+- [x] Build a `ChebyshevTT` over the five-dimensional full-PV function with `method: "cross"`, deterministic seed, modest node counts, and a rank cap suitable for CI.
+- [x] Build a `ChebyshevSlider` over the same function with partition `[[0, 1, 2], [3], [4]]` and pivot at the domain midpoint.
+- [x] Evaluate each model at the deterministic validation points.
+- [x] Compute model-side finite differences using the same step sizes as the baseline, with central differences where the shifted point stays inside the domain and one-sided differences near boundaries.
+- [x] Fill summary metrics for:
   - absolute and relative PV error,
   - zero-pillar DV01 error,
   - coupon derivative error,
   - maturity slope error,
   - rate-coupon mixed derivative error,
   - rate-maturity mixed derivative error.
-- [ ] Run the focused test and fix only this experiment code until it passes.
+- [x] Run the focused test and fix only this experiment code until it passes.
 
 ## Task 4: Add CLI Output and Research Report
 
@@ -85,16 +85,16 @@
 - Modify: `docs/research/fixed-rate-bond-surrogate/status.md`
 - Modify if useful: `docs/docs/examples.md`
 
-- [ ] Add a `--surrogate-reproduction` CLI mode that prints the fixture ID, dimensions, model build costs, and compact metric table.
-- [ ] Write the report with formulas for the compared quantities:
+- [x] Add a `--surrogate-reproduction` CLI mode that prints the fixture ID, dimensions, model build costs, and compact metric table.
+- [x] Write the report with formulas for the compared quantities:
   - PV error,
   - zero-pillar DV01,
   - coupon derivative,
   - maturity slope,
   - mixed finite differences.
-- [ ] Explain why this phase intentionally uses a full-PV tensor before testing the later analytic coupon decomposition.
-- [ ] Cite only verified public sources and local ChebyshevSharp docs where needed.
-- [ ] Update `status.md` to mark Phase 4 in progress, include the plan/report links, and preserve the one-active-PR gate.
+- [x] Explain why this phase intentionally uses a full-PV tensor before testing the later analytic coupon decomposition.
+- [x] Cite only verified public sources and local ChebyshevSharp docs where needed.
+- [x] Update `status.md` to mark Phase 4 in progress, include the plan/report links, and preserve the one-active-PR gate.
 
 ## Task 5: Closeout Verification and One Phase PR
 
