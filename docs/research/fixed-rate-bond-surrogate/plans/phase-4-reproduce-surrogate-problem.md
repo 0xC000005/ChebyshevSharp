@@ -101,11 +101,11 @@
 **Files:**
 - Modify this plan file as steps complete.
 
-- [ ] Run private-name scan:
+- [x] Run private-name scan:
   - `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md`
-- [ ] Run focused tests:
+- [x] Run focused tests:
   - `dotnet test --filter "FullyQualifiedName~FixedRateBondSurrogateReproductionTests"`
-- [ ] Run full verification:
+- [x] Run full verification:
   - `dotnet format --verify-no-changes --verbosity minimal`
   - `dotnet build --configuration Release --no-restore`
   - `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`

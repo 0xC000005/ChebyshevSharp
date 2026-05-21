@@ -68,9 +68,11 @@ Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should bui
 - Plan: [Phase 4 Surrogate Problem Reproduction Implementation Plan](plans/phase-4-reproduce-surrogate-problem.md).
 - Report draft: [Phase 4 Report: Full-PV Surrogate Reproduction](reports/phase-4-surrogate-reproduction.md).
 - Implementation files: `examples/FixedRateBondSurrogate/SurrogateReproduction.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondSurrogateReproductionTests.cs`.
+- Implementation commits: `39c22c3` and `8c88454`.
 - Data-source decision: use the pinned Federal Reserve nominal zero-yield fixture for deterministic tests and documentation. Yahoo Finance, FRED, and live Federal Reserve downloads remain optional future refresh paths; no API key or live download is required for this phase.
 - Scope boundary: build direct full-PV surrogates first. Do not implement analytic coupon decomposition, maturity splitting, or adaptive splitting until later phases so the reproduction isolates the problem before proposing fixes.
 - Preliminary findings: TensorTrain max PV relative error is 0.35% on the compact validation set, while maturity-slope relative error reaches 398.88%, rate-coupon mixed relative error reaches 23.62%, and rate-maturity mixed relative error reaches 150.84%. Slider is weaker on this partition, including 100% relative error for the reported mixed terms.
+- Local verification: private-name scan produced only guardrail/search-term matches; focused Phase 4 tests passed 3 tests; focused coverage found no missing lines in `SurrogateReproduction.cs`; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1686 tests with 0 failures; the Release `--surrogate-reproduction` example ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
 
 ## Phase PR Cadence Gate
 
