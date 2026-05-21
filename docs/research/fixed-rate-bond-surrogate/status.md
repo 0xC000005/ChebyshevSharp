@@ -12,7 +12,7 @@ Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
 Working branch: `bond-surrogate-research`
 
-Active phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192)
+Last completed phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192), merged on 2026-05-21 as `3d1518f`.
 
 ## Confidentiality Guardrail
 
@@ -33,7 +33,7 @@ Use generic public terms:
 | --- | --- | --- |
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
-| 2. Data fixture pipeline | Not started | Public curve fixture generated, pinned, and documented; no live downloads in CI |
+| 2. Data fixture pipeline | In progress | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Not started | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
@@ -61,7 +61,11 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Monitor Phase 1 PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192), address CI/review feedback in that PR, and record the outcome. Do not start Phase 2 implementation until the Phase 1 PR is reviewed, merged or explicitly closed, and the tracking issue/status file record the outcome. Phase 2 planning notes may be drafted only if they do not create a second PR or distract from closing the active phase.
+Monitor Phase 2 PR [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193), address review/CI feedback inside that PR, and merge or explicitly close it before starting Phase 3 implementation.
+
+## Phase PR Cadence Gate
+
+Use exactly one active phase PR for this workflow. After a phase PR opens, all review fixes for that phase stay in that PR. Do not start the next phase implementation, open another phase PR, or accumulate unrelated follow-up PRs until the current phase PR is merged or explicitly closed without merge. Record the outcome in this status file and in tracking issue [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191) before moving on.
 
 ## Phase 1 Notes
 
@@ -74,6 +78,26 @@ Monitor Phase 1 PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192),
 - Local coverage evidence for the Codecov follow-up: `FixedRateBondSurrogate` line-rate `99.29%`, branch-rate `100%`.
 - Phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504103137).
+- Merge outcome: PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192) merged on 2026-05-21 after required checks passed, including `All Tests Passed` and `codecov/patch`.
+
+## Phase 2 Notes
+
+- Plan: [Phase 2 Public Data Fixture Pipeline Implementation Plan](plans/phase-2-public-data-fixtures.md).
+- Report draft: [Phase 2 Report: Public Data Fixtures](reports/phase-2-public-data-fixtures.md).
+- Primary data source selected for the first fixture: Federal Reserve nominal yield curve CSV, using `SVENY01` to `SVENY30` continuously compounded zero-coupon yields.
+- Pinned fixture: `examples/FixedRateBondSurrogate/Data/fed-nominal-yield-curve-2026-05-15.json`.
+- Optional refresh tool: `tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py`.
+- C# fixture loader: `examples/FixedRateBondSurrogate/MarketData.cs`.
+- Implementation commit: `35f9c33`.
+- Phase PR: [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504300102).
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 27 tests with 0 failures.
+- Local closeout verification: private-name scan produced only guardrail/search-term matches; fixture regeneration matched the committed JSON byte-for-byte; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1676 tests with 0 failures; local coverage inspection found no uncovered or partial lines in `MarketData.cs`; the fixed-rate bond example ran against the pinned fixture; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Official source checks completed:
+  - Federal Reserve nominal yield curve page confirms the data are fitted nominal yield-curve parameters and smoothed yields from 1961 to present, and that the model is a staff research product rather than an official statistical release.
+  - Federal Reserve CSV schema confirms `SVENYXX` are continuously compounded zero-coupon yields, `SVENPYXX` are coupon-equivalent par yields, `SVENFXX` are continuously compounded instantaneous forwards, and `SVEN1FXX` are coupon-equivalent one-year forwards.
+  - Treasury XML feed remains a later par-yield source, not the first direct-zero fixture.
+  - New York Fed SOFR remains a later overnight-rate source, not the first term zero-curve fixture.
 
 ## Notes for Future Sessions
 

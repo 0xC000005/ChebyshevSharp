@@ -1,0 +1,70 @@
+{
+  "name": "Federal Reserve nominal zero yield curve",
+  "fixture_id": "fed-nominal-yield-curve-2026-05-15",
+  "source": {
+    "institution": "Board of Governors of the Federal Reserve System",
+    "source_url": "https://www.federalreserve.gov/data/yield-curve-tables/feds200628.csv",
+    "source_page": "https://www.federalreserve.gov/data/nominal-yield-curve.htm",
+    "download_date": "2026-05-20",
+    "curve_date": "2026-05-15",
+    "source_note": "Federal Reserve nominal yield curve staff research product; not an official statistical release."
+  },
+  "instrument_family": "hypothetical_treasury_zero_coupon_yield",
+  "rate_kind": "zero_coupon_yield",
+  "units": "percent",
+  "compounding": "continuous",
+  "day_count": "Actual/365",
+  "interpolation": "linear_in_zero_rates",
+  "original_fields": [
+    "SVENY01",
+    "SVENY02",
+    "SVENY03",
+    "SVENY05",
+    "SVENY07",
+    "SVENY10",
+    "SVENY20",
+    "SVENY30"
+  ],
+  "points": [
+    {
+      "maturity_years": 1,
+      "field": "SVENY01",
+      "zero_yield_percent": 3.8925
+    },
+    {
+      "maturity_years": 2,
+      "field": "SVENY02",
+      "zero_yield_percent": 3.9893
+    },
+    {
+      "maturity_years": 3,
+      "field": "SVENY03",
+      "zero_yield_percent": 4.0854
+    },
+    {
+      "maturity_years": 5,
+      "field": "SVENY05",
+      "zero_yield_percent": 4.2728
+    },
+    {
+      "maturity_years": 7,
+      "field": "SVENY07",
+      "zero_yield_percent": 4.45
+    },
+    {
+      "maturity_years": 10,
+      "field": "SVENY10",
+      "zero_yield_percent": 4.6898
+    },
+    {
+      "maturity_years": 20,
+      "field": "SVENY20",
+      "zero_yield_percent": 5.2118
+    },
+    {
+      "maturity_years": 30,
+      "field": "SVENY30",
+      "zero_yield_percent": 5.3322
+    }
+  ]
+}

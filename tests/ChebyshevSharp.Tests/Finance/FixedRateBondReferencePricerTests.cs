@@ -86,8 +86,77 @@ public sealed class FixedRateBondReferencePricerTests
 
         string output = writer.ToString();
         Assert.Contains("Fixed-rate bond reference pricer", output);
-        Assert.Contains("Dirty price    : 104.42670796", output);
+        Assert.Contains("Curve fixture : fed-nominal-yield-curve-2026-05-15", output);
+        Assert.Contains("Curve date    : 2026-05-15", output);
+        Assert.Contains("Dirty price    : 98.53533001", output);
         Assert.Contains("Cashflows      : 21", output);
+    }
+
+    [Fact]
+    public void Default_curve_fixture_has_expected_metadata()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDefaultCurveFixture();
+
+        Assert.Equal("fed-nominal-yield-curve-2026-05-15", fixture.FixtureId);
+        Assert.Equal(new DateTime(2026, 5, 15), fixture.Source.CurveDate.Date);
+        Assert.Equal("zero_coupon_yield", fixture.RateKind);
+        Assert.Equal("percent", fixture.Units);
+        Assert.Equal("continuous", fixture.Compounding);
+        Assert.Equal("linear_in_zero_rates", fixture.Interpolation);
+        Assert.Equal(["SVENY01", "SVENY02", "SVENY03", "SVENY05", "SVENY07", "SVENY10", "SVENY20", "SVENY30"], fixture.OriginalFields);
+    }
+
+    [Fact]
+    public void Default_curve_fixture_converts_percent_yields_to_decimal_pillars()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDefaultCurveFixture();
+
+        IReadOnlyList<ZeroRatePillar> pillars = FixedRateBondMarketData.ToZeroRatePillars(
+            fixture,
+            new DateTime(2026, 5, 15));
+
+        Assert.Equal(fixture.Points.Count + 1, pillars.Count);
+        Assert.Equal(new DateTime(2026, 5, 15), pillars[0].Date);
+        Assert.Equal(0.038925, pillars[0].ZeroRate, precision: 12);
+        Assert.Equal(new DateTime(2036, 5, 15), pillars[6].Date);
+        Assert.Equal(0.046898, pillars[6].ZeroRate, precision: 12);
+    }
+
+    [Fact]
+    public void Reference_pricer_uses_pinned_public_curve_fixture()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDefaultCurveFixture();
+        FixedRateBondRequest request = FixedRateBondMarketData.RegularTenYearFromFixture(fixture);
+
+        FixedRateBondResult result = Pricer.Price(request);
+
+        Assert.Equal(new DateTime(2026, 5, 15), request.ValuationDate);
+        Assert.Equal(new DateTime(2036, 5, 15), request.MaturityDate);
+        Assert.Equal(98.53533001, result.DirtyPrice, precision: 8);
+    }
+
+    [Fact]
+    public void Null_curve_fixture_file_is_rejected()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+
+        try
+        {
+            File.WriteAllText(path, "null");
+
+            Assert.Throws<InvalidDataException>(() => FixedRateBondMarketData.LoadCurveFixture(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidFixtures))]
+    public void Invalid_curve_fixtures_are_rejected(YieldCurveFixture fixture)
+    {
+        Assert.Throws<InvalidDataException>(() => FixedRateBondMarketData.Validate(fixture));
     }
 
     [Theory]
@@ -147,6 +216,44 @@ public sealed class FixedRateBondReferencePricerTests
                 ],
             },
             valid with { ZeroCurve = valid.ZeroCurve.Take(4).ToArray() },
+        ];
+    }
+
+    public static TheoryData<YieldCurveFixture> InvalidFixtures()
+    {
+        YieldCurveFixture valid = FixedRateBondMarketData.LoadDefaultCurveFixture();
+
+        return
+        [
+            valid with { RateKind = "par_yield" },
+            valid with { Units = "decimal" },
+            valid with { Compounding = "annual" },
+            valid with { Points = [] },
+            valid with
+            {
+                Points =
+                [
+                    valid.Points[1],
+                    valid.Points[0],
+                    .. valid.Points.Skip(2),
+                ],
+            },
+            valid with
+            {
+                Points =
+                [
+                    valid.Points[0] with { ZeroYieldPercent = double.NaN },
+                    .. valid.Points.Skip(1),
+                ],
+            },
+            valid with
+            {
+                Points =
+                [
+                    valid.Points[0] with { Field = "SVENPY01" },
+                    .. valid.Points.Skip(1),
+                ],
+            },
         ];
     }
 
