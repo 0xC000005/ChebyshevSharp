@@ -17,6 +17,7 @@ dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
 ```
 
 ## QuickStart
@@ -142,6 +143,14 @@ PV, zero-pillar DV01, coupon, maturity, and mixed finite-difference errors:
 
 ```bash
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
+```
+
+Run the naive discovery mode to use the dense fixture, estimate why the full
+dense tensor is infeasible, and compare a limited full-PV TensorTrain and
+Slider probe before any decomposition or maturity splitting:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
 ```
 
 This example is intentionally restricted. It is a baseline for later surrogate

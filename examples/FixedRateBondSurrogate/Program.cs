@@ -21,6 +21,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--naive-surrogate-discovery"])
+        {
+            RunNaiveSurrogateDiscovery(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -135,6 +141,57 @@ public static class FixedRateBondExample
                     $"  {metric.Name,-22} abs max {metric.MaxAbsoluteError,12:E6} " +
                     $"rel max {metric.MaxRelativeError,12:P2}");
             }
+        }
+    }
+
+    private static void RunNaiveSurrogateDiscovery(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        NaiveSurrogateDiscoveryReport report = NaiveSurrogateDiscovery.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond naive surrogate discovery");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"Dimensions    : {string.Join(", ", report.Dimensions.Select(dimension => dimension.Name))}");
+        output.WriteLine($"Validation points : {report.ValidationPoints.Count}");
+        output.WriteLine();
+        output.WriteLine(
+            $"Dense full tensor : {report.Feasibility.ThreeNodeDenseGridLabel} = " +
+            $"{report.Feasibility.ThreeNodeDenseGridCount} nodes; " +
+            $"{report.Feasibility.FiveNodeDenseGridLabel} = {report.Feasibility.FiveNodeDenseGridCount} nodes");
+        output.WriteLine(report.Feasibility.DenseTensorConclusion);
+        output.WriteLine();
+
+        foreach (NaiveSurrogateModelSummary model in report.Models)
+        {
+            NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity slope");
+            NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, " +
+                $"PV rel max {pv.MaxRelativeError:P2}, " +
+                $"maturity slope rel max {maturity.MaxRelativeError:P2}, " +
+                $"coupon-maturity mixed rel max {couponMaturity.MaxRelativeError:P2}");
+
+            foreach (NaiveSurrogateMetricSummary metric in model.Metrics)
+            {
+                output.WriteLine(
+                    $"  {metric.Name,-24} abs max {metric.MaxAbsoluteError,12:E6} " +
+                    $"rel max {metric.MaxRelativeError,12:P2} worst {metric.WorstPointName}");
+            }
+        }
+
+        output.WriteLine();
+        output.WriteLine("Top maturity spike candidates");
+        foreach (NaiveMaturitySpikeCandidate point in report.TopMaturitySpikeCandidates.Take(5))
+        {
+            output.WriteLine(
+                $"{point.MaturityDate:yyyy-MM-dd} offset {point.OffsetDays,3}d " +
+                $"cashflows {point.CashflowCount,2} second {point.SecondDifference:E6} " +
+                $"left {point.LeftSlopePerYear:E6} right {point.RightSlopePerYear:E6}");
         }
     }
 }

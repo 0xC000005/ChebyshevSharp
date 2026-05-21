@@ -37,11 +37,12 @@ Use generic public terms:
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Realistic dense-curve baseline | Complete locally | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
-| 6. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
-| 7. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
-| 8. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
-| 9. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
-| 10. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
+| 6. Naive dense-baseline surrogate discovery | In progress | Dense-baseline naive TT/Slider and maturity-smoothness evidence documented |
+| 7. Analytic coupon decomposition | Deferred | Principal/annuity surrogate comparison completed |
+| 8. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
+| 9. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
+| 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
+| 11. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
 
@@ -62,7 +63,24 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Finish Phase 5 realistic dense-curve baseline hardening. Stop after the baseline is ready; do not resume analytic coupon decomposition, maturity splitting, adaptive splitting, or any surrogate implementation until explicitly requested.
+Run Phase 6 naive dense-baseline surrogate discovery. Start from the QLNet-backed dense baseline and collect evidence for or against naive full-PV Chebyshev modelling. Stop after documenting the naive failure modes; do not implement analytic coupon decomposition, maturity splitting, adaptive splitting, or portfolio-specific modelling in this phase.
+
+## Phase 6 Notes
+
+- Plan: [Phase 6 Naive Surrogate Discovery Implementation Plan](plans/phase-6-naive-surrogate-discovery.md).
+- Report draft: [Phase 6 Report: Naive Dense-Baseline Surrogate Discovery](reports/phase-6-naive-surrogate-discovery.md).
+- Scope boundary: this is a discovery phase. It may build limited naive TT/Slider models, but it must not implement the next modelling fix.
+- Conceptual inputs are curve, coupon, maturity, and notional. Chebyshev dimensions count scalar coordinates, so the dense fixture creates 60 curve-bump dimensions; excluding notional, the naive full-PV surrogate is 62-dimensional.
+- Evidence targets: full dense tensor infeasibility, naive TT/Slider PV error, zero-pillar DV01 error, coupon and maturity finite-difference error, rate-coupon/rate-maturity/coupon-maturity mixed terms, and maturity-date second-difference spikes.
+- Implementation files: `examples/FixedRateBondSurrogate/NaiveSurrogateDiscovery.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondNaiveSurrogateDiscoveryTests.cs`.
+- First measured result: a dense full tensor would need `3^62 = 381,520,424,476,945,831,628,649,898,809` nodes even with only three nodes per scalar coordinate.
+- Limited naive probe: selected 1Y, 5Y, 10Y, 20Y, and 30Y zero-rate bumps plus coupon and maturity, with no decomposition or bucket splitting.
+- Preliminary findings from `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery`: TensorTrain max PV relative error `2.98%`, maturity-slope relative error `115.74%`, and coupon-maturity mixed relative error `16.24%`; Slider max PV relative error `93.87%`, maturity-slope relative error `288.39%`, and coupon-maturity mixed relative error `100.00%`.
+- The maturity scan found one-day slope flips around schedule-boundary candidates, with the largest second difference at `2038-05-15`: left slope/year `-1.953303E+000`, right slope/year `2.790432E-001`, and second difference `6.116018E-003`.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondNaiveSurrogateDiscoveryTests"` passed 4 tests with 0 failures.
+- Fixed-rate bond test slice run: `dotnet test --filter "FullyQualifiedName~FixedRateBond"` passed 54 tests with 0 failures.
+- Local closeout checks so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1703 tests with 0 failures; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed; private-name scan matched only pre-existing guardrail/search-term text.
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509528109).
 
 ## Phase 5 Notes
 
