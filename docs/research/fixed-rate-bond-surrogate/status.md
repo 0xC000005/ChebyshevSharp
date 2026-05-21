@@ -72,6 +72,7 @@ Monitor Phase 1 PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192),
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 5 tests with 0 failures.
 - Full verification run: `dotnet build --no-restore` passed with 0 warnings/errors; `dotnet test` passed 1654 tests with 0 failures; all examples ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504103137).
 
 ## Notes for Future Sessions
 

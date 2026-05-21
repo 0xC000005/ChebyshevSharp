@@ -75,4 +75,4 @@
 - [x] Run `docfx docs/docfx.json`.
 - [x] Commit with `feat: add fixed-rate bond reference pricer harness`.
 - [x] Push `bond-surrogate-research`.
-- [ ] Comment on issue `#191` with the commit, tests, and Phase 1 report path.
+- [x] Comment on issue `#191` with the commit, tests, and Phase 1 report path.
