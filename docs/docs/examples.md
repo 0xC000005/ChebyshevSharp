@@ -77,6 +77,47 @@ fixture:
    price, clean price, accrued amount, NPV, and cashflow count.
 4. Keep the direct zero-rate curve separate from later Chebyshev surrogates.
 
+### QLNet-backed reference pricer
+
+The baseline is QLNet, not an in-repository bond-pricing implementation. The
+example code only adapts a compact research input into QLNet objects:
+
+```text
+FixedRateBondRequest
+  -> QLNet Schedule
+  -> QLNet FixedRateBond
+  -> QLNet InterpolatedZeroCurve<Linear>
+  -> QLNet DiscountingBondEngine
+  -> FixedRateBondResult
+```
+
+This boundary is intentional. The case study is about learning a fast
+Chebyshev approximation of a trusted pricing function, not about replacing
+fixed-income conventions, schedule generation, accrued-interest logic, or
+discounting rules. Future TensorTrain and Slider experiments should treat
+`IFixedRateBondReferencePricer.Price()` as the ground-truth black box, then
+measure where a surrogate reproduces PV, DV01, coupon sensitivity, maturity
+sensitivity, and mixed terms.
+
+The current baseline assumptions are deliberately narrow:
+
+- fixed-rate bullet bond;
+- valuation date equals effective date;
+- semiannual coupon schedule;
+- 30/360 USA coupon day count;
+- U.S. Government Bond calendar;
+- Modified Following business-day adjustment;
+- backward schedule generation;
+- direct zero-rate curve with Actual/365 Fixed timing;
+- continuous annual compounding and linear zero-rate interpolation;
+- redemption of `100.0`;
+- no amortization, callability, ex-coupon handling, stubs, or arbitrary
+  settlement-date modelling.
+
+These assumptions make the example reproducible and auditable. They are also
+the eligibility domain for later Chebyshev surrogate validation; outside this
+domain, the correct reference remains the underlying fixed-income pricer.
+
 The default run uses a 30-year semiannual 4.5% coupon bullet bond with
 61 zero-rate pillars: the valuation-date anchor plus 60 semiannual points from
 0.5Y to 30Y. The semiannual fixture is derived from the Federal Reserve fitted
