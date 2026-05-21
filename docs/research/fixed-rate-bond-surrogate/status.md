@@ -34,7 +34,7 @@ Use generic public terms:
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
-| 3. Smoothness diagnostics | Not started | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
+| 3. Smoothness diagnostics | Planned | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
 | 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Prepare and execute Phase 3 smoothness diagnostics. Phase 3 should identify PV, slope, DV01, coupon, and maturity smoothness behavior against the public fixed-rate bond reference pricer before any surrogate redesign is implemented.
+Execute the Phase 3 smoothness diagnostics from [the Phase 3 plan](plans/phase-3-smoothness-diagnostics.md). Phase 3 should identify PV, slope, DV01, coupon, and maturity smoothness behavior against the public fixed-rate bond reference pricer before any surrogate redesign is implemented.
 
 ## Phase PR Cadence Gate
 
