@@ -41,7 +41,7 @@ Use generic public terms:
 | 7. Structured alternatives benchmark | Complete | Controlled alternatives compared against the Phase 6 evidence bank |
 | 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
 | 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
-| 10. Schedule-aware high-dimensional router | Planned; branch ready | Router prototype, one-sided split diagnostics, and public-API decision completed |
+| 10. Schedule-aware high-dimensional router | In progress | Router prototype, one-sided split diagnostics, and public-API decision implemented locally |
 | 11. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
 | 12. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
@@ -160,6 +160,16 @@ Start Phase 10 on `phase10-schedule-aware-router`: prototype a schedule-aware hi
 - Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
 - Default internal formula: keep Phase 8 principal/annuity decomposition and Phase 9 schedule-derived breakpoints.
 - Required new evidence: one-sided maturity sensitivities around split points, piece-routing diagnostics, comparison against Phase 9 global/uniform/schedule-aware controls, and an explicit public-API decision.
+- Report draft: [Phase 10 Report: Schedule-Aware Piecewise Router](reports/phase-10-schedule-aware-router.md).
+- Current implementation: explicit `ScheduleAwarePiecewiseRouter` with half-open maturity pieces, full-wrapper `Eval(double[] fullPoint)`, build diagnostics, and schedule-candidate provenance.
+- Current result: the explicit router reproduces the Phase 9 schedule-aware clone metrics (`4.73%` max PV rel error, `89.21%` max maturity rel error, `48.75%` max coupon-maturity mixed rel error) while making the dispatch semantics auditable.
+- Current one-sided evidence: first split diagnostics show left/right maturity-slope absolute errors around `1.0E-001` to `2.0E-001`, so the router clarifies validation but does not solve residual sensitivity error.
+- Current public-API decision: keep the router example-local; evidence supports a future schedule-aware router design discussion, not a generic automatic kink-detection API.
+- Focused tests run: `dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBondScheduleAwareRouterTests" --verbosity minimal` passed 8 tests with 0 failures.
+- Focused coverage run found no missing or partial lines in `ScheduleAwareRouterBenchmark.cs`.
+- Fixed-rate bond test slice run: `dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBond" --verbosity minimal` passed 77 tests with 0 failures.
+- Closeout verification so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `docfx docs/docfx.json` passed with 0 warnings/errors; full Release tests passed 1,727 tests with 0 failures; `git diff --check` passed.
+- Benchmark command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router`.
 
 ## Phase 5 Notes
 

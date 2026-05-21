@@ -26,7 +26,7 @@
 - Create: `examples/FixedRateBondSurrogate/ScheduleAwareRouterBenchmark.cs`
 - Modify: `examples/FixedRateBondSurrogate/Program.cs`
 
-- [ ] **Step 1: Write the failing wrapper/report test**
+- [x] **Step 1: Write the failing wrapper/report test**
 
 ```csharp
 [Fact]
@@ -41,7 +41,7 @@ public void Phase10_report_preserves_full_public_wrapper()
 }
 ```
 
-- [ ] **Step 2: Run the focused test and confirm RED**
+- [x] **Step 2: Run the focused test and confirm RED**
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBondScheduleAwareRouterTests" --verbosity minimal
@@ -49,7 +49,7 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
 
 Expected: compile failure because `ScheduleAwareRouterBenchmark` does not exist.
 
-- [ ] **Step 3: Add minimal report records and CLI mode**
+- [x] **Step 3: Add minimal report records and CLI mode**
 
 Define `ScheduleAwareRouterReport`, `ScheduleAwareRouterPieceSummary`, and `ScheduleAwareRouterDecision`. Add `--schedule-aware-router` output containing:
 
@@ -61,7 +61,7 @@ One-sided maturity diagnostics
 Decision
 ```
 
-- [ ] **Step 4: Run focused tests until GREEN**
+- [x] **Step 4: Run focused tests until GREEN**
 
 Expected: focused Phase 10 tests pass.
 
@@ -71,11 +71,11 @@ Expected: focused Phase 10 tests pass.
 - Modify: `examples/FixedRateBondSurrogate/ScheduleAwareRouterBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondScheduleAwareRouterTests.cs`
 
-- [ ] **Step 1: Add router piece tests**
+- [x] **Step 1: Add router piece tests**
 
 Assert piece intervals are sorted, non-overlapping, cover `[2.0, 30.0]`, and route exact boundary points by half-open intervals except for the final closed interval.
 
-- [ ] **Step 2: Implement router**
+- [x] **Step 2: Implement router**
 
 Implement an internal `ScheduleAwarePiecewiseRouter` with:
 
@@ -87,7 +87,7 @@ public double Eval(double[] fullPoint);
 public ScheduleAwareRouterPieceSummary Route(double maturityYears);
 ```
 
-- [ ] **Step 3: Run focused tests**
+- [x] **Step 3: Run focused tests**
 
 Expected: piece coverage, boundary routing, and wrapper preservation tests pass.
 
@@ -97,7 +97,7 @@ Expected: piece coverage, boundary routing, and wrapper preservation tests pass.
 - Modify: `examples/FixedRateBondSurrogate/ScheduleAwareRouterBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondScheduleAwareRouterTests.cs`
 
-- [ ] **Step 1: Add provenance tests**
+- [x] **Step 1: Add provenance tests**
 
 Assert breakpoints are derived from Phase 9 schedule-aware candidates, not automatic detector candidates:
 
@@ -106,11 +106,11 @@ Assert.All(report.ScheduleBreakpoints, bp =>
     Assert.Contains(report.Phase9ScheduleCandidateYears, y => Math.Abs(y - bp) < 1e-8));
 ```
 
-- [ ] **Step 2: Implement source extraction**
+- [x] **Step 2: Implement source extraction**
 
 Reuse `MaturitySpecialPointsBenchmark.RunDefault(pricer)` to obtain schedule candidates, then filter to `(2.0, 30.0)`.
 
-- [ ] **Step 3: Run focused tests**
+- [x] **Step 3: Run focused tests**
 
 Expected: provenance and domain tests pass.
 
@@ -120,11 +120,11 @@ Expected: provenance and domain tests pass.
 - Modify: `examples/FixedRateBondSurrogate/ScheduleAwareRouterBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondScheduleAwareRouterTests.cs`
 
-- [ ] **Step 1: Add one-sided metric tests**
+- [x] **Step 1: Add one-sided metric tests**
 
 Assert the report includes left and right maturity sensitivity near at least five schedule breakpoints, and all values are finite.
 
-- [ ] **Step 2: Implement one-sided metrics**
+- [x] **Step 2: Implement one-sided metrics**
 
 For a breakpoint `T`, evaluate:
 
@@ -135,7 +135,7 @@ right slope = (f(T + 2eps) - f(T + eps)) / eps
 
 Use `eps = 7.0 / 365.25`, and clamp sample points inside `[2.0, 30.0]`.
 
-- [ ] **Step 3: Run focused tests**
+- [x] **Step 3: Run focused tests**
 
 Expected: one-sided diagnostics are finite and named by breakpoint.
 
@@ -145,7 +145,7 @@ Expected: one-sided diagnostics are finite and named by breakpoint.
 - Modify: `examples/FixedRateBondSurrogate/ScheduleAwareRouterBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondScheduleAwareRouterTests.cs`
 
-- [ ] **Step 1: Add comparison tests**
+- [x] **Step 1: Add comparison tests**
 
 Assert the model bank contains:
 
@@ -156,11 +156,11 @@ Phase 9 schedule-aware special-point control
 Schedule-aware router decomposed factor tensor
 ```
 
-- [ ] **Step 2: Implement comparison**
+- [x] **Step 2: Implement comparison**
 
 Reuse the Phase 9 validation bank and metric summaries. The new router must report PV, selected zero-pillar DV01, coupon derivative, maturity sensitivity, rate-coupon mixed, rate-maturity mixed, rate-rate mixed, and coupon-maturity mixed.
 
-- [ ] **Step 3: Implement decision**
+- [x] **Step 3: Implement decision**
 
 The decision must state whether the router should remain example-local, become a follow-up public API issue, or needs another modelling phase first.
 
@@ -171,11 +171,11 @@ The decision must state whether the router should remain example-local, become a
 - Modify: `docs/research/fixed-rate-bond-surrogate/status.md`
 - Modify: `docs/docs/examples.md`
 
-- [ ] **Step 1: Write the Phase 10 report**
+- [x] **Step 1: Write the Phase 10 report**
 
 Include wrapper contract, architecture, schedule-breakpoint provenance, one-sided sensitivity results, model comparison, and decision.
 
-- [ ] **Step 2: Update examples docs**
+- [x] **Step 2: Update examples docs**
 
 Add:
 
@@ -192,25 +192,25 @@ Record the phase branch, report path, verification commands, and PR link once op
 **Files:**
 - All Phase 10 files
 
-- [ ] **Step 1: Run focused tests**
+- [x] **Step 1: Run focused tests**
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBondScheduleAwareRouterTests" --verbosity minimal
 ```
 
-- [ ] **Step 2: Run fixed-rate bond slice**
+- [x] **Step 2: Run fixed-rate bond slice**
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBond" --verbosity minimal
 ```
 
-- [ ] **Step 3: Run example**
+- [x] **Step 3: Run example**
 
 ```bash
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router
 ```
 
-- [ ] **Step 4: Run closeout checks**
+- [x] **Step 4: Run closeout checks**
 
 ```bash
 dotnet format --verify-no-changes --verbosity minimal

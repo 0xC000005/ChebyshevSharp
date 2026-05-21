@@ -52,6 +52,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--schedule-aware-router"])
+        {
+            RunScheduleAwareRouter(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -389,6 +395,62 @@ public static class FixedRateBondExample
                 $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
             output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
             output.WriteLine($"  Interpretation: {model.Interpretation}");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Decision");
+        output.WriteLine($"  Recommendation : {report.Decision.Recommendation}");
+        output.WriteLine($"  Library follow-up: {report.Decision.LibraryEnhancementDecision}");
+        output.WriteLine($"  Evidence       : {report.Decision.Evidence}");
+    }
+
+    private static void RunScheduleAwareRouter(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        ScheduleAwareRouterReport report = ScheduleAwareRouterBenchmark.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond schedule-aware router");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Schedule breakpoints: {report.ScheduleBreakpoints.Count}");
+        output.WriteLine();
+
+        output.WriteLine("Pieces");
+        foreach (ScheduleAwareRouterPieceSummary piece in report.Pieces.Take(5))
+        {
+            string right = piece.IncludesUpperBound ? "]" : ")";
+            output.WriteLine(
+                $"  #{piece.Index,2}: [{piece.MaturityLo:F6}, {piece.MaturityHi:F6}{right} from {piece.Source}");
+        }
+
+        output.WriteLine();
+        output.WriteLine("One-sided maturity diagnostics");
+        foreach (OneSidedMaturityDiagnostic diagnostic in report.OneSidedMaturityDiagnostics.Take(5))
+        {
+            output.WriteLine(
+                $"  {diagnostic.Name} T={diagnostic.BreakpointYears:F6}: " +
+                $"baseline left {diagnostic.BaselineLeftSlopePerYear:E6}, " +
+                $"router left {diagnostic.RouterLeftSlopePerYear:E6}, " +
+                $"left abs error {diagnostic.LeftSlopeAbsoluteError:E6}, " +
+                $"right abs error {diagnostic.RightSlopeAbsoluteError:E6}");
+        }
+
+        output.WriteLine();
+        foreach (AnalyticCouponModelSummary model in report.Models)
+        {
+            NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity sensitivity");
+            NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, pieces {model.BucketCount}");
+            output.WriteLine(
+                $"  Clone metrics : PV rel max {pv.MaxRelativeError:P2}, " +
+                $"maturity rel max {maturity.MaxRelativeError:P2}, " +
+                $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
         }
 
         output.WriteLine();
