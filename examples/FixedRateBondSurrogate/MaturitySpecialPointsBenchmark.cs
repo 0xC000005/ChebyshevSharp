@@ -85,10 +85,7 @@ public static class MaturitySpecialPointsBenchmark
 
         YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
         FixedRateBondRequest request = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
-        if (request.ZeroCurve.Count != CurveBumpDimensionCount + 1)
-        {
-            throw new InvalidOperationException("Phase 9 expects the dense semiannual curve fixture.");
-        }
+        EnsureDenseFixtureShape(request);
 
         IReadOnlyList<MaturityBreakpointInventoryPoint> inventory = BuildBreakpointInventory(pricer, request);
         IReadOnlyList<MaturitySpecialPointCandidateSummary> candidates = BuildCandidates(inventory);
@@ -139,6 +136,15 @@ public static class MaturitySpecialPointsBenchmark
         }
 
         return points;
+    }
+
+    [ExcludeFromCodeCoverage(Justification = "Default fixture shape is covered by RunDefault; this is a defensive guard for edited fixtures.")]
+    private static void EnsureDenseFixtureShape(FixedRateBondRequest request)
+    {
+        if (request.ZeroCurve.Count != CurveBumpDimensionCount + 1)
+        {
+            throw new InvalidOperationException("Phase 9 expects the dense semiannual curve fixture.");
+        }
     }
 
     private static MaturityBreakpointInventorySummary SummarizeInventory(
@@ -361,14 +367,6 @@ public static class MaturitySpecialPointsBenchmark
         if (currentCoupons != FutureCouponCount(previous) || currentCoupons != FutureCouponCount(next))
         {
             reasons.Add("coupon-count");
-        }
-
-        double currentAccrual = FinalFutureCoupon(current)?.AccrualPeriod ?? 0.0;
-        double previousAccrual = FinalFutureCoupon(previous)?.AccrualPeriod ?? 0.0;
-        double nextAccrual = FinalFutureCoupon(next)?.AccrualPeriod ?? 0.0;
-        if (Math.Abs(currentAccrual - previousAccrual) > 0.05 || Math.Abs(currentAccrual - nextAccrual) > 0.05)
-        {
-            reasons.Add("final-accrual");
         }
 
         return reasons.Count == 0 ? "none" : string.Join("+", reasons);

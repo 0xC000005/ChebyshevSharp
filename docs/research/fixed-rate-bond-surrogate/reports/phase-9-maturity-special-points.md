@@ -62,7 +62,8 @@ Top raw spike candidates:
 | `2037-11-14` | `-1d` | `24` | `5.400643E-003` | `-1.953188E+000` | `1.939687E-002` |
 
 These are not arbitrary numerical wiggles. The scan records structural reasons
-such as cashflow-count, coupon-count, and final-accrual changes.
+such as cashflow-count and coupon-count changes, while also recording final
+coupon accrual behavior for audit.
 
 ## Candidate Configuration
 

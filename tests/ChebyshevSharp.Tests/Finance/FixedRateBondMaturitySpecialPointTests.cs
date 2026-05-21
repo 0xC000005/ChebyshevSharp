@@ -31,9 +31,12 @@ public sealed class FixedRateBondMaturitySpecialPointTests
         Assert.All(report.BreakpointInventory, point =>
         {
             Assert.True(point.MaturityDate > report.CurveDate);
+            Assert.True(point.BoundaryDate >= report.CurveDate.AddYears(2));
             Assert.InRange(point.MaturityYears, 2.0, 30.0);
             Assert.True(point.CashflowCount > 0);
             Assert.True(point.CouponCashflowCount > 0);
+            Assert.True(point.FinalCashflowDate >= point.MaturityDate);
+            Assert.InRange(point.FinalCouponAccrualPeriod, 0.0, 1.0);
             Assert.True(double.IsFinite(point.DirtyPrice));
             Assert.True(double.IsFinite(point.LeftSlopePerYear));
             Assert.True(double.IsFinite(point.RightSlopePerYear));
