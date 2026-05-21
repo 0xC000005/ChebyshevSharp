@@ -40,6 +40,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--analytic-coupon-decomposition"])
+        {
+            RunAnalyticCouponDecomposition(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -275,6 +281,47 @@ public static class FixedRateBondExample
             output.WriteLine($"  Method        : {model.InternalMethod}");
             output.WriteLine(
                 $"  Clone metrics : PV rel max {pv.MaxRelativeError:P2}, " +
+                $"maturity rel max {maturity.MaxRelativeError:P2}, " +
+                $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
+            output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
+            output.WriteLine($"  Interpretation: {model.Interpretation}");
+        }
+    }
+
+    private static void RunAnalyticCouponDecomposition(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        AnalyticCouponDecompositionReport report = AnalyticCouponDecompositionBenchmark.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond analytic coupon decomposition");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Formula       : {report.Formula}");
+        output.WriteLine(
+            $"coupon-linearity max abs {report.Identity.MaxAbsoluteError:E6}, " +
+            $"max rel {report.Identity.MaxRelativeError:P6}");
+        output.WriteLine($"Identity points: {report.Identity.ValidationPointCount}");
+        output.WriteLine();
+
+        foreach (AnalyticCouponModelSummary model in report.Models)
+        {
+            NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            NaiveSurrogateMetricSummary coupon = model.Metrics.Single(metric => metric.Name == "coupon derivative");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity sensitivity");
+            NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
+            NaiveSurrogateMetricSummary factorPv = model.FactorAlignedMetrics.Single(metric => metric.Name == "PV");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, " +
+                $"internal dims {model.InternalDimensionCount}, " +
+                $"buckets {model.BucketCount}");
+            output.WriteLine($"  Method        : {model.InternalMethod}");
+            output.WriteLine(
+                $"  Clone metrics : PV rel max {pv.MaxRelativeError:P2}, " +
+                $"coupon rel max {coupon.MaxRelativeError:P2}, " +
                 $"maturity rel max {maturity.MaxRelativeError:P2}, " +
                 $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
             output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
