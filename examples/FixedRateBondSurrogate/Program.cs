@@ -46,6 +46,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--maturity-special-points"])
+        {
+            RunMaturitySpecialPoints(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -326,6 +332,39 @@ public static class FixedRateBondExample
                 $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
             output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
             output.WriteLine($"  Interpretation: {model.Interpretation}");
+        }
+    }
+
+    private static void RunMaturitySpecialPoints(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        MaturitySpecialPointsReport report = MaturitySpecialPointsBenchmark.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond maturity special points");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Breakpoint inventory points: {report.BreakpointInventory.Count}");
+        output.WriteLine();
+
+        output.WriteLine("Breakpoint inventory");
+        foreach (MaturityBreakpointInventoryPoint point in report.BreakpointInventory
+            .OrderByDescending(point => Math.Abs(point.SecondDifference))
+            .Take(5))
+        {
+            output.WriteLine(
+                $"{point.MaturityDate:yyyy-MM-dd} offset {point.OffsetDays,3}d " +
+                $"cashflows {point.CashflowCount,2} second {point.SecondDifference:E6} " +
+                $"left {point.LeftSlopePerYear:E6} right {point.RightSlopePerYear:E6}");
+        }
+
+        output.WriteLine();
+        foreach (MaturitySpecialPointCandidateSummary candidate in report.Candidates)
+        {
+            output.WriteLine(
+                $"{candidate.Name}: {candidate.CandidateCount} candidates from {candidate.Source}");
+            output.WriteLine($"  Interpretation: {candidate.Interpretation}");
         }
     }
 
