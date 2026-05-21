@@ -16,6 +16,7 @@ dotnet run --project examples/SliderPartitionValidation/SliderPartitionValidatio
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
 ```
 
 ## QuickStart
@@ -81,6 +82,14 @@ DV01, and maturity-date spike candidates before fitting a Chebyshev surrogate:
 
 ```bash
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
+```
+
+Run the surrogate reproduction mode to fit the first compact full-PV
+TensorTrain and Slider models against the public reference pricer, then compare
+PV, zero-pillar DV01, coupon, maturity, and mixed finite-difference errors:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
 ```
 
 This example is intentionally restricted. It is a baseline for later surrogate

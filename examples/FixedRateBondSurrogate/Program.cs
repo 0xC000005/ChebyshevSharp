@@ -15,6 +15,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--surrogate-reproduction"])
+        {
+            RunSurrogateReproduction(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -87,6 +93,39 @@ public static class FixedRateBondExample
             output.WriteLine(
                 $"{point.MaturityDate:yyyy-MM-dd} offset {point.OffsetDays,3}d " +
                 $"cashflows {point.CashflowCount,2} spike {point.SecondDifference!.Value:E6}");
+        }
+    }
+
+    private static void RunSurrogateReproduction(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        SurrogateExperimentReport report = FixedRateBondSurrogateExperiment.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond surrogate reproduction");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"Dimensions    : {string.Join(", ", report.Dimensions.Select(dimension => dimension.Name))}");
+        output.WriteLine($"Validation points : {report.ValidationPoints.Count}");
+        output.WriteLine();
+
+        foreach (SurrogateModelSummary model in report.Models)
+        {
+            SurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            SurrogateMetricSummary rateCoupon = model.Metrics.Single(metric => metric.Name == "rate-coupon mixed");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, " +
+                $"PV rel max {pv.MaxRelativeError:P2}, " +
+                $"rate-coupon mixed rel max {rateCoupon.MaxRelativeError:P2}");
+
+            foreach (SurrogateMetricSummary metric in model.Metrics)
+            {
+                output.WriteLine(
+                    $"  {metric.Name,-22} abs max {metric.MaxAbsoluteError,12:E6} " +
+                    $"rel max {metric.MaxRelativeError,12:P2}");
+            }
         }
     }
 }
