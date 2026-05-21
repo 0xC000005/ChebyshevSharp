@@ -109,8 +109,8 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Implementation commit: `00845f4`.
 - Phase PR: [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504452110).
-- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"` passed 5 tests with 0 failures.
-- Local closeout verification: private-name scan produced only guardrail/search-term matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1681 tests with 0 failures; both fixed-rate bond example modes ran successfully; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"` passed 7 tests with 0 failures.
+- Local closeout verification: private-name scan produced only guardrail/search-term matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1683 tests with 0 failures; local coverage inspection found no uncovered or partial lines in `SmoothnessDiagnostics.cs`; the only uncovered `Program.cs` line in the full report is the unchanged console entrypoint; both fixed-rate bond example modes ran successfully; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Diagnostics command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
 - Preliminary findings: coupon second differences are near numerical zero, 10Y is the largest zero-pillar DV01 for the 10Y bond, 20Y/30Y DV01 are zero under the current interpolation support, the diagnostics records 25 rate-bump slice points, and maturity-date slices show daily second-difference spikes near schedule-boundary regions.
 

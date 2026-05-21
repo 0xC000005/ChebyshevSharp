@@ -257,8 +257,8 @@ public static class SmoothnessDiagnostics
                     DirtyPrice: result.DirtyPrice,
                     CleanPrice: result.CleanPrice,
                     AccruedAmount: result.AccruedAmount,
-                    FirstFutureCashflowDate: futureCashflows.FirstOrDefault()?.PaymentDate,
-                    FinalCashflowDate: futureCashflows.LastOrDefault()?.PaymentDate,
+                    FirstFutureCashflowDate: futureCashflows[0].PaymentDate,
+                    FinalCashflowDate: futureCashflows[^1].PaymentDate,
                     SlopePerYear: null,
                     SecondDifference: null));
             }
@@ -301,15 +301,8 @@ public static class SmoothnessDiagnostics
     private static int FindPillarIndex(FixedRateBondRequest request, int pillarYears)
     {
         DateTime expected = request.ValuationDate.Date.AddYears(pillarYears);
-
-        for (int i = 0; i < request.ZeroCurve.Count; i++)
-        {
-            if (request.ZeroCurve[i].Date.Date == expected)
-            {
-                return i;
-            }
-        }
-
-        throw new InvalidOperationException($"No {pillarYears}Y zero-rate pillar exists on the request curve.");
+        return Enumerable
+            .Range(0, request.ZeroCurve.Count)
+            .First(index => request.ZeroCurve[index].Date.Date == expected);
     }
 }

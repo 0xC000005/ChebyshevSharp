@@ -1,11 +1,11 @@
 using FixedRateBondSurrogate;
 
-FixedRateBondExample.Run(args, Console.Out);
+FixedRateBondExample.Run(Console.Out);
 
 public static class FixedRateBondExample
 {
     public static void Run(TextWriter output)
-        => Run([], output);
+        => Run(Environment.GetCommandLineArgs().Skip(1).ToArray(), output);
 
     public static void Run(string[] args, TextWriter output)
     {

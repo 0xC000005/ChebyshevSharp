@@ -69,4 +69,46 @@ public sealed class FixedRateBondSmoothnessDiagnosticsTests
         Assert.Contains("Largest absolute zero-pillar DV01", output);
         Assert.Contains("Top maturity spike candidates", output);
     }
+
+    [Fact]
+    public void Diagnostics_report_exposes_auxiliary_price_and_schedule_fields()
+    {
+        SmoothnessDiagnosticReport report = SmoothnessDiagnostics.RunDefault(Pricer);
+
+        CouponSlicePoint couponPoint = report.CouponSlice[0];
+        RateSensitivityPoint ratePoint = report.RateSensitivities[0];
+        RateBumpSlicePoint bumpPoint = report.RateBumpSlice[0];
+        MaturitySlicePoint maturityPoint = report.MaturitySlice.First(point => point.SlopePerYear.HasValue);
+
+        Assert.True(couponPoint.CleanPrice > 0.0);
+        Assert.Equal(0.0, couponPoint.AccruedAmount, precision: 12);
+        Assert.True(ratePoint.PillarIndex > 0);
+        Assert.True(ratePoint.PillarDate > report.CurveDate);
+        Assert.True(bumpPoint.PillarYears > 0);
+        Assert.True(Math.Abs(bumpPoint.BumpBasisPoints) <= 150.0);
+        Assert.True(bumpPoint.CleanPrice > 0.0);
+        Assert.Equal(0.0, bumpPoint.AccruedAmount, precision: 12);
+        Assert.True(maturityPoint.BoundaryDate > report.CurveDate);
+        Assert.True(maturityPoint.CouponCashflowCount > 0);
+        Assert.True(maturityPoint.CleanPrice > 0.0);
+        Assert.Equal(0.0, maturityPoint.AccruedAmount, precision: 12);
+        Assert.True(maturityPoint.FirstFutureCashflowDate.HasValue);
+        Assert.True(maturityPoint.FinalCashflowDate.HasValue);
+    }
+
+    [Fact]
+    public void Finite_difference_helpers_reject_invalid_inputs_and_compute_mixed_terms()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDefaultCurveFixture();
+        FixedRateBondRequest request = FixedRateBondMarketData.RegularTenYearFromFixture(fixture);
+
+        double rateDerivative = SmoothnessDiagnostics.RateDerivative(Pricer, request, pillarIndex: 6);
+        double mixedDerivative = SmoothnessDiagnostics.RateCouponMixedDerivative(Pricer, request, pillarIndex: 6);
+
+        Assert.True(double.IsFinite(rateDerivative));
+        Assert.True(double.IsFinite(mixedDerivative));
+        Assert.Throws<ArgumentOutOfRangeException>(() => SmoothnessDiagnostics.BumpZeroRate(request, -1, 1e-4));
+        Assert.Throws<ArgumentOutOfRangeException>(() => SmoothnessDiagnostics.BumpZeroRate(request, request.ZeroCurve.Count, 1e-4));
+        Assert.Throws<ArgumentException>(() => SmoothnessDiagnostics.WithMaturity(request, request.EffectiveDate));
+    }
 }

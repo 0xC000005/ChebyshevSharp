@@ -95,7 +95,7 @@ dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests
 Result:
 
 ```text
-Passed: 5, Failed: 0, Skipped: 0
+Passed: 7, Failed: 0, Skipped: 0
 ```
 
 Diagnostics command:
@@ -123,7 +123,8 @@ Results:
 - private-name scan found only guardrail/search-term text already present in the research docs;
 - formatter verification exited with no changes;
 - Release build succeeded with 0 warnings and 0 errors;
-- Release coverage test passed 1681 tests with 0 failures and 0 skipped tests;
+- Release coverage test passed 1683 tests with 0 failures and 0 skipped tests;
+- local coverage inspection found no uncovered or partial lines in `SmoothnessDiagnostics.cs`; the only uncovered `Program.cs` line in the full report is the unchanged console entrypoint;
 - both default and diagnostics example modes ran successfully;
 - DocFX build succeeded with 0 warnings and 0 errors.
 
