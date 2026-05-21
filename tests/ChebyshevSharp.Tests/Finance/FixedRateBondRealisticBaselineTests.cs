@@ -114,23 +114,23 @@ public sealed class FixedRateBondRealisticBaselineTests
         Assert.Equal(expectedDirtyPrice, result.DirtyPrice, precision: 8);
     }
 
-    [Fact]
-    public void Actual_treasury_auction_price_is_near_flat_auction_yield_price()
+    [Theory]
+    [MemberData(nameof(TreasuryAuctionSanityCases))]
+    public void Actual_treasury_auction_price_is_near_flat_auction_yield_price(
+        string cusip,
+        DateTime issueDate,
+        DateTime maturityDate,
+        double coupon,
+        double auctionHighYield,
+        double auctionPrice,
+        double tolerance)
     {
-        // Treasury auction result R_20260513_2:
-        // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260513_2.pdf
-        // CUSIP 912810UU0, 5% coupon, 2056-05-15 maturity, 5.046% high yield,
-        // price 99.292811.
-        DateTime issueDate = new(2026, 5, 15);
-        DateTime maturityDate = new(2056, 5, 15);
-        const double auctionHighYield = 0.05046;
-        const double auctionPrice = 99.292811;
         double continuousEquivalentRate = 2.0 * Math.Log(1.0 + (auctionHighYield / 2.0));
         var request = new FixedRateBondRequest(
             ValuationDate: issueDate,
             EffectiveDate: issueDate,
             MaturityDate: maturityDate,
-            Coupon: 0.05,
+            Coupon: coupon,
             Notional: 100.0,
             ZeroCurve:
             [
@@ -141,7 +141,7 @@ public sealed class FixedRateBondRealisticBaselineTests
         FixedRateBondResult result = Pricer.Price(request);
 
         Assert.Equal(0.0, result.AccruedAmount, precision: 12);
-        AssertClose(auctionPrice, result.DirtyPrice, 0.10);
+        AssertClose(auctionPrice, result.DirtyPrice, tolerance, cusip);
     }
 
     [Fact]
@@ -190,11 +190,83 @@ public sealed class FixedRateBondRealisticBaselineTests
     private static double YieldAtMonths(YieldCurveFixture fixture, int months)
         => fixture.Points.Single(point => point.MaturityMonths == months).ZeroYieldPercent;
 
+    public static TheoryData<string, DateTime, DateTime, double, double, double, double> TreasuryAuctionSanityCases()
+        => new()
+        {
+            // TreasuryDirect auction-result PDFs:
+            // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260427_1.pdf
+            // 2Y note, CUSIP 91282CQL8, price 99.881691, high yield 3.812%.
+            {
+                "91282CQL8",
+                new DateTime(2026, 4, 30),
+                new DateTime(2028, 4, 30),
+                0.0375,
+                0.03812,
+                99.881691,
+                0.20
+            },
+            // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260511_3.pdf
+            // 3Y note, CUSIP 91282CQR5, price 99.747787, high yield 3.965%.
+            {
+                "91282CQR5",
+                new DateTime(2026, 5, 15),
+                new DateTime(2029, 5, 15),
+                0.03875,
+                0.03965,
+                99.747787,
+                0.15
+            },
+            // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260427_4.pdf
+            // 5Y note, CUSIP 91282CQK0, price 99.640273, high yield 3.955%.
+            {
+                "91282CQK0",
+                new DateTime(2026, 4, 30),
+                new DateTime(2031, 4, 30),
+                0.03875,
+                0.03955,
+                99.640273,
+                0.15
+            },
+            // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260428_3.pdf
+            // 7Y note, CUSIP 91282CQN4, price 99.699199, high yield 4.175%.
+            {
+                "91282CQN4",
+                new DateTime(2026, 4, 30),
+                new DateTime(2033, 4, 30),
+                0.04125,
+                0.04175,
+                99.699199,
+                0.20
+            },
+            // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260512_3.pdf
+            // 10Y note, CUSIP 91282CQQ7, price 99.256552, high yield 4.468%.
+            {
+                "91282CQQ7",
+                new DateTime(2026, 5, 15),
+                new DateTime(2036, 5, 15),
+                0.04375,
+                0.04468,
+                99.256552,
+                0.15
+            },
+            // https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260513_2.pdf
+            // 30Y bond, CUSIP 912810UU0, price 99.292811, high yield 5.046%.
+            {
+                "912810UU0",
+                new DateTime(2026, 5, 15),
+                new DateTime(2056, 5, 15),
+                0.05,
+                0.05046,
+                99.292811,
+                0.10
+            },
+        };
+
     private static double Actual365(DateTime start, DateTime end)
         => (end.Date - start.Date).TotalDays / 365.0;
 
-    private static void AssertClose(double expected, double actual, double tolerance)
+    private static void AssertClose(double expected, double actual, double tolerance, string label = "value")
         => Assert.True(
             Math.Abs(expected - actual) <= tolerance,
-            $"Expected {actual} to be within {tolerance} of {expected}.");
+            $"Expected {label}={actual} to be within {tolerance} of {expected}.");
 }

@@ -62,6 +62,11 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 
 - Board of Governors of the Federal Reserve System. "Yield Curve Models and Data: Nominal Yield Curve." [Data page](https://www.federalreserve.gov/data/nominal-yield-curve.htm).
 - Gürkaynak, R. S., Sack, B., and Wright, J. H. (2006). "The U.S. Treasury Yield Curve: 1961 to the Present." Federal Reserve FEDS 2006-28. [Paper](https://www.federalreserve.gov/pubs/feds/2006/200628/200628pap.pdf).
+- U.S. Department of the Treasury. "Treasury Auction Results: 2-Year Note, CUSIP 91282CQL8." April 27, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260427_1.pdf).
+- U.S. Department of the Treasury. "Treasury Auction Results: 3-Year Note, CUSIP 91282CQR5." May 11, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260511_3.pdf).
+- U.S. Department of the Treasury. "Treasury Auction Results: 5-Year Note, CUSIP 91282CQK0." April 27, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260427_4.pdf).
+- U.S. Department of the Treasury. "Treasury Auction Results: 7-Year Note, CUSIP 91282CQN4." April 28, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260428_3.pdf).
+- U.S. Department of the Treasury. "Treasury Auction Results: 10-Year Note, CUSIP 91282CQQ7." May 12, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260512_3.pdf).
 - U.S. Department of the Treasury. "Treasury Auction Results: 30-Year Bond, CUSIP 912810UU0." May 13, 2026. [Auction result](https://www.treasurydirect.gov/instit/annceresult/press/preanre/2026/R_20260513_2.pdf).
 - U.S. Department of the Treasury. "Treasury Daily Interest Rate XML Feed." [Feed documentation](https://home.treasury.gov/treasury-daily-interest-rate-xml-feed).
 - Federal Reserve Bank of New York. "SOFR Averages and Index Data." [Data page](https://www.newyorkfed.org/markets/reference-rates/sofr-averages-and-index).
