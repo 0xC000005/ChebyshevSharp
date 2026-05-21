@@ -238,15 +238,33 @@ second-difference candidates are:
 
 | Maturity date | Offset | Cashflows | Second difference | Left slope/year | Right slope/year |
 | --- | ---: | ---: | ---: | ---: | ---: |
+| 2039-11-11 | -4d | 28 | `7.339039E-003` | `-2.650493E+000` | `2.825619E-002` |
+| 2040-11-10 | -5d | 30 | `7.191154E-003` | `-2.605554E+000` | `1.921722E-002` |
+| 2041-11-09 | -6d | 32 | `6.993055E-003` | `-2.536190E+000` | `1.627477E-002` |
+| 2035-11-10 | -5d | 20 | `6.654704E-003` | `-2.405472E+000` | `2.349520E-002` |
 | 2038-05-15 | 0d | 25 | `6.116018E-003` | `-1.953303E+000` | `2.790432E-001` |
-| 2036-11-15 | 0d | 22 | `5.901720E-003` | `-1.878257E+000` | `2.758709E-001` |
-| 2042-11-15 | 0d | 34 | `5.656000E-003` | `-1.784292E+000` | `2.801483E-001` |
-| 2038-11-13 | -2d | 26 | `5.506722E-003` | `-1.990271E+000` | `1.968216E-002` |
-| 2039-05-14 | -1d | 27 | `5.471144E-003` | `-1.975006E+000` | `2.196122E-002` |
 
 This supports the working hypothesis that maturity is not globally smooth in
 the same way as coupon or small curve bumps. Changing maturity changes the
 cashflow schedule and can flip local one-day slopes around schedule boundaries.
+The largest spikes can occur a few calendar days before the nominal semiannual
+date because the U.S. Government Bond calendar and Modified Following
+adjustment move actual payment dates.
+
+The following generated figure focuses on the largest observed local
+second-difference window, around the 2039-11-15 semiannual boundary. Dirty PV
+looks visually mild, while the finite-difference maturity sensitivity moves
+abruptly over adjacent days.
+
+![Maturity sensitivity near a semiannual schedule boundary](../images/phase-6-maturity-sensitivity.svg)
+
+The source data is committed as
+[phase-6-maturity-scan.csv](../data/phase-6-maturity-scan.csv). Regenerate the
+CSV and SVG with:
+
+```bash
+python tools/PlotFixedRateBondEvidence/plot_phase6_maturity.py
+```
 
 ## Interpretation
 

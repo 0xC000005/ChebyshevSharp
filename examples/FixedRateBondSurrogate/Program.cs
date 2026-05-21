@@ -1,3 +1,4 @@
+using System.Globalization;
 using FixedRateBondSurrogate;
 
 FixedRateBondExample.Run(Console.Out);
@@ -24,6 +25,12 @@ public static class FixedRateBondExample
         if (args is ["--naive-surrogate-discovery"])
         {
             RunNaiveSurrogateDiscovery(output);
+            return;
+        }
+
+        if (args is ["--naive-maturity-scan-csv"])
+        {
+            RunNaiveMaturityScanCsv(output);
             return;
         }
 
@@ -209,4 +216,29 @@ public static class FixedRateBondExample
                 $"left {point.LeftSlopePerYear:E6} right {point.RightSlopePerYear:E6}");
         }
     }
+
+    private static void RunNaiveMaturityScanCsv(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        IReadOnlyList<NaiveMaturityScanPoint> maturityScan = NaiveSurrogateDiscovery.RunMaturityScanDefault(pricer);
+
+        output.WriteLine(
+            "boundary_date,offset_days,maturity_date,cashflow_count,dirty_price,central_slope_per_year,second_difference");
+        foreach (NaiveMaturityScanPoint point in maturityScan)
+        {
+            output.WriteLine(
+                string.Join(
+                    ",",
+                    point.BoundaryDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    point.OffsetDays.ToString(CultureInfo.InvariantCulture),
+                    point.MaturityDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    point.CashflowCount.ToString(CultureInfo.InvariantCulture),
+                    FormatCsvDouble(point.DirtyPrice),
+                    FormatCsvDouble(point.CentralSlopePerYear),
+                    FormatCsvDouble(point.SecondDifference)));
+        }
+    }
+
+    private static string FormatCsvDouble(double? value)
+        => value.HasValue ? value.Value.ToString("G17", CultureInfo.InvariantCulture) : string.Empty;
 }

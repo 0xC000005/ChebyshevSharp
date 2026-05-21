@@ -64,6 +64,8 @@ Federal Reserve dense zero-curve fixture, DocFX research docs.
 - [x] Update `status.md`, public examples, and the meta issue with the evidence.
 - [x] Add risk-terminology citations and post-maturity support checks after the
   full-input correction.
+- [x] Add a reproducible maturity-sensitivity evidence plot and the CSV source
+  data used to render it.
 - [x] Run closeout verification before calling the phase complete.
 
 ## Exit Gate

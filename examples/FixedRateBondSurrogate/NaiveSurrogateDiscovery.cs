@@ -47,6 +47,16 @@ public sealed record NaiveSurrogateSanityCheck(
     IReadOnlyList<NaiveSurrogateSanityModelValue> ModelValues,
     string Interpretation);
 
+public sealed record NaiveMaturityScanPoint(
+    DateTime BoundaryDate,
+    int OffsetDays,
+    DateTime MaturityDate,
+    int CashflowCount,
+    double DirtyPrice,
+    double? CentralSlopePerYear,
+    double? SecondDifference,
+    double? AbsoluteSecondDifference);
+
 public sealed record NaiveMaturitySpikeCandidate(
     DateTime BoundaryDate,
     int OffsetDays,
@@ -67,6 +77,7 @@ public sealed record NaiveSurrogateDiscoveryReport(
     IReadOnlyList<SurrogateValidationPoint> ValidationPoints,
     IReadOnlyList<NaiveSurrogateModelSummary> Models,
     IReadOnlyList<NaiveSurrogateSanityCheck> SanityChecks,
+    IReadOnlyList<NaiveMaturityScanPoint> MaturityScan,
     IReadOnlyList<NaiveMaturitySpikeCandidate> TopMaturitySpikeCandidates);
 
 public static class NaiveSurrogateDiscovery
@@ -82,6 +93,15 @@ public static class NaiveSurrogateDiscovery
 
     private static readonly int[] NNodes = Enumerable.Repeat(3, TotalDimensionCount).ToArray();
     private static readonly double[][] Domain = BuildDomain();
+
+    public static IReadOnlyList<NaiveMaturityScanPoint> RunMaturityScanDefault(IFixedRateBondReferencePricer pricer)
+    {
+        ArgumentNullException.ThrowIfNull(pricer);
+
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
+        FixedRateBondRequest baseRequest = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
+        return BuildMaturityScan(pricer, baseRequest);
+    }
 
     public static NaiveSurrogateDiscoveryReport RunDefault(IFixedRateBondReferencePricer pricer)
     {
@@ -109,9 +129,10 @@ public static class NaiveSurrogateDiscovery
         IReadOnlyList<NaiveSurrogateSanityCheck> sanityChecks = BuildSanityChecks(
             fullPv,
             builtModels);
-        IReadOnlyList<NaiveMaturitySpikeCandidate> maturitySpikes = BuildMaturitySpikeCandidates(
+        IReadOnlyList<NaiveMaturityScanPoint> maturityScan = BuildMaturityScan(
             pricer,
             baseRequest);
+        IReadOnlyList<NaiveMaturitySpikeCandidate> maturitySpikes = BuildMaturitySpikeCandidates(maturityScan);
 
         return new NaiveSurrogateDiscoveryReport(
             FixtureId: fixture.FixtureId,
@@ -122,6 +143,7 @@ public static class NaiveSurrogateDiscovery
             ValidationPoints: validationPoints,
             Models: builtModels.Select(model => model.Summary).ToArray(),
             SanityChecks: sanityChecks,
+            MaturityScan: maturityScan,
             TopMaturitySpikeCandidates: maturitySpikes);
     }
 
@@ -439,45 +461,99 @@ public static class NaiveSurrogateDiscovery
             Interpretation: interpretation);
     }
 
-    private static IReadOnlyList<NaiveMaturitySpikeCandidate> BuildMaturitySpikeCandidates(
+    private static IReadOnlyList<NaiveMaturityScanPoint> BuildMaturityScan(
         IFixedRateBondReferencePricer pricer,
         FixedRateBondRequest request)
     {
-        var candidates = new List<NaiveMaturitySpikeCandidate>();
+        var scan = new List<NaiveMaturityScanPoint>();
 
         for (int months = 24; months <= 360; months += 6)
         {
             DateTime boundary = request.EffectiveDate.Date.AddMonths(months);
-            for (int offset = -2; offset <= 2; offset++)
+            var window = new List<(DateTime Maturity, int Offset, FixedRateBondResult Result)>();
+
+            for (int offset = -7; offset <= 7; offset++)
             {
                 DateTime maturity = boundary.AddDays(offset);
                 if (maturity <= request.EffectiveDate.Date ||
-                    maturity.AddDays(1) > request.ZeroCurve[^1].Date.Date)
+                    maturity > request.ZeroCurve[^1].Date.Date)
                 {
                     continue;
                 }
 
-                FixedRateBondResult previous = pricer.Price(SmoothnessDiagnostics.WithMaturity(request, maturity.AddDays(-1)));
-                FixedRateBondResult current = pricer.Price(SmoothnessDiagnostics.WithMaturity(request, maturity));
-                FixedRateBondResult next = pricer.Price(SmoothnessDiagnostics.WithMaturity(request, maturity.AddDays(1)));
-                double leftSlope = (current.DirtyPrice - previous.DirtyPrice) * 365.0;
-                double rightSlope = (next.DirtyPrice - current.DirtyPrice) * 365.0;
-                double secondDifference = next.DirtyPrice - 2.0 * current.DirtyPrice + previous.DirtyPrice;
+                window.Add((
+                    Maturity: maturity,
+                    Offset: offset,
+                    Result: pricer.Price(SmoothnessDiagnostics.WithMaturity(request, maturity))));
+            }
 
-                candidates.Add(new NaiveMaturitySpikeCandidate(
+            for (int i = 0; i < window.Count; i++)
+            {
+                double? centralSlope = null;
+                double? secondDifference = null;
+                double? absoluteSecondDifference = null;
+
+                if (i > 0 && i < window.Count - 1)
+                {
+                    FixedRateBondResult previous = window[i - 1].Result;
+                    FixedRateBondResult current = window[i].Result;
+                    FixedRateBondResult next = window[i + 1].Result;
+                    centralSlope = (next.DirtyPrice - previous.DirtyPrice) * 365.0 / 2.0;
+                    secondDifference = next.DirtyPrice - 2.0 * current.DirtyPrice + previous.DirtyPrice;
+                    absoluteSecondDifference = Math.Abs(secondDifference.Value);
+                }
+
+                scan.Add(new NaiveMaturityScanPoint(
                     BoundaryDate: boundary,
-                    OffsetDays: offset,
-                    MaturityDate: maturity,
-                    CashflowCount: current.Cashflows.Count,
-                    DirtyPrice: current.DirtyPrice,
-                    LeftSlopePerYear: leftSlope,
-                    RightSlopePerYear: rightSlope,
+                    OffsetDays: window[i].Offset,
+                    MaturityDate: window[i].Maturity,
+                    CashflowCount: window[i].Result.Cashflows.Count,
+                    DirtyPrice: window[i].Result.DirtyPrice,
+                    CentralSlopePerYear: centralSlope,
                     SecondDifference: secondDifference,
-                    AbsoluteSecondDifference: Math.Abs(secondDifference)));
+                    AbsoluteSecondDifference: absoluteSecondDifference));
             }
         }
 
-        return candidates
+        return scan.ToArray();
+    }
+
+    private static IReadOnlyList<NaiveMaturitySpikeCandidate> BuildMaturitySpikeCandidates(
+        IReadOnlyList<NaiveMaturityScanPoint> scan)
+    {
+        return scan
+            .Where(point => point.SecondDifference.HasValue)
+            .Select(point =>
+            {
+                double leftSlope = double.NaN;
+                double rightSlope = double.NaN;
+                NaiveMaturityScanPoint? previous = scan.FirstOrDefault(other =>
+                    other.BoundaryDate == point.BoundaryDate &&
+                    other.OffsetDays == point.OffsetDays - 1);
+                NaiveMaturityScanPoint? next = scan.FirstOrDefault(other =>
+                    other.BoundaryDate == point.BoundaryDate &&
+                    other.OffsetDays == point.OffsetDays + 1);
+                if (previous is not null)
+                {
+                    leftSlope = (point.DirtyPrice - previous.DirtyPrice) * 365.0;
+                }
+
+                if (next is not null)
+                {
+                    rightSlope = (next.DirtyPrice - point.DirtyPrice) * 365.0;
+                }
+
+                return new NaiveMaturitySpikeCandidate(
+                    BoundaryDate: point.BoundaryDate,
+                    OffsetDays: point.OffsetDays,
+                    MaturityDate: point.MaturityDate,
+                    CashflowCount: point.CashflowCount,
+                    DirtyPrice: point.DirtyPrice,
+                    LeftSlopePerYear: leftSlope,
+                    RightSlopePerYear: rightSlope,
+                    SecondDifference: point.SecondDifference!.Value,
+                    AbsoluteSecondDifference: point.AbsoluteSecondDifference!.Value);
+            })
             .OrderByDescending(candidate => candidate.AbsoluteSecondDifference)
             .Take(8)
             .ToArray();

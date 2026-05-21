@@ -18,6 +18,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
 ## QuickStart
@@ -158,6 +159,17 @@ a bond maturing at the 10Y curve pillar should have zero direct sensitivity to
 the 30Y zero-rate pillar under the current direct-zero interpolation setup. If
 that check fails, the surrogate is inventing post-maturity curve exposure before
 any finer modelling question matters.
+
+To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
+run:
+
+```bash
+python tools/PlotFixedRateBondEvidence/plot_phase6_maturity.py
+```
+
+The script invokes the example's `--naive-maturity-scan-csv` mode, writes the
+deterministic CSV under `docs/research/fixed-rate-bond-surrogate/data/`, and
+renders an SVG under `docs/research/fixed-rate-bond-surrogate/images/`.
 
 This example is intentionally restricted. It is a baseline for later surrogate
 validation, not a general fixed-income library. It does not download market data

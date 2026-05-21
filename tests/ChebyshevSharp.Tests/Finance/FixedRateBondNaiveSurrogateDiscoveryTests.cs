@@ -72,6 +72,11 @@ public sealed class FixedRateBondNaiveSurrogateDiscoveryTests
     {
         NaiveSurrogateDiscoveryReport report = NaiveSurrogateDiscovery.RunDefault(Pricer);
 
+        Assert.NotEmpty(report.MaturityScan);
+        Assert.Contains(report.MaturityScan, point =>
+            point.BoundaryDate == new DateTime(2038, 5, 15) &&
+            point.OffsetDays == 0 &&
+            point.SecondDifference.HasValue);
         Assert.NotEmpty(report.TopMaturitySpikeCandidates);
         Assert.All(report.TopMaturitySpikeCandidates, point =>
         {
@@ -81,6 +86,21 @@ public sealed class FixedRateBondNaiveSurrogateDiscoveryTests
             Assert.True(double.IsFinite(point.LeftSlopePerYear));
             Assert.True(double.IsFinite(point.RightSlopePerYear));
         });
+    }
+
+    [Fact]
+    public void Naive_maturity_scan_csv_mode_writes_reproducible_plot_data()
+    {
+        using var writer = new StringWriter();
+
+        FixedRateBondExample.Run(["--naive-maturity-scan-csv"], writer);
+
+        string output = writer.ToString();
+        Assert.StartsWith(
+            "boundary_date,offset_days,maturity_date,cashflow_count,dirty_price,central_slope_per_year,second_difference",
+            output,
+            StringComparison.Ordinal);
+        Assert.Contains("2038-05-15,0,2038-05-15", output);
     }
 
     [Fact]
