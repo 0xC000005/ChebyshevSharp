@@ -46,6 +46,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--maturity-special-points"])
+        {
+            RunMaturitySpecialPoints(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -327,6 +333,69 @@ public static class FixedRateBondExample
             output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
             output.WriteLine($"  Interpretation: {model.Interpretation}");
         }
+    }
+
+    private static void RunMaturitySpecialPoints(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        MaturitySpecialPointsReport report = MaturitySpecialPointsBenchmark.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond maturity special points");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Breakpoint inventory points: {report.BreakpointInventory.Count}");
+        output.WriteLine(
+            $"Largest maturity spike: {report.InventorySummary.WorstMaturityDate:yyyy-MM-dd} " +
+            $"second {report.InventorySummary.MaxAbsSecondDifference:E6}, " +
+            $"slope jump {report.InventorySummary.MaxAbsSlopeJump:E6}");
+        output.WriteLine();
+
+        output.WriteLine("Breakpoint inventory");
+        foreach (MaturityBreakpointInventoryPoint point in report.BreakpointInventory
+            .OrderByDescending(point => Math.Abs(point.SecondDifference))
+            .Take(5))
+        {
+            output.WriteLine(
+                $"{point.MaturityDate:yyyy-MM-dd} offset {point.OffsetDays,3}d " +
+                $"cashflows {point.CashflowCount,2} second {point.SecondDifference:E6} " +
+                $"left {point.LeftSlopePerYear:E6} right {point.RightSlopePerYear:E6}");
+        }
+
+        output.WriteLine();
+        foreach (MaturitySpecialPointCandidateSummary candidate in report.Candidates)
+        {
+            output.WriteLine(
+                $"{candidate.Name}: {candidate.CandidateCount} candidates from {candidate.Source}");
+            output.WriteLine($"  Interpretation: {candidate.Interpretation}");
+        }
+
+        output.WriteLine();
+        foreach (AnalyticCouponModelSummary model in report.Models)
+        {
+            NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity sensitivity");
+            NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
+            NaiveSurrogateMetricSummary factorPv = model.FactorAlignedMetrics.Single(metric => metric.Name == "PV");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, pieces {model.BucketCount}");
+            output.WriteLine($"  Method        : {model.InternalMethod}");
+            output.WriteLine(
+                $"  Clone metrics : PV rel max {pv.MaxRelativeError:P2}, " +
+                $"maturity rel max {maturity.MaxRelativeError:P2}, " +
+                $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
+            output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
+            output.WriteLine($"  Interpretation: {model.Interpretation}");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Decision");
+        output.WriteLine($"  Recommendation : {report.Decision.Recommendation}");
+        output.WriteLine($"  Library follow-up: {report.Decision.LibraryEnhancementDecision}");
+        output.WriteLine($"  Evidence       : {report.Decision.Evidence}");
     }
 
     private static string FormatCsvDouble(double? value)

@@ -10,9 +10,9 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `phase8-analytic-coupon-decomposition`
+Working branch: `phase9-maturity-special-points`
 
-Last completed phase PR: [#198](https://github.com/0xC000005/ChebyshevSharp/pull/198), merged on 2026-05-21 as `22331ea`.
+Last completed phase PR: [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199), merged on 2026-05-21 as `ae41f2d`.
 
 ## Confidentiality Guardrail
 
@@ -39,8 +39,8 @@ Use generic public terms:
 | 5. Realistic dense-curve baseline | Complete | Dense semiannual curve fixture, explicit conventions, 30Y baseline tests, and docs complete |
 | 6. Naive dense-baseline surrogate discovery | Complete | Dense-baseline naive TT/Slider failure evidence and maturity-smoothness evidence documented |
 | 7. Structured alternatives benchmark | Complete | Controlled alternatives compared against the Phase 6 evidence bank |
-| 8. Analytic coupon decomposition | Complete; PR ready to merge | Principal/annuity surrogate comparison completed |
-| 9. Maturity splitting and adaptive knots | Deferred | No split vs 1Y vs 0.5Y vs schedule-aware/adaptive split comparison completed |
+| 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
+| 9. Maturity splitting and adaptive knots | In progress | Schedule-aware and detector special-point comparison implemented; report draft added |
 | 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
 | 11. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
@@ -63,7 +63,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Merge Phase 8 PR [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199) after final review. Then start Phase 9 planning for maturity special points, schedule-aware routing, and automatic kink detection.
+Continue Phase 9 on `phase9-maturity-special-points`: harden the maturity-special-point report, update tracking issue #191, run fixed-rate-bond slice/full verification, and then open one coherent Phase 9 PR.
 
 ## Phase 6 Notes
 
@@ -113,6 +113,7 @@ Merge Phase 8 PR [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199) af
 - Report draft: [Phase 8 Report: Analytic Coupon Decomposition](reports/phase-8-analytic-coupon-decomposition.md).
 - Phase PR: [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4512018897).
+- Merge outcome: PR [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199) merged into `main` on 2026-05-21 with merge commit `ae41f2de30e5ce34adb0b51aaa03a3de0fac852d`.
 - Scope boundary: validate and benchmark analytic coupon recombination; keep automatic kink detection and library-level special-point routing for Phase 9.
 - Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`, even when coupon is removed internally.
 - Core formula: `PV(curve, coupon, T) = PrincipalPV(curve, T) + coupon * AnnuityPV(curve, T)`.
@@ -123,6 +124,28 @@ Merge Phase 8 PR [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199) af
 - 0.5Y semiannual bucketed decomposed factor routing keeps max factor-aligned PV relative error at `0.58%` but leaves coupon-maturity mixed relative error `56.94%`, so maturity nonsmoothness remains a Phase 9 problem.
 - Local verification: focused Phase 8 tests passed 3 tests; focused Phase 8 coverage showed no missing or partial lines in `AnalyticCouponDecompositionBenchmark.cs`; fixed-rate bond slice passed 62 tests; analytic-coupon example ran and printed the report table; Release build passed with 0 warnings/errors; DocFX passed with 0 warnings/errors; Release tests passed 1711 tests; `git diff --check` passed; private-name scan matched only existing guardrail/checklist text.
 - CI outcome before merge: `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, `All Tests Passed`, and `codecov/patch` passed on the amended Phase 8 commit.
+
+## Phase 9 Notes
+
+- Plan: [Phase 9 Maturity Special Points Plan](plans/phase-9-maturity-special-points.md).
+- Implementation plan path: `docs/superpowers/plans/2026-05-21-phase9-maturity-special-points.md`.
+- Report draft: [Phase 9 Report: Maturity Special Points](reports/phase-9-maturity-special-points.md).
+- Phase PR: [#200](https://github.com/0xC000005/ChebyshevSharp/pull/200).
+- Working branch: `phase9-maturity-special-points`.
+- Scope boundary: test maturity special points, schedule-aware routing, and automatic detector candidates before adding reusable library-level APIs.
+- Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
+- Default internal formula: use the Phase 8 principal/annuity decomposition unless validation proves the restricted product family no longer satisfies coupon linearity.
+- Evidence basis: Phase 6 maturity second-difference spikes, Phase 7 bucket/factor limitations, and Phase 8 proof that coupon is analytical but maturity errors remain.
+- Current inventory: 167 one-day maturity-window points around semiannual schedule regions; largest spike is `2038-05-15`, with second difference `6.116018E-003` and one-day slope jump `2.233876E+000`.
+- Candidate families measured: global decomposed factor control, uniform 0.5Y bucket control, schedule-aware special points, automatic detector special points, and a hybrid union.
+- Current result: schedule-aware routing improves maturity relative error from `96.44%` to `89.21%` and coupon-maturity mixed relative error from `55.52%` to `48.75%` versus the uniform 0.5Y control, while detector-only and hybrid routing do not improve maturity sensitivity.
+- Phase 9 decision so far: evidence supports a future schedule-aware high-dimensional piecewise-router design, but not a generic automatic kink-detection API yet.
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4512527963).
+- Focused tests run: `dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBondMaturitySpecialPointTests" --verbosity minimal` passed 8 tests with 0 failures.
+- Fixed-rate bond test slice run: `dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBond" --verbosity minimal` passed 70 tests with 0 failures.
+- Benchmark command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points`.
+- Local verification so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `docfx docs/docfx.json` passed with 0 warnings/errors; Release tests passed 1719 tests; `git diff --check` passed.
+- CI outcome on PR #200: `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, and `All Tests Passed` passed; Dependabot was skipped.
 
 ## Phase 5 Notes
 
