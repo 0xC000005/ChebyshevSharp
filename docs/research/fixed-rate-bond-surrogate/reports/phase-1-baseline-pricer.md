@@ -55,7 +55,7 @@ dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"
 Result:
 
 ```text
-Passed: 5, Failed: 0, Skipped: 0
+Passed: 16, Failed: 0, Skipped: 0
 ```
 
 Full verification:
@@ -88,9 +88,10 @@ private-name scan: no proprietary system/interface names; matches are guardrail 
 git diff --check: no whitespace errors
 dotnet format: 0 formatting changes required
 dotnet build --configuration Release --no-restore: 0 warnings, 0 errors
-dotnet test --configuration Release --no-build: Passed 1654, Failed 0, Skipped 0
+dotnet test --configuration Release --no-build: Passed 1665, Failed 0, Skipped 0
+coverage.cobertura.xml for FixedRateBondSurrogate: line-rate 99.29%, branch-rate 100%
 dotnet build --no-restore: 0 warnings, 0 errors
-dotnet test: Passed 1654, Failed 0, Skipped 0
+dotnet test: Passed 1665, Failed 0, Skipped 0
 dotnet pack: created ChebyshevSharp.0.13.3.nupkg
 DocFX: 0 warnings, 0 errors
 All runnable examples completed in Debug and CI-style Release/no-build mode.
@@ -102,7 +103,16 @@ The tests verify:
 - coupon linearity;
 - principal/annuity recombination;
 - zero-coupon principal component behavior;
-- matured-bond zero value and zero rate sensitivity under the direct-zero curve setup.
+- matured-bond zero value and zero rate sensitivity under the direct-zero curve setup;
+- example runner output;
+- invalid-request validation branches;
+- cashflow diagnostic accessors used by the public example.
+
+The PR initially failed `codecov/patch` because the console example was executed
+by the example smoke job but the top-level statements were not represented as
+covered in the xUnit coverage upload. The fix keeps the patch target intact:
+the console output now flows through a testable `FixedRateBondExample.Run`
+method, and focused tests cover the adapter validation and diagnostics.
 
 ## Citation and Source Verification
 

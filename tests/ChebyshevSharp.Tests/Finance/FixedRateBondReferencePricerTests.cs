@@ -77,6 +77,79 @@ public sealed class FixedRateBondReferencePricerTests
         Assert.Equal(baseResult.DirtyPrice, bumpedResult.DirtyPrice, precision: 12);
     }
 
+    [Fact]
+    public void Example_runner_writes_reference_price_summary()
+    {
+        using var writer = new StringWriter();
+
+        FixedRateBondExample.Run(writer);
+
+        string output = writer.ToString();
+        Assert.Contains("Fixed-rate bond reference pricer", output);
+        Assert.Contains("Dirty price    : 104.42670796", output);
+        Assert.Contains("Cashflows      : 21", output);
+    }
+
+    [Theory]
+    [MemberData(nameof(InvalidRequests))]
+    public void Invalid_requests_are_rejected(FixedRateBondRequest request)
+    {
+        Assert.ThrowsAny<ArgumentException>(() => Pricer.Price(request));
+    }
+
+    [Fact]
+    public void Cashflow_diagnostics_expose_payment_date_and_coupon_rate()
+    {
+        FixedRateBondResult result = Pricer.Price(FixedRateBondScenarios.RegularTenYear());
+
+        CashflowInfo firstCoupon = result.Cashflows.First(cf => cf.IsCoupon);
+
+        Assert.True(firstCoupon.PaymentDate > FixedRateBondScenarios.RegularTenYear().ValuationDate);
+        Assert.False(firstCoupon.HasOccurred);
+        Assert.Equal(0.045, firstCoupon.CouponRate!.Value, precision: 12);
+    }
+
+    public static TheoryData<FixedRateBondRequest> InvalidRequests()
+    {
+        FixedRateBondRequest valid = FixedRateBondScenarios.RegularTenYear();
+
+        return
+        [
+            valid with { Notional = 0.0 },
+            valid with { Notional = double.NaN },
+            valid with { Coupon = double.PositiveInfinity },
+            valid with { EffectiveDate = valid.MaturityDate },
+            valid with { ZeroCurve = valid.ZeroCurve.Take(1).ToArray() },
+            valid with
+            {
+                ZeroCurve =
+                [
+                    valid.ZeroCurve[0],
+                    valid.ZeroCurve[0] with { ZeroRate = 0.039 },
+                    .. valid.ZeroCurve.Skip(2),
+                ],
+            },
+            valid with
+            {
+                ZeroCurve =
+                [
+                    valid.ZeroCurve[0],
+                    valid.ZeroCurve[1] with { ZeroRate = double.NaN },
+                    .. valid.ZeroCurve.Skip(2),
+                ],
+            },
+            valid with
+            {
+                ZeroCurve =
+                [
+                    valid.ZeroCurve[0] with { Date = valid.ValuationDate.AddDays(1) },
+                    .. valid.ZeroCurve.Skip(1),
+                ],
+            },
+            valid with { ZeroCurve = valid.ZeroCurve.Take(4).ToArray() },
+        ];
+    }
+
     private static FixedRateBondRequest MaturedBondRequest(double rateBump)
     {
         DateTime valuationDate = new(2026, 5, 20);

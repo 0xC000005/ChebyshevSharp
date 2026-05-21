@@ -69,8 +69,9 @@ Monitor Phase 1 PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192),
 - Report draft: [Phase 1 Report: Baseline Pricer Adapter](reports/phase-1-baseline-pricer.md).
 - Selected first C# baseline path: QLNet `1.13.1` in the example and tests only.
 - Optional cross-check path: Python QuantLib through `uv`.
-- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 5 tests with 0 failures.
-- Full verification run: `dotnet build --no-restore` passed with 0 warnings/errors; `dotnet test` passed 1654 tests with 0 failures; all examples ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 16 tests with 0 failures.
+- Full verification run: `dotnet build --no-restore` passed with 0 warnings/errors; `dotnet test` passed 1665 tests with 0 failures; Release coverage run passed 1665 tests with 0 failures; all examples ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Local coverage evidence for the Codecov follow-up: `FixedRateBondSurrogate` line-rate `99.29%`, branch-rate `100%`.
 - Phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504103137).
 
