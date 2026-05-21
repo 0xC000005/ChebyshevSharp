@@ -146,8 +146,8 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 ```
 
 Run the naive discovery mode to use the dense fixture, estimate why the full
-dense tensor is infeasible, and compare a limited full-PV TensorTrain and
-Slider probe before any decomposition or maturity splitting:
+dense tensor is infeasible, and compare full-input 62D TensorTrain and Slider
+probes before any decomposition or maturity splitting:
 
 ```bash
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery

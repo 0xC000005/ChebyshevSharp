@@ -10,8 +10,9 @@ approximated naively as one full-PV Chebyshev function.
 
 **Architecture:** Keep QLNet as the reference pricer. First estimate the
 infeasibility of a full dense Chebyshev tensor over the dense curve fixture.
-Then run a limited but still naive full-PV TensorTrain and Slider comparison on
-selected curve pillars plus coupon and maturity. Report PV, DV01, coupon,
+Then run naive full-PV TensorTrain and Slider comparisons whose public callable
+input is the full 62-coordinate vector: 60 curve-bump coordinates plus coupon
+and maturity. Report PV, DV01, coupon,
 maturity, and mixed finite-difference errors, plus maturity-date smoothness
 diagnostics.
 
@@ -30,9 +31,11 @@ Federal Reserve dense zero-curve fixture, DocFX research docs.
   and maturity.
 - Do not train a dense full tensor. Record its node count to show why it is not
   a viable starting point.
-- Do train limited naive full-PV models on selected curve pillars from the
-  dense fixture. This is not a proposed final model; it is a controlled
-  discovery harness.
+- Do not use selected-pillar surrogate inputs as evidence for the clone
+  objective. Any TT, Slider, bucketed, decomposed, or routed model must expose
+  the full 62-coordinate input at the wrapper boundary.
+- Internal models may partition, route, or ignore coordinates where the design
+  justifies it, but tests and reports must state that distinction explicitly.
 - Treat user hypotheses as unproven until measured: DV01 weakness, mixed-term
   weakness, and maturity non-smoothness must be supported by local evidence.
 

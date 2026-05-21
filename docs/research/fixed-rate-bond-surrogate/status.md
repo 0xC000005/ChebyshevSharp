@@ -69,18 +69,20 @@ Run Phase 6 naive dense-baseline surrogate discovery. Start from the QLNet-backe
 
 - Plan: [Phase 6 Naive Surrogate Discovery Implementation Plan](plans/phase-6-naive-surrogate-discovery.md).
 - Report draft: [Phase 6 Report: Naive Dense-Baseline Surrogate Discovery](reports/phase-6-naive-surrogate-discovery.md).
-- Scope boundary: this is a discovery phase. It may build limited naive TT/Slider models, but it must not implement the next modelling fix.
+- Scope boundary: this is a discovery phase. It may build naive TT/Slider models, but it must not implement the next modelling fix.
 - Conceptual inputs are curve, coupon, maturity, and notional. Chebyshev dimensions count scalar coordinates, so the dense fixture creates 60 curve-bump dimensions; excluding notional, the naive full-PV surrogate is 62-dimensional.
+- Correction: selected-pillar surrogate inputs are not faithful evidence for the clone objective. All Phase 6 and later surrogate tests must expose the full 62-coordinate input at the wrapper boundary, even if an internal model partitions, routes, or ignores some coordinates.
 - Evidence targets: full dense tensor infeasibility, naive TT/Slider PV error, zero-pillar DV01 error, coupon and maturity finite-difference error, rate-coupon/rate-maturity/coupon-maturity mixed terms, and maturity-date second-difference spikes.
 - Implementation files: `examples/FixedRateBondSurrogate/NaiveSurrogateDiscovery.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondNaiveSurrogateDiscoveryTests.cs`.
 - First measured result: a dense full tensor would need `3^62 = 381,520,424,476,945,831,628,649,898,809` nodes even with only three nodes per scalar coordinate.
-- Limited naive probe: selected 1Y, 5Y, 10Y, 20Y, and 30Y zero-rate bumps plus coupon and maturity, with no decomposition or bucket splitting.
-- Preliminary findings from `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery`: TensorTrain max PV relative error `2.98%`, maturity-slope relative error `115.74%`, and coupon-maturity mixed relative error `16.24%`; Slider max PV relative error `93.87%`, maturity-slope relative error `288.39%`, and coupon-maturity mixed relative error `100.00%`.
+- Corrected full-input naive probe: all 60 semiannual zero-rate bumps plus coupon and maturity, with no decomposition or bucket splitting.
+- Preliminary findings from `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery`: TensorTrain max PV relative error `17.72%`, maturity-slope relative error `461.43%`, and coupon-maturity mixed relative error `49.10%`; Slider max PV relative error `92.64%`, maturity-slope relative error `154.35%`, and coupon-maturity mixed relative error `100.00%`.
 - The maturity scan found one-day slope flips around schedule-boundary candidates, with the largest second difference at `2038-05-15`: left slope/year `-1.953303E+000`, right slope/year `2.790432E-001`, and second difference `6.116018E-003`.
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondNaiveSurrogateDiscoveryTests"` passed 4 tests with 0 failures.
 - Fixed-rate bond test slice run: `dotnet test --filter "FullyQualifiedName~FixedRateBond"` passed 54 tests with 0 failures.
 - Local closeout checks so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1703 tests with 0 failures; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed; private-name scan matched only pre-existing guardrail/search-term text.
-- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509528109).
+- Superseded tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509528109) recorded the earlier selected-pillar probe and should not be used as clone evidence.
+- Correction tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4509648601).
 
 ## Phase 5 Notes
 

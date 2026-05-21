@@ -45,37 +45,40 @@ Even very small dense Chebyshev grids are infeasible:
 | `5^62` | `21,684,043,449,710,088,680,149,056,017,398,834,228,515,625` |
 
 So the phase does not attempt a dense full tensor. It uses TensorTrain and
-Slider as limited naive probes.
+Slider as feasible full-input naive probes.
 
-## Limited Naive Probe
+## Full-Input Naive Probe
 
-The probe keeps the full-PV structure but restricts curve inputs to selected
-pillars:
+The probe keeps the full 62-dimensional input wrapper:
 
 ```text
-f(b1, b5, b10, b20, b30, c, T) = dirty PV
+f(b_6M, b_1Y, ..., b_30Y, c, T) = dirty PV
 ```
 
-where rate bumps are in basis points, `c` is coupon, and `T` is maturity in
-years from the valuation date.
+where the 60 rate-bump coordinates correspond to the dense semiannual curve
+pillars, rate bumps are in basis points, `c` is coupon, and `T` is maturity in
+years from the valuation date. The experiment may use a low-order TT or a
+partitioned Slider internally, but the callable model input is always the full
+62-coordinate vector.
 
 Domain:
 
 | Dimension | Range |
 | --- | --- |
-| 1Y, 5Y, 10Y, 20Y, 30Y zero-rate bumps | `[-150, 150]` bp |
+| 60 semiannual zero-rate bumps, 6M to 30Y | `[-150, 150]` bp |
 | coupon | `[0.00, 0.12]` |
 | maturity | `[2.0, 30.0]` years |
 
 Both models use the same QLNet baseline, validation points, and
-finite-difference metrics. The Slider partition is deliberately naive:
+finite-difference metrics. The Slider partition is deliberately naive but still
+62-dimensional:
 
 ```text
-[[all selected curve bumps], [coupon], [maturity]]
+[[6M], [1Y], ..., [30Y], [coupon], [maturity]]
 ```
 
-This tests whether separating curve, coupon, and maturity destroys mixed-term
-information.
+This tests whether a computationally cheap global Slider loses the interactions
+needed by a faithful bond-pricer clone.
 
 ## Compared Quantities
 
@@ -109,28 +112,29 @@ Measured on 12 deterministic validation points:
 
 | Model | Build evals | Max PV rel. error | Max maturity-slope rel. error | Max coupon-maturity mixed rel. error |
 | --- | ---: | ---: | ---: | ---: |
-| TensorTrain | 948 | 2.98% | 115.74% | 16.24% |
-| Slider | 3135 | 93.87% | 288.39% | 100.00% |
+| TensorTrain | 5274 | 17.72% | 461.43% | 49.10% |
+| Slider | 186 | 92.64% | 154.35% | 100.00% |
 
 Selected TensorTrain errors:
 
 | Metric | Max abs. error | Max rel. error | Worst point |
 | --- | ---: | ---: | --- |
-| PV | `4.790271E+000` | 2.98% | `n10` |
-| 10Y zero-pillar DV01 | `6.073550E-002` | very large, baseline near zero at worst point | `n12` |
+| PV | `1.123330E+001` | 17.72% | `n6` |
+| coupon derivative | `1.721368E+002` | 17.57% | `n8` |
+| 10Y zero-pillar DV01 | `6.001897E-002` | very large, baseline near zero at worst point | `n12` |
 | 30Y zero-pillar DV01 | `6.056521E-002` | 100.00% | `n4` |
-| maturity slope | `1.888824E+001` | 115.74% | `n10` |
-| 10Y rate-maturity mixed | `1.309789E-001` | very large, baseline near zero at worst point | `n11` |
-| coupon-maturity mixed | `1.194684E+001` | 16.24% | `n12` |
+| maturity slope | `3.880240E+000` | 461.43% | `n10` |
+| 10Y rate-maturity mixed | `1.311026E-001` | very large, baseline near zero at worst point | `n11` |
+| coupon-maturity mixed | `2.547448E+001` | 49.10% | `n6` |
 
 Selected Slider errors:
 
 | Metric | Max abs. error | Max rel. error | Worst point |
 | --- | ---: | ---: | --- |
-| PV | `6.757798E+001` | 93.87% | `n5` |
+| PV | `6.865510E+001` | 92.64% | `n5` |
 | coupon derivative | `9.010148E+002` | 423.05% | `n5` |
-| maturity slope | `1.712245E+001` | 288.39% | `n10` |
-| 10Y rate-coupon mixed | `3.289965E-002` | 100.00% | `n3` |
+| maturity slope | `7.757617E+000` | 154.35% | `n5` |
+| 10Y rate-coupon mixed | `3.621014E-002` | 100.00% | `n6` |
 | 10Y rate-maturity mixed | `1.311016E-001` | 100.00% | `n11` |
 | coupon-maturity mixed | `9.184798E+001` | 100.00% | `n5` |
 
@@ -155,12 +159,12 @@ cashflow schedule and can flip local one-day slopes around schedule boundaries.
 ## Interpretation
 
 The naive dense tensor is not a viable baseline because the scalar dimension
-count is too high. The limited naive TensorTrain is useful enough to show the
-trade-off: PV can look moderately acceptable on a small validation set, but
-maturity slope, DV01 at some points, and mixed terms are much weaker. The naive
-Slider partition is a useful negative control: separating curve, coupon, and
-maturity destroys cross-group mixed-term behavior and can also damage PV on the
-wide maturity domain.
+count is too high. The full-input low-node TensorTrain is computationally
+feasible but already weak on this discovery set: PV reaches 17.72% relative
+error, and maturity slope and mixed terms are much worse. The full-input
+singleton Slider is very cheap to build, but the approximation is too weak for
+the clone objective because it discards the interactions between curve, coupon,
+and maturity.
 
 This is enough evidence to justify testing more structured modelling next, but
 not enough to pick the final approach. The next phase should compare fixes

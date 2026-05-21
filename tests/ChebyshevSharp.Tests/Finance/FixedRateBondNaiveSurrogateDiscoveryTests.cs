@@ -13,7 +13,9 @@ public sealed class FixedRateBondNaiveSurrogateDiscoveryTests
 
         Assert.Equal("fed-nominal-yield-curve-semiannual-2026-05-15", report.FixtureId);
         Assert.Equal(new DateTime(2026, 5, 15), report.CurveDate);
-        Assert.Equal([1, 5, 10, 20, 30], report.CurvePillarYears);
+        Assert.Equal(60, report.CurvePillarMonths.Count);
+        Assert.Equal(6, report.CurvePillarMonths[0]);
+        Assert.Equal(360, report.CurvePillarMonths[^1]);
         Assert.Equal(60, report.Feasibility.CurveBumpDimensions);
         Assert.Equal(62, report.Feasibility.SurrogateDimensionsExcludingNotional);
         Assert.Equal(63, report.Feasibility.SurrogateDimensionsIncludingNotional);
@@ -26,12 +28,14 @@ public sealed class FixedRateBondNaiveSurrogateDiscoveryTests
     {
         NaiveSurrogateDiscoveryReport report = NaiveSurrogateDiscovery.RunDefault(Pricer);
 
-        Assert.Equal(7, report.Dimensions.Count);
+        Assert.Equal(62, report.Dimensions.Count);
+        Assert.Equal(60, report.Dimensions.Count(dimension => dimension.Name.EndsWith("zero-rate bump", StringComparison.Ordinal)));
         Assert.Equal(["TensorTrain", "Slider"], report.Models.Select(model => model.ModelName).ToArray());
         Assert.All(report.Models, model =>
         {
             Assert.True(model.BuildEvaluations > 0);
             Assert.True(model.BuildSeconds >= 0.0);
+            Assert.Equal(62, model.InputDimensionCount);
             Assert.Contains(model.Metrics, metric => metric.Name == "PV");
             Assert.Contains(model.Metrics, metric => metric.Name == "10Y zero-pillar DV01");
             Assert.Contains(model.Metrics, metric => metric.Name == "30Y zero-pillar DV01");

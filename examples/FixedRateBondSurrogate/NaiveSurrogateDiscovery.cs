@@ -27,6 +27,7 @@ public sealed record NaiveSurrogateMetricSummary(
 
 public sealed record NaiveSurrogateModelSummary(
     string ModelName,
+    int InputDimensionCount,
     int BuildEvaluations,
     double BuildSeconds,
     IReadOnlyList<NaiveSurrogateMetricSummary> Metrics);
@@ -47,32 +48,24 @@ public sealed record NaiveSurrogateDiscoveryReport(
     DateTime CurveDate,
     NaiveSurrogateFeasibility Feasibility,
     IReadOnlyList<SurrogateInputDimension> Dimensions,
-    IReadOnlyList<int> CurvePillarYears,
+    IReadOnlyList<int> CurvePillarMonths,
     IReadOnlyList<SurrogateValidationPoint> ValidationPoints,
     IReadOnlyList<NaiveSurrogateModelSummary> Models,
     IReadOnlyList<NaiveMaturitySpikeCandidate> TopMaturitySpikeCandidates);
 
 public static class NaiveSurrogateDiscovery
 {
-    private const int CouponDimension = 5;
-    private const int MaturityDimension = 6;
+    private const int CurveBumpDimensionCount = 60;
+    private const int CouponDimension = CurveBumpDimensionCount;
+    private const int MaturityDimension = CurveBumpDimensionCount + 1;
+    private const int TotalDimensionCount = CurveBumpDimensionCount + 2;
     private const double RateBpStep = 1.0;
     private const double CouponStep = 1e-4;
     private const double MaturityYearStep = 7.0 / 365.25;
     private const double RelativeErrorFloor = 1e-10;
 
-    private static readonly int[] SelectedCurvePillarYears = [1, 5, 10, 20, 30];
-    private static readonly int[] NNodes = [5, 5, 5, 5, 5, 5, 5];
-    private static readonly double[][] Domain =
-    [
-        [-150.0, 150.0],
-        [-150.0, 150.0],
-        [-150.0, 150.0],
-        [-150.0, 150.0],
-        [-150.0, 150.0],
-        [0.0, 0.12],
-        [2.0, 30.0],
-    ];
+    private static readonly int[] NNodes = Enumerable.Repeat(3, TotalDimensionCount).ToArray();
+    private static readonly double[][] Domain = BuildDomain();
 
     public static NaiveSurrogateDiscoveryReport RunDefault(IFixedRateBondReferencePricer pricer)
     {
@@ -80,8 +73,15 @@ public static class NaiveSurrogateDiscovery
 
         YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
         FixedRateBondRequest baseRequest = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
-        var adapter = new RequestAdapter(pricer, baseRequest, SelectedCurvePillarYears);
-        IReadOnlyList<SurrogateInputDimension> dimensions = BuildDimensions();
+        if (fixture.Points.Count != CurveBumpDimensionCount)
+        {
+            throw new InvalidOperationException(
+                $"Expected {CurveBumpDimensionCount} dense curve points, found {fixture.Points.Count}.");
+        }
+
+        int[] curvePillarMonths = fixture.Points.Select(point => point.MaturityMonths).ToArray();
+        var adapter = new RequestAdapter(pricer, baseRequest);
+        IReadOnlyList<SurrogateInputDimension> dimensions = BuildDimensions(fixture);
         IReadOnlyList<SurrogateValidationPoint> validationPoints = BuildValidationPoints(adapter);
         Func<double[], double> fullPv = point => adapter.Price(point);
 
@@ -96,10 +96,23 @@ public static class NaiveSurrogateDiscovery
             CurveDate: fixture.Source.CurveDate.Date,
             Feasibility: BuildFeasibility(fixture),
             Dimensions: dimensions,
-            CurvePillarYears: SelectedCurvePillarYears,
+            CurvePillarMonths: curvePillarMonths,
             ValidationPoints: validationPoints,
             Models: [ttSummary, sliderSummary],
             TopMaturitySpikeCandidates: maturitySpikes);
+    }
+
+    private static double[][] BuildDomain()
+    {
+        var domain = new double[TotalDimensionCount][];
+        for (int i = 0; i < CurveBumpDimensionCount; i++)
+        {
+            domain[i] = [-150.0, 150.0];
+        }
+
+        domain[CouponDimension] = [0.0, 0.12];
+        domain[MaturityDimension] = [2.0, 30.0];
+        return domain;
     }
 
     private static NaiveSurrogateFeasibility BuildFeasibility(YieldCurveFixture fixture)
@@ -118,16 +131,17 @@ public static class NaiveSurrogateDiscovery
             FiveNodeDenseGridLabel: $"5^{excludingNotional}",
             FiveNodeDenseGridCount: BigInteger.Pow(new BigInteger(5), excludingNotional).ToString("N0"),
             DenseTensorConclusion:
-                "The dense tensor is too large to build; this phase uses TT/Slider only as limited naive probes.");
+                "The dense tensor is too large to build; this phase uses full-input TT/Slider only as naive probes.");
     }
 
-    private static IReadOnlyList<SurrogateInputDimension> BuildDimensions()
+    private static IReadOnlyList<SurrogateInputDimension> BuildDimensions(YieldCurveFixture fixture)
     {
         var dimensions = new List<SurrogateInputDimension>();
-        for (int i = 0; i < SelectedCurvePillarYears.Length; i++)
+        for (int i = 0; i < fixture.Points.Count; i++)
         {
+            YieldCurvePoint point = fixture.Points[i];
             dimensions.Add(new SurrogateInputDimension(
-                Name: $"{SelectedCurvePillarYears[i]}Y zero-rate bump",
+                Name: $"{FormatTenor(point.MaturityMonths)} zero-rate bump",
                 Unit: "basis points",
                 LowerBound: Domain[i][0],
                 UpperBound: Domain[i][1]));
@@ -146,23 +160,26 @@ public static class NaiveSurrogateDiscovery
         return dimensions;
     }
 
+    private static string FormatTenor(int months)
+        => months % 12 == 0 ? $"{months / 12}Y" : $"{months}M";
+
     private static IReadOnlyList<SurrogateValidationPoint> BuildValidationPoints(RequestAdapter adapter)
     {
         double week = MaturityYearStep;
         double[][] coordinates =
         [
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.045, 16.0],
-            [125.0, -75.0, 50.0, 25.0, -100.0, 0.08, 10.0],
-            [-125.0, 75.0, -50.0, -25.0, 100.0, 0.02, 25.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.0],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.12, 2.25],
-            [150.0, -150.0, 150.0, -150.0, 150.0, 0.12, 29.5],
-            [-150.0, 150.0, -150.0, 150.0, -150.0, 0.005, 3.0],
-            [100.0, 50.0, -50.0, 75.0, -100.0, 0.065, 15.5],
-            [-40.0, 120.0, 80.0, -90.0, 30.0, 0.035, 7.5],
-            [25.0, -35.0, 110.0, -120.0, 80.0, 0.095, 20.25],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.045, 10.0 - week],
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.045, 10.0 + week],
+            Point(0.045, 16.0, _ => 0.0),
+            Point(0.08, 10.0, _ => 100.0),
+            Point(0.02, 25.0, _ => -100.0),
+            Point(0.0, 30.0, _ => 0.0),
+            Point(0.12, 2.25, _ => 0.0),
+            Point(0.12, 29.5, index => index % 2 == 0 ? 150.0 : -150.0),
+            Point(0.005, 3.0, index => index % 2 == 0 ? -150.0 : 150.0),
+            Point(0.065, 15.5, index => -120.0 + 240.0 * index / (CurveBumpDimensionCount - 1)),
+            Point(0.035, 7.5, index => 120.0 - 240.0 * index / (CurveBumpDimensionCount - 1)),
+            Point(0.095, 20.25, index => 75.0 * Math.Sin((index + 1) * Math.PI / 8.0)),
+            Point(0.045, 10.0 - week, _ => 0.0),
+            Point(0.045, 10.0 + week, _ => 0.0),
         ];
 
         return coordinates
@@ -171,6 +188,19 @@ public static class NaiveSurrogateDiscovery
                 Coordinates: point,
                 BaselineDirtyPrice: adapter.Price(point)))
             .ToArray();
+    }
+
+    private static double[] Point(double coupon, double maturityYears, Func<int, double> bumpByCurveIndex)
+    {
+        var point = new double[TotalDimensionCount];
+        for (int i = 0; i < CurveBumpDimensionCount; i++)
+        {
+            point[i] = bumpByCurveIndex(i);
+        }
+
+        point[CouponDimension] = coupon;
+        point[MaturityDimension] = maturityYears;
+        return point;
     }
 
     private static NaiveSurrogateModelSummary BuildTensorTrainSummary(
@@ -192,6 +222,7 @@ public static class NaiveSurrogateDiscovery
 
         return new NaiveSurrogateModelSummary(
             ModelName: "TensorTrain",
+            InputDimensionCount: TotalDimensionCount,
             BuildEvaluations: tt.TotalBuildEvals,
             BuildSeconds: sw.Elapsed.TotalSeconds,
             Metrics: SummarizeMetrics(fullPv, tt.Eval, validationPoints));
@@ -201,8 +232,11 @@ public static class NaiveSurrogateDiscovery
         Func<double[], double> fullPv,
         IReadOnlyList<SurrogateValidationPoint> validationPoints)
     {
-        double[] pivotPoint = [0.0, 0.0, 0.0, 0.0, 0.0, 0.045, 16.0];
-        int[][] partition = [[0, 1, 2, 3, 4], [5], [6]];
+        double[] pivotPoint = Point(0.045, 16.0, _ => 0.0);
+        int[][] partition = Enumerable
+            .Range(0, TotalDimensionCount)
+            .Select(dimension => new[] { dimension })
+            .ToArray();
         var slider = new ChebyshevSlider(
             (point, _) => fullPv(point),
             numDimensions: Domain.Length,
@@ -215,9 +249,10 @@ public static class NaiveSurrogateDiscovery
 
         return new NaiveSurrogateModelSummary(
             ModelName: "Slider",
+            InputDimensionCount: TotalDimensionCount,
             BuildEvaluations: slider.TotalBuildEvals,
             BuildSeconds: slider.BuildTime,
-            Metrics: SummarizeMetrics(fullPv, point => slider.Eval(point, [0, 0, 0, 0, 0, 0, 0]), validationPoints));
+            Metrics: SummarizeMetrics(fullPv, point => slider.Eval(point, new int[TotalDimensionCount]), validationPoints));
     }
 
     private static IReadOnlyList<NaiveSurrogateMetricSummary> SummarizeMetrics(
@@ -228,23 +263,33 @@ public static class NaiveSurrogateDiscovery
         var metricFunctions = new (string Name, Func<Func<double[], double>, double[], double> Compute)[]
         {
             ("PV", (f, point) => f(point)),
-            ("1Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 0, RateBpStep)),
-            ("5Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 1, RateBpStep)),
-            ("10Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 2, RateBpStep)),
-            ("20Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 3, RateBpStep)),
-            ("30Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, 4, RateBpStep)),
+            ("1Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(12), RateBpStep)),
+            ("5Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(60), RateBpStep)),
+            ("10Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(120), RateBpStep)),
+            ("20Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(240), RateBpStep)),
+            ("30Y zero-pillar DV01", (f, point) => FirstDerivative(f, point, CurveDimensionForMonths(360), RateBpStep)),
             ("coupon derivative", (f, point) => FirstDerivative(f, point, CouponDimension, CouponStep)),
             ("maturity slope", (f, point) => FirstDerivative(f, point, MaturityDimension, MaturityYearStep)),
-            ("10Y rate-coupon mixed", (f, point) => MixedDerivative(f, point, 2, RateBpStep, CouponDimension, CouponStep)),
-            ("30Y rate-coupon mixed", (f, point) => MixedDerivative(f, point, 4, RateBpStep, CouponDimension, CouponStep)),
-            ("10Y rate-maturity mixed", (f, point) => MixedDerivative(f, point, 2, RateBpStep, MaturityDimension, MaturityYearStep)),
-            ("30Y rate-maturity mixed", (f, point) => MixedDerivative(f, point, 4, RateBpStep, MaturityDimension, MaturityYearStep)),
+            ("10Y rate-coupon mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(120), RateBpStep, CouponDimension, CouponStep)),
+            ("30Y rate-coupon mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(360), RateBpStep, CouponDimension, CouponStep)),
+            ("10Y rate-maturity mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(120), RateBpStep, MaturityDimension, MaturityYearStep)),
+            ("30Y rate-maturity mixed", (f, point) => MixedDerivative(f, point, CurveDimensionForMonths(360), RateBpStep, MaturityDimension, MaturityYearStep)),
             ("coupon-maturity mixed", (f, point) => MixedDerivative(f, point, CouponDimension, CouponStep, MaturityDimension, MaturityYearStep)),
         };
 
         return metricFunctions
             .Select(metric => SummarizeMetric(metric.Name, metric.Compute, baseline, model, validationPoints))
             .ToArray();
+    }
+
+    private static int CurveDimensionForMonths(int months)
+    {
+        if (months % 6 != 0 || months < 6 || months > 360)
+        {
+            throw new ArgumentOutOfRangeException(nameof(months), "Expected a dense semiannual tenor from 6M to 360M.");
+        }
+
+        return (months / 6) - 1;
     }
 
     private static NaiveSurrogateMetricSummary SummarizeMetric(
@@ -399,18 +444,13 @@ public static class NaiveSurrogateDiscovery
     {
         private readonly IFixedRateBondReferencePricer _pricer;
         private readonly FixedRateBondRequest _baseRequest;
-        private readonly int[] _curvePillarIndices;
 
         public RequestAdapter(
             IFixedRateBondReferencePricer pricer,
-            FixedRateBondRequest baseRequest,
-            IReadOnlyList<int> curvePillarYears)
+            FixedRateBondRequest baseRequest)
         {
             _pricer = pricer;
             _baseRequest = baseRequest;
-            _curvePillarIndices = curvePillarYears
-                .Select(years => FindPillarIndex(baseRequest, years))
-                .ToArray();
         }
 
         public double Price(double[] point)
@@ -419,9 +459,9 @@ public static class NaiveSurrogateDiscovery
         private FixedRateBondRequest ToRequest(double[] point)
         {
             ZeroRatePillar[] curve = _baseRequest.ZeroCurve.ToArray();
-            for (int i = 0; i < _curvePillarIndices.Length; i++)
+            for (int i = 0; i < CurveBumpDimensionCount; i++)
             {
-                int curveIndex = _curvePillarIndices[i];
+                int curveIndex = i + 1;
                 ZeroRatePillar pillar = curve[curveIndex];
                 curve[curveIndex] = pillar with { ZeroRate = pillar.ZeroRate + point[i] * 1e-4 };
             }
@@ -435,14 +475,6 @@ public static class NaiveSurrogateDiscovery
                 MaturityDate = maturityDate,
                 ZeroCurve = curve,
             };
-        }
-
-        private static int FindPillarIndex(FixedRateBondRequest request, int pillarYears)
-        {
-            DateTime expected = request.ValuationDate.Date.AddYears(pillarYears);
-            return Enumerable
-                .Range(0, request.ZeroCurve.Count)
-                .First(index => request.ZeroCurve[index].Date.Date == expected);
         }
     }
 }
