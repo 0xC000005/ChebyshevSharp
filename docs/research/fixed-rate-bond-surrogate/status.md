@@ -61,7 +61,11 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Implement the Phase 2 public data fixture pipeline from [the Phase 2 plan](plans/phase-2-public-data-fixtures.md). Keep live downloads in the optional refresh tool only; C# tests and examples must consume pinned fixtures.
+Commit the Phase 2 public data fixture pipeline, push `bond-surrogate-research`, and open one coherent Phase 2 PR after the local exit gate recorded in [the Phase 2 plan](plans/phase-2-public-data-fixtures.md).
+
+## Phase PR Cadence Gate
+
+Use exactly one active phase PR for this workflow. After a phase PR opens, all review fixes for that phase stay in that PR. Do not start the next phase implementation, open another phase PR, or accumulate unrelated follow-up PRs until the current phase PR is merged or explicitly closed without merge. Record the outcome in this status file and in tracking issue [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191) before moving on.
 
 ## Phase 1 Notes
 
@@ -79,7 +83,13 @@ Implement the Phase 2 public data fixture pipeline from [the Phase 2 plan](plans
 ## Phase 2 Notes
 
 - Plan: [Phase 2 Public Data Fixture Pipeline Implementation Plan](plans/phase-2-public-data-fixtures.md).
+- Report draft: [Phase 2 Report: Public Data Fixtures](reports/phase-2-public-data-fixtures.md).
 - Primary data source selected for the first fixture: Federal Reserve nominal yield curve CSV, using `SVENY01` to `SVENY30` continuously compounded zero-coupon yields.
+- Pinned fixture: `examples/FixedRateBondSurrogate/Data/fed-nominal-yield-curve-2026-05-15.json`.
+- Optional refresh tool: `tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py`.
+- C# fixture loader: `examples/FixedRateBondSurrogate/MarketData.cs`.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 26 tests with 0 failures.
+- Local closeout verification: private-name scan produced only guardrail/search-term matches; fixture regeneration matched the committed JSON byte-for-byte; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1675 tests with 0 failures; the fixed-rate bond example ran against the pinned fixture; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Official source checks completed:
   - Federal Reserve nominal yield curve page confirms the data are fitted nominal yield-curve parameters and smoothed yields from 1961 to present, and that the model is a staff research product rather than an official statistical release.
   - Federal Reserve CSV schema confirms `SVENYXX` are continuously compounded zero-coupon yields, `SVENPYXX` are coupon-equivalent par yields, `SVENFXX` are continuously compounded instantaneous forwards, and `SVEN1FXX` are coupon-equivalent one-year forwards.

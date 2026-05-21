@@ -31,20 +31,20 @@
 
 ## Task 1: Pinned Fixture Contract
 
-- [ ] Create `MarketData.cs` records:
+- [x] Create `MarketData.cs` records:
   - `YieldCurveFixture`
   - `YieldCurveSourceMetadata`
   - `YieldCurvePoint`
-- [ ] Add `FixedRateBondMarketData.LoadDefaultCurveFixture()` that loads the copied JSON fixture from `AppContext.BaseDirectory`.
-- [ ] Add `FixedRateBondMarketData.ToZeroRatePillars(YieldCurveFixture fixture, DateTime valuationDate)` that converts percent zero yields to decimal `ZeroRatePillar` values and includes a valuation-date anchor rate.
-- [ ] Add validation that fixture kind is `zero_coupon_yield`, compounding is `continuous`, units are `percent`, maturities are strictly increasing, and all selected yields are finite.
+- [x] Add `FixedRateBondMarketData.LoadDefaultCurveFixture()` that loads the copied JSON fixture from `AppContext.BaseDirectory`.
+- [x] Add `FixedRateBondMarketData.ToZeroRatePillars(YieldCurveFixture fixture, DateTime valuationDate)` that converts percent zero yields to decimal `ZeroRatePillar` values and includes a valuation-date anchor rate.
+- [x] Add validation that fixture kind is `zero_coupon_yield`, compounding is `continuous`, units are `percent`, maturities are strictly increasing, and all selected yields are finite.
 
 ## Task 2: Data Refresh Tool
 
-- [ ] Create `refresh_fed_nominal_yield_curve.py` using only Python stdlib.
-- [ ] The script must download `https://www.federalreserve.gov/data/yield-curve-tables/feds200628.csv`.
-- [ ] It must skip the CSV note/series metadata rows, parse the real `Date,...` header row, select either a user-supplied `--curve-date` or the latest row with complete `SVENY01` to `SVENY30`, and write normalized JSON.
-- [ ] The JSON must record:
+- [x] Create `refresh_fed_nominal_yield_curve.py` using only Python stdlib.
+- [x] The script must download `https://www.federalreserve.gov/data/yield-curve-tables/feds200628.csv`.
+- [x] It must skip the CSV note/series metadata rows, parse the real `Date,...` header row, select either a user-supplied `--curve-date` or the latest row with complete `SVENY01` to `SVENY30`, and write normalized JSON.
+- [x] The JSON must record:
   - source institution;
   - source URL;
   - download date;
@@ -54,34 +54,37 @@
   - compounding;
   - interpolation convention used by the C# harness;
   - selected maturities and yields.
-- [ ] Run the tool once to create the pinned 2026-05-15 fixture.
+- [x] Run the tool once to create the pinned 2026-05-15 fixture.
 
 ## Task 3: C# Fixture Tests
 
-- [ ] Add `Default_curve_fixture_has_expected_metadata`.
-- [ ] Add `Default_curve_fixture_converts_percent_yields_to_decimal_pillars`.
-- [ ] Add `Reference_pricer_uses_pinned_public_curve_fixture`.
-- [ ] Add at least one invalid-fixture test for non-increasing maturities or non-finite values.
-- [ ] Run focused finance tests.
+- [x] Add `Default_curve_fixture_has_expected_metadata`.
+- [x] Add `Default_curve_fixture_converts_percent_yields_to_decimal_pillars`.
+- [x] Add `Reference_pricer_uses_pinned_public_curve_fixture`.
+- [x] Add at least one invalid-fixture test for non-increasing maturities or non-finite values.
+- [x] Run focused finance tests.
 
 ## Task 4: Example and Documentation
 
-- [ ] Update `Program.cs` output to include curve date, source label, and fixture name.
-- [ ] Update `docs/docs/examples.md` to explain that the finance example uses a pinned Federal Reserve nominal zero-yield fixture and does not download data at runtime.
-- [ ] Update `docs/docs/citations.md` only if Phase 2 needs additional citation detail beyond the existing public data sources.
-- [ ] Create the Phase 2 report with source verification, fixture schema, generated file path, commands, and limitations.
-- [ ] Update `status.md` with Phase 2 status and next task.
+- [x] Update `Program.cs` output to include curve date, source label, and fixture name.
+- [x] Update `docs/docs/examples.md` to explain that the finance example uses a pinned Federal Reserve nominal zero-yield fixture and does not download data at runtime.
+- [x] Update `docs/docs/citations.md` only if Phase 2 needs additional citation detail beyond the existing public data sources.
+- [x] Create the Phase 2 report with source verification, fixture schema, generated file path, commands, and limitations.
+- [x] Update `status.md` with Phase 2 status and next task.
 
 ## Task 5: Verification and Phase Closeout
 
-- [ ] Run `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md`.
-- [ ] Run `uv run tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py --help`.
-- [ ] Run the refresh script for `--curve-date 2026-05-15` and verify the committed fixture is reproducible.
-- [ ] Run `dotnet format --verify-no-changes --verbosity minimal`.
-- [ ] Run `dotnet build --configuration Release --no-restore`.
-- [ ] Run `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`.
-- [ ] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj`.
-- [ ] Run `docfx docs/docfx.json`.
+- [x] Run `rg -n "VTA|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance tools/RefreshFixedRateBondMarketData docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md`.
+- [x] Run `uv run tools/RefreshFixedRateBondMarketData/refresh_fed_nominal_yield_curve.py --help`.
+- [x] Run the refresh script for `--curve-date 2026-05-15` and verify the committed fixture is reproducible.
+- [x] Run `dotnet format --verify-no-changes --verbosity minimal`.
+- [x] Run `dotnet build --configuration Release --no-restore`.
+- [x] Run `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`.
+- [x] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj`.
+- [x] Run `docfx docs/docfx.json`.
 - [ ] Commit Phase 2 work.
 - [ ] Push `bond-surrogate-research`.
 - [ ] Open one coherent Phase 2 PR only after the exit gate is satisfied locally.
+- [ ] Keep Phase 2 review fixes inside that same PR; do not open Phase 3 PRs or implementation PRs while it is open.
+- [ ] Wait for required CI/review feedback, then merge the Phase 2 PR or explicitly close it without merge.
+- [ ] Record the PR outcome, remaining follow-ups, and tracking issue update before starting Phase 3 implementation.
