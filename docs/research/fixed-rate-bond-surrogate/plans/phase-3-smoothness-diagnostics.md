@@ -140,8 +140,8 @@ Use this as a breakpoint signal, not as proof of a true discontinuity.
 - [x] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj`.
 - [x] Run `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
 - [x] Run `docfx docs/docfx.json`.
-- [ ] Commit Phase 3 work.
-- [ ] Push `bond-surrogate-research`.
+- [x] Commit Phase 3 work.
+- [x] Push `bond-surrogate-research`.
 - [ ] Open one coherent Phase 3 PR only after the local exit gate is satisfied.
 - [ ] Keep Phase 3 review fixes inside that same PR; do not start Phase 4 implementation while it is open.
 - [ ] Wait for CI/review feedback, then merge the Phase 3 PR or explicitly close it without merge.

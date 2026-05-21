@@ -106,6 +106,7 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Plan: [Phase 3 Smoothness Diagnostics Implementation Plan](plans/phase-3-smoothness-diagnostics.md).
 - Report draft: [Phase 3 Report: Smoothness Diagnostics](reports/phase-3-smoothness-diagnostics.md).
 - Implementation files: `examples/FixedRateBondSurrogate/SmoothnessDiagnostics.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondSmoothnessDiagnosticsTests.cs`.
+- Implementation commit: `00845f4`.
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"` passed 5 tests with 0 failures.
 - Local closeout verification: private-name scan produced only guardrail/search-term matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1681 tests with 0 failures; both fixed-rate bond example modes ran successfully; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Diagnostics command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.
