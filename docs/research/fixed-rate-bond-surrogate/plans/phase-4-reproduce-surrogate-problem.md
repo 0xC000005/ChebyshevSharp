@@ -111,5 +111,5 @@
   - `dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true`
   - `dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction`
   - `docfx docs/docfx.json`
-- [ ] Open exactly one Phase 4 PR after local verification.
+- [x] Open exactly one Phase 4 PR after local verification.
 - [ ] Do not begin Phase 5 implementation until the Phase 4 PR is merged or explicitly closed.

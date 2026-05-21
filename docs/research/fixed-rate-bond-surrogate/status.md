@@ -69,6 +69,8 @@ Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should bui
 - Report draft: [Phase 4 Report: Full-PV Surrogate Reproduction](reports/phase-4-surrogate-reproduction.md).
 - Implementation files: `examples/FixedRateBondSurrogate/SurrogateReproduction.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondSurrogateReproductionTests.cs`.
 - Implementation commits: `39c22c3` and `8c88454`.
+- Phase PR: [#195](https://github.com/0xC000005/ChebyshevSharp/pull/195).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504622669).
 - Data-source decision: use the pinned Federal Reserve nominal zero-yield fixture for deterministic tests and documentation. Yahoo Finance, FRED, and live Federal Reserve downloads remain optional future refresh paths; no API key or live download is required for this phase.
 - Scope boundary: build direct full-PV surrogates first. Do not implement analytic coupon decomposition, maturity splitting, or adaptive splitting until later phases so the reproduction isolates the problem before proposing fixes.
 - Preliminary findings: TensorTrain max PV relative error is 0.35% on the compact validation set, while maturity-slope relative error reaches 398.88%, rate-coupon mixed relative error reaches 23.62%, and rate-maturity mixed relative error reaches 150.84%. Slider is weaker on this partition, including 100% relative error for the reported mixed terms.
