@@ -346,6 +346,10 @@ public static class FixedRateBondExample
         output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
         output.WriteLine($"full wrapper  : {report.WrapperContract}");
         output.WriteLine($"Breakpoint inventory points: {report.BreakpointInventory.Count}");
+        output.WriteLine(
+            $"Largest maturity spike: {report.InventorySummary.WorstMaturityDate:yyyy-MM-dd} " +
+            $"second {report.InventorySummary.MaxAbsSecondDifference:E6}, " +
+            $"slope jump {report.InventorySummary.MaxAbsSlopeJump:E6}");
         output.WriteLine();
 
         output.WriteLine("Breakpoint inventory");
@@ -366,6 +370,32 @@ public static class FixedRateBondExample
                 $"{candidate.Name}: {candidate.CandidateCount} candidates from {candidate.Source}");
             output.WriteLine($"  Interpretation: {candidate.Interpretation}");
         }
+
+        output.WriteLine();
+        foreach (AnalyticCouponModelSummary model in report.Models)
+        {
+            NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity sensitivity");
+            NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
+            NaiveSurrogateMetricSummary factorPv = model.FactorAlignedMetrics.Single(metric => metric.Name == "PV");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, pieces {model.BucketCount}");
+            output.WriteLine($"  Method        : {model.InternalMethod}");
+            output.WriteLine(
+                $"  Clone metrics : PV rel max {pv.MaxRelativeError:P2}, " +
+                $"maturity rel max {maturity.MaxRelativeError:P2}, " +
+                $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
+            output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
+            output.WriteLine($"  Interpretation: {model.Interpretation}");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Decision");
+        output.WriteLine($"  Recommendation : {report.Decision.Recommendation}");
+        output.WriteLine($"  Library follow-up: {report.Decision.LibraryEnhancementDecision}");
+        output.WriteLine($"  Evidence       : {report.Decision.Evidence}");
     }
 
     private static string FormatCsvDouble(double? value)

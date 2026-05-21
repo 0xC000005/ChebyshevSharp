@@ -26,7 +26,7 @@
 - Create: `examples/FixedRateBondSurrogate/MaturitySpecialPointsBenchmark.cs`
 - Modify: `examples/FixedRateBondSurrogate/Program.cs`
 
-- [ ] **Step 1: Write failing tests for the Phase 9 report shape**
+- [x] **Step 1: Write failing tests for the Phase 9 report shape**
 
 ```csharp
 [Fact]
@@ -42,7 +42,7 @@ public void Phase9_report_preserves_full_public_wrapper()
 }
 ```
 
-- [ ] **Step 2: Run the focused test and confirm RED**
+- [x] **Step 2: Run the focused test and confirm RED**
 
 Run:
 
@@ -52,11 +52,11 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
 
 Expected: compile failure because `MaturitySpecialPointsBenchmark` does not exist.
 
-- [ ] **Step 3: Add minimal report records and a deterministic stub report**
+- [x] **Step 3: Add minimal report records and a deterministic stub report**
 
 Implement `MaturitySpecialPointsReport`, `MaturityBreakpointInventoryPoint`, and `MaturitySpecialPointCandidateSummary` with real wrapper metadata and a placeholder inventory generated from the reference request.
 
-- [ ] **Step 4: Add `--maturity-special-points` CLI mode**
+- [x] **Step 4: Add `--maturity-special-points` CLI mode**
 
 Console output must include:
 
@@ -68,7 +68,7 @@ Schedule-aware special points
 Automatic detector candidates
 ```
 
-- [ ] **Step 5: Run focused tests until GREEN**
+- [x] **Step 5: Run focused tests until GREEN**
 
 Run the focused command from Step 2. Expected: all Phase 9 tests pass.
 
@@ -78,11 +78,11 @@ Run the focused command from Step 2. Expected: all Phase 9 tests pass.
 - Modify: `examples/FixedRateBondSurrogate/MaturitySpecialPointsBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondMaturitySpecialPointTests.cs`
 
-- [ ] **Step 1: Add failing tests for schedule-regime evidence**
+- [x] **Step 1: Add failing tests for schedule-regime evidence**
 
 Test that the inventory contains semiannual boundary windows, finite left/right slopes, finite second differences, positive cashflow counts, and at least one point where cashflow count or final accrual metadata changes.
 
-- [ ] **Step 2: Implement inventory scan**
+- [x] **Step 2: Implement inventory scan**
 
 Use the dense semiannual fixture, valuation date, and maturities from 2Y to 30Y. Around each semiannual schedule candidate, scan offsets `-7` through `+7` days, price each maturity through `IFixedRateBondReferencePricer`, and record:
 
@@ -93,11 +93,11 @@ dirty price, left slope/year, right slope/year, central slope/year,
 second difference, schedule-regime changed flag
 ```
 
-- [ ] **Step 3: Add defensive interpretation**
+- [x] **Step 3: Add defensive interpretation**
 
 The report must say these are one-dimensional maturity diagnostics over the fixed restricted product family, not proof that all bond products have the same breakpoints.
 
-- [ ] **Step 4: Run focused tests**
+- [x] **Step 4: Run focused tests**
 
 Expected: finite metrics and a non-empty schedule-regime evidence set.
 
@@ -107,15 +107,15 @@ Expected: finite metrics and a non-empty schedule-regime evidence set.
 - Modify: `examples/FixedRateBondSurrogate/MaturitySpecialPointsBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondMaturitySpecialPointTests.cs`
 
-- [ ] **Step 1: Test schedule-aware candidates**
+- [x] **Step 1: Test schedule-aware candidates**
 
 Assert schedule candidates are sorted, inside `[2.0, 30.0]`, deduplicated, and derived from inventory points with schedule-regime changes.
 
-- [ ] **Step 2: Test automatic detector candidates**
+- [x] **Step 2: Test automatic detector candidates**
 
 Assert detector candidates are sorted, inside `[2.0, 30.0]`, deduplicated, and correspond to the largest absolute second differences after minimum-distance filtering.
 
-- [ ] **Step 3: Implement candidate generation**
+- [x] **Step 3: Implement candidate generation**
 
 Add schedule-aware, automatic detector, and hybrid candidate summaries. The hybrid candidate is allowed only when both schedule-aware and detector lists are non-empty.
 
@@ -125,11 +125,11 @@ Add schedule-aware, automatic detector, and hybrid candidate summaries. The hybr
 - Modify: `examples/FixedRateBondSurrogate/MaturitySpecialPointsBenchmark.cs`
 - Modify: `tests/ChebyshevSharp.Tests/Finance/FixedRateBondMaturitySpecialPointTests.cs`
 
-- [ ] **Step 1: Add tests for model summaries**
+- [x] **Step 1: Add tests for model summaries**
 
 Assert every model summary has public dimension count `62`, finite metrics, non-negative build evaluations, positive bucket/piece count, and a clear interpretation.
 
-- [ ] **Step 2: Implement controls**
+- [x] **Step 2: Implement controls**
 
 Include Phase 8 controls by rerunning or reusing:
 
@@ -138,11 +138,11 @@ Curve-factor decomposed tensor
 Semiannual bucketed decomposed curve-factor tensor
 ```
 
-- [ ] **Step 3: Implement special-point piecewise factor models**
+- [x] **Step 3: Implement special-point piecewise factor models**
 
 Build internal decomposed factor tensors over level/slope/curvature/maturity per maturity piece. Keep the outer evaluator a full 62-coordinate wrapper.
 
-- [ ] **Step 4: Validate metrics**
+- [x] **Step 4: Validate metrics**
 
 Reuse the Phase 6-8 metric bank: PV, selected zero-pillar DV01, coupon derivative, maturity sensitivity, rate-coupon mixed, rate-maturity mixed, rate-rate mixed, and coupon-maturity mixed.
 
@@ -153,11 +153,11 @@ Reuse the Phase 6-8 metric bank: PV, selected zero-pillar DV01, coupon derivativ
 - Modify: `docs/research/fixed-rate-bond-surrogate/status.md`
 - Modify: `docs/docs/examples.md`
 
-- [ ] **Step 1: Write the Phase 9 report**
+- [x] **Step 1: Write the Phase 9 report**
 
 Report the inventory, candidate lists, model metrics, worst points, and decision. State explicitly whether evidence supports a future `PiecewiseChebyshevTT` or similar API.
 
-- [ ] **Step 2: Update user-facing examples**
+- [x] **Step 2: Update user-facing examples**
 
 Add:
 
@@ -165,7 +165,7 @@ Add:
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
 ```
 
-- [ ] **Step 3: Update status and issue tracking**
+- [x] **Step 3: Update status and issue tracking**
 
 Update the Phase 9 status entry and add a tracking comment to issue #191 summarizing results and the PR link once opened.
 
@@ -174,31 +174,31 @@ Update the Phase 9 status entry and add a tracking comment to issue #191 summari
 **Files:**
 - All Phase 9 files
 
-- [ ] **Step 1: Run focused tests**
+- [x] **Step 1: Run focused tests**
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBondMaturitySpecialPointTests" --verbosity minimal
 ```
 
-- [ ] **Step 2: Run fixed-rate bond test slice**
+- [x] **Step 2: Run fixed-rate bond test slice**
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBond" --verbosity minimal
 ```
 
-- [ ] **Step 3: Run the example**
+- [x] **Step 3: Run the example**
 
 ```bash
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
 ```
 
-- [ ] **Step 4: Run docs**
+- [x] **Step 4: Run docs**
 
 ```bash
 docfx docs/docfx.json
 ```
 
-- [ ] **Step 5: Run full verification**
+- [x] **Step 5: Run full verification**
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --verbosity minimal

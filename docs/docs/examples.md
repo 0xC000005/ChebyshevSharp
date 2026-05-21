@@ -20,6 +20,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --analytic-coupon-decomposition
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
@@ -194,6 +195,20 @@ This mode keeps the full 62-coordinate public wrapper but builds internal
 principal and annuity models without coupon as a tensor coordinate. The result
 is useful for deciding whether coupon should be analytical in a tutorial model;
 it does not remove the separate maturity-smoothness problem.
+
+Run the maturity-special-points mode after the analytic coupon result. It keeps
+the full public wrapper, scans one-day windows around semiannual maturity
+regions, and compares global, uniform-bucket, schedule-aware, detector, and
+hybrid maturity routing:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
+```
+
+Read this as a research benchmark. The current result supports
+schedule-aware maturity routing over a blind global fit or a simple uniform
+bucket rule, but it does not yet make automatic kink detection a public library
+feature.
 
 To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
 run:

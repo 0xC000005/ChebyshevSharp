@@ -109,16 +109,16 @@ headline metric.
 
 ## Tasks
 
-- [ ] Update the Phase 9 branch, status file, and tracking issue before
+- [x] Update the Phase 9 branch, status file, and tracking issue before
   implementation.
-- [ ] Add a failing test and CLI/report skeleton for the maturity-special-point
+- [x] Add a failing test and CLI/report skeleton for the maturity-special-point
   benchmark.
-- [ ] Implement the maturity breakpoint inventory and document the evidence.
-- [ ] Add schedule-aware declared special-point routing.
-- [ ] Add automatic detector candidates and validate their proposed breakpoints.
-- [ ] Add the hybrid router only if the previous two candidates justify it.
-- [ ] Run the full benchmark and write the Phase 9 report.
-- [ ] Update examples docs, citations, and status notes.
+- [x] Implement the maturity breakpoint inventory and document the evidence.
+- [x] Add schedule-aware declared special-point routing.
+- [x] Add automatic detector candidates and validate their proposed breakpoints.
+- [x] Add the hybrid router only if the previous two candidates justify it.
+- [x] Run the full benchmark and write the Phase 9 report.
+- [x] Update examples docs, citations, and status notes.
 - [ ] Open one coherent Phase 9 PR after local verification.
 
 ## Exit Gate
@@ -133,4 +133,3 @@ Phase 9 is complete when the report can answer:
 4. whether a hybrid router is materially better than schedule-only routing;
 5. whether evidence justifies a future library-level feature such as
    high-dimensional piecewise TT routing.
-
