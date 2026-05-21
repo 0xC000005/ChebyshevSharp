@@ -135,6 +135,23 @@ public sealed class FixedRateBondReferencePricerTests
         Assert.Equal(98.53533001, result.DirtyPrice, precision: 8);
     }
 
+    [Fact]
+    public void Null_curve_fixture_file_is_rejected()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.json");
+
+        try
+        {
+            File.WriteAllText(path, "null");
+
+            Assert.Throws<InvalidDataException>(() => FixedRateBondMarketData.LoadCurveFixture(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [Theory]
     [MemberData(nameof(InvalidFixtures))]
     public void Invalid_curve_fixtures_are_rejected(YieldCurveFixture fixture)

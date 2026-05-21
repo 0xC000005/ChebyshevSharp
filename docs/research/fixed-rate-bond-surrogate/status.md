@@ -91,8 +91,8 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Implementation commit: `35f9c33`.
 - Phase PR: [#193](https://github.com/0xC000005/ChebyshevSharp/pull/193).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504300102).
-- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 26 tests with 0 failures.
-- Local closeout verification: private-name scan produced only guardrail/search-term matches; fixture regeneration matched the committed JSON byte-for-byte; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1675 tests with 0 failures; the fixed-rate bond example ran against the pinned fixture; `docfx docs/docfx.json` passed with 0 warnings/errors.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 27 tests with 0 failures.
+- Local closeout verification: private-name scan produced only guardrail/search-term matches; fixture regeneration matched the committed JSON byte-for-byte; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1676 tests with 0 failures; local coverage inspection found no uncovered or partial lines in `MarketData.cs`; the fixed-rate bond example ran against the pinned fixture; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Official source checks completed:
   - Federal Reserve nominal yield curve page confirms the data are fitted nominal yield-curve parameters and smoothed yields from 1961 to present, and that the model is a staff research product rather than an official statistical release.
   - Federal Reserve CSV schema confirms `SVENYXX` are continuously compounded zero-coupon yields, `SVENPYXX` are coupon-equivalent par yields, `SVENFXX` are continuously compounded instantaneous forwards, and `SVEN1FXX` are coupon-equivalent one-year forwards.
