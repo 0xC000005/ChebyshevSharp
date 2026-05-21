@@ -36,7 +36,7 @@ Use generic public terms:
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Complete | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
-| 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
+| 5. Analytic coupon decomposition | Planned | Principal/annuity surrogate comparison completed |
 | 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
 | 7. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
 | 8. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
@@ -62,6 +62,12 @@ Last checked: 2026-05-20.
 ## Next Task
 
 Prepare Phase 5 analytic coupon decomposition. Phase 5 should compare the direct full-PV surrogate against a principal/annuity decomposition so coupon is no longer a tensor dimension.
+
+## Phase 5 Notes
+
+- Plan: [Phase 5 Analytic Coupon Decomposition Implementation Plan](plans/phase-5-analytic-coupon-decomposition.md).
+- Baseline idea: derive `Principal(curve, T)` and `Annuity(curve, T)` from the QLNet reference pricer, then reconstruct `PV = Principal + coupon * Annuity`.
+- Scope boundary: do not introduce maturity splitting in Phase 5. Keep the same compact curve/maturity domain as Phase 4 so any change in metrics is attributable primarily to removing coupon from the tensor.
 
 ## Phase 4 Notes
 
