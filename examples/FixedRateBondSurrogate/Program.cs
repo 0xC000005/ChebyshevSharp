@@ -418,7 +418,7 @@ public static class FixedRateBondExample
         output.WriteLine();
 
         output.WriteLine("Pieces");
-        foreach (ScheduleAwareRouterPieceSummary piece in report.Pieces.Take(5))
+        foreach (ScheduleAwareRouterPieceSummary piece in DisplayedScheduleAwarePieces(report.Pieces))
         {
             string right = piece.IncludesUpperBound ? "]" : ")";
             output.WriteLine(
@@ -458,6 +458,20 @@ public static class FixedRateBondExample
         output.WriteLine($"  Recommendation : {report.Decision.Recommendation}");
         output.WriteLine($"  Library follow-up: {report.Decision.LibraryEnhancementDecision}");
         output.WriteLine($"  Evidence       : {report.Decision.Evidence}");
+    }
+
+    private static IEnumerable<ScheduleAwareRouterPieceSummary> DisplayedScheduleAwarePieces(
+        IReadOnlyList<ScheduleAwareRouterPieceSummary> pieces)
+    {
+        foreach (ScheduleAwareRouterPieceSummary piece in pieces.Take(5))
+        {
+            yield return piece;
+        }
+
+        if (pieces.Count > 5)
+        {
+            yield return pieces[^1];
+        }
     }
 
     private static string FormatCsvDouble(double? value)
