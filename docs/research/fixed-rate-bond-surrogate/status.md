@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Finish Phase 3 verification and closeout for the smoothness diagnostics from [the Phase 3 plan](plans/phase-3-smoothness-diagnostics.md). Phase 3 identifies coupon linearity, zero-pillar DV01 support, and maturity-date spike candidates against the public fixed-rate bond reference pricer before any surrogate redesign is implemented.
+Monitor Phase 3 PR [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194), address review/CI feedback inside that PR, and merge or explicitly close it before starting Phase 4 implementation.
 
 ## Phase PR Cadence Gate
 
@@ -107,6 +107,8 @@ Use exactly one active phase PR for this workflow. After a phase PR opens, all r
 - Report draft: [Phase 3 Report: Smoothness Diagnostics](reports/phase-3-smoothness-diagnostics.md).
 - Implementation files: `examples/FixedRateBondSurrogate/SmoothnessDiagnostics.cs`, `examples/FixedRateBondSurrogate/Program.cs`, and `tests/ChebyshevSharp.Tests/Finance/FixedRateBondSmoothnessDiagnosticsTests.cs`.
 - Implementation commit: `00845f4`.
+- Phase PR: [#194](https://github.com/0xC000005/ChebyshevSharp/pull/194).
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504452110).
 - Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondSmoothnessDiagnosticsTests"` passed 5 tests with 0 failures.
 - Local closeout verification: private-name scan produced only guardrail/search-term matches; `dotnet format --verify-no-changes --verbosity minimal` passed; `dotnet build --configuration Release --no-restore` passed with 0 warnings/errors; Release coverage tests passed 1681 tests with 0 failures; both fixed-rate bond example modes ran successfully; `docfx docs/docfx.json` passed with 0 warnings/errors.
 - Diagnostics command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics`.

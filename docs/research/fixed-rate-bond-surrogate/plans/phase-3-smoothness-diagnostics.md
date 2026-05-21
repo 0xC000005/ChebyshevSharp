@@ -142,7 +142,7 @@ Use this as a breakpoint signal, not as proof of a true discontinuity.
 - [x] Run `docfx docs/docfx.json`.
 - [x] Commit Phase 3 work.
 - [x] Push `bond-surrogate-research`.
-- [ ] Open one coherent Phase 3 PR only after the local exit gate is satisfied.
+- [x] Open one coherent Phase 3 PR only after the local exit gate is satisfied.
 - [ ] Keep Phase 3 review fixes inside that same PR; do not start Phase 4 implementation while it is open.
 - [ ] Wait for CI/review feedback, then merge the Phase 3 PR or explicitly close it without merge.
 - [ ] Record the PR outcome in `status.md` and tracking issue `#191` before starting Phase 4.
