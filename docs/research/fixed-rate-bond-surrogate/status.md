@@ -35,7 +35,7 @@ Use generic public terms:
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Complete | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Complete | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
-| 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
+| 4. Reproduce surrogate problem | Planned | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
 | 6. Maturity splitting | Not started | No split vs 1Y vs 0.5Y vs schedule-aware split comparison completed |
 | 7. Adaptive splitting research | Not started | Decision on whether adaptive splitting is needed |
@@ -61,7 +61,13 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Prepare and execute Phase 4 surrogate reproduction. Phase 4 should build the first full PV TT and Slider surrogates against the public baseline and test whether acceptable PV can coexist with unacceptable DV01, coupon, maturity, or mixed-term errors.
+Execute Phase 4 surrogate reproduction from the written plan. Phase 4 should build the first full PV TT and Slider surrogates against the public baseline and test whether acceptable PV can coexist with unacceptable DV01, coupon, maturity, or mixed-term errors.
+
+## Phase 4 Notes
+
+- Plan: [Phase 4 Surrogate Problem Reproduction Implementation Plan](plans/phase-4-reproduce-surrogate-problem.md).
+- Data-source decision: use the pinned Federal Reserve nominal zero-yield fixture for deterministic tests and documentation. Yahoo Finance, FRED, and live Federal Reserve downloads remain optional future refresh paths; no API key or live download is required for this phase.
+- Scope boundary: build direct full-PV surrogates first. Do not implement analytic coupon decomposition, maturity splitting, or adaptive splitting until later phases so the reproduction isolates the problem before proposing fixes.
 
 ## Phase PR Cadence Gate
 
