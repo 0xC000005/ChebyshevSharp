@@ -142,6 +142,22 @@ Each experiment should produce a compact report in `docs/research/fixed-rate-bon
 
 This gives future conversations a restart point and prevents repeated audits of the same ground.
 
+## Documentation-While-Research Rule
+
+Documentation is part of each phase, not a cleanup task at the end. Every phase must update the durable research docs and, when the phase creates user-facing behavior or a stable lesson, the public documentation site.
+
+Each phase update should include:
+
+- what changed and why;
+- the mathematical formula or concept being validated;
+- usage examples or runnable commands when they help a reader reproduce the result;
+- citations for algorithms, financial conventions, market-data sources, and external libraries;
+- explicit source/provenance notes for any market data used;
+- citation verification evidence when new citations or data sources are added;
+- limitations and scope restrictions, especially where the example is not a general fixed-income library.
+
+Follow the existing documentation style: short tutorial pages for user workflows, `docs/docs/citations.md` for persistent references, and `docs/docs/testing-and-validation.md` for validation expectations. Avoid private or proprietary names in public docs.
+
 ## Auto-Research Execution Loop
 
 This project is the main scope for the next small version update. The loop for each large phase is:
@@ -151,8 +167,11 @@ This project is the main scope for the next small version update. The loop for e
 3. Search public documentation and references relevant to that phase.
 4. Implement the smallest useful harness/test/reporting increment for that phase.
 5. Validate with deterministic tests and phase-specific research reports.
-6. Update `docs/research/fixed-rate-bond-surrogate/status.md`.
-7. Stop only when the phase exit gate is satisfied or a blocker is recorded.
+6. Update documentation and citation/source notes for the phase.
+7. Update `docs/research/fixed-rate-bond-surrogate/status.md`.
+8. Open one coherent phase PR only after the phase exit gate is satisfied locally.
+9. Wait for CI/review, address review feedback in that same PR, and record the result.
+10. Move to the next phase only after the current phase PR is merged or explicitly closed and the status file is updated.
 
 Do not treat each small task as a standalone PR. Small fixes, chores, and documentation edits that support the current phase should accumulate on the phase branch and be reviewed together.
 
@@ -166,6 +185,9 @@ Use issue-backed, phase-level development:
 - Open one PR per completed large phase, not one PR per trivial task.
 - A phase PR should include implementation, tests, reports, documentation updates, and status-file updates needed to satisfy that phase's exit gate.
 - Do not merge a phase PR until validation passes and the report explains what was learned.
+- Do not accumulate multiple open phase PRs. A phase is not complete until its PR is merged, or explicitly closed without merge, and the outcome is recorded in the tracking issue/status file.
+- Do not start implementation for the next phase while the current phase PR is still open, except for review fixes that belong to that open PR. Planning notes for the next phase are allowed, but they should not create another PR.
+- Do not create issues for every small observation. Use the tracking issue and phase report for routine findings; create a separate issue only when the finding is a real bug, blocker, or follow-up that needs independent tracking.
 - Release notes should reference the phase PR and any issues closed by that PR.
 
 If a bug is discovered while working on a phase:

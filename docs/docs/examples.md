@@ -4,7 +4,7 @@ title: Examples
 
 # Examples
 
-The repository includes three runnable console projects. They are intended to be
+The repository includes runnable console projects. They are intended to be
 small enough to read in one sitting and concrete enough to verify that the local
 toolchain, package reference, and public API are working.
 
@@ -14,6 +14,7 @@ Run the examples from the repository root:
 dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
 ```
 
 ## QuickStart
@@ -61,9 +62,25 @@ the model is expected to have moderate numerical TT ranks. If the TT ranks grow
 to the rank cap or the held-out error is too high, increase the rank cap, adjust
 the node counts, or use a dense/spline/slider representation instead.
 
+## FixedRateBondSurrogate
+
+`examples/FixedRateBondSurrogate` is the finance research harness used to build
+a public fixed-rate bond tutorial. The first phase adds only a reference-pricer
+adapter:
+
+1. Build a deterministic regular fixed-rate bullet bond.
+2. Price it with QLNet through a small `IFixedRateBondReferencePricer` boundary.
+3. Report dirty price, clean price, accrued amount, NPV, and cashflow count.
+4. Keep the direct zero-rate curve separate from later Chebyshev surrogates.
+
+This example is intentionally restricted. It is a baseline for later surrogate
+validation, not a general fixed-income library. The research notes in
+`docs/research/fixed-rate-bond-surrogate/` track formulas, data provenance,
+citations, and validation results as the workflow progresses.
+
 ## When to run them
 
 Run the examples when changing public workflows, constructor defaults,
 serialization behavior, domain validation, or documentation snippets that show
-first-use code. CI runs both projects in the `Format, Pack, and Docs` job, so a
+first-use code. CI runs the examples in the `Format, Pack, and Docs` job, so a
 PR that breaks the examples should fail before merge.

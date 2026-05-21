@@ -30,7 +30,7 @@ Use generic public terms:
 | Phase | Status | Exit Gate |
 | --- | --- | --- |
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
-| 1. Baseline pricer selection and adapter | Not started | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
+| 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
 | 2. Data fixture pipeline | Not started | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Not started | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
@@ -59,13 +59,25 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Wait for the explicit order to start continuous execution. The first execution step is to write the Phase 1 implementation plan before selecting or integrating the external baseline pricer.
+Commit and push the Phase 1 baseline adapter/report, then open one coherent Phase 1 PR. Do not start Phase 2 implementation until the Phase 1 PR is reviewed, merged or explicitly closed, and the tracking issue/status file record the outcome. Phase 2 planning notes may be drafted only if they do not create a second PR or distract from closing the active phase.
+
+## Phase 1 Notes
+
+- Plan: [Phase 1 Baseline Pricer Adapter Implementation Plan](plans/phase-1-baseline-pricer-adapter.md).
+- Report draft: [Phase 1 Report: Baseline Pricer Adapter](reports/phase-1-baseline-pricer.md).
+- Selected first C# baseline path: QLNet `1.13.1` in the example and tests only.
+- Optional cross-check path: Python QuantLib through `uv`.
+- Focused tests run: `dotnet test --filter "FullyQualifiedName~FixedRateBondReferencePricerTests"` passed 5 tests with 0 failures.
+- Full verification run: `dotnet build --no-restore` passed with 0 warnings/errors; `dotnet test` passed 1654 tests with 0 failures; all examples ran; `docfx docs/docfx.json` passed with 0 warnings/errors.
 
 ## Notes for Future Sessions
 
 - Keep the harness inside ChebyshevSharp under `examples/`, `tests/`, and `docs/research/`.
 - Use phase-level PRs. Do not open a PR for every small task. A phase PR should satisfy the phase exit gate and include tests, reports, docs, and status updates.
-- Use issues for real bugs, blockers, and follow-up features. If a discovered bug is required for the current phase, fix it in the phase branch and reference the issue in the phase PR.
+- Keep at most one phase PR open for this workflow. Finish review and merge or explicitly close that PR before starting the next phase implementation.
+- Treat PR closeout as part of the phase: record CI/review results, review fixes, merge/close outcome, and any remaining follow-up in the phase report or tracking issue.
+- Update documentation while each phase is running. Phase work must record formulas, concepts, usage examples, citations, citation verification, and data provenance as soon as they become part of the evidence.
+- Use the tracking issue and phase reports for routine observations. Create separate issues only for real bugs, blockers, or follow-up features that need independent tracking. If a discovered bug is required for the current phase, fix it in the phase branch and reference the issue in the phase PR.
 - The first implementation should be deliberately restricted and transparent, not a general fixed-income library.
 - Do not implement a full bond pricer unless external baseline integration blocks deterministic CI or a tiny transparent sanity oracle is needed.
 - Preferred baseline strategy: use QuantLib/QLNet/QuantLib Python as the trusted pricing function and train/validate Chebyshev surrogates against it.
