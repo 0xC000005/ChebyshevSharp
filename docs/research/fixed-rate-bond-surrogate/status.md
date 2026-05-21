@@ -155,6 +155,7 @@ Start Phase 10 on `phase10-schedule-aware-router`: prototype a schedule-aware hi
 
 - Plan: [Phase 10 Schedule-Aware Piecewise Router Plan](plans/phase-10-schedule-aware-router.md).
 - Implementation plan path: `docs/superpowers/plans/2026-05-21-phase10-schedule-aware-router.md`.
+- Phase PR: [#201](https://github.com/0xC000005/ChebyshevSharp/pull/201).
 - Working branch: `phase10-schedule-aware-router`.
 - Scope boundary: prototype a schedule-aware high-dimensional router inside the fixed-rate bond harness first; do not add a generic automatic kink-detection API in this phase.
 - Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
@@ -170,6 +171,7 @@ Start Phase 10 on `phase10-schedule-aware-router`: prototype a schedule-aware hi
 - Fixed-rate bond test slice run: `dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBond" --verbosity minimal` passed 77 tests with 0 failures.
 - Closeout verification so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `docfx docs/docfx.json` passed with 0 warnings/errors; full Release tests passed 1,727 tests with 0 failures; `git diff --check` passed.
 - Benchmark command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router`.
+- Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4513211570).
 
 ## Phase 5 Notes
 

@@ -183,7 +183,7 @@ Add:
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router
 ```
 
-- [ ] **Step 3: Update status and issue #191**
+- [x] **Step 3: Update status and issue #191**
 
 Record the phase branch, report path, verification commands, and PR link once opened.
 
@@ -219,7 +219,7 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
 git diff --check
 ```
 
-- [ ] **Step 5: Open one coherent Phase 10 PR**
+- [x] **Step 5: Open one coherent Phase 10 PR**
 
 Open the PR only after local verification passes. Keep all Phase 10 review fixes in that PR.
 
