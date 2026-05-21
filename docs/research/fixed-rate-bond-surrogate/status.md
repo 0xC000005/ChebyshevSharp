@@ -33,7 +33,7 @@ Use generic public terms:
 | --- | --- | --- |
 | 0. Setup and guardrails | Complete | Plan, status file, tracking issue, working branch, and report folders exist with public-safe language |
 | 1. Baseline pricer selection and adapter | Complete | QuantLib/QLNet/Python baseline selected and callable behind generic adapter |
-| 2. Data fixture pipeline | Not started | Public curve fixture generated, pinned, and documented; no live downloads in CI |
+| 2. Data fixture pipeline | In progress | Public curve fixture generated, pinned, and documented; no live downloads in CI |
 | 3. Smoothness diagnostics | Not started | Report identifies PV/slope/sensitivity smoothness and maturity breakpoints |
 | 4. Reproduce surrogate problem | Not started | TT/Slider report confirms or rejects PV-good/Greeks-bad behavior |
 | 5. Analytic coupon decomposition | Not started | Principal/annuity surrogate comparison completed |
@@ -61,7 +61,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Start Phase 2 by writing the public data fixture implementation plan. Keep Phase 2 work on `bond-surrogate-research`, do not open a PR until the Phase 2 exit gate is satisfied locally, and keep only one phase PR open at a time.
+Implement the Phase 2 public data fixture pipeline from [the Phase 2 plan](plans/phase-2-public-data-fixtures.md). Keep live downloads in the optional refresh tool only; C# tests and examples must consume pinned fixtures.
 
 ## Phase 1 Notes
 
@@ -75,6 +75,16 @@ Start Phase 2 by writing the public data fixture implementation plan. Keep Phase
 - Phase PR: [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4504103137).
 - Merge outcome: PR [#192](https://github.com/0xC000005/ChebyshevSharp/pull/192) merged on 2026-05-21 after required checks passed, including `All Tests Passed` and `codecov/patch`.
+
+## Phase 2 Notes
+
+- Plan: [Phase 2 Public Data Fixture Pipeline Implementation Plan](plans/phase-2-public-data-fixtures.md).
+- Primary data source selected for the first fixture: Federal Reserve nominal yield curve CSV, using `SVENY01` to `SVENY30` continuously compounded zero-coupon yields.
+- Official source checks completed:
+  - Federal Reserve nominal yield curve page confirms the data are fitted nominal yield-curve parameters and smoothed yields from 1961 to present, and that the model is a staff research product rather than an official statistical release.
+  - Federal Reserve CSV schema confirms `SVENYXX` are continuously compounded zero-coupon yields, `SVENPYXX` are coupon-equivalent par yields, `SVENFXX` are continuously compounded instantaneous forwards, and `SVEN1FXX` are coupon-equivalent one-year forwards.
+  - Treasury XML feed remains a later par-yield source, not the first direct-zero fixture.
+  - New York Fed SOFR remains a later overnight-rate source, not the first term zero-curve fixture.
 
 ## Notes for Future Sessions
 
