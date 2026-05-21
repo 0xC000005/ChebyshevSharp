@@ -46,6 +46,7 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 ## Finance Context
 
 - Ruiz, I. and Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View*. Wiley Finance. ISBN: [978-1-119-79138-6](https://www.wiley-vch.de/en/areas-interest/finance-economics-law/machine-learning-for-risk-calculations-978-1-119-79138-6).
+- MoCaX Intelligence. "Research & Resources." Public resources on Chebyshev tensors, tensor extension algorithms, and risk-calculation acceleration. [Research resources](https://mocaxintelligence.com/research-resources/).
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
 

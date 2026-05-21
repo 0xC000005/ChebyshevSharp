@@ -18,6 +18,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --diagnostics
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --surrogate-reproduction
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-surrogate-discovery
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
@@ -159,6 +160,23 @@ a bond maturing at the 10Y curve pillar should have zero direct sensitivity to
 the 30Y zero-rate pillar under the current direct-zero interpolation setup. If
 that check fails, the surrogate is inventing post-maturity curve exposure before
 any finer modelling question matters.
+
+Run the structured alternatives mode after the naive failure is reproduced. It
+keeps the same 62-coordinate wrapper while comparing common modelling choices:
+trying a stronger global TensorTrain, testing TT auto-ordering, grouping
+interacting variables in a Slider, projecting the 60 curve bumps into
+level/slope/curvature factors, and routing factor models through 1Y and 0.5Y
+maturity buckets.
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives
+```
+
+Read this mode as an evidence generator, not a finished pricing architecture.
+The factor tensor performs well on factor-aligned scenarios, while arbitrary
+60-pillar bump vectors still expose projection error. The bucketed variants
+test the Phase 6 maturity-smoothness hypothesis, but they do not by themselves
+make the mixed sensitivities reliable.
 
 To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
 run:

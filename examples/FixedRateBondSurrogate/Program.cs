@@ -34,6 +34,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--structured-alternatives"])
+        {
+            RunStructuredAlternatives(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -236,6 +242,43 @@ public static class FixedRateBondExample
                     FormatCsvDouble(point.DirtyPrice),
                     FormatCsvDouble(point.CentralSlopePerYear),
                     FormatCsvDouble(point.SecondDifference)));
+        }
+    }
+
+    private static void RunStructuredAlternatives(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        StructuredAlternativesReport report = StructuredAlternativesBenchmark.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond structured alternatives");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Research basis: {report.ResearchBasis}");
+        output.WriteLine($"Clone validation points        : {report.CloneValidationPoints.Count}");
+        output.WriteLine($"Factor-aligned validation points: {report.FactorAlignedValidationPoints.Count}");
+        output.WriteLine();
+
+        foreach (StructuredAlternativeModelSummary model in report.Models)
+        {
+            NaiveSurrogateMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            NaiveSurrogateMetricSummary maturity = model.Metrics.Single(metric => metric.Name == "maturity sensitivity");
+            NaiveSurrogateMetricSummary couponMaturity = model.Metrics.Single(metric => metric.Name == "coupon-maturity mixed");
+            NaiveSurrogateMetricSummary factorPv = model.FactorAlignedMetrics.Single(metric => metric.Name == "PV");
+
+            output.WriteLine(
+                $"{model.ModelName}: build evals {model.BuildEvaluations}, " +
+                $"build seconds {model.BuildSeconds:F3}, " +
+                $"internal dims {model.InternalDimensionCount}, " +
+                $"buckets {model.BucketCount}");
+            output.WriteLine($"  Method        : {model.InternalMethod}");
+            output.WriteLine(
+                $"  Clone metrics : PV rel max {pv.MaxRelativeError:P2}, " +
+                $"maturity rel max {maturity.MaxRelativeError:P2}, " +
+                $"coupon-maturity rel max {couponMaturity.MaxRelativeError:P2}");
+            output.WriteLine($"  Factor metrics: PV rel max {factorPv.MaxRelativeError:P2}");
+            output.WriteLine($"  Interpretation: {model.Interpretation}");
         }
     }
 
