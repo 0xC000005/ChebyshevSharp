@@ -10,9 +10,9 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `phase9-maturity-special-points`
+Working branch: `phase10-schedule-aware-router`
 
-Last completed phase PR: [#199](https://github.com/0xC000005/ChebyshevSharp/pull/199), merged on 2026-05-21 as `ae41f2d`.
+Last completed phase PR: [#200](https://github.com/0xC000005/ChebyshevSharp/pull/200), merged on 2026-05-21 as `e2ac6ac`.
 
 ## Confidentiality Guardrail
 
@@ -40,9 +40,10 @@ Use generic public terms:
 | 6. Naive dense-baseline surrogate discovery | Complete | Dense-baseline naive TT/Slider failure evidence and maturity-smoothness evidence documented |
 | 7. Structured alternatives benchmark | Complete | Controlled alternatives compared against the Phase 6 evidence bank |
 | 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
-| 9. Maturity splitting and adaptive knots | In progress | Schedule-aware and detector special-point comparison implemented; report draft added |
-| 10. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
-| 11. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
+| 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
+| 10. Schedule-aware high-dimensional router | Planned; branch ready | Router prototype, one-sided split diagnostics, and public-API decision completed |
+| 11. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
+| 12. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
 
@@ -63,7 +64,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Continue Phase 9 on `phase9-maturity-special-points`: harden the maturity-special-point report, update tracking issue #191, run fixed-rate-bond slice/full verification, and then open one coherent Phase 9 PR.
+Start Phase 10 on `phase10-schedule-aware-router`: prototype a schedule-aware high-dimensional piecewise router, validate one-sided maturity sensitivities near split points, compare against Phase 9 controls, and decide whether a public ChebyshevSharp API is justified.
 
 ## Phase 6 Notes
 
@@ -146,6 +147,19 @@ Continue Phase 9 on `phase9-maturity-special-points`: harden the maturity-specia
 - Benchmark command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points`.
 - Local verification so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `docfx docs/docfx.json` passed with 0 warnings/errors; Release tests passed 1719 tests; `git diff --check` passed.
 - CI outcome on PR #200: `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, and `All Tests Passed` passed; Dependabot was skipped.
+- Codecov closeout: focused local coverage found no missing or partial lines in `MaturitySpecialPointsBenchmark.cs`; final PR check `codecov/patch` passed.
+- Merge outcome: PR [#200](https://github.com/0xC000005/ChebyshevSharp/pull/200) merged into `main` on 2026-05-21 with merge commit `e2ac6acfd172bee280e9486dab8bec5a92c4324c`.
+- Closeout tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4512938294).
+
+## Phase 10 Notes
+
+- Plan: [Phase 10 Schedule-Aware Piecewise Router Plan](plans/phase-10-schedule-aware-router.md).
+- Implementation plan path: `docs/superpowers/plans/2026-05-21-phase10-schedule-aware-router.md`.
+- Working branch: `phase10-schedule-aware-router`.
+- Scope boundary: prototype a schedule-aware high-dimensional router inside the fixed-rate bond harness first; do not add a generic automatic kink-detection API in this phase.
+- Required wrapper contract: every tested candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
+- Default internal formula: keep Phase 8 principal/annuity decomposition and Phase 9 schedule-derived breakpoints.
+- Required new evidence: one-sided maturity sensitivities around split points, piece-routing diagnostics, comparison against Phase 9 global/uniform/schedule-aware controls, and an explicit public-API decision.
 
 ## Phase 5 Notes
 
