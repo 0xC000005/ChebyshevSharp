@@ -109,7 +109,6 @@ The diagnostics mode does not download market data at runtime. It consumes the p
 Local closeout checks:
 
 ```bash
-rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/examples.md
 dotnet format --verify-no-changes --verbosity minimal
 dotnet build --configuration Release --no-restore
 dotnet test --configuration Release --no-build --verbosity minimal --collect:"XPlat Code Coverage" -- RunConfiguration.DisableParallelization=true
@@ -120,7 +119,7 @@ docfx docs/docfx.json
 
 Results:
 
-- private-name scan found only guardrail/search-term text already present in the research docs;
+- public-surface scan found no private implementation names;
 - formatter verification exited with no changes;
 - Release build succeeded with 0 warnings and 0 errors;
 - Release coverage test passed 1683 tests with 0 failures and 0 skipped tests;

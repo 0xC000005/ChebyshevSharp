@@ -6,6 +6,8 @@
       href: getting-started.md
     - name: Examples
       href: examples.md
+    - name: Fixed-Rate Bond Case Study
+      href: fixed-rate-bond-surrogate.md
     - name: Which Class Should I Use?
       href: which-class.md
 

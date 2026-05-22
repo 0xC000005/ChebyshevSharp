@@ -142,5 +142,5 @@ Results:
 - Chebfun Guide, "Piecewise smooth chebfuns": <https://www.chebfun.org/docs/guide/guide01.html>
 - Pachón, R., Platte, R. B., & Trefethen, L. N. (2010). "Piecewise-smooth chebfuns." *IMA Journal of Numerical Analysis*, 30(4), 898-916. <https://doi.org/10.1093/imanum/drp008>
 - Oxford Mathematical Institute seminar page, "Optimal domain splitting in Chebyshev collocation": <https://www.maths.ox.ac.uk/node/10792>
-- PyChebyshev special-points guide: `/home/max/Documents/PyChebyshev/docs/user-guide/special-points.md`
+- PyChebyshev special-points guide: <https://0xc000005.github.io/PyChebyshev/user-guide/special-points/>
 - Phase 8 report: [Analytic Coupon Decomposition](phase-8-analytic-coupon-decomposition.md)
