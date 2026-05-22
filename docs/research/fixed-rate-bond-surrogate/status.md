@@ -10,9 +10,9 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `phase12-accuracy-recipe-search`
+Working branch: `phase13-speed-accuracy-prep`
 
-Last completed phase PR: [#202](https://github.com/0xC000005/ChebyshevSharp/pull/202), merged on 2026-05-22 as `f4dafca`.
+Last completed phase PR: [#205](https://github.com/0xC000005/ChebyshevSharp/pull/205), merged on 2026-05-22 as `9a38642`.
 
 ## Confidentiality Guardrail
 
@@ -43,8 +43,8 @@ Use generic public terms:
 | 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
 | 10. Schedule-aware high-dimensional router | Complete | PR #201 merged; router remains example-local and does not justify a generic kink-detection API yet |
 | 11. Tutorial and documentation | Complete | PR #202 merged; public tutorial and case-study documentation are on main |
-| 12. Accuracy recipe search | In progress | Dominant residual error source identified and next modelling recipe selected |
-| 13. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
+| 12. Accuracy recipe search | Complete | Dominant residual error source identified and next modelling recipe selected |
+| 13. Accuracy and hot-path speed pilot | In progress | Benchmark evidence shows whether the supported-family clone is both accurate and materially faster |
 
 ## Environment Readiness
 
@@ -65,7 +65,23 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Start Phase 12 on `phase12-accuracy-recipe-search`: isolate why the fixed-rate bond surrogate remains inaccurate after schedule-aware routing, then compare stronger candidate recipes while preserving the full 62-coordinate wrapper.
+Execute Phase 13 on `phase13-speed-accuracy-prep`: benchmark the accurate
+schedule-resolved cashflow Chebyshev recipe, pilot product-side hot-path
+improvements, and decide whether any core ChebyshevSharp optimization issue is
+justified by evidence.
+
+## Phase 13 Notes
+
+- Plan: [Phase 13 Accuracy And Speed Pilot Plan](plans/phase-13-accuracy-speed-pilot.md).
+- Report draft: [Phase 13 Report: Accuracy And Hot-Path Speed Pilot](reports/phase-13-accuracy-speed-pilot.md).
+- Working branch: `phase13-speed-accuracy-prep`.
+- Scope boundary: benchmark and optimize the fixed-rate bond example first; do not add reusable ChebyshevSharp APIs unless profiling shows the bottleneck is the core evaluator.
+- Required wrapper contract: every public candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
+- Research refresh: MoCaX materials emphasize dynamic sensitivities and computational gains from replacing repeated pricing calls; BenchmarkDotNet documents `MemoryDiagnoser` as the cross-platform allocation measurement path; Tensor Train Cross literature reinforces held-out validation for sampled high-dimensional models.
+- Initial benchmark targets: QLNet scalar price, current schedule-resolved scalar price, optimized schedule-resolved scalar price, QLNet all-pillar finite-difference DV01, analytic schedule-resolved all-pillar DV01/rate-coupon mixed terms, and batch scenario pricing.
+- Current implementation: schedule templates now cache their discount kernels directly, and `ScheduleResolvedCashflowChebyshevBondPricer` exposes an allocation-conscious risk snapshot path for dirty price, all-pillar curve-bump gradients, coupon derivative, and all-pillar rate-coupon mixed terms.
+- Current benchmark evidence: BenchmarkDotNet short run reports QLNet scalar value `11,500.0 ns`, Chebyshev scalar value `1,520.5 ns`, Chebyshev unchecked scalar value `1,489.9 ns`, QLNet all-pillar finite-difference DV01 `1,382,441.2 ns`, Chebyshev analytic all-pillar risk `1,625.6 ns`, QLNet batch-32 scalar `529,871.1 ns`, Chebyshev batch-32 scalar `75,150.8 ns`, and cached exact fixed-schedule scalar `108.4 ns`.
+- Current interpretation: scalar Chebyshev speedup is about `7.6x` to `7.7x` against the QLNet reference path, batch scalar speedup is about `7.1x`, and the all-pillar risk snapshot is about `850x` faster than finite-difference QLNet. The exact cached fixed-schedule control is about `106x` faster than QLNet and faster than the Chebyshev kernel, so future production comparisons must include exact cached pricing as a serious baseline.
 
 ## Phase 12 Notes
 
@@ -79,7 +95,7 @@ Start Phase 12 on `phase12-accuracy-recipe-search`: isolate why the fixed-rate b
 - Research refresh: Chebfun supports splitting piecewise-smooth functions; OpenGamma Strata validates PV and bucketed PV01 as core outputs; Federal Reserve H.15 documents public constant-maturity curve construction; yield-curve PCA references support level/slope/curvature as a common compression idea; Tensor Train Cross references require held-out validation rather than rank assumptions.
 - Required first diagnostics: projection oracle, derivative-step oracle, schedule-dispatch oracle, richer factor candidate, schedule-aware active-pillar candidate, fixed-trade curve-only control, and a full-wrapper schedule-resolved cashflow Chebyshev-kernel candidate.
 - Initial oracle implementation: `examples/FixedRateBondSurrogate/AccuracyRecipeSearch.cs`, CLI flag `--accuracy-recipe-search`, and `FixedRateBondAccuracyRecipeSearchTests`.
-- Current evidence: projection from arbitrary 60-pillar clone points into deterministic level/slope/curvature factors creates `4.467694E+000` max PV absolute error and `4.73%` max PV relative error, while factor-aligned points reconstruct at `0.00%` error. A five-factor deterministic polynomial basis reports `5.291768E+000` max PV absolute error and `4.81%` max PV relative error, so simply adding smooth factors is not the recipe. The active-support oracle is exact on the current validation bank after removing post-maturity-neighbourhood curve bumps; active curve dimensions range from `5` to `60`. A first 10Y active-pillar TT uses `23` internal dimensions, `2014` build evaluations, and reports `1.53%` max PV relative error, but still has `132.88%` max maturity-sensitivity relative error. A narrowed/higher-resolution 10Y active-pillar TT uses `3566` build evaluations and improves max PV relative error to `0.48%`, max 10Y DV01 relative error to `1.03%`, max coupon derivative relative error to `1.03%`, and max coupon-maturity mixed relative error to `10.98%`; maturity-sensitivity relative error remains high at `161.90%`, and one-sided maturity slope errors remain large. A fixed-trade curve-only TT uses `21` internal dimensions and `837` build evaluations, with `1.796590E-004` max PV absolute error and effectively zero displayed PV/DV01 relative error. The schedule-resolved cashflow Chebyshev-kernel candidate now exists as `ScheduleResolvedCashflowChebyshevBondPricer`; it keeps the full 62-coordinate wrapper, uses at-most-2D local discount kernels, validates on `99` full-wrapper points, reports `1.348184E-010` max PV absolute error, `4.263256E-010` max all-pillar DV01 absolute error, small mixed-risk absolute errors (`2.842171E-006` for 10Y rate-coupon, `1.112253E-008` for 10Y rate-maturity, and `3.197442E-006` for 10Y-10.5Y rate-rate), and `2.5x` measured evaluation speedup. A request-level test matches QLNet dirty price to 8 decimal places under a non-flat 60-pillar bump, changed coupon, changed maturity, and non-100 notional, and the pricer rejects out-of-domain curve bumps. A non-100 notional check at `250` notional reports `4.243361E-011` max dirty-price absolute error, confirming notional is algebraic rather than a hidden Chebyshev dimension. The tested 10Y pillar DV01 is stable across rate steps, one-day/three-day/seven-day maturity slopes differ materially, and post-maturity unsupported 30Y pillar DV01 is numerically zero.
+- Current evidence: projection from arbitrary 60-pillar clone points into deterministic level/slope/curvature factors creates `4.467694E+000` max PV absolute error and `4.73%` max PV relative error, while factor-aligned points reconstruct at `0.00%` error. A five-factor deterministic polynomial basis reports `5.291768E+000` max PV absolute error and `4.81%` max PV relative error, so simply adding smooth factors is not the recipe. The active-support oracle is exact on the current validation bank after removing post-maturity-neighbourhood curve bumps; active curve dimensions range from `5` to `60`. A first 10Y active-pillar TT uses `23` internal dimensions, `2014` build evaluations, and reports `1.53%` max PV relative error, but still has `132.88%` max maturity-sensitivity relative error. A narrowed/higher-resolution 10Y active-pillar TT uses `3566` build evaluations and improves max PV relative error to `0.48%`, max 10Y DV01 relative error to `1.03%`, max coupon derivative relative error to `1.03%`, and max coupon-maturity mixed relative error to `10.98%`; maturity-sensitivity relative error remains high at `161.90%`, and one-sided maturity slope errors remain large. A fixed-trade curve-only TT uses `21` internal dimensions and `837` build evaluations, with `1.796590E-004` max PV absolute error and effectively zero displayed PV/DV01 relative error. The schedule-resolved cashflow Chebyshev-kernel candidate now exists as `ScheduleResolvedCashflowChebyshevBondPricer`; it keeps the full 62-coordinate wrapper, uses at-most-2D local discount kernels, validates on `99` full-wrapper points, reports `1.348184E-010` max PV absolute error, `4.263256E-010` max all-pillar DV01 absolute error, small mixed-risk absolute errors (`2.842171E-006` for 10Y rate-coupon, `1.112253E-008` for 10Y rate-maturity, and `3.197442E-006` for 10Y-10.5Y rate-rate), and now reports `9.1x` measured scalar evaluation speedup after Phase 13 hot-path caching. A request-level test matches QLNet dirty price to 8 decimal places under a non-flat 60-pillar bump, changed coupon, changed maturity, and non-100 notional, and the pricer rejects out-of-domain curve bumps. A non-100 notional check at `250` notional reports `4.243361E-011` max dirty-price absolute error, confirming notional is algebraic rather than a hidden Chebyshev dimension. The tested 10Y pillar DV01 is stable across rate steps, one-day/three-day/seven-day maturity slopes differ materially, and post-maturity unsupported 30Y pillar DV01 is numerically zero.
 - Verification so far: focused Phase 12 tests passed 12 tests; the fixed-rate bond Release slice passed 90 tests; the CI-style net10 Release coverage run passed 1739 tests; `--accuracy-recipe-search` CLI run completed with the 99-point cashflow-kernel validation bank and the added all-pillar/mixed-risk metrics; `dotnet format --verify-no-changes --verbosity minimal`, `docfx docs/docfx.json`, and `git diff --check` passed after the pricer-class extraction.
 - Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191).
 

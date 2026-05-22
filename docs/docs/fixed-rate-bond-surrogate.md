@@ -12,8 +12,8 @@ The short answer is: not by blindly fitting one global high-dimensional tensor.
 For the supported product family, the first accurate clone resolves the bond
 cashflows first, keeps coupon and notional algebraic, and uses Chebyshev
 kernels only for the smooth discount-factor pieces. This page focuses on
-correctness and reproducibility; the current speed numbers are diagnostic, not
-the final performance target.
+correctness and reproducibility first, then reports the first BenchmarkDotNet
+speed evidence for scalar price, batch price, and all-pillar risk.
 
 The example is public and reproducible. It uses QLNet as the reference pricer,
 a pinned Federal Reserve nominal-yield-curve fixture, and a regular fixed-rate
@@ -101,17 +101,21 @@ reported table entry is the model's error in that cross sensitivity.
 
 ## How speed is treated in this article
 
-The main trial tables are accuracy-first. They include build evaluations where
-available because build cost matters, but they do not yet present a normalized
-per-trial latency benchmark. The current `2.2x` speedup for the final candidate
-is a measured end-to-end harness comparison against the QLNet reference path
-after schedules and kernels are cached. It should not be read as the expected
-production ceiling for a Chebyshev replacement.
+The main trial tables are accuracy-first because a fast but wrong risk clone is
+not useful. The final section adds a BenchmarkDotNet speed check with managed
+allocation columns. Those numbers are still diagnostic, but they are stronger
+than a hand-written stopwatch loop.
 
-The intended performance question is separate: after the clone is mathematically
-faithful, benchmark an optimized hot path with allocation control, batch
-evaluation, and a comparable reference-pricer baseline. That is where a
-10x to 100x target should be evaluated.
+The speed comparison includes three baselines:
+
+1. QLNet as the trusted reference-pricer path.
+2. The schedule-resolved Chebyshev kernel clone.
+3. An exact cached cashflow control for one fixed schedule.
+
+The third baseline is important. For this direct-zero fixed-rate bond, once the
+schedule is known, exact cashflow summation is very cheap. Chebyshev should not
+be judged only against a high-overhead reference adapter if a specialized exact
+cashflow pricer is available.
 
 ## The baseline formula
 
@@ -171,7 +175,7 @@ dense grid.
 | Analytic coupon decomposition | Use fixed-rate bond linearity in $c$. | Coupon should not be a nonlinear tensor axis if cashflows are fixed. | Identity is exact, but maturity remains hard. |
 | Schedule and automatic split points | Split maturity into smoother pieces. | Chebyshev methods work best on smooth pieces. | Schedule-aware splits help; automatic split detection alone is not enough. |
 | Active-pillar and fixed-trade controls | Remove inactive post-maturity pillars or fix the trade. | Risk systems often price known trades under curve scenarios. | Fixed-trade curve-only TT works well; parametric new-bond clone still needs more structure. |
-| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; performance optimization remains separate work. |
+| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; scalar speedup is useful, and all-pillar risk speedup is large. |
 
 ## Trial 1: one global model
 
@@ -461,7 +465,10 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 | Max internal kernel dimension | 2 |
 | Validation points | 99 |
 | Build evaluations | 39,699 |
-| Measured evaluation speedup, current harness | 2.2x |
+| Measured scalar evaluation speedup, current harness | 9.1x |
+| BenchmarkDotNet scalar speedup vs QLNet | 7.6x |
+| BenchmarkDotNet all-pillar risk speedup vs finite-difference QLNet | 850.4x |
+| BenchmarkDotNet batch-32 scalar speedup vs QLNet | 7.1x |
 | Max PV absolute error | `1.348184E-010` |
 | Max all-pillar DV01 absolute error | `4.263256E-010` |
 | Max 10Y rate-coupon cross-sensitivity absolute error | `2.842171E-006` |
@@ -475,6 +482,15 @@ schedule-sensitive maturity behavior by resolving cashflows, captures
 coupon-rate cross sensitivities through the cashflow formula, rejects out-of-domain
 curve bumps instead of silently clamping, and avoids modelling inactive
 post-maturity curve pillars.
+
+The speed result is mixed but useful. Scalar price is several times faster than
+the QLNet reference path, and the all-pillar risk snapshot is hundreds of times
+faster than finite-difference QLNet because it computes the curve gradient and
+rate-coupon mixed terms analytically in one pass. However, the exact cached
+cashflow control prices a fixed resolved schedule faster than the Chebyshev
+kernel. That means this case study supports a formula-aware Chebyshev clone for
+public demonstration and fast risk snapshots, while a production scalar
+fixed-bond pricer should still compare against an exact cached cashflow engine.
 
 ## Why this method is accurate
 
