@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ChebyshevSharp\ChebyshevSharp.csproj" />
     <ProjectReference Include="..\..\examples\FixedRateBondSurrogate\FixedRateBondSurrogate.csproj" />
+    <ProjectReference Include="..\..\examples\CallableBondSurrogate\CallableBondSurrogate.csproj" />
   </ItemGroup>
 
   <ItemGroup>
