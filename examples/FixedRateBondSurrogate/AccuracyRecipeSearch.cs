@@ -8,8 +8,15 @@ public sealed record AccuracyProjectionPoint(
     double AbsoluteError,
     double RelativeError);
 
+public sealed record AccuracyProjectionBasisSummary(
+    string Name,
+    int FactorCount,
+    double MaxClonePvAbsoluteError,
+    double MaxClonePvRelativeError);
+
 public sealed record AccuracyProjectionOracleSummary(
     IReadOnlyList<AccuracyProjectionPoint> Points,
+    IReadOnlyList<AccuracyProjectionBasisSummary> AlternativeBases,
     double MaxClonePvAbsoluteError,
     double MaxClonePvRelativeError,
     double MaxFactorAlignedPvAbsoluteError,
@@ -111,10 +118,32 @@ public static class AccuracyRecipeSearch
 
         return new AccuracyProjectionOracleSummary(
             Points: points,
+            AlternativeBases:
+            [
+                BuildProjectionBasisSummary("Five-factor deterministic curve basis", 5, adapter, clonePoints),
+            ],
             MaxClonePvAbsoluteError: clone.Max(point => point.AbsoluteError),
             MaxClonePvRelativeError: clone.Max(point => point.RelativeError),
             MaxFactorAlignedPvAbsoluteError: factor.Max(point => point.AbsoluteError),
             MaxFactorAlignedPvRelativeError: factor.Max(point => point.RelativeError));
+    }
+
+    private static AccuracyProjectionBasisSummary BuildProjectionBasisSummary(
+        string name,
+        int factorCount,
+        RequestAdapter adapter,
+        IReadOnlyList<SurrogateValidationPoint> clonePoints)
+    {
+        var factorBasis = new CurveFactorBasis(CurveBumpDimensionCount, factorCount);
+        AccuracyProjectionPoint[] points = clonePoints
+            .Select(point => ProjectionPoint("clone", point, adapter, factorBasis))
+            .ToArray();
+
+        return new AccuracyProjectionBasisSummary(
+            Name: name,
+            FactorCount: factorCount,
+            MaxClonePvAbsoluteError: points.Max(point => point.AbsoluteError),
+            MaxClonePvRelativeError: points.Max(point => point.RelativeError));
     }
 
     private static AccuracyProjectionPoint ProjectionPoint(
@@ -285,14 +314,11 @@ public static class AccuracyRecipeSearch
         var curveBumps = new double[CurveBumpDimensionCount];
         Array.Copy(fullPoint, curveBumps, CurveBumpDimensionCount);
         double[] factors = factorBasis.Project(curveBumps);
-        return
-        [
-            factors[0],
-            factors[1],
-            factors[2],
-            fullPoint[CouponDimension],
-            fullPoint[MaturityDimension],
-        ];
+        var factorPoint = new double[factorBasis.FactorCount + 2];
+        Array.Copy(factors, factorPoint, factors.Length);
+        factorPoint[factorBasis.FactorCount] = fullPoint[CouponDimension];
+        factorPoint[factorBasis.FactorCount + 1] = fullPoint[MaturityDimension];
+        return factorPoint;
     }
 
     private static double[] ToFullPoint(double[] factorPoint, CurveFactorBasis factorBasis)
@@ -300,8 +326,8 @@ public static class AccuracyRecipeSearch
         var fullPoint = new double[PublicInputDimensionCount];
         double[] reconstructedBumps = factorBasis.Reconstruct(factorPoint);
         Array.Copy(reconstructedBumps, fullPoint, reconstructedBumps.Length);
-        fullPoint[CouponDimension] = factorPoint[3];
-        fullPoint[MaturityDimension] = factorPoint[4];
+        fullPoint[CouponDimension] = factorPoint[factorBasis.FactorCount];
+        fullPoint[MaturityDimension] = factorPoint[factorBasis.FactorCount + 1];
         return fullPoint;
     }
 
@@ -379,16 +405,18 @@ public static class AccuracyRecipeSearch
         private readonly double[][] _basis;
         private readonly double[,] _gramInverse;
 
-        public CurveFactorBasis(int pointCount)
+        public CurveFactorBasis(int pointCount, int factorCount = FactorDimensionCount)
         {
-            _basis = BuildBasis(pointCount);
+            _basis = BuildBasis(pointCount, factorCount);
             _gramInverse = Invert3x3(BuildGram(_basis));
         }
 
+        public int FactorCount => _basis.Length;
+
         public double[] Project(double[] curveBumps)
         {
-            var rhs = new double[FactorDimensionCount];
-            for (int factor = 0; factor < FactorDimensionCount; factor++)
+            var rhs = new double[FactorCount];
+            for (int factor = 0; factor < FactorCount; factor++)
             {
                 for (int i = 0; i < curveBumps.Length; i++)
                 {
@@ -402,7 +430,7 @@ public static class AccuracyRecipeSearch
         public double[] Reconstruct(double[] factorPoint)
         {
             var curveBumps = new double[_basis[0].Length];
-            for (int factor = 0; factor < FactorDimensionCount; factor++)
+            for (int factor = 0; factor < FactorCount; factor++)
             {
                 for (int i = 0; i < curveBumps.Length; i++)
                 {
@@ -413,30 +441,57 @@ public static class AccuracyRecipeSearch
             return curveBumps;
         }
 
-        private static double[][] BuildBasis(int pointCount)
+        private static double[][] BuildBasis(int pointCount, int factorCount)
         {
-            var level = new double[pointCount];
-            var slope = new double[pointCount];
-            var curvature = new double[pointCount];
+            if (factorCount < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(factorCount), "At least one curve factor is required.");
+            }
 
+            double[][] basis = Enumerable
+                .Range(0, factorCount)
+                .Select(_ => new double[pointCount])
+                .ToArray();
             for (int i = 0; i < pointCount; i++)
             {
                 double u = pointCount == 1 ? 0.0 : (double)i / (pointCount - 1);
                 double x = 2.0 * u - 1.0;
-                level[i] = 1.0;
-                slope[i] = x;
-                curvature[i] = 2.0 * x * x - 1.0;
+                basis[0][i] = 1.0;
+                if (factorCount > 1)
+                {
+                    basis[1][i] = x;
+                }
+
+                if (factorCount > 2)
+                {
+                    basis[2][i] = 2.0 * x * x - 1.0;
+                }
+
+                if (factorCount > 3)
+                {
+                    basis[3][i] = 4.0 * x * x * x - 3.0 * x;
+                }
+
+                if (factorCount > 4)
+                {
+                    basis[4][i] = 8.0 * Math.Pow(x, 4.0) - 8.0 * x * x + 1.0;
+                }
+
+                for (int factor = 5; factor < factorCount; factor++)
+                {
+                    basis[factor][i] = Math.Cos(factor * Math.Acos(Math.Clamp(x, -1.0, 1.0)));
+                }
             }
 
-            return [level, slope, curvature];
+            return basis;
         }
 
         private static double[,] BuildGram(double[][] basis)
         {
-            var gram = new double[FactorDimensionCount, FactorDimensionCount];
-            for (int i = 0; i < FactorDimensionCount; i++)
+            var gram = new double[basis.Length, basis.Length];
+            for (int i = 0; i < basis.Length; i++)
             {
-                for (int j = 0; j < FactorDimensionCount; j++)
+                for (int j = 0; j < basis.Length; j++)
                 {
                     for (int k = 0; k < basis[i].Length; k++)
                     {
@@ -464,22 +519,74 @@ public static class AccuracyRecipeSearch
 
         private static double[,] Invert3x3(double[,] matrix)
         {
-            double a = matrix[0, 0], b = matrix[0, 1], c = matrix[0, 2];
-            double d = matrix[1, 0], e = matrix[1, 1], f = matrix[1, 2];
-            double g = matrix[2, 0], h = matrix[2, 1], i = matrix[2, 2];
-
-            double det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-            if (Math.Abs(det) < 1e-14)
+            int n = matrix.GetLength(0);
+            var augmented = new double[n, 2 * n];
+            for (int row = 0; row < n; row++)
             {
-                throw new InvalidOperationException("Curve factor basis Gram matrix is singular.");
+                for (int col = 0; col < n; col++)
+                {
+                    augmented[row, col] = matrix[row, col];
+                }
+
+                augmented[row, n + row] = 1.0;
             }
 
-            return new[,]
+            for (int pivot = 0; pivot < n; pivot++)
             {
-                { (e * i - f * h) / det, (c * h - b * i) / det, (b * f - c * e) / det },
-                { (f * g - d * i) / det, (a * i - c * g) / det, (c * d - a * f) / det },
-                { (d * h - e * g) / det, (b * g - a * h) / det, (a * e - b * d) / det },
-            };
+                int bestRow = pivot;
+                for (int row = pivot + 1; row < n; row++)
+                {
+                    if (Math.Abs(augmented[row, pivot]) > Math.Abs(augmented[bestRow, pivot]))
+                    {
+                        bestRow = row;
+                    }
+                }
+
+                if (Math.Abs(augmented[bestRow, pivot]) < 1e-14)
+                {
+                    throw new InvalidOperationException("Curve factor basis Gram matrix is singular.");
+                }
+
+                if (bestRow != pivot)
+                {
+                    for (int col = 0; col < 2 * n; col++)
+                    {
+                        (augmented[pivot, col], augmented[bestRow, col]) =
+                            (augmented[bestRow, col], augmented[pivot, col]);
+                    }
+                }
+
+                double scale = augmented[pivot, pivot];
+                for (int col = 0; col < 2 * n; col++)
+                {
+                    augmented[pivot, col] /= scale;
+                }
+
+                for (int row = 0; row < n; row++)
+                {
+                    if (row == pivot)
+                    {
+                        continue;
+                    }
+
+                    double factor = augmented[row, pivot];
+                    for (int col = 0; col < 2 * n; col++)
+                    {
+                        augmented[row, col] -= factor * augmented[pivot, col];
+                    }
+                }
+            }
+
+            var inverse = new double[n, n];
+            for (int row = 0; row < n; row++)
+            {
+                for (int col = 0; col < n; col++)
+                {
+                    inverse[row, col] = augmented[row, n + col];
+                }
+            }
+
+            return inverse;
         }
     }
 }

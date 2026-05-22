@@ -67,6 +67,8 @@ Initial oracle results:
 | Projection oracle, clone max PV rel. error | `4.73%` |
 | Projection oracle, factor-aligned max PV abs. error | `0.000000E+000` |
 | Projection oracle, factor-aligned max PV rel. error | `0.00%` |
+| Five-factor deterministic basis, clone max PV abs. error | `5.291768E+000` |
+| Five-factor deterministic basis, clone max PV rel. error | `4.81%` |
 | 10Y pillar DV01, rate step `1e-4` | `-6.363631E-002` |
 | 10Y pillar DV01, rate step `5e-5` | `-6.363631E-002` |
 | 10Y pillar DV01, rate step `1e-5` | `-6.363632E-002` |
@@ -83,6 +85,11 @@ arbitrary clone validation bank used by the previous phases, while the
 factor-aligned points reconstruct exactly. That means the Phase 10 factor-router
 error floor can be explained before adding more TT complexity: the current
 factor representation is not a faithful clone of arbitrary 60-pillar shocks.
+
+The first richer deterministic basis check does not fix this. A five-factor
+polynomial basis increases the current max clone PV error slightly to `4.81%`.
+That does not prove every richer basis is unhelpful, but it does show that
+adding a few smooth factors blindly is not the missing recipe.
 
 The rate-step derivative diagnostic is stable for the tested 10Y pillar, so the
 initial evidence does not point to rate finite-difference step size as the main

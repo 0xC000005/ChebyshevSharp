@@ -486,6 +486,14 @@ public static class FixedRateBondExample
         output.WriteLine(
             $"  factor max abs {report.ProjectionOracle.MaxFactorAlignedPvAbsoluteError:E6}, " +
             $"factor max rel {report.ProjectionOracle.MaxFactorAlignedPvRelativeError:P2}");
+        foreach (AccuracyProjectionBasisSummary basis in report.ProjectionOracle.AlternativeBases)
+        {
+            output.WriteLine(
+                $"  {basis.Name}: factors {basis.FactorCount}, " +
+                $"clone max abs {basis.MaxClonePvAbsoluteError:E6}, " +
+                $"clone max rel {basis.MaxClonePvRelativeError:P2}");
+        }
+
         output.WriteLine();
         output.WriteLine("Derivative oracle");
         foreach (AccuracyDerivativeStepDiagnostic diagnostic in report.DerivativeOracle.RateStepDiagnostics)

@@ -64,8 +64,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
 
 ## Task 4: Add Stronger Candidate Recipes
 
-- [ ] Implement a richer deterministic factor tensor candidate with at least
-  level, slope, curvature, belly hump, and long-end hump factors.
+- [x] Implement a richer deterministic factor projection candidate with five
+  smooth polynomial factors before building another tensor candidate.
 - [ ] Implement a schedule-aware active-pillar TT candidate that preserves
   `Eval(double[] fullPoint)` and internally selects pillars around cashflow
   support for the current maturity piece.

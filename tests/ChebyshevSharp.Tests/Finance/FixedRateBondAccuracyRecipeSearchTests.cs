@@ -35,6 +35,21 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
     }
 
     [Fact]
+    public void Projection_oracle_compares_richer_deterministic_curve_basis()
+    {
+        AccuracyRecipeSearchReport report = Report.Value;
+
+        AccuracyProjectionBasisSummary richer = Assert.Single(
+            report.ProjectionOracle.AlternativeBases,
+            basis => basis.Name == "Five-factor deterministic curve basis");
+
+        Assert.Equal(5, richer.FactorCount);
+        Assert.True(double.IsFinite(richer.MaxClonePvAbsoluteError));
+        Assert.True(double.IsFinite(richer.MaxClonePvRelativeError));
+        Assert.True(richer.MaxClonePvRelativeError > 1e-6);
+    }
+
+    [Fact]
     public void Derivative_oracle_records_step_sensitivity_and_post_maturity_support()
     {
         AccuracyRecipeSearchReport report = Report.Value;
