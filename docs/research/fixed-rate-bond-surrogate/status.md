@@ -42,7 +42,7 @@ Use generic public terms:
 | 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
 | 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
 | 10. Schedule-aware high-dimensional router | Complete | PR #201 merged; router remains example-local and does not justify a generic kink-detection API yet |
-| 11. Tutorial and documentation | Planned | Public tutorial and case-study documentation ready for one coherent PR |
+| 11. Tutorial and documentation | In progress | Public tutorial and case-study documentation ready for one coherent PR |
 | 12. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
@@ -185,6 +185,8 @@ Start Phase 11 on `phase11-fixed-rate-bond-tutorial`: turn the fixed-rate bond r
 - Required guardrail: avoid proprietary names and avoid language implying a universal replacement for arbitrary fixed-income products.
 - Required evidence reuse: Phase 5 baseline assumptions, Phase 6 naive global TT/Slider failures, Phase 7 structured alternatives, Phase 8 analytic coupon identity, Phase 9 schedule-special-point evidence, and Phase 10 router decision.
 - Planned output: a documentation case study, README/example links if needed, and a concise tracking-issue update before opening one coherent Phase 11 PR.
+- Current implementation: added the public tutorial page at `docs/docs/fixed-rate-bond-surrogate.md`, linked it from the user-guide TOC and examples page, and kept the detailed evidence in the phase reports.
+- Verification so far: CLI flags quoted by the tutorial match `examples/FixedRateBondSurrogate/Program.cs`; public source links checked with `curl` returned HTTP 200 for the Federal Reserve nominal curve page/CSV, QLNet `FixedRateBond`, Chebfun guide/edge-detection pages, OpenGamma fixed-coupon-bond/pricer pages, and QuantLib Guide vanilla-bonds page; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed; fixed-rate bond Release test slice passed 78 tests with 0 failures.
 
 ## Phase 5 Notes
 

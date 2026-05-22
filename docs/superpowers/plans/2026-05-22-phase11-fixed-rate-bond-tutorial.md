@@ -27,35 +27,35 @@ identity, and schedule-aware routing limits.
 
 ## Task 1: Inventory Existing Public Surfaces
 
-- [ ] Identify the current documentation pages that mention the fixed-rate bond
+- [x] Identify the current documentation pages that mention the fixed-rate bond
       example.
-- [ ] Identify the best destination for a tutorial page and the minimum links
+- [x] Identify the best destination for a tutorial page and the minimum links
       needed from examples/research pages.
-- [ ] Confirm no proprietary wording exists in the pages to be edited.
+- [x] Confirm no proprietary wording exists in the pages to be edited.
 
 ## Task 2: Draft Tutorial Narrative
 
-- [ ] Write the reference-problem section with QLNet and pinned Federal Reserve
+- [x] Write the reference-problem section with QLNet and pinned Federal Reserve
       fixture assumptions.
-- [ ] Write the naive global surrogate section using Phase 6 evidence.
-- [ ] Write the common-practice alternatives section using Phase 7 evidence.
-- [ ] Write the coupon-linearity and maturity-schedule sections using Phase 8
+- [x] Write the naive global surrogate section using Phase 6 evidence.
+- [x] Write the common-practice alternatives section using Phase 7 evidence.
+- [x] Write the coupon-linearity and maturity-schedule sections using Phase 8
       and Phase 9 evidence.
-- [ ] Write the router outcome and practical conclusion using Phase 10 evidence.
+- [x] Write the router outcome and practical conclusion using Phase 10 evidence.
 
 ## Task 3: Verify Claims and Links
 
-- [ ] Check every command in the tutorial against the current example CLI.
-- [ ] Check every numerical claim against the committed phase reports.
-- [ ] Check every public source link used by the tutorial.
-- [ ] Keep citations as source references only; do not teach citation style.
+- [x] Check every command in the tutorial against the current example CLI.
+- [x] Check every numerical claim against the committed phase reports.
+- [x] Check every public source link used by the tutorial.
+- [x] Keep citations as source references only; do not teach citation style.
 
 ## Task 4: Documentation Build and Local Checks
 
-- [ ] Run `docfx docs/docfx.json`.
-- [ ] Run `git diff --check`.
-- [ ] Run any focused markdown/link checks already present in the repo.
-- [ ] Update `status.md` with verification commands and results.
+- [x] Run `docfx docs/docfx.json`.
+- [x] Run `git diff --check`.
+- [x] Run any focused markdown/link checks already present in the repo.
+- [x] Update `status.md` with verification commands and results.
 
 ## Task 5: Tracking and PR
 

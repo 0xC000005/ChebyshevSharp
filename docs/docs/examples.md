@@ -83,6 +83,10 @@ fixture:
    price, clean price, accrued amount, NPV, and cashflow count.
 4. Keep the direct zero-rate curve separate from later Chebyshev surrogates.
 
+For the full modelling narrative, including the naive global TT/Slider failure
+evidence and the structured follow-up experiments, see the
+[Fixed-Rate Bond Surrogate Case Study](fixed-rate-bond-surrogate.md).
+
 ### QLNet-backed reference pricer
 
 The baseline is QLNet, not an in-repository bond-pricing implementation. The
