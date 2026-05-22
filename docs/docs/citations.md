@@ -61,8 +61,10 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - NuGet Gallery. `QuantLib` package metadata and thread-safety notes for the C# wrapper. [QuantLib package](https://www.nuget.org/packages/QuantLib/).
 - OpenGamma Strata API. `FixedCouponBond` definition describing fixed periodic coupon payments and final nominal payment. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/product/bond/FixedCouponBond.html).
 - OpenGamma Strata API. `DiscountingFixedCouponBondProductPricer` present-value and sensitivity methods for fixed coupon bonds. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/pricer/bond/DiscountingFixedCouponBondProductPricer.html).
+- OpenGamma Strata API. `FixedCouponBondTradeCalculations` present value and PV01 entry points for fixed coupon bond trades. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/measure/bond/FixedCouponBondTradeCalculations.html).
 - OpenGamma. "Strata Analytics: Curve Calibration & Bucketed PV01 Calculation." Public terminology for bucketed PV01, bucketed delta, rate sensitivities, and key-rate duration. [Article](https://opengamma.com/strata-and-multi-curve-calibration-and-bucketed-pv01/).
 - OpenGamma Strata API. `pv01CalibratedBucketed` and `pv01MarketQuoteBucketed` definitions distinguishing calibrated-curve-node and market-quote one-basis-point sensitivity. [API docs](https://strata.opengamma.io/apidocs/com/opengamma/strata/measure/dsf/DsfTradeCalculations.html).
+- QuantLib Guide. "Cash-flow analysis." Examples of inspecting bond cashflows, coupon amounts, accrual dates, and payment dates. [Guide page](https://www.quantlibguide.com/Cash-flow%20analysis.html).
 
 ## Public Market Data Sources
 

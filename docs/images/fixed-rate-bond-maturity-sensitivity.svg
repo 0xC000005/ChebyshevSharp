@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="610" viewBox="0 0 980 610" role="img" aria-labelledby="title desc">
+<title id="title">Fixed-rate bond maturity sensitivity near a semiannual schedule boundary</title>
+<desc id="desc">Dirty price and central finite-difference maturity sensitivity for maturities within seven days of 2039-11-15.</desc>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="78" y="34" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#172033">Maturity schedule boundary evidence</text>
+<text x="78" y="56" font-family="Arial, sans-serif" font-size="13" fill="#526071">Boundary 2039-11-15; valuation date fixed; QLNet-backed baseline; direct zero-rate curve fixture.</text>
+<rect x="78" y="66" width="868" height="190" fill="#f8fafc" stroke="#d5dbe5"/>
+<text x="20" y="161.00" font-family="Arial, sans-serif" font-size="13" fill="#3a4658" transform="rotate(-90 20 161.00)">Dirty PV</text>
+<line x1="78.00" y1="66" x2="78.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="71.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-7</text>
+<line x1="202.00" y1="66" x2="202.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="195.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-5</text>
+<line x1="326.00" y1="66" x2="326.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="319.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-3</text>
+<line x1="450.00" y1="66" x2="450.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="443.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-1</text>
+<line x1="574.00" y1="66" x2="574.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="567.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">1</text>
+<line x1="698.00" y1="66" x2="698.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="691.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">3</text>
+<line x1="822.00" y1="66" x2="822.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="815.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">5</text>
+<line x1="946.00" y1="66" x2="946.00" y2="256" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="939.00" y="274" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">7</text>
+<line x1="78" y1="256.00" x2="946" y2="256.00" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="260.00" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">96.223</text>
+<line x1="78" y1="208.50" x2="946" y2="208.50" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="212.50" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">96.229</text>
+<line x1="78" y1="161.00" x2="946" y2="161.00" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="165.00" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">96.236</text>
+<line x1="78" y1="113.50" x2="946" y2="113.50" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="117.50" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">96.243</text>
+<line x1="78" y1="66.00" x2="946" y2="66.00" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="70.00" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">96.249</text>
+<line x1="78" y1="256" x2="946" y2="256" stroke="#3a4658" stroke-width="1.2"/>
+<line x1="78" y1="66" x2="78" y2="256" stroke="#3a4658" stroke-width="1.2"/>
+<polyline points="78.00,79.10 140.00,91.94 202.00,104.67 264.00,156.78 326.00,156.22 388.00,155.84 450.00,155.41 512.00,168.10 574.00,175.42 636.00,187.78 698.00,200.17 760.00,236.49 822.00,234.33 884.00,232.24 946.00,242.90" fill="none" stroke="#2563eb" stroke-width="2.7" stroke-linejoin="round"/>
+<line x1="512.00" y1="66" x2="512.00" y2="256" stroke="#111827" stroke-width="1.2" stroke-dasharray="5 5"/>
+<rect x="78" y="320" width="868" height="190" fill="#f8fafc" stroke="#d5dbe5"/>
+<text x="20" y="415.00" font-family="Arial, sans-serif" font-size="13" fill="#3a4658" transform="rotate(-90 20 415.00)">Maturity sensitivity dPV/dT</text>
+<line x1="78.00" y1="320" x2="78.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="71.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-7</text>
+<line x1="202.00" y1="320" x2="202.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="195.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-5</text>
+<line x1="326.00" y1="320" x2="326.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="319.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-3</text>
+<line x1="450.00" y1="320" x2="450.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="443.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-1</text>
+<line x1="574.00" y1="320" x2="574.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="567.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">1</text>
+<line x1="698.00" y1="320" x2="698.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="691.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">3</text>
+<line x1="822.00" y1="320" x2="822.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="815.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">5</text>
+<line x1="946.00" y1="320" x2="946.00" y2="510" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="939.00" y="528" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">7</text>
+<line x1="78" y1="510.00" x2="946" y2="510.00" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="514.00" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-1.912</text>
+<line x1="78" y1="462.50" x2="946" y2="462.50" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="466.50" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-1.341</text>
+<line x1="78" y1="415.00" x2="946" y2="415.00" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="419.00" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-0.770</text>
+<line x1="78" y1="367.50" x2="946" y2="367.50" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="371.50" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">-0.199</text>
+<line x1="78" y1="320.00" x2="946" y2="320.00" stroke="#d5dbe5" stroke-width="0.8"/>
+<text x="12" y="324.00" font-family="Arial, sans-serif" font-size="11" fill="#3a4658">0.372</text>
+<line x1="78" y1="510" x2="946" y2="510" stroke="#3a4658" stroke-width="1.2"/>
+<line x1="78" y1="320" x2="78" y2="510" stroke="#3a4658" stroke-width="1.2"/>
+<polyline points="140.00,405.00 202.00,488.08 264.00,459.98 326.00,348.93 388.00,349.20 450.00,376.86 512.00,393.25 574.00,392.56 636.00,403.27 698.00,453.96 760.00,423.20 822.00,341.92 884.00,369.03" fill="none" stroke="#dc2626" stroke-width="2.7" stroke-linejoin="round"/>
+<line x1="512.00" y1="320" x2="512.00" y2="510" stroke="#111827" stroke-width="1.2" stroke-dasharray="5 5"/>
+<circle cx="264.00" cy="459.98" r="5" fill="#dc2626" stroke="#ffffff" stroke-width="1.5"/>
+<text x="276.00" y="449.98" font-family="Arial, sans-serif" font-size="12" fill="#7f1d1d">largest local second diff 7.339e-03</text>
+<text x="432.00" y="582" font-family="Arial, sans-serif" font-size="13" fill="#374151">offset in calendar days from semiannual boundary</text>
+<text x="78" y="600" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">Generated by tools/PlotFixedRateBondEvidence/plot_maturity_sensitivity.py from --naive-maturity-scan-csv.</text>
+</svg>

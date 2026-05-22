@@ -22,6 +22,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --analytic-coupon-decomposition
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --accuracy-recipe-search
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
@@ -182,11 +183,11 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 Read this mode as an evidence generator, not a finished pricing architecture.
 The factor tensor performs well on factor-aligned scenarios, while arbitrary
 60-pillar bump vectors still expose projection error. The bucketed variants
-test the Phase 6 maturity-smoothness hypothesis, but they do not by themselves
-make the mixed sensitivities reliable.
+test whether maturity splitting helps, but they do not by themselves make the
+mixed sensitivities reliable.
 
 Run the analytic coupon decomposition mode to test the fixed-rate bond identity
-used by the next modelling phase:
+used by later candidate models:
 
 ```text
 PV(curve, coupon, T) = PrincipalPV(curve, T) + coupon * AnnuityPV(curve, T)
@@ -225,28 +226,39 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 ```
 
 Read this as a router-design benchmark. The current explicit router reproduces
-the Phase 9 schedule-aware model and clarifies dispatch semantics, but it does
-not yet remove the residual sensitivity errors. The result supports further
-piece-model research before promoting a reusable ChebyshevSharp router API.
+the schedule-aware special-point benchmark and clarifies dispatch semantics, but
+it does not yet remove the residual sensitivity errors. The result supports
+further piece-model research before promoting a reusable ChebyshevSharp router
+API.
 
-To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
-run:
+Run the accuracy recipe search mode to compare the remaining candidate recipes
+and the schedule-resolved cashflow-kernel proof of concept:
 
 ```bash
-python tools/PlotFixedRateBondEvidence/plot_phase6_maturity.py
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --accuracy-recipe-search
+```
+
+This mode reports the first full-wrapper proof of concept that reaches
+near-roundoff PV error for the supported regular fixed-rate bullet family. It is
+formula-aware: it resolves cashflows by maturity, keeps coupon and notional
+algebraic, and uses local one- or two-dimensional Chebyshev kernels only for
+smooth discount factors.
+
+To regenerate the maturity-sensitivity plot used by the case study, run:
+
+```bash
+python tools/PlotFixedRateBondEvidence/plot_maturity_sensitivity.py
 ```
 
 The script invokes the example's `--naive-maturity-scan-csv` mode, writes the
-deterministic CSV under `docs/research/fixed-rate-bond-surrogate/data/`, and
-renders an SVG under `docs/research/fixed-rate-bond-surrogate/images/`.
+deterministic CSV artifact, and renders the SVG used by the public case study.
 
 This example is intentionally restricted. It is a baseline for later surrogate
 validation, not a general fixed-income library. It does not download market data
 at runtime; the optional refresh script under
 `tools/RefreshFixedRateBondMarketData/` regenerates the pinned JSON fixtures
-from the Federal Reserve public CSV. The research notes in
-`docs/research/fixed-rate-bond-surrogate/` track formulas, data provenance,
-citations, source limitations, and validation results as the workflow progresses.
+from the Federal Reserve public CSV. The public case study page tracks formulas,
+data provenance, citations, source limitations, and validation results.
 
 ## When to run them
 
