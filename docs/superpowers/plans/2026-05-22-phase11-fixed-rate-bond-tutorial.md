@@ -59,8 +59,8 @@ identity, and schedule-aware routing limits.
 
 ## Task 5: Tracking and PR
 
-- [ ] Comment on issue #191 with the Phase 11 branch and scope.
-- [ ] Open one coherent Phase 11 PR after local verification passes.
+- [x] Comment on issue #191 with the Phase 11 branch and scope.
+- [x] Open one coherent Phase 11 PR after local verification passes.
 - [ ] Keep all review fixes in that PR.
 - [ ] Do not start Phase 12 until the Phase 11 PR is merged or explicitly
       closed without merge.
