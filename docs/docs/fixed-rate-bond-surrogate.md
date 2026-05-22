@@ -12,8 +12,8 @@ The short answer is: not by blindly fitting one global high-dimensional tensor.
 For the supported product family, the first accurate clone resolves the bond
 cashflows first, keeps coupon and notional algebraic, and uses Chebyshev
 kernels only for the smooth discount-factor pieces. This page focuses on
-correctness and reproducibility; the current speed numbers are diagnostic, not
-the final performance target.
+correctness and reproducibility first, then reports the first BenchmarkDotNet
+speed evidence for scalar price, batch price, and all-pillar risk.
 
 The example is public and reproducible. It uses QLNet as the reference pricer,
 a pinned Federal Reserve nominal-yield-curve fixture, and a regular fixed-rate
@@ -101,17 +101,21 @@ reported table entry is the model's error in that cross sensitivity.
 
 ## How speed is treated in this article
 
-The main trial tables are accuracy-first. They include build evaluations where
-available because build cost matters, but they do not yet present a normalized
-per-trial latency benchmark. The current `2.2x` speedup for the final candidate
-is a measured end-to-end harness comparison against the QLNet reference path
-after schedules and kernels are cached. It should not be read as the expected
-production ceiling for a Chebyshev replacement.
+The main trial tables are accuracy-first because a fast but wrong risk clone is
+not useful. The final section adds a BenchmarkDotNet speed check with managed
+allocation columns. Those numbers are still diagnostic, but they are stronger
+than a hand-written stopwatch loop.
 
-The intended performance question is separate: after the clone is mathematically
-faithful, benchmark an optimized hot path with allocation control, batch
-evaluation, and a comparable reference-pricer baseline. That is where a
-10x to 100x target should be evaluated.
+The speed comparison includes three baselines:
+
+1. QLNet as the trusted reference-pricer path.
+2. The schedule-resolved Chebyshev kernel clone.
+3. An exact cached cashflow control for one fixed schedule.
+
+The third baseline is important. For this direct-zero fixed-rate bond, once the
+schedule is known, exact cashflow summation is very cheap. Chebyshev should not
+be judged only against a high-overhead reference adapter if a specialized exact
+cashflow pricer is available.
 
 ## The baseline formula
 
@@ -148,6 +152,59 @@ $$
 This local interpolation fact is the key to the final method: each individual
 discount factor depends on at most two curve-bump coordinates.
 
+### What dirty price does not smooth
+
+It is natural to ask whether dirty price removes the maturity problem. Dirty
+price helps with a different problem: for a fixed bond observed between coupon
+dates, it includes accrued interest at the settlement date. In this case study
+the valuation date, settlement date, and effective date are the same, so accrued
+interest is zero in the baseline request. More importantly, the maturity
+coordinate is not moving the valuation date through time. It is changing the
+bond being built.
+
+The implementation maps the real maturity coordinate to a maturity date:
+
+$$
+d(T)=\operatorname{round}(365.25T),
+\qquad
+M(T)=\mathrm{valuationDate}+d(T)\text{ days}.
+$$
+
+The pricer then generates a coupon schedule from that date. The evaluation
+formula is therefore
+
+$$
+Q(x,c,T)
+  =
+  F\!\left(\mathcal{C}(M(T)),x,c\right),
+$$
+
+where $\mathcal{C}(M)$ is the generated set of future coupon and redemption
+cashflows. Both $d(T)$ and $\mathcal{C}(M(T))$ are discrete objects. When
+$T$ crosses a date-rounding threshold, a business-day adjustment, or a
+semiannual schedule boundary, the cashflow list can change:
+
+$$
+\lim_{T \downarrow T_*} Q(x,c,T)
+-
+\lim_{T \uparrow T_*} Q(x,c,T)
+=
+\frac{100}{N_0}
+\left[
+  \sum_{k\in \mathcal{C}_+}
+    \mathrm{CF}_k D_x(t_k)
+  -
+  \sum_{k\in \mathcal{C}_-}
+    \mathrm{CF}_k D_x(t_k)
+\right].
+$$
+
+If the left and right schedules differ by an entering coupon or a different
+stub period, this difference is generally not forced to be zero. Even when the
+price happens to be nearly continuous, the slope can still jump because the
+left and right formulas are different. That is the discontinuity or kink that a
+global smooth Chebyshev polynomial is trying to approximate.
+
 ## Why a dense tensor is impossible
 
 A full Chebyshev tensor over 62 scalar coordinates is not a realistic starting
@@ -171,9 +228,15 @@ dense grid.
 | Analytic coupon decomposition | Use fixed-rate bond linearity in $c$. | Coupon should not be a nonlinear tensor axis if cashflows are fixed. | Identity is exact, but maturity remains hard. |
 | Schedule and automatic split points | Split maturity into smoother pieces. | Chebyshev methods work best on smooth pieces. | Schedule-aware splits help; automatic split detection alone is not enough. |
 | Active-pillar and fixed-trade controls | Remove inactive post-maturity pillars or fix the trade. | Risk systems often price known trades under curve scenarios. | Fixed-trade curve-only TT works well; parametric new-bond clone still needs more structure. |
-| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; performance optimization remains separate work. |
+| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; scalar speedup is useful, and all-pillar risk speedup is large. |
 
 ## Trial 1: one global model
+
+The first trial intentionally uses the most naive mental model: "take the
+existing pricer as a black box and fit one high-dimensional surrogate to it."
+This is the simplest story to sell, but it asks the Tensor Train or Slider to
+discover every financial structure from samples alone: active curve pillars,
+coupon linearity, schedule changes, and mixed sensitivities.
 
 The naive experiment directly fits the full wrapper:
 
@@ -230,6 +293,9 @@ and cross sensitivities that it does not resolve.
 Coupon is smooth for this supported product. Maturity is different because it
 can regenerate the schedule. A one-day change can alter the number of future
 cashflows, the final accrual period, or the business-day-adjusted payment date.
+This is not a clean-price versus dirty-price artifact. It is a product
+construction artifact: changing maturity changes the schedule that defines the
+future cashflows.
 
 The harness scans one-day windows around semiannual maturity regions. Dirty PV
 can look visually mild while the finite-difference slope jumps:
@@ -249,6 +315,12 @@ continuous enough to look benign, but slope and cross sensitivities are poor
 targets for one global polynomial surrogate.
 
 ## Trial 2: common compression and buckets
+
+The second trial asks a practical question: maybe the global fit failed because
+we gave it too many coordinates in the wrong form. In finance, curve moves are
+often summarized by level, slope, and curvature factors, and nonsmooth maturity
+behavior is often handled by splitting the domain into pieces. This trial tries
+those common ideas while keeping the public input contract unchanged.
 
 The next trial keeps the same public wrapper but tries common modelling fixes:
 a stronger global TT, grouped Slider partitions, low-dimensional curve factors,
@@ -296,11 +368,17 @@ function whose public input is every curve pillar.
 
 ## Trial 3: coupon is algebraic
 
+The third trial separates a real difficulty from a fake one. Coupon looks like
+another input coordinate, but for this supported fixed-rate bullet bond it only
+scales already-scheduled coupon cashflows. It does not change the payment dates,
+the discount curve, or the principal redemption. That means the pricer has an
+intercept plus a coupon-scaled annuity term.
+
 For a regular fixed-rate bullet bond with a fixed schedule, coupon cashflows are
 linear in the coupon rate:
 
 $$
-\mathrm{CF}_k(c,T) = R_k(T) + c A_k(T),
+\mathrm{CF}_k(c,T) = R_k(T) + c M_k(T),
 $$
 
 so
@@ -315,8 +393,14 @@ where
 $$
 P(x,T) = \frac{100}{N_0}\sum_k R_k(T)D_x(t_k),
 \qquad
-A(x,T) = \frac{100}{N_0}\sum_k A_k(T)D_x(t_k).
+A(x,T) = \frac{100}{N_0}\sum_k M_k(T)D_x(t_k).
 $$
+
+Here $R_k(T)$ is any redemption or principal amount on payment $k$, and
+$M_k(T)$ is the coupon cashflow multiplier per unit coupon rate. For a normal
+coupon period, $M_k(T)$ is notional times the accrual fraction. For a principal
+redemption, $M_k(T)=0$. This is exactly what the example extracts by pricing
+the resolved schedule with a unit coupon.
 
 Run the check:
 
@@ -339,6 +423,12 @@ decomposed TT still reports `456.94%` max maturity-sensitivity relative error
 in the benchmark.
 
 ## Trial 4: schedule splits and automatic split detection
+
+The fourth trial follows the Chebyshev intuition directly. A Chebyshev
+polynomial is excellent on a smooth interval, but it struggles when one
+polynomial has to cover multiple regimes. Since maturity changes the schedule,
+we try routing maturity into smaller pieces so each local model sees a simpler
+function.
 
 Since Chebyshev interpolation performs best on smooth intervals, the next trial
 tests whether maturity should be routed into smoother pieces:
@@ -378,6 +468,12 @@ validation.
 
 ## Trial 5: active pillars and fixed trades
 
+The fifth trial asks whether we are wasting approximation budget on curve
+coordinates that cannot affect the bond. A 10-year bond should not have direct
+exposure to a far 30-year pillar under this direct-zero interpolation setup. If
+the wrapper must accept all 60 pillars, the model can still route internally and
+ignore pillars that are structurally inactive for the resolved schedule.
+
 The next diagnostic asks whether the remaining error comes from modelling too
 many irrelevant curve coordinates. For a maturity $T$, pillars far beyond the
 last relevant cashflow should not affect price under this direct-zero setup.
@@ -402,11 +498,13 @@ relative error. That is a good recipe for a known trade under repeated curve
 scenarios. It is not the same problem as a parametric new-bond surface over
 coupon and maturity.
 
-## First accurate clone: resolve cashflows first
+## Trial 6: resolve cashflows first
 
-The successful method changes the modelling premise. It keeps the same
-62-coordinate public wrapper, but it stops asking a global TT to rediscover the
-bond pricing formula.
+The sixth trial changes the modelling premise. Instead of asking a global TT to
+rediscover the bond formula, it uses the formula as the outer structure and
+uses Chebyshev only where interpolation is actually needed. This is still a
+surrogate behind the same 62-coordinate wrapper, but it is no longer a blind
+black-box clone.
 
 The implementation is
 `examples/FixedRateBondSurrogate/ScheduleResolvedCashflowChebyshevBondPricer.cs`.
@@ -430,9 +528,15 @@ $$
 \widehat{Q}(x,c,T)
   = \frac{100}{N_0}
     \sum_{k \in \mathcal{C}(T)}
-    \left(R_k(T) + c A_k(T)\right)
+    \left(R_k(T) + c M_k(T)\right)
     K_k(x_j,x_{j+1}).
 $$
+
+The notation mirrors the coupon-linearity check above. $R_k(T)$ is principal or
+redemption cashflow, and $M_k(T)$ is the coupon amount per unit coupon rate.
+Coupon is algebraic because it multiplies $M_k(T)$ after the schedule is known.
+It does not need a Chebyshev basis to learn a curve: doubling the coupon doubles
+the coupon part of every cashflow.
 
 This formula explains why the method captures the important cross sensitivities.
 For example,
@@ -441,7 +545,7 @@ $$
 \frac{\partial^2 \widehat{Q}}{\partial x_j\,\partial c}
   = \frac{100}{N_0}
     \sum_{k \in \mathcal{C}(T)}
-    A_k(T)\frac{\partial K_k}{\partial x_j}.
+    M_k(T)\frac{\partial K_k}{\partial x_j}.
 $$
 
 Maturity is no longer treated as a single globally smooth polynomial axis. It
@@ -461,7 +565,10 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 | Max internal kernel dimension | 2 |
 | Validation points | 99 |
 | Build evaluations | 39,699 |
-| Measured evaluation speedup, current harness | 2.2x |
+| Measured scalar evaluation speedup, current harness | 9.1x |
+| BenchmarkDotNet scalar speedup vs QLNet | 7.6x |
+| BenchmarkDotNet all-pillar risk speedup vs finite-difference QLNet | 850.4x |
+| BenchmarkDotNet batch-32 scalar speedup vs QLNet | 7.1x |
 | Max PV absolute error | `1.348184E-010` |
 | Max all-pillar DV01 absolute error | `4.263256E-010` |
 | Max 10Y rate-coupon cross-sensitivity absolute error | `2.842171E-006` |
@@ -476,6 +583,15 @@ coupon-rate cross sensitivities through the cashflow formula, rejects out-of-dom
 curve bumps instead of silently clamping, and avoids modelling inactive
 post-maturity curve pillars.
 
+The speed result is mixed but useful. Scalar price is several times faster than
+the QLNet reference path, and the all-pillar risk snapshot is hundreds of times
+faster than finite-difference QLNet because it computes the curve gradient and
+rate-coupon mixed terms analytically in one pass. However, the exact cached
+cashflow control prices a fixed resolved schedule faster than the Chebyshev
+kernel. That means this case study supports a formula-aware Chebyshev clone for
+public demonstration and fast risk snapshots, while a production scalar
+fixed-bond pricer should still compare against an exact cached cashflow engine.
+
 ## Why this method is accurate
 
 The proof is a decomposition argument under the stated conventions.
@@ -484,8 +600,12 @@ First, the supported product's dirty price is a sum of future discounted
 cashflows. Second, each cashflow amount is affine in coupon:
 
 $$
-\mathrm{CF}_k(c,T)=R_k(T)+cA_k(T).
+\mathrm{CF}_k(c,T)=R_k(T)+cM_k(T).
 $$
+
+Here $M_k(T)$ is the coupon multiplier per unit coupon rate: for a coupon
+cashflow it is notional times accrual fraction, and for a principal-only
+cashflow it is zero.
 
 Third, under linear zero-rate interpolation, each discount factor depends on at
 most two adjacent curve-bump coordinates. Therefore every term in the price sum
@@ -494,7 +614,7 @@ is low-dimensional once the schedule has been resolved:
 $$
 \mathrm{CF}_k(c,T)D_x(t_k)
   =
-  \left(R_k(T)+cA_k(T)\right)
+  \left(R_k(T)+cM_k(T)\right)
   D_k(x_j,x_{j+1}).
 $$
 
@@ -557,6 +677,25 @@ Use the case study as a modelling workflow:
 6. Use factor compression only when the input contract is factor scenarios.
 7. Treat maturity as schedule-sensitive for parametric bond surfaces.
 8. Use formula-aware decomposition when the product payoff structure gives one.
+
+## Limitations of this write-up
+
+This page is now a technical case study rather than a short getting-started
+tutorial. That is intentional, but it has tradeoffs:
+
+1. The final method is formula-aware. It demonstrates how to build a faithful
+   supported-family clone, not how to replace arbitrary bond products with one
+   blind Chebyshev tensor.
+2. The speed evidence is a short BenchmarkDotNet run. It is good enough to guide
+   the next engineering step, but a release-quality performance claim should use
+   longer runs, more machines, and more scenario sets.
+3. The exact cached cashflow control is faster than the Chebyshev scalar
+   kernel. That weakens the case for Chebyshev as a scalar fixed-bond pricer,
+   but strengthens the engineering conclusion: always compare against the best
+   exact baseline you can build.
+4. Maturity is still treated as a schedule-routing coordinate. The page does
+   not prove a generic automatic kink detector; it shows why schedule-aware
+   routing is needed for this example.
 
 ## Sources
 

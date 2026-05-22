@@ -2,13 +2,19 @@ using System.Diagnostics;
 
 namespace FixedRateBondSurrogate;
 
+public sealed record ScheduleResolvedRiskResult(
+    double DirtyPrice,
+    double[] CurveBumpGradient,
+    double CouponDerivative,
+    double[] RateCouponMixed);
+
 public sealed class ScheduleResolvedCashflowChebyshevBondPricer
 {
     public const int CurveBumpDimensionCount = 60;
     public const int PublicInputDimensionCount = CurveBumpDimensionCount + 2;
+    public const int CouponDimension = CurveBumpDimensionCount;
+    public const int MaturityDimension = CurveBumpDimensionCount + 1;
 
-    private const int CouponDimension = CurveBumpDimensionCount;
-    private const int MaturityDimension = CurveBumpDimensionCount + 1;
     private const int DiscountKernelNodes = 9;
     private const double CurveBumpDomainLo = -150.0;
     private const double CurveBumpDomainHi = 150.0;
@@ -53,6 +59,11 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
     {
         ValidateFullPoint(fullPoint);
 
+        return EvalUnchecked(fullPoint);
+    }
+
+    public double EvalUnchecked(double[] fullPoint)
+    {
         DateTime maturityDate = MaturityDateFromPoint(fullPoint);
         CashflowTemplate template = GetTemplate(maturityDate);
         double coupon = fullPoint[CouponDimension];
@@ -60,12 +71,87 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
 
         foreach (CashflowComponent component in template.Components)
         {
-            DiscountKernel kernel = GetDiscountKernel(component.PaymentDate);
             double amount = component.PrincipalAmount + coupon * component.CouponMultiplier;
-            pv += amount * kernel.Eval(fullPoint);
+            pv += amount * component.Kernel.Eval(fullPoint);
         }
 
         return pv * 100.0 / _baseRequest.Notional;
+    }
+
+    public ScheduleResolvedRiskResult EvalRisk(double[] fullPoint)
+    {
+        var curveBumpGradient = new double[CurveBumpDimensionCount];
+        var rateCouponMixed = new double[CurveBumpDimensionCount];
+        double dirtyPrice = EvalRisk(fullPoint, curveBumpGradient, rateCouponMixed, out double couponDerivative);
+
+        return new ScheduleResolvedRiskResult(
+            dirtyPrice,
+            curveBumpGradient,
+            couponDerivative,
+            rateCouponMixed);
+    }
+
+    public double EvalRisk(
+        double[] fullPoint,
+        Span<double> curveBumpGradient,
+        Span<double> rateCouponMixed,
+        out double couponDerivative)
+    {
+        ValidateFullPoint(fullPoint);
+        ValidateRiskBuffers(curveBumpGradient, rateCouponMixed);
+
+        return EvalRiskUnchecked(fullPoint, curveBumpGradient, rateCouponMixed, out couponDerivative);
+    }
+
+    public double EvalRiskUnchecked(
+        double[] fullPoint,
+        Span<double> curveBumpGradient,
+        Span<double> rateCouponMixed,
+        out double couponDerivative)
+    {
+        ValidateRiskBuffers(curveBumpGradient, rateCouponMixed);
+
+        DateTime maturityDate = MaturityDateFromPoint(fullPoint);
+        CashflowTemplate template = GetTemplate(maturityDate);
+        double coupon = fullPoint[CouponDimension];
+        double pv = 0.0;
+        couponDerivative = 0.0;
+        curveBumpGradient[..CurveBumpDimensionCount].Clear();
+        rateCouponMixed[..CurveBumpDimensionCount].Clear();
+        Span<int> localDimensions = stackalloc int[2];
+        Span<double> localDerivatives = stackalloc double[2];
+
+        foreach (CashflowComponent component in template.Components)
+        {
+            double amount = component.PrincipalAmount + coupon * component.CouponMultiplier;
+            component.Kernel.EvalWithDerivatives(
+                fullPoint,
+                localDimensions,
+                localDerivatives,
+                out double discount,
+                out int derivativeCount);
+
+            pv += amount * discount;
+            couponDerivative += component.CouponMultiplier * discount;
+
+            for (int i = 0; i < derivativeCount; i++)
+            {
+                int dimension = localDimensions[i];
+                double discountDerivative = localDerivatives[i];
+                curveBumpGradient[dimension] += amount * discountDerivative;
+                rateCouponMixed[dimension] += component.CouponMultiplier * discountDerivative;
+            }
+        }
+
+        double scale = 100.0 / _baseRequest.Notional;
+        for (int i = 0; i < CurveBumpDimensionCount; i++)
+        {
+            curveBumpGradient[i] *= scale;
+            rateCouponMixed[i] *= scale;
+        }
+
+        couponDerivative *= scale;
+        return pv * scale;
     }
 
     private double[] ToFullPoint(FixedRateBondRequest request)
@@ -156,6 +242,25 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
         }
     }
 
+    private static void ValidateRiskBuffers(
+        Span<double> curveBumpGradient,
+        Span<double> rateCouponMixed)
+    {
+        if (curveBumpGradient.Length < CurveBumpDimensionCount)
+        {
+            throw new ArgumentException(
+                $"Curve-gradient buffer must contain at least {CurveBumpDimensionCount} entries.",
+                nameof(curveBumpGradient));
+        }
+
+        if (rateCouponMixed.Length < CurveBumpDimensionCount)
+        {
+            throw new ArgumentException(
+                $"Rate-coupon mixed buffer must contain at least {CurveBumpDimensionCount} entries.",
+                nameof(rateCouponMixed));
+        }
+    }
+
     private CashflowTemplate GetTemplate(DateTime maturityDate)
     {
         if (_scheduleCache.TryGetValue(maturityDate, out CashflowTemplate? template))
@@ -174,7 +279,8 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
             .Select(cashflow => new CashflowComponent(
                 cashflow.PaymentDate.Date,
                 CouponMultiplier: cashflow.IsCoupon ? cashflow.Amount : 0.0,
-                PrincipalAmount: cashflow.IsCoupon ? 0.0 : cashflow.Amount))
+                PrincipalAmount: cashflow.IsCoupon ? 0.0 : cashflow.Amount,
+                GetDiscountKernel(cashflow.PaymentDate.Date)))
             .ToArray();
 
         template = new CashflowTemplate(components);
@@ -204,10 +310,12 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
     private sealed record CashflowComponent(
         DateTime PaymentDate,
         double CouponMultiplier,
-        double PrincipalAmount);
+        double PrincipalAmount,
+        DiscountKernel Kernel);
 
     private sealed class DiscountKernel
     {
+        private readonly DiscountKernelSpec _spec;
         private readonly int[] _publicDimensions;
         private readonly double[] _nodes;
         private readonly double[] _weights;
@@ -215,6 +323,7 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
         private readonly double _constantDiscount;
 
         private DiscountKernel(
+            DiscountKernelSpec spec,
             int[] publicDimensions,
             double[] nodes,
             double[] weights,
@@ -223,6 +332,7 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
             int buildEvaluations,
             double buildSeconds)
         {
+            _spec = spec;
             _publicDimensions = publicDimensions;
             _nodes = nodes;
             _weights = weights;
@@ -247,6 +357,7 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
             if (spec.PublicDimensions.Length == 0)
             {
                 return new DiscountKernel(
+                    spec,
                     spec.PublicDimensions,
                     nodes: [],
                     weights: [],
@@ -268,6 +379,7 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
             sw.Stop();
 
             return new DiscountKernel(
+                spec,
                 spec.PublicDimensions,
                 nodes,
                 weights,
@@ -292,6 +404,17 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
 
             double y = fullPoint[_publicDimensions[1]];
             return Interpolate2D(x, y, _nodes, _weights, _values);
+        }
+
+        public void EvalWithDerivatives(
+            double[] fullPoint,
+            Span<int> outputDimensions,
+            Span<double> derivatives,
+            out double discount,
+            out int derivativeCount)
+        {
+            discount = Eval(fullPoint);
+            derivativeCount = _spec.FillFirstDerivatives(discount, outputDimensions, derivatives);
         }
 
         private static double[] BuildKernelValues(DiscountKernelSpec spec, double[] nodes)
@@ -439,9 +562,11 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
         private readonly double _upperBaseRate;
         private readonly int _lowerLocalIndex;
         private readonly int _upperLocalIndex;
+        private readonly double[] _publicRateWeights;
 
         private DiscountKernelSpec(
             int[] publicDimensions,
+            double[] publicRateWeights,
             double paymentTime,
             double lowerTime,
             double upperTime,
@@ -451,6 +576,7 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
             int upperLocalIndex)
         {
             PublicDimensions = publicDimensions;
+            _publicRateWeights = publicRateWeights;
             _paymentTime = paymentTime;
             _lowerTime = lowerTime;
             _upperTime = upperTime;
@@ -491,9 +617,17 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
                 .Select(curveIndex => curveIndex - 1)
                 .Distinct()
                 .ToArray();
+            double[] publicRateWeights = BuildPublicRateWeights(
+                publicDimensions,
+                lower,
+                upper,
+                Actual365(valuationDate, curve[lower].Date),
+                Actual365(valuationDate, curve[upper].Date),
+                paymentTime);
 
             return new DiscountKernelSpec(
                 publicDimensions,
+                publicRateWeights,
                 paymentTime,
                 Actual365(valuationDate, curve[lower].Date),
                 Actual365(valuationDate, curve[upper].Date),
@@ -512,6 +646,63 @@ public sealed class ScheduleResolvedCashflowChebyshevBondPricer
                 : lowerRate + (upperRate - lowerRate) * ((_paymentTime - _lowerTime) / (_upperTime - _lowerTime));
 
             return Math.Exp(-zeroRate * _paymentTime);
+        }
+
+        public int FillFirstDerivatives(
+            double discount,
+            Span<int> outputDimensions,
+            Span<double> derivatives)
+        {
+            for (int i = 0; i < PublicDimensions.Length; i++)
+            {
+                outputDimensions[i] = PublicDimensions[i];
+                derivatives[i] = -_paymentTime * _publicRateWeights[i] * 1e-4 * discount;
+            }
+
+            return PublicDimensions.Length;
+        }
+
+        private static double[] BuildPublicRateWeights(
+            int[] publicDimensions,
+            int lowerCurveIndex,
+            int upperCurveIndex,
+            double lowerTime,
+            double upperTime,
+            double paymentTime)
+        {
+            var weights = new double[publicDimensions.Length];
+            if (lowerCurveIndex == upperCurveIndex || Math.Abs(upperTime - lowerTime) < 1e-14)
+            {
+                AddPublicWeight(weights, publicDimensions, upperCurveIndex, 1.0);
+                return weights;
+            }
+
+            double upperWeight = (paymentTime - lowerTime) / (upperTime - lowerTime);
+            AddPublicWeight(weights, publicDimensions, lowerCurveIndex, 1.0 - upperWeight);
+            AddPublicWeight(weights, publicDimensions, upperCurveIndex, upperWeight);
+            return weights;
+        }
+
+        private static void AddPublicWeight(
+            double[] weights,
+            int[] publicDimensions,
+            int curveIndex,
+            double weight)
+        {
+            if (curveIndex == 0)
+            {
+                return;
+            }
+
+            int publicDimension = curveIndex - 1;
+            for (int i = 0; i < publicDimensions.Length; i++)
+            {
+                if (publicDimensions[i] == publicDimension)
+                {
+                    weights[i] += weight;
+                    return;
+                }
+            }
         }
 
         private static int LocalIndex(int[] publicDimensions, int curveIndex)
