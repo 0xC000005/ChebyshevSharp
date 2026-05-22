@@ -189,6 +189,7 @@ Start Phase 11 on `phase11-fixed-rate-bond-tutorial`: turn the fixed-rate bond r
 - Verification so far: CLI flags quoted by the tutorial match `examples/FixedRateBondSurrogate/Program.cs`; public source links checked with `curl` returned HTTP 200 for the Federal Reserve nominal curve page/CSV, QLNet `FixedRateBond`, Chebfun guide/edge-detection pages, OpenGamma fixed-coupon-bond/pricer pages, and QuantLib Guide vanilla-bonds page; `docfx docs/docfx.json` passed with 0 warnings/errors; `git diff --check` passed; fixed-rate bond Release test slice passed 78 tests with 0 failures.
 - Phase PR: [#202](https://github.com/0xC000005/ChebyshevSharp/pull/202).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4519611297).
+- CI outcome: `.NET 10 tests`, `.NET 8 library build`, `All Tests Passed`, and `Format, Pack, and Docs` passed; Dependabot skipped.
 
 ## Phase 5 Notes
 
