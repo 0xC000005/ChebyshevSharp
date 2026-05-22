@@ -73,6 +73,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   public wrapper and measures local PV and Greek errors.
 - [x] Implement a narrowed/higher-resolution 10Y active-pillar TT candidate to
   test whether rank/window/resolution are driving the Greek errors.
+- [x] Add one-sided maturity slope metrics to check whether central differences
+  are the only reason maturity sensitivity looks bad.
 - [ ] Implement an analytic-coupon active-pillar TT candidate only after the
   active-pillar full-PV candidate is measurable.
 - [ ] Add fixed-trade curve-only control results to distinguish a production

@@ -436,6 +436,16 @@ public static class AccuracyRecipeSearch
                     point => FirstDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
                     validationPoints),
                 SummarizeMetric(
+                    "maturity left sensitivity",
+                    point => BackwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                    point => BackwardDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
+                    validationPoints),
+                SummarizeMetric(
+                    "maturity right sensitivity",
+                    point => ForwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                    point => ForwardDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
+                    validationPoints),
+                SummarizeMetric(
                     "coupon-maturity mixed",
                     point => MixedDerivative(adapter.Price, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
                     point => MixedDerivative(Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
@@ -622,6 +632,26 @@ public static class AccuracyRecipeSearch
         double[] down = Shift(point, dimension, -step);
         double[] up = Shift(point, dimension, step);
         return (function(up) - function(down)) / (2.0 * step);
+    }
+
+    private static double BackwardDerivative(
+        Func<double[], double> function,
+        double[] point,
+        int dimension,
+        double step)
+    {
+        double[] down = Shift(point, dimension, -step);
+        return (function(point) - function(down)) / step;
+    }
+
+    private static double ForwardDerivative(
+        Func<double[], double> function,
+        double[] point,
+        int dimension,
+        double step)
+    {
+        double[] up = Shift(point, dimension, step);
+        return (function(up) - function(point)) / step;
     }
 
     private static double MixedDerivative(

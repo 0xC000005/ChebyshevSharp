@@ -94,6 +94,8 @@ Initial oracle results:
 | 10Y narrow active-pillar TT max 10Y DV01 rel. error | `1.03%` |
 | 10Y narrow active-pillar TT max coupon derivative rel. error | `1.03%` |
 | 10Y narrow active-pillar TT max maturity sensitivity rel. error | `161.90%` |
+| 10Y narrow active-pillar TT max maturity left-slope rel. error | `1513.27%` |
+| 10Y narrow active-pillar TT max maturity right-slope rel. error | `892.27%` |
 | 10Y narrow active-pillar TT max coupon-maturity mixed rel. error | `10.98%` |
 
 ## Interpretation
@@ -143,6 +145,12 @@ maturity sensitivity itself, which stays very large at `161.90%`. This suggests
 the active-pillar recipe is promising for PV and rate/coupon risk, but maturity
 derivatives need special handling instead of being treated as ordinary smooth
 central differences.
+
+One-sided maturity slopes do not remove the problem in this first candidate.
+For the narrow 10Y active-pillar TT, max left-slope and right-slope relative
+errors are `1513.27%` and `892.27%`. The absolute one-sided slope errors are
+also material in the CLI output, so this is not only a denominator artifact. The
+current evidence says the maturity coordinate is still the hard axis.
 
 ## Decision
 

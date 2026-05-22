@@ -95,6 +95,8 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         Assert.Contains(activeTt.Metrics, metric => metric.Name == "10Y DV01");
         Assert.Contains(activeTt.Metrics, metric => metric.Name == "coupon derivative");
         Assert.Contains(activeTt.Metrics, metric => metric.Name == "maturity sensitivity");
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "maturity left sensitivity");
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "maturity right sensitivity");
         Assert.Contains(activeTt.Metrics, metric => metric.Name == "coupon-maturity mixed");
         Assert.All(activeTt.Metrics, metric =>
         {
