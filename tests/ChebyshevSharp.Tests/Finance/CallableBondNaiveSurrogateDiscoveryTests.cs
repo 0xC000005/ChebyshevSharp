@@ -5,11 +5,13 @@ namespace ChebyshevSharp.Tests.Finance;
 public sealed class CallableBondNaiveSurrogateDiscoveryTests
 {
     private static readonly ICallableBondReferencePricer Pricer = new QlNetCallableBondReferencePricer();
+    private static readonly Lazy<CallableNaiveSurrogateDiscoveryReport> DefaultReport =
+        new(() => CallableNaiveSurrogateDiscovery.RunDefault(Pricer));
 
     [Fact]
     public void Default_report_records_full_65d_tensor_infeasibility()
     {
-        CallableNaiveSurrogateDiscoveryReport report = CallableNaiveSurrogateDiscovery.RunDefault(Pricer);
+        CallableNaiveSurrogateDiscoveryReport report = DefaultReport.Value;
 
         Assert.Equal("fed-nominal-yield-curve-semiannual-2026-05-15", report.FixtureId);
         Assert.Equal(new DateTime(2026, 5, 15), report.CurveDate);
@@ -23,7 +25,7 @@ public sealed class CallableBondNaiveSurrogateDiscoveryTests
     [Fact]
     public void Default_report_builds_naive_tensor_train_and_slider_metric_summaries()
     {
-        CallableNaiveSurrogateDiscoveryReport report = CallableNaiveSurrogateDiscovery.RunDefault(Pricer);
+        CallableNaiveSurrogateDiscoveryReport report = DefaultReport.Value;
 
         Assert.Equal(["TensorTrain", "Slider"], report.Models.Select(model => model.ModelName).ToArray());
         Assert.All(report.Models, model =>

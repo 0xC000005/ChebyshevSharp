@@ -24,6 +24,9 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --accuracy-recipe-search
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --naive-surrogate-discovery
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 ```
 
 ## QuickStart
@@ -259,6 +262,50 @@ at runtime; the optional refresh script under
 `tools/RefreshFixedRateBondMarketData/` regenerates the pinned JSON fixtures
 from the Federal Reserve public CSV. The public case study page tracks formulas,
 data provenance, citations, source limitations, and validation results.
+
+## CallableBondSurrogate
+
+`examples/CallableBondSurrogate` extends the finance examples to a callable
+fixed-rate bond where the QLNet baseline is expensive enough for acceleration to
+matter. It uses the same pinned semiannual Federal Reserve curve fixture, but
+prices a callable fixed-rate bond with QLNet's `CallableFixedRateBond`,
+`HullWhite`, and `TreeCallableFixedRateBondEngine` classes.
+
+The public wrapper intentionally stays full-dimensional:
+
+```text
+curveBumps[60], coupon, maturity, firstCall, callPrice, sigma
+    -> callable dirty price per 100 notional
+```
+
+The default mode prints the QLNet baseline price, comparable straight-bond
+price, embedded call value, and call-date count:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
+```
+
+Run the naive discovery mode before trying structured models. It compares a
+full-input 65D TensorTrain probe with a singleton Slider probe and records why
+the direct global clone is not accurate enough for PV, DV01, and mixed-risk
+checks:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --naive-surrogate-discovery
+```
+
+Run the structured alternatives mode to compare factor-risk and formula-aware
+surrogates behind the same 65D public wrapper. This mode reports build cost,
+evaluation cost, break-even count, PV errors, factor-direction sensitivities,
+local key-rate DV01 checks, and volatility sensitivity checks:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
+```
+
+For the full narrative, including the financial formula, trial rationale,
+failure evidence, acceleration economics, and current limitations, see the
+[Callable Bond Case Study](callable-bond-surrogate.md).
 
 ## When to run them
 

@@ -52,6 +52,16 @@ public sealed class CallableBondReferencePricerTests
     }
 
     [Fact]
+    public void Higher_hull_white_volatility_lowers_callable_bond_price()
+    {
+        CallableBondResult lowVolatility = Pricer.Price(CallableBondScenarios.StandardThirtyYear(hullWhiteSigma: 0.005));
+        CallableBondResult highVolatility = Pricer.Price(CallableBondScenarios.StandardThirtyYear(hullWhiteSigma: 0.020));
+
+        Assert.True(highVolatility.DirtyPrice < lowVolatility.DirtyPrice);
+        Assert.True(highVolatility.EmbeddedCallValue > lowVolatility.EmbeddedCallValue);
+    }
+
+    [Fact]
     public void Tree_step_convergence_is_stable_for_reference_case()
     {
         CallableBondRequest baseRequest = CallableBondScenarios.StandardThirtyYear();
@@ -128,5 +138,20 @@ public sealed class CallableBondFullDimensionalWrapperTests
 
         Assert.Throws<ArgumentException>(() => wrapper.ToRequest(new double[64]));
         Assert.Throws<ArgumentException>(() => wrapper.Price(new double[66]));
+    }
+
+    [Fact]
+    public void Post_maturity_pillar_bump_does_not_change_shorter_callable_price()
+    {
+        var wrapper = CallableBondFullDimensionalWrapper.CreateDefault(Pricer);
+        double[] point = wrapper.CreateBasePoint();
+        point[61] = 20.0;
+        point[62] = 5.0;
+
+        double basePrice = wrapper.Price(point);
+        double[] bumped = (double[])point.Clone();
+        bumped[59] = 100.0;
+
+        Assert.Equal(basePrice, wrapper.Price(bumped), precision: 8);
     }
 }

@@ -8,6 +8,8 @@
       href: examples.md
     - name: Fixed-Rate Bond Case Study
       href: fixed-rate-bond-surrogate.md
+    - name: Callable Bond Case Study
+      href: callable-bond-surrogate.md
     - name: Which Class Should I Use?
       href: which-class.md
 
