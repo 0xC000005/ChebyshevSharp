@@ -28,39 +28,38 @@ TensorTrain/Slider objects where needed, DocFX documentation.
 
 ## Task 1: Add Accuracy Report Types
 
-- [ ] Create `AccuracyRecipeSearch.cs` with immutable report records:
-  `AccuracyRecipeSearchReport`, `AccuracyRecipeModelSummary`,
-  `AccuracyRecipeMetricSummary`, `ProjectionOracleSummary`,
-  `DerivativeOracleSummary`, and `ScheduleDispatchSummary`.
-- [ ] Include public fields for model name, build evaluations, PV max absolute
+- [x] Create `AccuracyRecipeSearch.cs` with immutable report records:
+  `AccuracyRecipeSearchReport`, `AccuracyProjectionOracleSummary`,
+  `AccuracyDerivativeOracleSummary`, and `AccuracyScheduleDispatchSummary`.
+- [x] Include public fields for model name, build evaluations, PV max absolute
   error, PV max relative error, maturity-slope max absolute error, maturity
   slope max relative error, coupon-maturity max absolute error, and
   coupon-maturity max relative error.
-- [ ] Add a `RunDefault(IFixedRateBondReferencePricer pricer)` entry point that
+- [x] Add a `RunDefault(IFixedRateBondReferencePricer pricer)` entry point that
   loads `FixedRateBondMarketData.LoadDenseSemiannualCurveFixture()` and uses
   `RegularThirtyYearFromDenseFixture()`.
 
 ## Task 2: Add Projection Oracle
 
-- [ ] Implement deterministic validation points by reusing the same full 60D
+- [x] Implement deterministic validation points by reusing the same full 60D
   bump shapes used by Phase 6 and Phase 7.
-- [ ] Implement the level/slope/curvature projection and reconstruction already
+- [x] Implement the level/slope/curvature projection and reconstruction already
   used by the structured-alternatives benchmark.
-- [ ] For each validation point, price the original 60D bumped curve and the
+- [x] For each validation point, price the original 60D bumped curve and the
   reconstructed curve with the QLNet reference pricer.
-- [ ] Summarize max PV absolute and relative projection error.
-- [ ] Add a test asserting the projection oracle reports nonzero error on at
+- [x] Summarize max PV absolute and relative projection error.
+- [x] Add a test asserting the projection oracle reports nonzero error on at
   least one arbitrary clone point and near-zero error on a factor-aligned point.
 
 ## Task 3: Add Derivative Oracle
 
-- [ ] Implement DV01 and maturity-slope finite differences with at least three
+- [x] Implement DV01 and maturity-slope finite differences with at least three
   step sizes: `1e-4`, `5e-5`, and `1e-5` for rate bumps, and one-day,
   three-day, and seven-day maturity steps.
-- [ ] Report how much the baseline derivative changes as the step changes.
+- [x] Report how much the baseline derivative changes as the step changes.
 - [ ] Add one-sided maturity slopes around schedule split candidates from Phase
   9 so central differences do not silently cross pricing regimes.
-- [ ] Add a test asserting post-maturity pillar DV01 stays within numerical
+- [x] Add a test asserting post-maturity pillar DV01 stays within numerical
   tolerance for the baseline derivative oracle.
 
 ## Task 4: Add Stronger Candidate Recipes
@@ -77,13 +76,13 @@ TensorTrain/Slider objects where needed, DocFX documentation.
 
 ## Task 5: Wire CLI And Tests
 
-- [ ] Add `--accuracy-recipe-search` to `FixedRateBondExample.Run`.
+- [x] Add `--accuracy-recipe-search` to `FixedRateBondExample.Run`.
 - [ ] Print a compact table comparing Phase 10 router control, projection
   oracle, derivative oracle, richer factor candidate, active-pillar candidate,
   analytic-coupon active-pillar candidate, and fixed-trade control.
-- [ ] Add focused tests that run the CLI mode and assert the report contains
+- [x] Add focused tests that run the CLI mode and assert the report contains
   the expected model names and nonempty diagnostics.
-- [ ] Run:
+- [x] Run:
 
 ```bash
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework net10.0 --configuration Release --filter "FullyQualifiedName~FixedRateBondAccuracyRecipeSearchTests" --verbosity minimal
@@ -91,9 +90,9 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
 
 ## Task 6: Document Findings
 
-- [ ] Update `reports/phase-12-accuracy-recipe-search.md` with the final table,
+- [x] Update `reports/phase-12-accuracy-recipe-search.md` with the initial oracle table,
   oracle interpretations, and next-recipe decision.
-- [ ] Update `status.md` with the Phase 12 branch, verification commands, and
+- [x] Update `status.md` with the Phase 12 branch, verification commands, and
   current decision.
 - [ ] Add only public-facing evidence to the report; keep workflow-only details
   in the plan/status files.
@@ -110,7 +109,7 @@ docfx docs/docfx.json
 git diff --check
 ```
 
-- [ ] Record results in `status.md` and the Phase 12 report.
+- [x] Record initial oracle results in `status.md` and the Phase 12 report.
 - [ ] Push `phase12-accuracy-recipe-search`.
-- [ ] Update issue #191 with the branch, plan, and initial evidence.
+- [x] Update issue #191 with the branch and plan.
 - [ ] Open one coherent Phase 12 PR only after local verification passes.

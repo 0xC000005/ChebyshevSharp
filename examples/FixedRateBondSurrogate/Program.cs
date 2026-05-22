@@ -58,6 +58,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--accuracy-recipe-search"])
+        {
+            RunAccuracyRecipeSearch(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -458,6 +464,54 @@ public static class FixedRateBondExample
         output.WriteLine($"  Recommendation : {report.Decision.Recommendation}");
         output.WriteLine($"  Library follow-up: {report.Decision.LibraryEnhancementDecision}");
         output.WriteLine($"  Evidence       : {report.Decision.Evidence}");
+    }
+
+    private static void RunAccuracyRecipeSearch(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        AccuracyRecipeSearchReport report = AccuracyRecipeSearch.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond accuracy recipe search");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Clone validation points        : {report.CloneValidationPoints.Count}");
+        output.WriteLine($"Factor-aligned validation points: {report.FactorAlignedValidationPoints.Count}");
+        output.WriteLine();
+        output.WriteLine("Projection oracle");
+        output.WriteLine(
+            $"  clone max abs {report.ProjectionOracle.MaxClonePvAbsoluteError:E6}, " +
+            $"clone max rel {report.ProjectionOracle.MaxClonePvRelativeError:P2}");
+        output.WriteLine(
+            $"  factor max abs {report.ProjectionOracle.MaxFactorAlignedPvAbsoluteError:E6}, " +
+            $"factor max rel {report.ProjectionOracle.MaxFactorAlignedPvRelativeError:P2}");
+        output.WriteLine();
+        output.WriteLine("Derivative oracle");
+        foreach (AccuracyDerivativeStepDiagnostic diagnostic in report.DerivativeOracle.RateStepDiagnostics)
+        {
+            output.WriteLine($"  {diagnostic.Name} step {diagnostic.Step:E1} {diagnostic.StepUnit}: {diagnostic.Value:E6}");
+        }
+
+        foreach (AccuracyDerivativeStepDiagnostic diagnostic in report.DerivativeOracle.MaturityStepDiagnostics)
+        {
+            output.WriteLine($"  {diagnostic.Name} step {diagnostic.Step:E6} {diagnostic.StepUnit}: {diagnostic.Value:E6}");
+        }
+
+        output.WriteLine(
+            $"  post-maturity unsupported-pillar DV01: {report.DerivativeOracle.PostMaturityUnsupportedPillarDv01:E6}");
+        output.WriteLine();
+        output.WriteLine("Schedule dispatch");
+        foreach (AccuracyScheduleDispatchDiagnostic diagnostic in report.ScheduleDispatch.Diagnostics)
+        {
+            output.WriteLine(
+                $"  {diagnostic.Name}: T={diagnostic.MaturityYears:F6} -> piece {diagnostic.PieceIndex} " +
+                $"[{diagnostic.PieceLo:F6}, {diagnostic.PieceHi:F6})");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Next decision");
+        output.WriteLine($"  {report.Decision}");
     }
 
     private static IEnumerable<ScheduleAwareRouterPieceSummary> DisplayedScheduleAwarePieces(

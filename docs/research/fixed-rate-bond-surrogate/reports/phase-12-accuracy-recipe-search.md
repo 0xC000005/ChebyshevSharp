@@ -51,12 +51,53 @@ sampled function is compressible enough.
 
 ## Results
 
-This section will be filled by the Phase 12 benchmark after implementation.
+Command:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --accuracy-recipe-search
+```
+
+Initial oracle results:
+
+| Diagnostic | Result |
+| --- | ---: |
+| Clone validation points | `12` |
+| Factor-aligned validation points | `7` |
+| Projection oracle, clone max PV abs. error | `4.467694E+000` |
+| Projection oracle, clone max PV rel. error | `4.73%` |
+| Projection oracle, factor-aligned max PV abs. error | `0.000000E+000` |
+| Projection oracle, factor-aligned max PV rel. error | `0.00%` |
+| 10Y pillar DV01, rate step `1e-4` | `-6.363631E-002` |
+| 10Y pillar DV01, rate step `5e-5` | `-6.363631E-002` |
+| 10Y pillar DV01, rate step `1e-5` | `-6.363632E-002` |
+| 1-day maturity central slope | `-7.757807E-001` |
+| 3-day maturity central slope | `-6.556768E-001` |
+| 7-day maturity central slope | `-6.005639E-001` |
+| Post-maturity unsupported 30Y pillar DV01 | `0.000000E+000` |
+
+## Interpretation
+
+The first oracle result is already informative. The deterministic
+level/slope/curvature projection creates a `4.73%` max PV error on the same
+arbitrary clone validation bank used by the previous phases, while the
+factor-aligned points reconstruct exactly. That means the Phase 10 factor-router
+error floor can be explained before adding more TT complexity: the current
+factor representation is not a faithful clone of arbitrary 60-pillar shocks.
+
+The rate-step derivative diagnostic is stable for the tested 10Y pillar, so the
+initial evidence does not point to rate finite-difference step size as the main
+problem. Maturity central differences are materially step-dependent, which is
+consistent with the schedule-boundary evidence from earlier phases. The
+post-maturity 30Y pillar DV01 remains numerically zero for a 10Y bond, so the
+current baseline and wrapper preserve the expected curve-support sanity check.
 
 ## Decision
 
-Phase 12 will close only after the dominant error source and next modelling
-recipe are recorded here.
+Current working decision: separate factor-scenario accuracy from arbitrary
+60-pillar clone accuracy before trying larger TT builds. The next candidate
+should either add richer curve factors and measure projection error again, or
+move to schedule-aware active-pillar models that keep the full public wrapper
+but do not compress every shock into three factors.
 
 ## Sources
 
