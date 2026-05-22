@@ -535,6 +535,13 @@ public static class FixedRateBondExample
                 $"  {model.ModelName}: internal dims {model.InternalDimensionCount}, " +
                 $"build evals {model.BuildEvaluations}, PV max abs {pv.MaxAbsoluteError:E6}, " +
                 $"PV max rel {pv.MaxRelativeError:P2}");
+            foreach (AccuracyRecipeMetricSummary metric in model.Metrics.Where(metric => metric.Name != "PV"))
+            {
+                output.WriteLine(
+                    $"    {metric.Name}: max abs {metric.MaxAbsoluteError:E6}, " +
+                    $"max rel {metric.MaxRelativeError:P2}");
+            }
+
             output.WriteLine($"    {model.Interpretation}");
         }
 

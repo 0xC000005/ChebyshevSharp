@@ -91,6 +91,10 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         Assert.InRange(activeTt.InternalDimensionCount, 1, 61);
         Assert.True(activeTt.BuildEvaluations > 0);
         Assert.Contains(activeTt.Metrics, metric => metric.Name == "PV");
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "10Y DV01");
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "coupon derivative");
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "maturity sensitivity");
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "coupon-maturity mixed");
         Assert.All(activeTt.Metrics, metric =>
         {
             Assert.True(double.IsFinite(metric.MaxAbsoluteError));

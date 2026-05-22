@@ -382,7 +382,27 @@ public static class AccuracyRecipeSearch
             BuildSeconds: sw.Elapsed.TotalSeconds,
             Metrics:
             [
-                SummarizePvMetric(adapter.Price, Eval, validationPoints),
+                SummarizeMetric("PV", adapter.Price, Eval, validationPoints),
+                SummarizeMetric(
+                    "10Y DV01",
+                    point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
+                    point => FirstDerivative(Eval, point, CurveDimensionForMonths(120), 1e-4),
+                    validationPoints),
+                SummarizeMetric(
+                    "coupon derivative",
+                    point => FirstDerivative(adapter.Price, point, CouponDimension, 1e-4),
+                    point => FirstDerivative(Eval, point, CouponDimension, 1e-4),
+                    validationPoints),
+                SummarizeMetric(
+                    "maturity sensitivity",
+                    point => FirstDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                    point => FirstDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
+                    validationPoints),
+                SummarizeMetric(
+                    "coupon-maturity mixed",
+                    point => MixedDerivative(adapter.Price, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                    point => MixedDerivative(Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                    validationPoints),
             ],
             Interpretation:
                 "Local TT over active curve pillars, coupon, and maturity for a 10Y window; the public wrapper remains 62D.");
@@ -426,7 +446,8 @@ public static class AccuracyRecipeSearch
             .ToArray();
     }
 
-    private static AccuracyRecipeMetricSummary SummarizePvMetric(
+    private static AccuracyRecipeMetricSummary SummarizeMetric(
+        string name,
         Func<double[], double> baseline,
         Func<double[], double> model,
         IReadOnlyList<SurrogateValidationPoint> validationPoints)
@@ -435,11 +456,11 @@ public static class AccuracyRecipeSearch
             .Select(point => Math.Abs(model(point.Coordinates) - baseline(point.Coordinates)))
             .ToArray();
         double[] relativeErrors = validationPoints
-            .Zip(absoluteErrors, (point, absolute) => RelativeError(absolute, point.BaselineDirtyPrice))
+            .Zip(absoluteErrors, (point, absolute) => RelativeError(absolute, baseline(point.Coordinates)))
             .ToArray();
 
         return new AccuracyRecipeMetricSummary(
-            Name: "PV",
+            Name: name,
             MeanAbsoluteError: absoluteErrors.Average(),
             MaxAbsoluteError: absoluteErrors.Max(),
             MeanRelativeError: relativeErrors.Average(),
@@ -553,6 +574,23 @@ public static class AccuracyRecipeSearch
         double[] down = Shift(point, dimension, -step);
         double[] up = Shift(point, dimension, step);
         return (function(up) - function(down)) / (2.0 * step);
+    }
+
+    private static double MixedDerivative(
+        Func<double[], double> function,
+        double[] point,
+        int firstDimension,
+        double firstStep,
+        int secondDimension,
+        double secondStep)
+    {
+        double[] upUp = Shift(Shift(point, firstDimension, firstStep), secondDimension, secondStep);
+        double[] upDown = Shift(Shift(point, firstDimension, firstStep), secondDimension, -secondStep);
+        double[] downUp = Shift(Shift(point, firstDimension, -firstStep), secondDimension, secondStep);
+        double[] downDown = Shift(Shift(point, firstDimension, -firstStep), secondDimension, -secondStep);
+
+        return (function(upUp) - function(upDown) - function(downUp) + function(downDown))
+            / (4.0 * firstStep * secondStep);
     }
 
     private static double[] Shift(double[] point, int dimension, double shift)

@@ -84,6 +84,10 @@ Initial oracle results:
 | 10Y active-pillar TT build evaluations | `2014` |
 | 10Y active-pillar TT max PV abs. error | `1.650403E+000` |
 | 10Y active-pillar TT max PV rel. error | `1.53%` |
+| 10Y active-pillar TT max 10Y DV01 rel. error | `9.83%` |
+| 10Y active-pillar TT max coupon derivative rel. error | `3.66%` |
+| 10Y active-pillar TT max maturity sensitivity rel. error | `132.88%` |
+| 10Y active-pillar TT max coupon-maturity mixed rel. error | `120.33%` |
 
 ## Interpretation
 
@@ -118,16 +122,21 @@ The first active-pillar TT candidate is a 10Y local piece with `23` internal
 coordinates: active curve pillars through the maturity neighbourhood, coupon,
 and maturity. It reduces local max PV relative error to `1.53%` with `2014`
 build evaluations. That is a meaningful improvement over the factor projection
-floor, but it is not a final recipe yet because this first candidate only
-reports PV and still needs tuning plus DV01/maturity/mixed-term validation.
+floor. However, the derivative surface is still not acceptable: the same
+candidate reports `9.83%` max 10Y DV01 relative error, `132.88%` max maturity
+sensitivity relative error, and `120.33%` max coupon-maturity mixed relative
+error. Active support fixes the inactive-pillar problem and improves PV, but it
+does not by itself solve the slope/cross-term problem.
 
 ## Decision
 
 Current working decision: factor compression can remain a factor-scenario
 recipe, but it should not be presented as the faithful arbitrary-pillar clone.
 The stronger path is schedule-aware active-pillar modelling: tune the 10Y local
-piece first, extend the validation from PV to Greeks, and only then generalize
-the router across maturity pieces.
+piece first with explicit maturity/sensitivity targets, then generalize the
+router across maturity pieces only if Greeks improve. The immediate next
+experiment should test whether higher node counts/rank, narrower maturity
+pieces, or one-sided/spectral derivative handling is the limiting factor.
 
 ## Sources
 
