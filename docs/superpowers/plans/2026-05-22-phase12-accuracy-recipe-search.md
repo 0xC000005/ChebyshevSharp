@@ -77,7 +77,7 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   are the only reason maturity sensitivity looks bad.
 - [ ] Implement an analytic-coupon active-pillar TT candidate only after the
   active-pillar full-PV candidate is measurable.
-- [ ] Add fixed-trade curve-only control results to distinguish a production
+- [x] Add fixed-trade curve-only control results to distinguish a production
   scenario surrogate from the parametric new-bond clone.
 
 ## Task 5: Wire CLI And Tests

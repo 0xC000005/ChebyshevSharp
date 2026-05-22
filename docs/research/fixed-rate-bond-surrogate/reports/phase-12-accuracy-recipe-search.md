@@ -97,6 +97,11 @@ Initial oracle results:
 | 10Y narrow active-pillar TT max maturity left-slope rel. error | `1513.27%` |
 | 10Y narrow active-pillar TT max maturity right-slope rel. error | `892.27%` |
 | 10Y narrow active-pillar TT max coupon-maturity mixed rel. error | `10.98%` |
+| 10Y fixed-trade curve-only TT internal dimensions | `21` |
+| 10Y fixed-trade curve-only TT build evaluations | `837` |
+| 10Y fixed-trade curve-only TT max PV abs. error | `1.796590E-004` |
+| 10Y fixed-trade curve-only TT max PV rel. error | `0.00%` |
+| 10Y fixed-trade curve-only TT max 10Y DV01 rel. error | `0.00%` |
 
 ## Interpretation
 
@@ -152,17 +157,22 @@ errors are `1513.27%` and `892.27%`. The absolute one-sided slope errors are
 also material in the CLI output, so this is not only a denominator artifact. The
 current evidence says the maturity coordinate is still the hard axis.
 
+The fixed-trade curve-only control is the clearest positive result in this
+phase. With coupon and maturity fixed and only active curve pillars varied, the
+10Y TT uses `21` internal dimensions, `837` build evaluations, and reaches
+`1.796590E-004` max PV absolute error with effectively zero displayed PV and
+10Y DV01 relative error. This supports a practical recipe for portfolio/risk
+use cases where trades are fixed and repeated scenarios vary the curve. It does
+not solve the separate problem of a parametric new-bond surface over maturity.
+
 ## Decision
 
 Current working decision: factor compression can remain a factor-scenario
 recipe, but it should not be presented as the faithful arbitrary-pillar clone.
-The stronger path is schedule-aware active-pillar modelling: tune the 10Y local
-piece first with explicit maturity/sensitivity targets, then generalize the
-router across maturity pieces only if Greeks improve. The immediate next
-experiment should focus on maturity derivative handling: one-sided slope
-validation inside each schedule regime, narrower maturity windows around coupon
-dates, or reporting maturity error in absolute terms when baseline slope is near
-zero.
+The strongest current recipe is fixed-trade curve-only active-pillar TT for
+repeated curve-risk scenarios. A parametric new-bond surface over maturity is a
+different and harder problem; it needs explicit maturity treatment before it can
+be claimed as a faithful clone.
 
 ## Sources
 

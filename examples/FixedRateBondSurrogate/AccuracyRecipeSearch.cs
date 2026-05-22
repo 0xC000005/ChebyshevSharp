@@ -150,16 +150,20 @@ public static class AccuracyRecipeSearch
                 maxSweeps: 5,
                 interpretation:
                     "Narrower 10Y active-pillar TT with higher coupon/maturity resolution and rank budget."),
+            BuildFixedTradeCurveOnlyTt(adapter),
         ];
 
         AccuracyRecipeModelSummary narrow = candidateModels.Single(model => model.ModelName == "10Y narrow active-pillar TT");
         AccuracyRecipeMetricSummary narrowPv = narrow.Metrics.Single(metric => metric.Name == "PV");
         AccuracyRecipeMetricSummary narrowMaturity = narrow.Metrics.Single(metric => metric.Name == "maturity sensitivity");
+        AccuracyRecipeModelSummary fixedTrade = candidateModels.Single(model => model.ModelName == "10Y fixed-trade curve-only TT");
+        AccuracyRecipeMetricSummary fixedPv = fixedTrade.Metrics.Single(metric => metric.Name == "PV");
         string decision =
             "Projection oracle is material, and active support is exact on the validation bank. " +
             $"A narrowed 10Y active-pillar TT reduces local PV max relative error to {narrowPv.MaxRelativeError:P2}, " +
             $"but maturity-sensitivity max relative error remains {narrowMaturity.MaxRelativeError:P2}. " +
-            "The next recipe must handle maturity derivatives explicitly before generalizing the router.";
+            $"A fixed-trade curve-only TT reaches {fixedPv.MaxRelativeError:P2} max PV relative error, " +
+            "so fixed-trade curve-risk surrogates are the strongest current recipe while parametric maturity remains unresolved.";
 
         return new AccuracyRecipeSearchReport(
             FixtureId: fixture.FixtureId,
@@ -452,6 +456,92 @@ public static class AccuracyRecipeSearch
                     validationPoints),
             ],
             Interpretation: interpretation);
+    }
+
+    private static AccuracyRecipeModelSummary BuildFixedTradeCurveOnlyTt(RequestAdapter adapter)
+    {
+        const double coupon = 0.045;
+        const double maturityYears = 10.0;
+        int activeCurveDimensions = ActiveCurveBumpDimensions(maturityYears);
+        double[][] domain = Enumerable
+            .Range(0, activeCurveDimensions)
+            .Select(_ => new[] { -150.0, 150.0 })
+            .ToArray();
+        int[] nNodes = Enumerable.Repeat(4, activeCurveDimensions).ToArray();
+
+        double Price(double[] internalPoint)
+        {
+            var fullPoint = new double[PublicInputDimensionCount];
+            Array.Copy(internalPoint, fullPoint, activeCurveDimensions);
+            fullPoint[CouponDimension] = coupon;
+            fullPoint[MaturityDimension] = maturityYears;
+            return adapter.Price(fullPoint);
+        }
+
+        var tt = new ChebyshevTT(
+            Price,
+            numDimensions: activeCurveDimensions,
+            domain: domain,
+            nNodes: nNodes,
+            maxRank: 6,
+            tolerance: 1e-6,
+            maxSweeps: 5);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        tt.Build(verbose: false, seed: 20260522, method: "cross");
+        sw.Stop();
+
+        double Eval(double[] fullPoint)
+        {
+            var internalPoint = new double[activeCurveDimensions];
+            Array.Copy(fullPoint, internalPoint, activeCurveDimensions);
+            return tt.Eval(internalPoint);
+        }
+
+        IReadOnlyList<SurrogateValidationPoint> validationPoints =
+            BuildFixedTradeValidationPoints(adapter, activeCurveDimensions, coupon, maturityYears);
+
+        return new AccuracyRecipeModelSummary(
+            ModelName: "10Y fixed-trade curve-only TT",
+            PublicInputDimensionCount: PublicInputDimensionCount,
+            InternalDimensionCount: activeCurveDimensions,
+            BuildEvaluations: tt.TotalBuildEvals,
+            BuildSeconds: sw.Elapsed.TotalSeconds,
+            Metrics:
+            [
+                SummarizeMetric("PV", adapter.Price, Eval, validationPoints),
+                SummarizeMetric(
+                    "10Y DV01",
+                    point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
+                    point => FirstDerivative(Eval, point, CurveDimensionForMonths(120), 1e-4),
+                    validationPoints),
+            ],
+            Interpretation:
+                "Fixed-trade control: coupon and maturity are fixed, and only active curve pillars are approximated.");
+    }
+
+    private static IReadOnlyList<SurrogateValidationPoint> BuildFixedTradeValidationPoints(
+        RequestAdapter adapter,
+        int activeCurveDimensions,
+        double coupon,
+        double maturityYears)
+    {
+        double[][] points =
+        [
+            FullPoint(coupon, maturityYears, _ => 0.0),
+            FullPoint(coupon, maturityYears, index => index < activeCurveDimensions ? 100.0 : 0.0),
+            FullPoint(coupon, maturityYears, index => index < activeCurveDimensions ? -100.0 : 0.0),
+            FullPoint(
+                coupon,
+                maturityYears,
+                index => index < activeCurveDimensions ? -120.0 + 240.0 * index / (activeCurveDimensions - 1) : 0.0),
+            FullPoint(coupon, maturityYears, index => index < activeCurveDimensions && index % 2 == 0 ? 100.0 : 0.0),
+            FullPoint(coupon, maturityYears, index => index < activeCurveDimensions && index % 2 == 1 ? -100.0 : 0.0),
+        ];
+
+        return points
+            .Select((point, index) => new SurrogateValidationPoint($"fixed-trade-10y-{index}", point, adapter.Price(point)))
+            .ToArray();
     }
 
     private static int[] BuildActivePillarNodeCounts(
