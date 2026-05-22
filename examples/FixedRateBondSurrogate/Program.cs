@@ -58,6 +58,12 @@ public static class FixedRateBondExample
             return;
         }
 
+        if (args is ["--accuracy-recipe-search"])
+        {
+            RunAccuracyRecipeSearch(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -458,6 +464,99 @@ public static class FixedRateBondExample
         output.WriteLine($"  Recommendation : {report.Decision.Recommendation}");
         output.WriteLine($"  Library follow-up: {report.Decision.LibraryEnhancementDecision}");
         output.WriteLine($"  Evidence       : {report.Decision.Evidence}");
+    }
+
+    private static void RunAccuracyRecipeSearch(TextWriter output)
+    {
+        var pricer = new QlNetFixedRateBondReferencePricer();
+        AccuracyRecipeSearchReport report = AccuracyRecipeSearch.RunDefault(pricer);
+
+        output.WriteLine("Fixed-rate bond accuracy recipe search");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"full wrapper  : {report.WrapperContract}");
+        output.WriteLine($"Clone validation points        : {report.CloneValidationPoints.Count}");
+        output.WriteLine($"Factor-aligned validation points: {report.FactorAlignedValidationPoints.Count}");
+        output.WriteLine();
+        output.WriteLine("Projection oracle");
+        output.WriteLine(
+            $"  clone max abs {report.ProjectionOracle.MaxClonePvAbsoluteError:E6}, " +
+            $"clone max rel {report.ProjectionOracle.MaxClonePvRelativeError:P2}");
+        output.WriteLine(
+            $"  factor max abs {report.ProjectionOracle.MaxFactorAlignedPvAbsoluteError:E6}, " +
+            $"factor max rel {report.ProjectionOracle.MaxFactorAlignedPvRelativeError:P2}");
+        foreach (AccuracyProjectionBasisSummary basis in report.ProjectionOracle.AlternativeBases)
+        {
+            output.WriteLine(
+                $"  {basis.Name}: factors {basis.FactorCount}, " +
+                $"clone max abs {basis.MaxClonePvAbsoluteError:E6}, " +
+                $"clone max rel {basis.MaxClonePvRelativeError:P2}");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Derivative oracle");
+        foreach (AccuracyDerivativeStepDiagnostic diagnostic in report.DerivativeOracle.RateStepDiagnostics)
+        {
+            output.WriteLine($"  {diagnostic.Name} step {diagnostic.Step:E1} {diagnostic.StepUnit}: {diagnostic.Value:E6}");
+        }
+
+        foreach (AccuracyDerivativeStepDiagnostic diagnostic in report.DerivativeOracle.MaturityStepDiagnostics)
+        {
+            output.WriteLine($"  {diagnostic.Name} step {diagnostic.Step:E6} {diagnostic.StepUnit}: {diagnostic.Value:E6}");
+        }
+
+        output.WriteLine(
+            $"  post-maturity unsupported-pillar DV01: {report.DerivativeOracle.PostMaturityUnsupportedPillarDv01:E6}");
+        output.WriteLine();
+        output.WriteLine("Schedule dispatch");
+        foreach (AccuracyScheduleDispatchDiagnostic diagnostic in report.ScheduleDispatch.Diagnostics)
+        {
+            output.WriteLine(
+                $"  {diagnostic.Name}: T={diagnostic.MaturityYears:F6} -> piece {diagnostic.PieceIndex} " +
+                $"[{diagnostic.PieceLo:F6}, {diagnostic.PieceHi:F6})");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Active support oracle");
+        output.WriteLine(
+            $"  max PV abs {report.ActiveSupport.MaxPvAbsoluteError:E6}, " +
+            $"max PV rel {report.ActiveSupport.MaxPvRelativeError:P2}");
+        output.WriteLine(
+            $"  active curve dims min {report.ActiveSupport.MinActiveCurveBumpDimensions}, " +
+            $"max {report.ActiveSupport.MaxActiveCurveBumpDimensions}");
+
+        output.WriteLine();
+        output.WriteLine("Notional scaling check");
+        output.WriteLine(
+            $"  notional {report.NotionalScaling.Notional:F2}, " +
+            $"points {report.NotionalScaling.ValidationPointCount}, " +
+            $"dirty price max abs {report.NotionalScaling.MaxDirtyPriceAbsoluteError:E6}, " +
+            $"max rel {report.NotionalScaling.MaxDirtyPriceRelativeError:P2}");
+
+        output.WriteLine();
+        output.WriteLine("Candidate models");
+        foreach (AccuracyRecipeModelSummary model in report.CandidateModels)
+        {
+            AccuracyRecipeMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
+            output.WriteLine(
+                $"  {model.ModelName}: internal dims {model.InternalDimensionCount}, " +
+                $"build evals {model.BuildEvaluations}, eval speedup {model.EvalSpeedup:F1}x, " +
+                $"validation points {model.ValidationPointCount}, " +
+                $"PV max abs {pv.MaxAbsoluteError:E6}, PV max rel {pv.MaxRelativeError:P2}");
+            foreach (AccuracyRecipeMetricSummary metric in model.Metrics.Where(metric => metric.Name != "PV"))
+            {
+                output.WriteLine(
+                    $"    {metric.Name}: max abs {metric.MaxAbsoluteError:E6}, " +
+                    $"max rel {metric.MaxRelativeError:P2}");
+            }
+
+            output.WriteLine($"    {model.Interpretation}");
+        }
+
+        output.WriteLine();
+        output.WriteLine("Next decision");
+        output.WriteLine($"  {report.Decision}");
     }
 
     private static IEnumerable<ScheduleAwareRouterPieceSummary> DisplayedScheduleAwarePieces(

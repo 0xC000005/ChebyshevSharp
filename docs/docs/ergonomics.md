@@ -60,7 +60,7 @@ double g = approx.Eval(point, gamma);
 ```
 
 The registry is per-instance and **does** persist across Save/Load on all
-four classes (added in Phase 4).
+supported interpolant classes.
 
 ## Introspection
 
