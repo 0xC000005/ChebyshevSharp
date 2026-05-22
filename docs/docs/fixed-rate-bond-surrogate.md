@@ -246,4 +246,3 @@ Detailed phase reports:
 - [Phase 8: Analytic Coupon Decomposition](../research/fixed-rate-bond-surrogate/reports/phase-8-analytic-coupon-decomposition.md)
 - [Phase 9: Maturity Special Points](../research/fixed-rate-bond-surrogate/reports/phase-9-maturity-special-points.md)
 - [Phase 10: Schedule-Aware Piecewise Router](../research/fixed-rate-bond-surrogate/reports/phase-10-schedule-aware-router.md)
-
