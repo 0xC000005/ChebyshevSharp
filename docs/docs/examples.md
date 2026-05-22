@@ -21,6 +21,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --analytic-coupon-decomposition
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --naive-maturity-scan-csv
 ```
 
@@ -209,6 +210,20 @@ Read this as a research benchmark. The current result supports
 schedule-aware maturity routing over a blind global fit or a simple uniform
 bucket rule, but it does not yet make automatic kink detection a public library
 feature.
+
+Run the schedule-aware router mode after the maturity-special-points benchmark.
+It converts the schedule-derived maturity split points into an explicit
+half-open piecewise router, keeps the 62-coordinate public wrapper, and reports
+one-sided maturity sensitivities around split points:
+
+```bash
+dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router
+```
+
+Read this as a router-design benchmark. The current explicit router reproduces
+the Phase 9 schedule-aware model and clarifies dispatch semantics, but it does
+not yet remove the residual sensitivity errors. The result supports further
+piece-model research before promoting a reusable ChebyshevSharp router API.
 
 To regenerate the Phase 6 maturity-sensitivity plot used by the research note,
 run:
