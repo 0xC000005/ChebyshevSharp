@@ -75,19 +75,28 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   test whether rank/window/resolution are driving the Greek errors.
 - [x] Add one-sided maturity slope metrics to check whether central differences
   are the only reason maturity sensitivity looks bad.
-- [ ] Implement an analytic-coupon active-pillar TT candidate only after the
-  active-pillar full-PV candidate is measurable.
+- [x] Skip the analytic-coupon active-pillar TT as a separate local-TT variant
+  after the stronger formula-aware cashflow-kernel candidate supersedes it.
 - [x] Add fixed-trade curve-only control results to distinguish a production
   scenario surrogate from the parametric new-bond clone.
+- [x] Implement a schedule-resolved cashflow Chebyshev-kernel candidate that
+  preserves the 62-coordinate wrapper, resolves cashflow schedules from
+  maturity, keeps coupon/notional algebraic, and uses local 1D/2D Chebyshev
+  discount kernels.
+- [x] Broaden the cashflow-kernel validation bank across coupons, maturities,
+  parallel shifts, slopes, sinusoidal shocks, and local 10Y curve bumps.
 
 ## Task 5: Wire CLI And Tests
 
 - [x] Add `--accuracy-recipe-search` to `FixedRateBondExample.Run`.
-- [ ] Print a compact table comparing Phase 10 router control, projection
-  oracle, derivative oracle, richer factor candidate, active-pillar candidate,
-  analytic-coupon active-pillar candidate, and fixed-trade control.
+- [x] Print a compact table comparing the projection oracle, derivative oracle,
+  richer factor candidate, active-pillar candidates, fixed-trade control, and
+  cashflow-kernel candidate.
 - [x] Add focused tests that run the CLI mode and assert the report contains
   the expected model names and nonempty diagnostics.
+- [x] Add focused tests requiring the cashflow-kernel candidate to preserve the
+  full wrapper, validate at least 80 points, match PV/risk metrics, and report
+  measured acceleration.
 - [x] Run:
 
 ```bash
@@ -100,7 +109,7 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
   oracle interpretations, and next-recipe decision.
 - [x] Update `status.md` with the Phase 12 branch, verification commands, and
   current decision.
-- [ ] Add only public-facing evidence to the report; keep workflow-only details
+- [x] Add only public-facing evidence to the report; keep workflow-only details
   in the plan/status files.
 
 ## Task 7: Local Exit Gate

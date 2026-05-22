@@ -46,8 +46,8 @@ sampled function is compressible enough.
 3. Schedule oracle: confirm that piece dispatch is not the hidden source of the
    Phase 10 residual error.
 4. Stronger candidates: compare richer factor tensors, active-pillar local TT
-   pieces, analytic-coupon active-pillar pieces, and fixed-trade curve-only
-   controls.
+   pieces, fixed-trade curve-only controls, and a formula-aware full-wrapper
+   cashflow-kernel Chebyshev model.
 
 ## Results
 
@@ -102,6 +102,17 @@ Initial oracle results:
 | 10Y fixed-trade curve-only TT max PV abs. error | `1.796590E-004` |
 | 10Y fixed-trade curve-only TT max PV rel. error | `0.00%` |
 | 10Y fixed-trade curve-only TT max 10Y DV01 rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels internal dimensions | `2` |
+| Schedule-resolved cashflow Chebyshev kernels build evaluations | `39699` |
+| Schedule-resolved cashflow Chebyshev kernels validation points | `99` |
+| Schedule-resolved cashflow Chebyshev kernels measured eval speedup | `2.8x` |
+| Schedule-resolved cashflow Chebyshev kernels max PV abs. error | `1.348184E-010` |
+| Schedule-resolved cashflow Chebyshev kernels max PV rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max 10Y DV01 rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max coupon derivative rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max maturity sensitivity rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max coupon-maturity mixed rel. error | `0.00%` |
+| Non-100 notional dirty-price max abs. error | `4.243361E-011` |
 
 ## Interpretation
 
@@ -165,19 +176,50 @@ phase. With coupon and maturity fixed and only active curve pillars varied, the
 use cases where trades are fixed and repeated scenarios vary the curve. It does
 not solve the separate problem of a parametric new-bond surface over maturity.
 
+The schedule-resolved cashflow Chebyshev-kernel candidate changes the modelling
+premise. It keeps the public `curve bumps[60], coupon, maturity` wrapper, but it
+does not ask a single TT to rediscover the bond formula. Instead, it resolves
+the maturity date to the corresponding coupon/redemption cashflows, keeps coupon
+linearity in the cashflow amount, and prices each cashflow through a local
+Chebyshev discount kernel. Because linear zero-rate interpolation makes a
+single cashflow discount factor depend on only one or two adjacent curve
+pillars, each local kernel is at most 2D. On a broadened 99-point full-wrapper
+validation bank spanning coupons, maturities, parallel shifts, slopes, sinusoidal
+shocks, and local 10Y bumps, this candidate reports `1.348184E-010` max PV
+absolute error, near-zero displayed PV/risk relative error, and `2.8x` measured
+evaluation speedup over the QLNet baseline path after schedules/kernels are
+cached. A separate non-100 notional check at `250` notional reports
+`4.243361E-011` max dirty-price absolute error, which confirms that notional is
+handled algebraically rather than becoming a hidden Chebyshev coordinate.
+
+This is the first candidate in Phase 12 that satisfies the intended replacement
+shape: it accepts the full wrapper, preserves schedule-sensitive maturity
+finite differences by routing through resolved cashflows, captures coupon/rate
+cross terms through the coupon-weighted cashflow amount, and avoids modelling
+inactive post-maturity curve pillars. The implementation uses a small
+allocation-free barycentric Chebyshev evaluator for each discount kernel rather
+than the general-purpose dense tensor evaluator on every cashflow. The tradeoff
+is that it is formula-aware. It is a correct recipe for the supported
+fixed-coupon bond family, not a blind black-box surrogate for arbitrary
+products.
+
 ## Decision
 
 Current working decision: factor compression can remain a factor-scenario
 recipe, but it should not be presented as the faithful arbitrary-pillar clone.
-The strongest current recipe is fixed-trade curve-only active-pillar TT for
-repeated curve-risk scenarios. A parametric new-bond surface over maturity is a
-different and harder problem; it needs explicit maturity treatment before it can
-be claimed as a faithful clone.
+The leading full-wrapper replacement recipe is now schedule-resolved cashflow
+decomposition plus local Chebyshev discount kernels. This keeps maturity as a
+schedule-routing input instead of an ordinary smooth Chebyshev axis, keeps
+coupon/notional algebraic, and uses low-dimensional Chebyshev tensors only for
+the smooth discount-factor kernels. The next Phase 12 task is to broaden this
+candidate's validation bank and decide whether the example should present this
+as the recommended bond-pricer acceleration pattern.
 
 ## Sources
 
 - Chebfun, "Edge detection in Chebfun": <https://www.chebfun.org/examples/approx/EdgeDetection.html>
 - Federal Reserve Board, "H.15 Selected Interest Rates": <https://www.federalreserve.gov/releases/h15/>
+- OpenGamma Strata, `FixedCouponBond`: <https://strata.opengamma.io/apidocs/com/opengamma/strata/product/bond/FixedCouponBond.html>
 - OpenGamma Strata, `FixedCouponBondTradeCalculations`: <https://strata.opengamma.io/apidocs/com/opengamma/strata/measure/bond/FixedCouponBondTradeCalculations.html>
 - OpenGamma, "Strata and multi-curve calibration and bucketed PV01": <https://opengamma.com/strata-and-multi-curve-calibration-and-bucketed-pv01/>
 - QuantLib Guide, "Cash-flow analysis": <https://www.quantlibguide.com/Cash-flow%20analysis.html>

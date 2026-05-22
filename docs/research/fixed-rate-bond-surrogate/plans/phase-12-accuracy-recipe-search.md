@@ -22,8 +22,9 @@ Current evidence points to four possible error sources:
    Chebyshev object than the current small dense factor tensor.
 3. **Derivative measurement error:** finite-difference step choice may distort
    DV01, maturity slope, and mixed-term comparisons.
-4. **Problem framing:** a faithful arbitrary 60-pillar parametric bond clone may
-   be less defensible than fixed-trade or factor-scenario surrogates.
+4. **Problem framing:** a blind faithful arbitrary 60-pillar parametric bond
+   clone may be less defensible than a formula-aware replacement that preserves
+   the full wrapper while decomposing the fixed-coupon bond cashflows.
 
 ## Related-Work Refresh
 
@@ -85,7 +86,10 @@ Measure candidates in this order:
 2. schedule-aware active-pillar TT per maturity piece while preserving the 62D
    wrapper;
 3. analytic-coupon plus active-pillar TT;
-4. fixed-trade curve-only surrogate as a production-control case.
+4. fixed-trade curve-only surrogate as a production-control case;
+5. schedule-resolved cashflow Chebyshev kernels: resolve the maturity schedule,
+   keep coupon/notional algebraic, and use local 1D/2D Chebyshev tensors for
+   smooth discount-factor kernels.
 
 Stop adding candidates once the dominant error source is clear.
 
@@ -95,7 +99,8 @@ The phase report must make one of these decisions:
 
 - a candidate materially improves PV and risk accuracy and should become the
   next implementation path;
-- the arbitrary 60-pillar parametric clone is not viable at current build cost;
+- a blind arbitrary 60-pillar parametric clone is not viable at current build
+  cost, but a formula-aware replacement is viable for the supported bond family;
 - the bottleneck is a ChebyshevSharp capability gap that needs a separate
   library-design phase.
 

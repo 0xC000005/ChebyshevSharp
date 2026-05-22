@@ -20,6 +20,7 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         Assert.NotEmpty(report.DerivativeOracle.RateStepDiagnostics);
         Assert.NotEmpty(report.DerivativeOracle.MaturityStepDiagnostics);
         Assert.NotEmpty(report.ScheduleDispatch.Diagnostics);
+        Assert.Equal(3, report.NotionalScaling.ValidationPointCount);
         Assert.Contains("projection", report.Decision, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -88,6 +89,7 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
             model => model.ModelName == "10Y active-pillar TT");
         Assert.Contains(report.CandidateModels, model => model.ModelName == "10Y narrow active-pillar TT");
         Assert.Contains(report.CandidateModels, model => model.ModelName == "10Y fixed-trade curve-only TT");
+        Assert.Contains(report.CandidateModels, model => model.ModelName == "Schedule-resolved cashflow Chebyshev kernels");
 
         Assert.Equal(62, activeTt.PublicInputDimensionCount);
         Assert.InRange(activeTt.InternalDimensionCount, 1, 61);
@@ -107,6 +109,38 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
     }
 
     [Fact]
+    public void Schedule_resolved_cashflow_kernel_candidate_preserves_full_wrapper_and_matches_reference_risk()
+    {
+        AccuracyRecipeSearchReport report = Report.Value;
+
+        AccuracyRecipeModelSummary model = Assert.Single(
+            report.CandidateModels,
+            model => model.ModelName == "Schedule-resolved cashflow Chebyshev kernels");
+
+        Assert.Equal(62, model.PublicInputDimensionCount);
+        Assert.Equal(2, model.InternalDimensionCount);
+        Assert.True(model.BuildEvaluations > 0);
+        Assert.True(model.EvalSpeedup > 1.0);
+        Assert.True(model.ValidationPointCount >= 80);
+
+        AssertMetricBelow(model, "PV", maxAbsoluteError: 1e-6, maxRelativeError: 1e-8);
+        AssertMetricBelow(model, "10Y DV01", maxAbsoluteError: 1e-7, maxRelativeError: 1e-5);
+        AssertMetricBelow(model, "coupon derivative", maxAbsoluteError: 1e-5, maxRelativeError: 1e-7);
+        AssertMetricBelow(model, "maturity sensitivity", maxAbsoluteError: 1e-4, maxRelativeError: 1e-4);
+        AssertMetricBelow(model, "coupon-maturity mixed", maxAbsoluteError: 1e-4, maxRelativeError: 1e-4);
+    }
+
+    [Fact]
+    public void Schedule_resolved_cashflow_kernel_preserves_dirty_price_under_non_100_notional()
+    {
+        AccuracyRecipeSearchReport report = Report.Value;
+
+        Assert.Equal(250.0, report.NotionalScaling.Notional);
+        Assert.True(report.NotionalScaling.MaxDirtyPriceAbsoluteError < 1e-6);
+        Assert.True(report.NotionalScaling.MaxDirtyPriceRelativeError < 1e-8);
+    }
+
+    [Fact]
     public void Accuracy_recipe_search_mode_writes_phase12_summary()
     {
         using var writer = new StringWriter();
@@ -118,6 +152,23 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         Assert.Contains("Projection oracle", output);
         Assert.Contains("Derivative oracle", output);
         Assert.Contains("Schedule dispatch", output);
+        Assert.Contains("Notional scaling check", output);
         Assert.Contains("Next decision", output);
+    }
+
+    private static void AssertMetricBelow(
+        AccuracyRecipeModelSummary model,
+        string metricName,
+        double maxAbsoluteError,
+        double maxRelativeError)
+    {
+        AccuracyRecipeMetricSummary metric = model.Metrics.Single(metric => metric.Name == metricName);
+
+        Assert.True(
+            metric.MaxAbsoluteError <= maxAbsoluteError,
+            $"{model.ModelName} {metricName} max abs {metric.MaxAbsoluteError:E6} > {maxAbsoluteError:E6}");
+        Assert.True(
+            metric.MaxRelativeError <= maxRelativeError,
+            $"{model.ModelName} {metricName} max rel {metric.MaxRelativeError:E6} > {maxRelativeError:E6}");
     }
 }

@@ -62,6 +62,12 @@ public sealed record AccuracyActiveSupportSummary(
     int MinActiveCurveBumpDimensions,
     int MaxActiveCurveBumpDimensions);
 
+public sealed record AccuracyNotionalScalingSummary(
+    int ValidationPointCount,
+    double Notional,
+    double MaxDirtyPriceAbsoluteError,
+    double MaxDirtyPriceRelativeError);
+
 public sealed record AccuracyRecipeMetricSummary(
     string Name,
     double MeanAbsoluteError,
@@ -75,8 +81,17 @@ public sealed record AccuracyRecipeModelSummary(
     int InternalDimensionCount,
     int BuildEvaluations,
     double BuildSeconds,
+    double BaselineEvalMicroseconds,
+    double ModelEvalMicroseconds,
+    double EvalSpeedup,
+    int ValidationPointCount,
     IReadOnlyList<AccuracyRecipeMetricSummary> Metrics,
     string Interpretation);
+
+public sealed record AccuracyEvalSpeedSummary(
+    double BaselineEvalMicroseconds,
+    double ModelEvalMicroseconds,
+    double EvalSpeedup);
 
 public sealed record AccuracyRecipeSearchReport(
     string FixtureId,
@@ -89,6 +104,7 @@ public sealed record AccuracyRecipeSearchReport(
     AccuracyDerivativeOracleSummary DerivativeOracle,
     AccuracyScheduleDispatchSummary ScheduleDispatch,
     AccuracyActiveSupportSummary ActiveSupport,
+    AccuracyNotionalScalingSummary NotionalScaling,
     IReadOnlyList<AccuracyRecipeModelSummary> CandidateModels,
     string Decision);
 
@@ -122,6 +138,7 @@ public static class AccuracyRecipeSearch
         AccuracyDerivativeOracleSummary derivative = BuildDerivativeOracle(adapter, request);
         AccuracyScheduleDispatchSummary schedule = BuildScheduleDispatchSummary();
         AccuracyActiveSupportSummary activeSupport = BuildActiveSupportOracle(adapter, clonePoints);
+        AccuracyNotionalScalingSummary notionalScaling = BuildNotionalScalingSummary(pricer, request);
         AccuracyRecipeModelSummary[] candidateModels =
         [
             BuildActivePillarTt(
@@ -151,19 +168,22 @@ public static class AccuracyRecipeSearch
                 interpretation:
                     "Narrower 10Y active-pillar TT with higher coupon/maturity resolution and rank budget."),
             BuildFixedTradeCurveOnlyTt(adapter),
+            BuildScheduleResolvedCashflowKernelModel(pricer, request, adapter, clonePoints, factorPoints),
         ];
 
         AccuracyRecipeModelSummary narrow = candidateModels.Single(model => model.ModelName == "10Y narrow active-pillar TT");
         AccuracyRecipeMetricSummary narrowPv = narrow.Metrics.Single(metric => metric.Name == "PV");
         AccuracyRecipeMetricSummary narrowMaturity = narrow.Metrics.Single(metric => metric.Name == "maturity sensitivity");
-        AccuracyRecipeModelSummary fixedTrade = candidateModels.Single(model => model.ModelName == "10Y fixed-trade curve-only TT");
-        AccuracyRecipeMetricSummary fixedPv = fixedTrade.Metrics.Single(metric => metric.Name == "PV");
+        AccuracyRecipeModelSummary cashflowKernel = candidateModels.Single(
+            model => model.ModelName == "Schedule-resolved cashflow Chebyshev kernels");
+        AccuracyRecipeMetricSummary cashflowPv = cashflowKernel.Metrics.Single(metric => metric.Name == "PV");
         string decision =
             "Projection oracle is material, and active support is exact on the validation bank. " +
             $"A narrowed 10Y active-pillar TT reduces local PV max relative error to {narrowPv.MaxRelativeError:P2}, " +
             $"but maturity-sensitivity max relative error remains {narrowMaturity.MaxRelativeError:P2}. " +
-            $"A fixed-trade curve-only TT reaches {fixedPv.MaxRelativeError:P2} max PV relative error, " +
-            "so fixed-trade curve-risk surrogates are the strongest current recipe while parametric maturity remains unresolved.";
+            $"A schedule-resolved cashflow Chebyshev-kernel model reaches {cashflowPv.MaxRelativeError:P2} max PV relative error " +
+            $"with {cashflowKernel.EvalSpeedup:F1}x measured evaluation speedup, " +
+            "so the defensible replacement recipe is formula-aware schedule routing plus local Chebyshev discount kernels.";
 
         return new AccuracyRecipeSearchReport(
             FixtureId: fixture.FixtureId,
@@ -176,6 +196,7 @@ public static class AccuracyRecipeSearch
             DerivativeOracle: derivative,
             ScheduleDispatch: schedule,
             ActiveSupport: activeSupport,
+            NotionalScaling: notionalScaling,
             CandidateModels: candidateModels,
             Decision: decision);
     }
@@ -347,6 +368,39 @@ public static class AccuracyRecipeSearch
             MaxActiveCurveBumpDimensions: points.Max(point => point.ActiveCurveBumpDimensions));
     }
 
+    private static AccuracyNotionalScalingSummary BuildNotionalScalingSummary(
+        IFixedRateBondReferencePricer pricer,
+        FixedRateBondRequest baseRequest)
+    {
+        const double scaledNotional = 250.0;
+        FixedRateBondRequest scaledRequest = baseRequest with { Notional = scaledNotional };
+        var adapter = new RequestAdapter(pricer, scaledRequest);
+        var model = new ScheduleResolvedCashflowChebyshevModel(pricer, scaledRequest);
+        SurrogateValidationPoint[] validationPoints =
+        [
+            new("notional-zero", FullPoint(0.045, 10.0, _ => 0.0), 0.0),
+            new("notional-slope", FullPoint(0.075, 15.5, index => -80.0 + 160.0 * index / (CurveBumpDimensionCount - 1)), 0.0),
+            new("notional-sine", FullPoint(0.025, 25.0, index => 60.0 * Math.Sin((index + 1) * Math.PI / 7.0)), 0.0),
+        ];
+
+        double maxAbsolute = 0.0;
+        double maxRelative = 0.0;
+        foreach (SurrogateValidationPoint point in validationPoints)
+        {
+            double expected = adapter.Price(point.Coordinates);
+            double actual = model.Eval(point.Coordinates);
+            double absolute = Math.Abs(actual - expected);
+            maxAbsolute = Math.Max(maxAbsolute, absolute);
+            maxRelative = Math.Max(maxRelative, RelativeError(absolute, expected));
+        }
+
+        return new AccuracyNotionalScalingSummary(
+            ValidationPointCount: validationPoints.Length,
+            Notional: scaledNotional,
+            MaxDirtyPriceAbsoluteError: maxAbsolute,
+            MaxDirtyPriceRelativeError: maxRelative);
+    }
+
     private static int ActiveCurveBumpDimensions(double maturityYears)
         => Math.Min(CurveBumpDimensionCount, (int)Math.Floor(maturityYears * 2.0) + 1);
 
@@ -414,6 +468,41 @@ public static class AccuracyRecipeSearch
 
         IReadOnlyList<SurrogateValidationPoint> validationPoints =
             BuildTenYearActiveValidationPoints(adapter, activeCurveDimensions);
+        AccuracyRecipeMetricSummary[] metrics =
+        [
+            SummarizeMetric("PV", adapter.Price, Eval, validationPoints),
+            SummarizeMetric(
+                "10Y DV01",
+                point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
+                point => FirstDerivative(Eval, point, CurveDimensionForMonths(120), 1e-4),
+                validationPoints),
+            SummarizeMetric(
+                "coupon derivative",
+                point => FirstDerivative(adapter.Price, point, CouponDimension, 1e-4),
+                point => FirstDerivative(Eval, point, CouponDimension, 1e-4),
+                validationPoints),
+            SummarizeMetric(
+                "maturity sensitivity",
+                point => FirstDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                point => FirstDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "maturity left sensitivity",
+                point => BackwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                point => BackwardDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "maturity right sensitivity",
+                point => ForwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                point => ForwardDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "coupon-maturity mixed",
+                point => MixedDerivative(adapter.Price, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                point => MixedDerivative(Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+        ];
+        AccuracyEvalSpeedSummary speed = MeasureEvaluationSpeed(adapter.Price, Eval, validationPoints);
 
         return new AccuracyRecipeModelSummary(
             ModelName: name,
@@ -421,40 +510,11 @@ public static class AccuracyRecipeSearch
             InternalDimensionCount: internalDimensions,
             BuildEvaluations: tt.TotalBuildEvals,
             BuildSeconds: sw.Elapsed.TotalSeconds,
-            Metrics:
-            [
-                SummarizeMetric("PV", adapter.Price, Eval, validationPoints),
-                SummarizeMetric(
-                    "10Y DV01",
-                    point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
-                    point => FirstDerivative(Eval, point, CurveDimensionForMonths(120), 1e-4),
-                    validationPoints),
-                SummarizeMetric(
-                    "coupon derivative",
-                    point => FirstDerivative(adapter.Price, point, CouponDimension, 1e-4),
-                    point => FirstDerivative(Eval, point, CouponDimension, 1e-4),
-                    validationPoints),
-                SummarizeMetric(
-                    "maturity sensitivity",
-                    point => FirstDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
-                    point => FirstDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
-                    validationPoints),
-                SummarizeMetric(
-                    "maturity left sensitivity",
-                    point => BackwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
-                    point => BackwardDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
-                    validationPoints),
-                SummarizeMetric(
-                    "maturity right sensitivity",
-                    point => ForwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
-                    point => ForwardDerivative(Eval, point, MaturityDimension, 7.0 / 365.25),
-                    validationPoints),
-                SummarizeMetric(
-                    "coupon-maturity mixed",
-                    point => MixedDerivative(adapter.Price, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
-                    point => MixedDerivative(Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
-                    validationPoints),
-            ],
+            BaselineEvalMicroseconds: speed.BaselineEvalMicroseconds,
+            ModelEvalMicroseconds: speed.ModelEvalMicroseconds,
+            EvalSpeedup: speed.EvalSpeedup,
+            ValidationPointCount: validationPoints.Count,
+            Metrics: metrics,
             Interpretation: interpretation);
     }
 
@@ -500,6 +560,16 @@ public static class AccuracyRecipeSearch
 
         IReadOnlyList<SurrogateValidationPoint> validationPoints =
             BuildFixedTradeValidationPoints(adapter, activeCurveDimensions, coupon, maturityYears);
+        AccuracyRecipeMetricSummary[] metrics =
+        [
+            SummarizeMetric("PV", adapter.Price, Eval, validationPoints),
+            SummarizeMetric(
+                "10Y DV01",
+                point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
+                point => FirstDerivative(Eval, point, CurveDimensionForMonths(120), 1e-4),
+                validationPoints),
+        ];
+        AccuracyEvalSpeedSummary speed = MeasureEvaluationSpeed(adapter.Price, Eval, validationPoints);
 
         return new AccuracyRecipeModelSummary(
             ModelName: "10Y fixed-trade curve-only TT",
@@ -507,17 +577,139 @@ public static class AccuracyRecipeSearch
             InternalDimensionCount: activeCurveDimensions,
             BuildEvaluations: tt.TotalBuildEvals,
             BuildSeconds: sw.Elapsed.TotalSeconds,
-            Metrics:
-            [
-                SummarizeMetric("PV", adapter.Price, Eval, validationPoints),
-                SummarizeMetric(
-                    "10Y DV01",
-                    point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
-                    point => FirstDerivative(Eval, point, CurveDimensionForMonths(120), 1e-4),
-                    validationPoints),
-            ],
+            BaselineEvalMicroseconds: speed.BaselineEvalMicroseconds,
+            ModelEvalMicroseconds: speed.ModelEvalMicroseconds,
+            EvalSpeedup: speed.EvalSpeedup,
+            ValidationPointCount: validationPoints.Count,
+            Metrics: metrics,
             Interpretation:
                 "Fixed-trade control: coupon and maturity are fixed, and only active curve pillars are approximated.");
+    }
+
+    private static AccuracyRecipeModelSummary BuildScheduleResolvedCashflowKernelModel(
+        IFixedRateBondReferencePricer pricer,
+        FixedRateBondRequest request,
+        RequestAdapter adapter,
+        IReadOnlyList<SurrogateValidationPoint> clonePoints,
+        IReadOnlyList<SurrogateValidationPoint> factorPoints)
+    {
+        var model = new ScheduleResolvedCashflowChebyshevModel(pricer, request);
+        SurrogateValidationPoint[] validationPoints = BuildCashflowKernelValidationPoints(adapter, clonePoints, factorPoints);
+
+        AccuracyRecipeMetricSummary[] metrics =
+        [
+            SummarizeMetric("PV", adapter.Price, model.Eval, validationPoints),
+            SummarizeMetric(
+                "10Y DV01",
+                point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
+                point => FirstDerivative(model.Eval, point, CurveDimensionForMonths(120), 1e-4),
+                validationPoints),
+            SummarizeMetric(
+                "coupon derivative",
+                point => FirstDerivative(adapter.Price, point, CouponDimension, 1e-4),
+                point => FirstDerivative(model.Eval, point, CouponDimension, 1e-4),
+                validationPoints),
+            SummarizeMetric(
+                "maturity sensitivity",
+                point => FirstDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                point => FirstDerivative(model.Eval, point, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "maturity left sensitivity",
+                point => BackwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                point => BackwardDerivative(model.Eval, point, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "maturity right sensitivity",
+                point => ForwardDerivative(adapter.Price, point, MaturityDimension, 7.0 / 365.25),
+                point => ForwardDerivative(model.Eval, point, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "coupon-maturity mixed",
+                point => MixedDerivative(adapter.Price, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                point => MixedDerivative(model.Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+        ];
+        AccuracyEvalSpeedSummary speed = MeasureEvaluationSpeed(adapter.Price, model.Eval, validationPoints);
+
+        return new AccuracyRecipeModelSummary(
+            ModelName: "Schedule-resolved cashflow Chebyshev kernels",
+            PublicInputDimensionCount: PublicInputDimensionCount,
+            InternalDimensionCount: model.MaxKernelDimension,
+            BuildEvaluations: model.BuildEvaluations,
+            BuildSeconds: model.BuildSeconds,
+            BaselineEvalMicroseconds: speed.BaselineEvalMicroseconds,
+            ModelEvalMicroseconds: speed.ModelEvalMicroseconds,
+            EvalSpeedup: speed.EvalSpeedup,
+            ValidationPointCount: validationPoints.Length,
+            Metrics: metrics,
+            Interpretation:
+                "Full-wrapper replacement candidate: route by resolved maturity schedule, keep coupon/notional algebraic, and price each cashflow with a local 1D/2D Chebyshev discount kernel.");
+    }
+
+    private static SurrogateValidationPoint[] BuildCashflowKernelValidationPoints(
+        RequestAdapter adapter,
+        IReadOnlyList<SurrogateValidationPoint> clonePoints,
+        IReadOnlyList<SurrogateValidationPoint> factorPoints)
+    {
+        var points = new List<double[]>();
+        points.AddRange(clonePoints.Select(point => point.Coordinates).Where(IsInteriorGreekCoordinate));
+        points.AddRange(factorPoints.Select(point => point.Coordinates).Where(IsInteriorGreekCoordinate));
+
+        double[] maturities = [2.25, 2.75, 3.0, 5.5, 7.25, 10.0, 10.0 - 7.0 / 365.25, 10.0 + 7.0 / 365.25, 15.5, 20.25, 25.0, 29.5];
+        double[] coupons = [0.015, 0.035, 0.055, 0.085, 0.105];
+
+        for (int i = 0; i < maturities.Length; i++)
+        {
+            double maturity = maturities[i];
+            double coupon = coupons[i % coupons.Length];
+            points.Add(FullPoint(coupon, maturity, _ => 0.0));
+            points.Add(FullPoint(coupon, maturity, _ => 90.0));
+            points.Add(FullPoint(coupon, maturity, _ => -90.0));
+            points.Add(FullPoint(coupon, maturity, index => -100.0 + 200.0 * index / (CurveBumpDimensionCount - 1)));
+            points.Add(FullPoint(coupon, maturity, index => 100.0 - 200.0 * index / (CurveBumpDimensionCount - 1)));
+            points.Add(FullPoint(coupon, maturity, index => 70.0 * Math.Sin((index + 1) * Math.PI / 9.0)));
+            points.Add(FullPoint(coupon, maturity, index => index == CurveDimensionForMonths(120) ? 100.0 : 0.0));
+        }
+
+        return points
+            .Where(IsInteriorGreekCoordinate)
+            .Select((point, index) => new SurrogateValidationPoint(
+                $"cashflow-kernel-{index}",
+                point,
+                adapter.Price(point)))
+            .ToArray();
+    }
+
+    private static bool IsInteriorGreekValidationPoint(SurrogateValidationPoint point)
+        => IsInteriorGreekCoordinate(point.Coordinates);
+
+    private static bool IsInteriorGreekCoordinate(double[] coordinates)
+    {
+        const double rateStep = 1e-4;
+        const double couponStep = 1e-4;
+        const double maturityStep = 8.0 / 365.25;
+
+        if (coordinates[CouponDimension] <= couponStep || coordinates[CouponDimension] >= 0.12 - couponStep)
+        {
+            return false;
+        }
+
+        if (coordinates[MaturityDimension] <= 2.0 + maturityStep ||
+            coordinates[MaturityDimension] >= 30.0 - maturityStep)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < CurveBumpDimensionCount; i++)
+        {
+            if (coordinates[i] <= -150.0 + rateStep || coordinates[i] >= 150.0 - rateStep)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static IReadOnlyList<SurrogateValidationPoint> BuildFixedTradeValidationPoints(
@@ -613,6 +805,51 @@ public static class AccuracyRecipeSearch
             MaxAbsoluteError: absoluteErrors.Max(),
             MeanRelativeError: relativeErrors.Average(),
             MaxRelativeError: relativeErrors.Max());
+    }
+
+    private static AccuracyEvalSpeedSummary MeasureEvaluationSpeed(
+        Func<double[], double> baseline,
+        Func<double[], double> model,
+        IReadOnlyList<SurrogateValidationPoint> validationPoints)
+    {
+        const int repetitions = 40;
+        double sink = 0.0;
+
+        foreach (SurrogateValidationPoint point in validationPoints)
+        {
+            sink += baseline(point.Coordinates);
+            sink += model(point.Coordinates);
+        }
+
+        Stopwatch sw = Stopwatch.StartNew();
+        for (int repetition = 0; repetition < repetitions; repetition++)
+        {
+            foreach (SurrogateValidationPoint point in validationPoints)
+            {
+                sink += baseline(point.Coordinates);
+            }
+        }
+
+        sw.Stop();
+        double baselineMicros = sw.Elapsed.TotalMilliseconds * 1000.0 / (repetitions * validationPoints.Count);
+
+        sw.Restart();
+        for (int repetition = 0; repetition < repetitions; repetition++)
+        {
+            foreach (SurrogateValidationPoint point in validationPoints)
+            {
+                sink += model(point.Coordinates);
+            }
+        }
+
+        sw.Stop();
+        GC.KeepAlive(sink);
+        double modelMicros = sw.Elapsed.TotalMilliseconds * 1000.0 / (repetitions * validationPoints.Count);
+
+        return new AccuracyEvalSpeedSummary(
+            BaselineEvalMicroseconds: baselineMicros,
+            ModelEvalMicroseconds: modelMicros,
+            EvalSpeedup: baselineMicros / Math.Max(modelMicros, 1e-12));
     }
 
     private static double[] ActiveInternalToFullPoint(double[] internalPoint, int activeCurveDimensions)
@@ -780,6 +1017,442 @@ public static class AccuracyRecipeSearch
 
     private static double RelativeError(double absoluteError, double expected)
         => absoluteError / Math.Max(Math.Abs(expected), RelativeErrorFloor);
+
+    private sealed class ScheduleResolvedCashflowChebyshevModel
+    {
+        private const int DiscountKernelNodes = 9;
+        private readonly IFixedRateBondReferencePricer _pricer;
+        private readonly FixedRateBondRequest _baseRequest;
+        private readonly Dictionary<DateTime, CashflowTemplate> _scheduleCache = new();
+        private readonly Dictionary<DateTime, DiscountKernel> _discountKernels = new();
+
+        public ScheduleResolvedCashflowChebyshevModel(
+            IFixedRateBondReferencePricer pricer,
+            FixedRateBondRequest baseRequest)
+        {
+            _pricer = pricer;
+            _baseRequest = baseRequest;
+        }
+
+        public int MaxKernelDimension { get; private set; }
+
+        public int BuildEvaluations => _discountKernels.Values.Sum(kernel => kernel.BuildEvaluations);
+
+        public double BuildSeconds => _discountKernels.Values.Sum(kernel => kernel.BuildSeconds);
+
+        public double Eval(double[] fullPoint)
+        {
+            DateTime maturityDate = MaturityDateFromPoint(fullPoint);
+            CashflowTemplate template = GetTemplate(maturityDate);
+            double coupon = fullPoint[CouponDimension];
+            double pv = 0.0;
+
+            foreach (CashflowComponent component in template.Components)
+            {
+                DiscountKernel kernel = GetDiscountKernel(component.PaymentDate);
+                double amount = component.PrincipalAmount + coupon * component.CouponMultiplier;
+                pv += amount * kernel.Eval(fullPoint);
+            }
+
+            return pv * 100.0 / _baseRequest.Notional;
+        }
+
+        private CashflowTemplate GetTemplate(DateTime maturityDate)
+        {
+            if (_scheduleCache.TryGetValue(maturityDate, out CashflowTemplate? template))
+            {
+                return template;
+            }
+
+            FixedRateBondResult result = _pricer.Price(_baseRequest with
+            {
+                Coupon = 1.0,
+                MaturityDate = maturityDate,
+            });
+
+            CashflowComponent[] components = result.Cashflows
+                .Where(cashflow => !cashflow.HasOccurred)
+                .Select(cashflow => new CashflowComponent(
+                    cashflow.PaymentDate.Date,
+                    CouponMultiplier: cashflow.IsCoupon ? cashflow.Amount : 0.0,
+                    PrincipalAmount: cashflow.IsCoupon ? 0.0 : cashflow.Amount))
+                .ToArray();
+
+            template = new CashflowTemplate(components);
+            _scheduleCache.Add(maturityDate, template);
+            return template;
+        }
+
+        private DiscountKernel GetDiscountKernel(DateTime paymentDate)
+        {
+            if (_discountKernels.TryGetValue(paymentDate, out DiscountKernel? kernel))
+            {
+                return kernel;
+            }
+
+            kernel = DiscountKernel.Build(_baseRequest, paymentDate, DiscountKernelNodes);
+            _discountKernels.Add(paymentDate, kernel);
+            MaxKernelDimension = Math.Max(MaxKernelDimension, kernel.DimensionCount);
+            return kernel;
+        }
+
+        private DateTime MaturityDateFromPoint(double[] fullPoint)
+            => _baseRequest.ValuationDate.Date.AddDays(
+                (int)Math.Round(365.25 * fullPoint[MaturityDimension]));
+
+        private sealed record CashflowTemplate(IReadOnlyList<CashflowComponent> Components);
+
+        private sealed record CashflowComponent(
+            DateTime PaymentDate,
+            double CouponMultiplier,
+            double PrincipalAmount);
+    }
+
+    private sealed class DiscountKernel
+    {
+        private const double DomainLo = -150.0;
+        private const double DomainHi = 150.0;
+        private readonly int[] _publicDimensions;
+        private readonly double[] _nodes;
+        private readonly double[] _weights;
+        private readonly double[] _values;
+        private readonly double _constantDiscount;
+
+        private DiscountKernel(
+            int[] publicDimensions,
+            double[] nodes,
+            double[] weights,
+            double[] values,
+            double constantDiscount,
+            int buildEvaluations,
+            double buildSeconds)
+        {
+            _publicDimensions = publicDimensions;
+            _nodes = nodes;
+            _weights = weights;
+            _values = values;
+            _constantDiscount = constantDiscount;
+            BuildEvaluations = buildEvaluations;
+            BuildSeconds = buildSeconds;
+        }
+
+        public int DimensionCount => _publicDimensions.Length;
+
+        public int BuildEvaluations { get; }
+
+        public double BuildSeconds { get; }
+
+        public static DiscountKernel Build(
+            FixedRateBondRequest baseRequest,
+            DateTime paymentDate,
+            int nNodes)
+        {
+            DiscountKernelSpec spec = DiscountKernelSpec.From(baseRequest, paymentDate);
+            if (spec.PublicDimensions.Length == 0)
+            {
+                return new DiscountKernel(
+                    spec.PublicDimensions,
+                    nodes: [],
+                    weights: [],
+                    values: [],
+                    constantDiscount: spec.Discount(Array.Empty<double>()),
+                    buildEvaluations: 0,
+                    buildSeconds: 0.0);
+            }
+
+            if (spec.PublicDimensions.Length > 2)
+            {
+                throw new InvalidOperationException("A linear zero-rate discount kernel should depend on at most two curve pillars.");
+            }
+
+            Stopwatch sw = Stopwatch.StartNew();
+            double[] nodes = MakeChebyshevNodes(DomainLo, DomainHi, nNodes);
+            double[] weights = ComputeBarycentricWeights(nodes);
+            double[] values = BuildKernelValues(spec, nodes);
+            sw.Stop();
+
+            return new DiscountKernel(
+                spec.PublicDimensions,
+                nodes,
+                weights,
+                values,
+                constantDiscount: 0.0,
+                buildEvaluations: values.Length,
+                buildSeconds: sw.Elapsed.TotalSeconds);
+        }
+
+        public double Eval(double[] fullPoint)
+        {
+            if (_publicDimensions.Length == 0)
+            {
+                return _constantDiscount;
+            }
+
+            double x = CheckedCoordinate(fullPoint[_publicDimensions[0]]);
+            if (_publicDimensions.Length == 1)
+            {
+                return Interpolate1D(x, _nodes, _weights, _values);
+            }
+
+            double y = CheckedCoordinate(fullPoint[_publicDimensions[1]]);
+            return Interpolate2D(x, y, _nodes, _weights, _values);
+        }
+
+        private static double[] BuildKernelValues(DiscountKernelSpec spec, double[] nodes)
+        {
+            int n = nodes.Length;
+            if (spec.PublicDimensions.Length == 1)
+            {
+                var values = new double[n];
+                var point = new double[1];
+                for (int i = 0; i < n; i++)
+                {
+                    point[0] = nodes[i];
+                    values[i] = spec.Discount(point);
+                }
+
+                return values;
+            }
+
+            var result = new double[n * n];
+            var twoDimPoint = new double[2];
+            for (int i = 0; i < n; i++)
+            {
+                twoDimPoint[0] = nodes[i];
+                for (int j = 0; j < n; j++)
+                {
+                    twoDimPoint[1] = nodes[j];
+                    result[(i * n) + j] = spec.Discount(twoDimPoint);
+                }
+            }
+
+            return result;
+        }
+
+        private static double CheckedCoordinate(double value)
+        {
+            if (value < DomainLo || value > DomainHi)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Curve bump is outside the supported domain.");
+            }
+
+            return value;
+        }
+
+        private static double Interpolate1D(
+            double x,
+            double[] nodes,
+            double[] weights,
+            double[] values)
+        {
+            Span<double> basis = stackalloc double[nodes.Length];
+            FillBarycentricBasis(x, nodes, weights, basis);
+            double result = 0.0;
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                result += basis[i] * values[i];
+            }
+
+            return result;
+        }
+
+        private static double Interpolate2D(
+            double x,
+            double y,
+            double[] nodes,
+            double[] weights,
+            double[] values)
+        {
+            int n = nodes.Length;
+            Span<double> xBasis = stackalloc double[n];
+            Span<double> yBasis = stackalloc double[n];
+            FillBarycentricBasis(x, nodes, weights, xBasis);
+            FillBarycentricBasis(y, nodes, weights, yBasis);
+
+            double result = 0.0;
+            for (int i = 0; i < n; i++)
+            {
+                double xWeight = xBasis[i];
+                int row = i * n;
+                for (int j = 0; j < n; j++)
+                {
+                    result += xWeight * yBasis[j] * values[row + j];
+                }
+            }
+
+            return result;
+        }
+
+        private static void FillBarycentricBasis(
+            double x,
+            double[] nodes,
+            double[] weights,
+            Span<double> basis)
+        {
+            double denominator = 0.0;
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                if (Math.Abs(x - nodes[i]) < 1e-14)
+                {
+                    basis.Clear();
+                    basis[i] = 1.0;
+                    return;
+                }
+
+                double value = weights[i] / (x - nodes[i]);
+                basis[i] = value;
+                denominator += value;
+            }
+
+            for (int i = 0; i < basis.Length; i++)
+            {
+                basis[i] /= denominator;
+            }
+        }
+
+        private static double[] MakeChebyshevNodes(double lo, double hi, int n)
+        {
+            double[] nodes = new double[n];
+            double mid = 0.5 * (lo + hi);
+            double half = 0.5 * (hi - lo);
+            for (int k = 0; k < n; k++)
+            {
+                nodes[k] = mid + half * Math.Cos(Math.PI * ((2 * k) + 1) / (2 * n));
+            }
+
+            Array.Sort(nodes);
+            return nodes;
+        }
+
+        private static double[] ComputeBarycentricWeights(double[] nodes)
+        {
+            int n = nodes.Length;
+            var weights = new double[n];
+            Array.Fill(weights, 1.0);
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    if (j != i)
+                    {
+                        weights[i] /= nodes[i] - nodes[j];
+                    }
+                }
+            }
+
+            return weights;
+        }
+    }
+
+    private sealed class DiscountKernelSpec
+    {
+        private readonly double _paymentTime;
+        private readonly double _lowerTime;
+        private readonly double _upperTime;
+        private readonly double _lowerBaseRate;
+        private readonly double _upperBaseRate;
+        private readonly int _lowerLocalIndex;
+        private readonly int _upperLocalIndex;
+
+        private DiscountKernelSpec(
+            int[] publicDimensions,
+            double paymentTime,
+            double lowerTime,
+            double upperTime,
+            double lowerBaseRate,
+            double upperBaseRate,
+            int lowerLocalIndex,
+            int upperLocalIndex)
+        {
+            PublicDimensions = publicDimensions;
+            _paymentTime = paymentTime;
+            _lowerTime = lowerTime;
+            _upperTime = upperTime;
+            _lowerBaseRate = lowerBaseRate;
+            _upperBaseRate = upperBaseRate;
+            _lowerLocalIndex = lowerLocalIndex;
+            _upperLocalIndex = upperLocalIndex;
+        }
+
+        public int[] PublicDimensions { get; }
+
+        public static DiscountKernelSpec From(FixedRateBondRequest baseRequest, DateTime paymentDate)
+        {
+            IReadOnlyList<ZeroRatePillar> curve = baseRequest.ZeroCurve;
+            DateTime valuationDate = baseRequest.ValuationDate.Date;
+            double paymentTime = Actual365(valuationDate, paymentDate);
+
+            int upper = 0;
+            while (upper < curve.Count && curve[upper].Date.Date < paymentDate.Date)
+            {
+                upper++;
+            }
+
+            if (upper >= curve.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(paymentDate), "Payment date is outside the zero-curve domain.");
+            }
+
+            int lower = upper;
+            if (curve[upper].Date.Date != paymentDate.Date)
+            {
+                lower = Math.Max(0, upper - 1);
+            }
+
+            int[] curveIndices = lower == upper ? [lower] : [lower, upper];
+            int[] publicDimensions = curveIndices
+                .Where(curveIndex => curveIndex > 0)
+                .Select(curveIndex => curveIndex - 1)
+                .Distinct()
+                .ToArray();
+
+            return new DiscountKernelSpec(
+                publicDimensions,
+                paymentTime,
+                Actual365(valuationDate, curve[lower].Date),
+                Actual365(valuationDate, curve[upper].Date),
+                curve[lower].ZeroRate,
+                curve[upper].ZeroRate,
+                LocalIndex(publicDimensions, lower),
+                LocalIndex(publicDimensions, upper));
+        }
+
+        public double Discount(double[] localBumps)
+        {
+            double lowerRate = BumpedRate(_lowerBaseRate, _lowerLocalIndex, localBumps);
+            double upperRate = BumpedRate(_upperBaseRate, _upperLocalIndex, localBumps);
+            double zeroRate = Math.Abs(_upperTime - _lowerTime) < 1e-14
+                ? upperRate
+                : lowerRate + (upperRate - lowerRate) * ((_paymentTime - _lowerTime) / (_upperTime - _lowerTime));
+
+            return Math.Exp(-zeroRate * _paymentTime);
+        }
+
+        private static int LocalIndex(int[] publicDimensions, int curveIndex)
+        {
+            if (curveIndex == 0)
+            {
+                return -1;
+            }
+
+            int publicDimension = curveIndex - 1;
+            for (int i = 0; i < publicDimensions.Length; i++)
+            {
+                if (publicDimensions[i] == publicDimension)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static double BumpedRate(double baseRate, int localIndex, double[] localBumps)
+            => localIndex < 0 ? baseRate : baseRate + localBumps[localIndex] * 1e-4;
+
+        private static double Actual365(DateTime valuationDate, DateTime paymentDate)
+            => (paymentDate.Date - valuationDate.Date).TotalDays / 365.0;
+    }
 
     private sealed class RequestAdapter
     {

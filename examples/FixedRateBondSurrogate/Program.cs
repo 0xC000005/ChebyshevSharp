@@ -527,14 +527,23 @@ public static class FixedRateBondExample
             $"max {report.ActiveSupport.MaxActiveCurveBumpDimensions}");
 
         output.WriteLine();
+        output.WriteLine("Notional scaling check");
+        output.WriteLine(
+            $"  notional {report.NotionalScaling.Notional:F2}, " +
+            $"points {report.NotionalScaling.ValidationPointCount}, " +
+            $"dirty price max abs {report.NotionalScaling.MaxDirtyPriceAbsoluteError:E6}, " +
+            $"max rel {report.NotionalScaling.MaxDirtyPriceRelativeError:P2}");
+
+        output.WriteLine();
         output.WriteLine("Candidate models");
         foreach (AccuracyRecipeModelSummary model in report.CandidateModels)
         {
             AccuracyRecipeMetricSummary pv = model.Metrics.Single(metric => metric.Name == "PV");
             output.WriteLine(
                 $"  {model.ModelName}: internal dims {model.InternalDimensionCount}, " +
-                $"build evals {model.BuildEvaluations}, PV max abs {pv.MaxAbsoluteError:E6}, " +
-                $"PV max rel {pv.MaxRelativeError:P2}");
+                $"build evals {model.BuildEvaluations}, eval speedup {model.EvalSpeedup:F1}x, " +
+                $"validation points {model.ValidationPointCount}, " +
+                $"PV max abs {pv.MaxAbsoluteError:E6}, PV max rel {pv.MaxRelativeError:P2}");
             foreach (AccuracyRecipeMetricSummary metric in model.Metrics.Where(metric => metric.Name != "PV"))
             {
                 output.WriteLine(
