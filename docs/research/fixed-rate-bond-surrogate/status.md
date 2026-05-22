@@ -10,9 +10,9 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `phase10-schedule-aware-router`
+Working branch: `phase11-fixed-rate-bond-tutorial`
 
-Last completed phase PR: [#200](https://github.com/0xC000005/ChebyshevSharp/pull/200), merged on 2026-05-21 as `e2ac6ac`.
+Last completed phase PR: [#201](https://github.com/0xC000005/ChebyshevSharp/pull/201), merged on 2026-05-22 as `1e9d66e`.
 
 ## Confidentiality Guardrail
 
@@ -41,8 +41,8 @@ Use generic public terms:
 | 7. Structured alternatives benchmark | Complete | Controlled alternatives compared against the Phase 6 evidence bank |
 | 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
 | 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
-| 10. Schedule-aware high-dimensional router | Complete; PR ready | Router prototype, one-sided split diagnostics, and public-API decision implemented in PR #201 |
-| 11. Tutorial and documentation | Not started | Public tutorial merged into documentation site |
+| 10. Schedule-aware high-dimensional router | Complete | PR #201 merged; router remains example-local and does not justify a generic kink-detection API yet |
+| 11. Tutorial and documentation | Planned | Public tutorial and case-study documentation ready for one coherent PR |
 | 12. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
@@ -64,7 +64,7 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Start Phase 10 on `phase10-schedule-aware-router`: prototype a schedule-aware high-dimensional piecewise router, validate one-sided maturity sensitivities near split points, compare against Phase 9 controls, and decide whether a public ChebyshevSharp API is justified.
+Start Phase 11 on `phase11-fixed-rate-bond-tutorial`: turn the fixed-rate bond research into a public tutorial and case study that explains the baseline pricer, data fixture, naive global TT/Slider failures, structured alternatives, analytic coupon identity, and schedule-aware routing limits without claiming a general fixed-income replacement.
 
 ## Phase 6 Notes
 
@@ -172,6 +172,19 @@ Start Phase 10 on `phase10-schedule-aware-router`: prototype a schedule-aware hi
 - Closeout verification so far: `dotnet format --verify-no-changes --verbosity minimal` passed; `docfx docs/docfx.json` passed with 0 warnings/errors; full Release tests passed 1,727 tests with 0 failures; `git diff --check` passed.
 - Benchmark command run: `dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --schedule-aware-router`.
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4513211570).
+- Merge outcome: PR [#201](https://github.com/0xC000005/ChebyshevSharp/pull/201) merged into `main` on 2026-05-22 with merge commit `1e9d66e29eee7028d5c7e7918f9d8d3b39ac260b`.
+- Closeout tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4519494565).
+
+## Phase 11 Notes
+
+- Plan: [Phase 11 Fixed-Rate Bond Tutorial Plan](plans/phase-11-fixed-rate-bond-tutorial.md).
+- Implementation plan path: `docs/superpowers/plans/2026-05-22-phase11-fixed-rate-bond-tutorial.md`.
+- Working branch: `phase11-fixed-rate-bond-tutorial`.
+- Scope boundary: create public-facing tutorial and documentation only; do not change surrogate algorithms, expose new APIs, bump versions, or release packages in this phase.
+- Required narrative: start from the QLNet reference pricer and pinned Federal Reserve fixture, then show why a naive global surrogate is insufficient before introducing progressively more structured models.
+- Required guardrail: avoid proprietary names and avoid language implying a universal replacement for arbitrary fixed-income products.
+- Required evidence reuse: Phase 5 baseline assumptions, Phase 6 naive global TT/Slider failures, Phase 7 structured alternatives, Phase 8 analytic coupon identity, Phase 9 schedule-special-point evidence, and Phase 10 router decision.
+- Planned output: a documentation case study, README/example links if needed, and a concise tracking-issue update before opening one coherent Phase 11 PR.
 
 ## Phase 5 Notes
 
