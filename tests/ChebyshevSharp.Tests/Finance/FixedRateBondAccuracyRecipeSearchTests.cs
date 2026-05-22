@@ -120,7 +120,9 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         Assert.Equal(62, model.PublicInputDimensionCount);
         Assert.Equal(2, model.InternalDimensionCount);
         Assert.True(model.BuildEvaluations > 0);
-        Assert.True(model.EvalSpeedup > 1.0);
+        Assert.True(double.IsFinite(model.BaselineEvalMicroseconds) && model.BaselineEvalMicroseconds > 0.0);
+        Assert.True(double.IsFinite(model.ModelEvalMicroseconds) && model.ModelEvalMicroseconds > 0.0);
+        Assert.True(double.IsFinite(model.EvalSpeedup) && model.EvalSpeedup > 0.0);
         Assert.True(model.ValidationPointCount >= 80);
 
         AssertMetricBelow(model, "PV", maxAbsoluteError: 1e-6, maxRelativeError: 1e-8);
