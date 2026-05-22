@@ -73,6 +73,7 @@ Start Phase 12 on `phase12-accuracy-recipe-search`: isolate why the fixed-rate b
 - Implementation plan path: `docs/superpowers/plans/2026-05-22-phase12-accuracy-recipe-search.md`.
 - Report draft: [Phase 12 Report: Accuracy Recipe Search](reports/phase-12-accuracy-recipe-search.md).
 - Working branch: `phase12-accuracy-recipe-search`.
+- Phase PR: [#203](https://github.com/0xC000005/ChebyshevSharp/pull/203).
 - Scope boundary: do not add reusable ChebyshevSharp APIs, bump versions, or release packages in this phase.
 - Required wrapper contract: every candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
 - Research refresh: Chebfun supports splitting piecewise-smooth functions; OpenGamma Strata validates PV and bucketed PV01 as core outputs; Federal Reserve H.15 documents public constant-maturity curve construction; yield-curve PCA references support level/slope/curvature as a common compression idea; Tensor Train Cross references require held-out validation rather than rank assumptions.

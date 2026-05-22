@@ -116,6 +116,6 @@ git diff --check
 ```
 
 - [x] Record initial oracle results in `status.md` and the Phase 12 report.
-- [ ] Push `phase12-accuracy-recipe-search`.
-- [x] Update issue #191 with the branch and plan.
-- [ ] Open one coherent Phase 12 PR only after local verification passes.
+- [x] Push `phase12-accuracy-recipe-search`.
+- [x] Update issue #191 with the branch, plan, and evidence.
+- [x] Open one coherent Phase 12 PR only after local verification passes.
