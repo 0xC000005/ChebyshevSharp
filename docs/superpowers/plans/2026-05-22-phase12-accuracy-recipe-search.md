@@ -69,6 +69,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
 - [x] Implement a schedule-aware active-support oracle that preserves
   `Eval(double[] fullPoint)` evidence and selects pillars around cashflow
   support for the current maturity neighbourhood.
+- [x] Implement a first 10Y active-pillar TT candidate that preserves the full
+  public wrapper and measures local PV error.
 - [ ] Implement an analytic-coupon active-pillar TT candidate only after the
   active-pillar full-PV candidate is measurable.
 - [ ] Add fixed-trade curve-only control results to distinguish a production

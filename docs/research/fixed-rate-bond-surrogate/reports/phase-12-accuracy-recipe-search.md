@@ -80,6 +80,10 @@ Initial oracle results:
 | Active-support oracle max PV rel. error | `0.00%` |
 | Active-support min active curve-bump dimensions | `5` |
 | Active-support max active curve-bump dimensions | `60` |
+| 10Y active-pillar TT internal dimensions | `23` |
+| 10Y active-pillar TT build evaluations | `2014` |
+| 10Y active-pillar TT max PV abs. error | `1.650403E+000` |
+| 10Y active-pillar TT max PV rel. error | `1.53%` |
 
 ## Interpretation
 
@@ -110,14 +114,20 @@ piece avoids modelling provably inactive post-maturity pillars. The long end
 still reaches all `60` curve-bump dimensions, so active support is necessary but
 not by itself a low-dimensional recipe for every maturity.
 
+The first active-pillar TT candidate is a 10Y local piece with `23` internal
+coordinates: active curve pillars through the maturity neighbourhood, coupon,
+and maturity. It reduces local max PV relative error to `1.53%` with `2014`
+build evaluations. That is a meaningful improvement over the factor projection
+floor, but it is not a final recipe yet because this first candidate only
+reports PV and still needs tuning plus DV01/maturity/mixed-term validation.
+
 ## Decision
 
-Current working decision: separate factor-scenario accuracy from arbitrary
-60-pillar clone accuracy before trying larger TT builds. The next candidate
-should move to schedule-aware active-pillar models that keep the full public
-wrapper but do not compress every shock into three factors. Factor compression
-can remain a factor-scenario recipe, but it should not be presented as the
-faithful arbitrary-pillar clone.
+Current working decision: factor compression can remain a factor-scenario
+recipe, but it should not be presented as the faithful arbitrary-pillar clone.
+The stronger path is schedule-aware active-pillar modelling: tune the 10Y local
+piece first, extend the validation from PV to Greeks, and only then generalize
+the router across maturity pieces.
 
 ## Sources
 

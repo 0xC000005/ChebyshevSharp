@@ -79,6 +79,26 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
     }
 
     [Fact]
+    public void Active_pillar_candidate_keeps_full_wrapper_with_smaller_local_dimension()
+    {
+        AccuracyRecipeSearchReport report = Report.Value;
+
+        AccuracyRecipeModelSummary activeTt = Assert.Single(
+            report.CandidateModels,
+            model => model.ModelName == "10Y active-pillar TT");
+
+        Assert.Equal(62, activeTt.PublicInputDimensionCount);
+        Assert.InRange(activeTt.InternalDimensionCount, 1, 61);
+        Assert.True(activeTt.BuildEvaluations > 0);
+        Assert.Contains(activeTt.Metrics, metric => metric.Name == "PV");
+        Assert.All(activeTt.Metrics, metric =>
+        {
+            Assert.True(double.IsFinite(metric.MaxAbsoluteError));
+            Assert.True(double.IsFinite(metric.MaxRelativeError));
+        });
+    }
+
+    [Fact]
     public void Accuracy_recipe_search_mode_writes_phase12_summary()
     {
         using var writer = new StringWriter();

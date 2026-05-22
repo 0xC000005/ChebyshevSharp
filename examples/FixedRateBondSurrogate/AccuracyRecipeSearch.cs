@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using ChebyshevSharp;
+
 namespace FixedRateBondSurrogate;
 
 public sealed record AccuracyProjectionPoint(
@@ -59,6 +62,22 @@ public sealed record AccuracyActiveSupportSummary(
     int MinActiveCurveBumpDimensions,
     int MaxActiveCurveBumpDimensions);
 
+public sealed record AccuracyRecipeMetricSummary(
+    string Name,
+    double MeanAbsoluteError,
+    double MaxAbsoluteError,
+    double MeanRelativeError,
+    double MaxRelativeError);
+
+public sealed record AccuracyRecipeModelSummary(
+    string ModelName,
+    int PublicInputDimensionCount,
+    int InternalDimensionCount,
+    int BuildEvaluations,
+    double BuildSeconds,
+    IReadOnlyList<AccuracyRecipeMetricSummary> Metrics,
+    string Interpretation);
+
 public sealed record AccuracyRecipeSearchReport(
     string FixtureId,
     DateTime CurveDate,
@@ -70,6 +89,7 @@ public sealed record AccuracyRecipeSearchReport(
     AccuracyDerivativeOracleSummary DerivativeOracle,
     AccuracyScheduleDispatchSummary ScheduleDispatch,
     AccuracyActiveSupportSummary ActiveSupport,
+    IReadOnlyList<AccuracyRecipeModelSummary> CandidateModels,
     string Decision);
 
 public static class AccuracyRecipeSearch
@@ -102,10 +122,16 @@ public static class AccuracyRecipeSearch
         AccuracyDerivativeOracleSummary derivative = BuildDerivativeOracle(adapter, request);
         AccuracyScheduleDispatchSummary schedule = BuildScheduleDispatchSummary();
         AccuracyActiveSupportSummary activeSupport = BuildActiveSupportOracle(adapter, clonePoints);
+        AccuracyRecipeModelSummary[] candidateModels =
+        [
+            BuildTenYearActivePillarTt(adapter),
+        ];
 
-        string decision = projection.MaxClonePvAbsoluteError > projection.MaxFactorAlignedPvAbsoluteError * 10.0
-            ? "Projection oracle is already material: factor compression must be separated from arbitrary 60-pillar clone accuracy before adding more TT complexity."
-            : "Projection oracle is not dominant yet; continue with derivative and local-piece resolution diagnostics.";
+        AccuracyRecipeMetricSummary activePv = candidateModels[0].Metrics.Single(metric => metric.Name == "PV");
+        string decision =
+            "Projection oracle is material, and active support is exact on the validation bank. " +
+            $"The first 10Y active-pillar TT reduces local PV max relative error to {activePv.MaxRelativeError:P2}, " +
+            "so the next recipe should tune schedule-aware active-pillar pieces and then validate Greeks.";
 
         return new AccuracyRecipeSearchReport(
             FixtureId: fixture.FixtureId,
@@ -118,6 +144,7 @@ public static class AccuracyRecipeSearch
             DerivativeOracle: derivative,
             ScheduleDispatch: schedule,
             ActiveSupport: activeSupport,
+            CandidateModels: candidateModels,
             Decision: decision);
     }
 
@@ -314,6 +341,127 @@ public static class AccuracyRecipeSearch
         }
 
         throw new ArgumentOutOfRangeException(nameof(maturity), "Maturity is outside the schedule dispatch domain.");
+    }
+
+    private static AccuracyRecipeModelSummary BuildTenYearActivePillarTt(RequestAdapter adapter)
+    {
+        const double maturityLo = 9.75;
+        const double maturityHi = 10.25;
+        int activeCurveDimensions = ActiveCurveBumpDimensions(maturityHi);
+        int internalDimensions = activeCurveDimensions + 2;
+        double[][] domain = BuildActivePillarDomain(activeCurveDimensions, maturityLo, maturityHi);
+        int[] nNodes = Enumerable.Repeat(3, internalDimensions).ToArray();
+
+        double Price(double[] internalPoint)
+            => adapter.Price(ActiveInternalToFullPoint(internalPoint, activeCurveDimensions));
+
+        var tt = new ChebyshevTT(
+            Price,
+            numDimensions: internalDimensions,
+            domain: domain,
+            nNodes: nNodes,
+            maxRank: 4,
+            tolerance: 1e-4,
+            maxSweeps: 3);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        tt.Build(verbose: false, seed: 20260522, method: "cross");
+        sw.Stop();
+
+        double Eval(double[] fullPoint)
+            => tt.Eval(FullToActiveInternalPoint(fullPoint, activeCurveDimensions));
+
+        IReadOnlyList<SurrogateValidationPoint> validationPoints =
+            BuildTenYearActiveValidationPoints(adapter, activeCurveDimensions);
+
+        return new AccuracyRecipeModelSummary(
+            ModelName: "10Y active-pillar TT",
+            PublicInputDimensionCount: PublicInputDimensionCount,
+            InternalDimensionCount: internalDimensions,
+            BuildEvaluations: tt.TotalBuildEvals,
+            BuildSeconds: sw.Elapsed.TotalSeconds,
+            Metrics:
+            [
+                SummarizePvMetric(adapter.Price, Eval, validationPoints),
+            ],
+            Interpretation:
+                "Local TT over active curve pillars, coupon, and maturity for a 10Y window; the public wrapper remains 62D.");
+    }
+
+    private static double[][] BuildActivePillarDomain(
+        int activeCurveDimensions,
+        double maturityLo,
+        double maturityHi)
+    {
+        double[][] curveDomain = Enumerable
+            .Range(0, activeCurveDimensions)
+            .Select(_ => new[] { -150.0, 150.0 })
+            .ToArray();
+        return curveDomain
+            .Append([0.0, 0.12])
+            .Append([maturityLo, maturityHi])
+            .ToArray();
+    }
+
+    private static IReadOnlyList<SurrogateValidationPoint> BuildTenYearActiveValidationPoints(
+        RequestAdapter adapter,
+        int activeCurveDimensions)
+    {
+        const double week = 7.0 / 365.25;
+        double[][] points =
+        [
+            FullPoint(0.045, 10.0, _ => 0.0),
+            FullPoint(0.08, 10.0, index => index < activeCurveDimensions ? 100.0 : 0.0),
+            FullPoint(0.02, 10.0, index => index < activeCurveDimensions ? -100.0 : 0.0),
+            FullPoint(
+                0.065,
+                10.0,
+                index => index < activeCurveDimensions ? -120.0 + 240.0 * index / (activeCurveDimensions - 1) : 0.0),
+            FullPoint(0.045, 10.0 - week, index => index < activeCurveDimensions && index % 2 == 0 ? 100.0 : 0.0),
+            FullPoint(0.045, 10.0 + week, index => index < activeCurveDimensions && index % 2 == 1 ? -100.0 : 0.0),
+        ];
+
+        return points
+            .Select((point, index) => new SurrogateValidationPoint($"active-10y-{index}", point, adapter.Price(point)))
+            .ToArray();
+    }
+
+    private static AccuracyRecipeMetricSummary SummarizePvMetric(
+        Func<double[], double> baseline,
+        Func<double[], double> model,
+        IReadOnlyList<SurrogateValidationPoint> validationPoints)
+    {
+        double[] absoluteErrors = validationPoints
+            .Select(point => Math.Abs(model(point.Coordinates) - baseline(point.Coordinates)))
+            .ToArray();
+        double[] relativeErrors = validationPoints
+            .Zip(absoluteErrors, (point, absolute) => RelativeError(absolute, point.BaselineDirtyPrice))
+            .ToArray();
+
+        return new AccuracyRecipeMetricSummary(
+            Name: "PV",
+            MeanAbsoluteError: absoluteErrors.Average(),
+            MaxAbsoluteError: absoluteErrors.Max(),
+            MeanRelativeError: relativeErrors.Average(),
+            MaxRelativeError: relativeErrors.Max());
+    }
+
+    private static double[] ActiveInternalToFullPoint(double[] internalPoint, int activeCurveDimensions)
+    {
+        var fullPoint = new double[PublicInputDimensionCount];
+        Array.Copy(internalPoint, fullPoint, activeCurveDimensions);
+        fullPoint[CouponDimension] = internalPoint[activeCurveDimensions];
+        fullPoint[MaturityDimension] = internalPoint[activeCurveDimensions + 1];
+        return fullPoint;
+    }
+
+    private static double[] FullToActiveInternalPoint(double[] fullPoint, int activeCurveDimensions)
+    {
+        var internalPoint = new double[activeCurveDimensions + 2];
+        Array.Copy(fullPoint, internalPoint, activeCurveDimensions);
+        internalPoint[activeCurveDimensions] = fullPoint[CouponDimension];
+        internalPoint[activeCurveDimensions + 1] = fullPoint[MaturityDimension];
+        return internalPoint;
     }
 
     private static IReadOnlyList<SurrogateValidationPoint> BuildCloneValidationPoints(RequestAdapter adapter)
