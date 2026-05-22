@@ -9,9 +9,11 @@ a fixed-rate bond pricing function while preserving price and risk
 sensitivities?
 
 The short answer is: not by blindly fitting one global high-dimensional tensor.
-For the supported product family, the accurate method is to resolve the bond
-cashflows first, keep coupon and notional algebraic, and use Chebyshev kernels
-only for the smooth discount-factor pieces.
+For the supported product family, the first accurate clone resolves the bond
+cashflows first, keeps coupon and notional algebraic, and uses Chebyshev
+kernels only for the smooth discount-factor pieces. This page focuses on
+correctness and reproducibility; the current speed numbers are diagnostic, not
+the final performance target.
 
 The example is public and reproducible. It uses QLNet as the reference pricer,
 a pinned Federal Reserve nominal-yield-curve fixture, and a regular fixed-rate
@@ -75,7 +77,7 @@ $$
 
 A price-only comparison is not enough for a risk use case. The harness checks
 held-out price, curve sensitivities, maturity sensitivity, coupon sensitivity,
-and mixed terms.
+and cross sensitivities.
 
 | Metric | Formula | What it checks |
 | --- | --- | --- |
@@ -83,14 +85,33 @@ and mixed terms.
 | DV01 vector | $\partial Q / \partial x_i$ for all 60 pillars | Whether rate exposure is assigned to the right curve pillars. |
 | Maturity sensitivity | $\partial Q / \partial T$, measured by finite differences | Whether the model follows local price changes as maturity moves. |
 | Coupon derivative | $\partial Q / \partial c$ | Whether coupon exposure is correct. |
-| Rate-coupon mixed | $\partial^2 Q / (\partial x_i\,\partial c)$ | Whether coupon exposure changes correctly when rates move. |
-| Rate-maturity mixed | $\partial^2 Q / (\partial x_i\,\partial T)$ | Whether rate exposure changes correctly when maturity moves. |
-| Coupon-maturity mixed | $\partial^2 Q / (\partial c\,\partial T)$ | Whether annuity-like coupon exposure changes correctly when maturity moves. |
-| Rate-rate mixed | $\partial^2 Q / (\partial x_i\,\partial x_j)$ | Whether the discount-factor curvature is localized and numerically stable. |
+| Rate-coupon cross sensitivity | $\partial^2 Q / (\partial x_i\,\partial c)$ | Whether coupon exposure changes correctly when rates move. |
+| Rate-maturity cross sensitivity | $\partial^2 Q / (\partial x_i\,\partial T)$ | Whether rate exposure changes correctly when maturity moves. |
+| Coupon-maturity cross sensitivity | $\partial^2 Q / (\partial c\,\partial T)$ | Whether annuity-like coupon exposure changes correctly when maturity moves. |
+| Rate-rate cross sensitivity | $\partial^2 Q / (\partial x_i\,\partial x_j)$ | Whether the discount-factor curvature is localized and numerically stable. |
 
 Relative errors are useful when the reference sensitivity is material. When the
 reference derivative is close to zero, the final candidate is judged mainly by
-absolute PV, all-pillar DV01, and mixed-risk errors.
+absolute PV, all-pillar DV01, and cross-sensitivity errors.
+
+The word "cross" means a mixed second derivative. For example, the
+coupon-maturity cross sensitivity is not a separate price measure; it is the
+finite-difference estimate of $\partial^2 Q / (\partial c\,\partial T)$. The
+reported table entry is the model's error in that cross sensitivity.
+
+## How speed is treated in this article
+
+The main trial tables are accuracy-first. They include build evaluations where
+available because build cost matters, but they do not yet present a normalized
+per-trial latency benchmark. The current `2.2x` speedup for the final candidate
+is a measured end-to-end harness comparison against the QLNet reference path
+after schedules and kernels are cached. It should not be read as the expected
+production ceiling for a Chebyshev replacement.
+
+The intended performance question is separate: after the clone is mathematically
+faithful, benchmark an optimized hot path with allocation control, batch
+evaluation, and a comparable reference-pricer baseline. That is where a
+10x to 100x target should be evaluated.
 
 ## The baseline formula
 
@@ -150,7 +171,7 @@ dense grid.
 | Analytic coupon decomposition | Use fixed-rate bond linearity in $c$. | Coupon should not be a nonlinear tensor axis if cashflows are fixed. | Identity is exact, but maturity remains hard. |
 | Schedule and automatic split points | Split maturity into smoother pieces. | Chebyshev methods work best on smooth pieces. | Schedule-aware splits help; automatic split detection alone is not enough. |
 | Active-pillar and fixed-trade controls | Remove inactive post-maturity pillars or fix the trade. | Risk systems often price known trades under curve scenarios. | Fixed-trade curve-only TT works well; parametric new-bond clone still needs more structure. |
-| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Works for the supported family. |
+| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; performance optimization remains separate work. |
 
 ## Trial 1: one global model
 
@@ -190,10 +211,10 @@ $$
 
 This is cheap, but if coupon and maturity are in separate groups then
 $\partial^2 \widehat{Q}_{\mathrm{slider}} / (\partial c\,\partial T)=0$ by
-construction. That structural limitation explains why some mixed terms fail
-even when each one-dimensional slide is well resolved.
+construction. That structural limitation explains why some cross sensitivities
+fail even when each one-dimensional slide is well resolved.
 
-| Model | Build evals | Max PV relative error | Max maturity-sensitivity relative error | Max coupon-maturity mixed relative error |
+| Model | Build evals | Max PV relative error | Max maturity-sensitivity relative error | Max rel. error in $\partial^2 Q/(\partial c\,\partial T)$ |
 | --- | ---: | ---: | ---: | ---: |
 | TensorTrain | 5,274 | 17.72% | 461.43% | 49.10% |
 | Slider | 186 | 92.64% | 154.35% | 100.00% |
@@ -202,7 +223,7 @@ The structural sanity checks pass: a 10-year bond has zero direct sensitivity
 to the unsupported 30-year zero-rate pillar in the reference and in the
 surrogate probes. The failure is therefore not a simple post-maturity exposure
 bug. One global smooth object is trying to learn schedule-sensitive behavior
-and mixed terms that it does not resolve.
+and cross sensitivities that it does not resolve.
 
 ## Why maturity is the hard coordinate
 
@@ -224,7 +245,7 @@ Representative spike evidence:
 | 2038-05-15 | 25 | `6.116018E-003` | `-1.953303E+000` | `2.790432E-001` |
 
 This is the practical meaning of piecewise smoothness here. Price may remain
-continuous enough to look benign, but slope and mixed sensitivities are poor
+continuous enough to look benign, but slope and cross sensitivities are poor
 targets for one global polynomial surrogate.
 
 ## Trial 2: common compression and buckets
@@ -260,7 +281,7 @@ $$
   \qquad T \in I_b.
 $$
 
-| Model | Max PV relative error on arbitrary 60-pillar bumps | Max maturity-sensitivity relative error | Max coupon-maturity mixed relative error | Max PV relative error on factor-aligned scenarios |
+| Model | Max PV relative error on arbitrary 60-pillar bumps | Max maturity-sensitivity relative error | Max rel. error in $\partial^2 Q/(\partial c\,\partial T)$ | Max PV relative error on factor-aligned scenarios |
 | --- | ---: | ---: | ---: | ---: |
 | Stronger global TT | 12.36% | 256.28% | 80.99% | 11.85% |
 | Grouped Slider | 8.48% | 327.65% | 75.20% | 5.85% |
@@ -304,8 +325,8 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 ```
 
 The identity holds to numerical roundoff: max absolute error is
-`8.526513E-014` across the validation bank. It also gives a useful mixed-risk
-identity:
+`8.526513E-014` across the validation bank. It also gives a useful
+cross-sensitivity identity:
 
 $$
 \frac{\partial^2 Q}{\partial x_i\,\partial c}
@@ -341,7 +362,7 @@ Run the benchmark:
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --maturity-special-points
 ```
 
-| Model | Max PV relative error | Max maturity-sensitivity relative error | Max coupon-maturity mixed relative error |
+| Model | Max PV relative error | Max maturity-sensitivity relative error | Max rel. error in $\partial^2 Q/(\partial c\,\partial T)$ |
 | --- | ---: | ---: | ---: |
 | Global decomposed curve-factor tensor | 5.12% | 142.62% | 74.94% |
 | Semiannual uniform bucketed tensor | 4.70% | 96.44% | 55.52% |
@@ -368,7 +389,7 @@ dimensions ranges from 5 to 60, depending on maturity.
 A local 10-year active-pillar TT improves price but still fails maturity
 sensitivity:
 
-| Candidate | Internal dims | Build evals | Max PV relative error | Max 10Y DV01 relative error | Max maturity-sensitivity relative error | Max coupon-maturity mixed relative error |
+| Candidate | Internal dims | Build evals | Max PV relative error | Max 10Y DV01 relative error | Max maturity-sensitivity relative error | Max rel. error in $\partial^2 Q/(\partial c\,\partial T)$ |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 10Y active-pillar TT | 23 | 2,014 | 1.53% | 9.83% | 132.88% | 120.33% |
 | Narrow 10Y active-pillar TT | 23 | 3,566 | 0.48% | 1.03% | 161.90% | 10.98% |
@@ -381,7 +402,7 @@ relative error. That is a good recipe for a known trade under repeated curve
 scenarios. It is not the same problem as a parametric new-bond surface over
 coupon and maturity.
 
-## The method that works: resolve cashflows first
+## First accurate clone: resolve cashflows first
 
 The successful method changes the modelling premise. It keeps the same
 62-coordinate public wrapper, but it stops asking a global TT to rediscover the
@@ -413,8 +434,8 @@ $$
     K_k(x_j,x_{j+1}).
 $$
 
-This formula explains why the method captures the important mixed terms. For
-example,
+This formula explains why the method captures the important cross sensitivities.
+For example,
 
 $$
 \frac{\partial^2 \widehat{Q}}{\partial x_j\,\partial c}
@@ -440,18 +461,18 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 | Max internal kernel dimension | 2 |
 | Validation points | 99 |
 | Build evaluations | 39,699 |
-| Measured evaluation speedup | 2.2x |
+| Measured evaluation speedup, current harness | 2.2x |
 | Max PV absolute error | `1.348184E-010` |
 | Max all-pillar DV01 absolute error | `4.263256E-010` |
-| Max 10Y rate-coupon mixed absolute error | `2.842171E-006` |
-| Max 10Y rate-maturity mixed absolute error | `1.112253E-008` |
-| Max 10Y-10.5Y rate-rate mixed absolute error | `3.197442E-006` |
+| Max 10Y rate-coupon cross-sensitivity absolute error | `2.842171E-006` |
+| Max 10Y rate-maturity cross-sensitivity absolute error | `1.112253E-008` |
+| Max 10Y-10.5Y rate-rate cross-sensitivity absolute error | `3.197442E-006` |
 | Non-100 notional dirty-price max absolute error | `4.243361E-011` |
 
 This is the first method in the case study that behaves like a practical clone
 for the supported family. It accepts the full request-level wrapper, preserves
 schedule-sensitive maturity behavior by resolving cashflows, captures
-coupon-rate cross terms through the cashflow formula, rejects out-of-domain
+coupon-rate cross sensitivities through the cashflow formula, rejects out-of-domain
 curve bumps instead of silently clamping, and avoids modelling inactive
 post-maturity curve pillars.
 
