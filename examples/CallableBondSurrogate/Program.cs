@@ -15,6 +15,12 @@ public static class CallableBondExample
             return;
         }
 
+        if (args is ["--structured-alternatives"])
+        {
+            RunStructuredAlternatives(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -70,5 +76,51 @@ public static class CallableBondExample
 
             output.WriteLine();
         }
+    }
+
+    private static void RunStructuredAlternatives(TextWriter output)
+    {
+        var pricer = new QlNetCallableBondReferencePricer();
+        CallableStructuredAlternativesReport report = CallableStructuredAlternatives.RunDefault(pricer);
+
+        output.WriteLine("Callable bond structured alternatives");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture : {report.FixtureId}");
+        output.WriteLine($"Curve date    : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine();
+
+        foreach (CallableStructuredAlternativeModelSummary model in report.Models)
+        {
+            output.WriteLine($"{model.ModelName} ({model.ApproximationType})");
+            output.WriteLine($"  Public dims   : {model.PublicInputDimensionCount}");
+            output.WriteLine($"  Internal dims : {model.InternalDimensionCount}");
+            output.WriteLine($"  Build evals   : {model.BuildEvaluations:N0}");
+            output.WriteLine($"  Build seconds : {model.BuildSeconds:F3}");
+            output.WriteLine($"  Baseline eval : {model.BaselineEvalMicroseconds:F3} us");
+            output.WriteLine($"  Surrogate eval: {model.SurrogateEvalMicroseconds:F3} us");
+            output.WriteLine($"  Break-even N  : {FormatBreakEven(model.BreakEvenEvaluations)}");
+            output.WriteLine();
+            WriteMetrics(output, "factor-aligned scenarios", model.FactorAlignedMetrics);
+            WriteMetrics(output, "arbitrary pillar shocks", model.ArbitraryBumpMetrics);
+        }
+    }
+
+    private static string FormatBreakEven(double value)
+        => double.IsPositiveInfinity(value) ? "not reached" : value.ToString("N0");
+
+    private static void WriteMetrics(
+        TextWriter output,
+        string title,
+        IReadOnlyList<CallableNaiveSurrogateMetricSummary> metrics)
+    {
+        output.WriteLine($"  {title}");
+        foreach (CallableNaiveSurrogateMetricSummary metric in metrics)
+        {
+            output.WriteLine(
+                $"    {metric.Name,-24} max abs {metric.MaxAbsoluteError:E6} " +
+                $"max rel {metric.MaxRelativeError:P2} worst {metric.WorstPointName}");
+        }
+
+        output.WriteLine();
     }
 }
