@@ -86,6 +86,7 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         AccuracyRecipeModelSummary activeTt = Assert.Single(
             report.CandidateModels,
             model => model.ModelName == "10Y active-pillar TT");
+        Assert.Contains(report.CandidateModels, model => model.ModelName == "10Y narrow active-pillar TT");
 
         Assert.Equal(62, activeTt.PublicInputDimensionCount);
         Assert.InRange(activeTt.InternalDimensionCount, 1, 61);

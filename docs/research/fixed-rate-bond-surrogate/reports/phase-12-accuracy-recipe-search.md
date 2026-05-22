@@ -88,6 +88,13 @@ Initial oracle results:
 | 10Y active-pillar TT max coupon derivative rel. error | `3.66%` |
 | 10Y active-pillar TT max maturity sensitivity rel. error | `132.88%` |
 | 10Y active-pillar TT max coupon-maturity mixed rel. error | `120.33%` |
+| 10Y narrow active-pillar TT internal dimensions | `23` |
+| 10Y narrow active-pillar TT build evaluations | `3566` |
+| 10Y narrow active-pillar TT max PV rel. error | `0.48%` |
+| 10Y narrow active-pillar TT max 10Y DV01 rel. error | `1.03%` |
+| 10Y narrow active-pillar TT max coupon derivative rel. error | `1.03%` |
+| 10Y narrow active-pillar TT max maturity sensitivity rel. error | `161.90%` |
+| 10Y narrow active-pillar TT max coupon-maturity mixed rel. error | `10.98%` |
 
 ## Interpretation
 
@@ -128,6 +135,15 @@ sensitivity relative error, and `120.33%` max coupon-maturity mixed relative
 error. Active support fixes the inactive-pillar problem and improves PV, but it
 does not by itself solve the slope/cross-term problem.
 
+Narrowing the 10Y active-pillar piece to `[9.95Y, 10.05Y]` and increasing the
+coupon/maturity resolution improves several outputs: max PV relative error falls
+to `0.48%`, max 10Y DV01 relative error falls to `1.03%`, and max
+coupon-maturity mixed relative error falls to `10.98%`. The remaining blocker is
+maturity sensitivity itself, which stays very large at `161.90%`. This suggests
+the active-pillar recipe is promising for PV and rate/coupon risk, but maturity
+derivatives need special handling instead of being treated as ordinary smooth
+central differences.
+
 ## Decision
 
 Current working decision: factor compression can remain a factor-scenario
@@ -135,8 +151,10 @@ recipe, but it should not be presented as the faithful arbitrary-pillar clone.
 The stronger path is schedule-aware active-pillar modelling: tune the 10Y local
 piece first with explicit maturity/sensitivity targets, then generalize the
 router across maturity pieces only if Greeks improve. The immediate next
-experiment should test whether higher node counts/rank, narrower maturity
-pieces, or one-sided/spectral derivative handling is the limiting factor.
+experiment should focus on maturity derivative handling: one-sided slope
+validation inside each schedule regime, narrower maturity windows around coupon
+dates, or reporting maturity error in absolute terms when baseline slope is near
+zero.
 
 ## Sources
 

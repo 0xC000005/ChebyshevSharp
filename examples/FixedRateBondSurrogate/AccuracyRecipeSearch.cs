@@ -124,14 +124,42 @@ public static class AccuracyRecipeSearch
         AccuracyActiveSupportSummary activeSupport = BuildActiveSupportOracle(adapter, clonePoints);
         AccuracyRecipeModelSummary[] candidateModels =
         [
-            BuildTenYearActivePillarTt(adapter),
+            BuildActivePillarTt(
+                adapter,
+                name: "10Y active-pillar TT",
+                maturityLo: 9.75,
+                maturityHi: 10.25,
+                curveNodes: 3,
+                couponNodes: 3,
+                maturityNodes: 3,
+                maxRank: 4,
+                tolerance: 1e-4,
+                maxSweeps: 3,
+                interpretation:
+                    "Local TT over active curve pillars, coupon, and maturity for a 10Y window; the public wrapper remains 62D."),
+            BuildActivePillarTt(
+                adapter,
+                name: "10Y narrow active-pillar TT",
+                maturityLo: 9.95,
+                maturityHi: 10.05,
+                curveNodes: 3,
+                couponNodes: 5,
+                maturityNodes: 7,
+                maxRank: 6,
+                tolerance: 1e-5,
+                maxSweeps: 5,
+                interpretation:
+                    "Narrower 10Y active-pillar TT with higher coupon/maturity resolution and rank budget."),
         ];
 
-        AccuracyRecipeMetricSummary activePv = candidateModels[0].Metrics.Single(metric => metric.Name == "PV");
+        AccuracyRecipeModelSummary narrow = candidateModels.Single(model => model.ModelName == "10Y narrow active-pillar TT");
+        AccuracyRecipeMetricSummary narrowPv = narrow.Metrics.Single(metric => metric.Name == "PV");
+        AccuracyRecipeMetricSummary narrowMaturity = narrow.Metrics.Single(metric => metric.Name == "maturity sensitivity");
         string decision =
             "Projection oracle is material, and active support is exact on the validation bank. " +
-            $"The first 10Y active-pillar TT reduces local PV max relative error to {activePv.MaxRelativeError:P2}, " +
-            "so the next recipe should tune schedule-aware active-pillar pieces and then validate Greeks.";
+            $"A narrowed 10Y active-pillar TT reduces local PV max relative error to {narrowPv.MaxRelativeError:P2}, " +
+            $"but maturity-sensitivity max relative error remains {narrowMaturity.MaxRelativeError:P2}. " +
+            "The next recipe must handle maturity derivatives explicitly before generalizing the router.";
 
         return new AccuracyRecipeSearchReport(
             FixtureId: fixture.FixtureId,
@@ -343,14 +371,23 @@ public static class AccuracyRecipeSearch
         throw new ArgumentOutOfRangeException(nameof(maturity), "Maturity is outside the schedule dispatch domain.");
     }
 
-    private static AccuracyRecipeModelSummary BuildTenYearActivePillarTt(RequestAdapter adapter)
+    private static AccuracyRecipeModelSummary BuildActivePillarTt(
+        RequestAdapter adapter,
+        string name,
+        double maturityLo,
+        double maturityHi,
+        int curveNodes,
+        int couponNodes,
+        int maturityNodes,
+        int maxRank,
+        double tolerance,
+        int maxSweeps,
+        string interpretation)
     {
-        const double maturityLo = 9.75;
-        const double maturityHi = 10.25;
         int activeCurveDimensions = ActiveCurveBumpDimensions(maturityHi);
         int internalDimensions = activeCurveDimensions + 2;
         double[][] domain = BuildActivePillarDomain(activeCurveDimensions, maturityLo, maturityHi);
-        int[] nNodes = Enumerable.Repeat(3, internalDimensions).ToArray();
+        int[] nNodes = BuildActivePillarNodeCounts(activeCurveDimensions, curveNodes, couponNodes, maturityNodes);
 
         double Price(double[] internalPoint)
             => adapter.Price(ActiveInternalToFullPoint(internalPoint, activeCurveDimensions));
@@ -360,9 +397,9 @@ public static class AccuracyRecipeSearch
             numDimensions: internalDimensions,
             domain: domain,
             nNodes: nNodes,
-            maxRank: 4,
-            tolerance: 1e-4,
-            maxSweeps: 3);
+            maxRank: maxRank,
+            tolerance: tolerance,
+            maxSweeps: maxSweeps);
 
         Stopwatch sw = Stopwatch.StartNew();
         tt.Build(verbose: false, seed: 20260522, method: "cross");
@@ -375,7 +412,7 @@ public static class AccuracyRecipeSearch
             BuildTenYearActiveValidationPoints(adapter, activeCurveDimensions);
 
         return new AccuracyRecipeModelSummary(
-            ModelName: "10Y active-pillar TT",
+            ModelName: name,
             PublicInputDimensionCount: PublicInputDimensionCount,
             InternalDimensionCount: internalDimensions,
             BuildEvaluations: tt.TotalBuildEvals,
@@ -404,8 +441,19 @@ public static class AccuracyRecipeSearch
                     point => MixedDerivative(Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
                     validationPoints),
             ],
-            Interpretation:
-                "Local TT over active curve pillars, coupon, and maturity for a 10Y window; the public wrapper remains 62D.");
+            Interpretation: interpretation);
+    }
+
+    private static int[] BuildActivePillarNodeCounts(
+        int activeCurveDimensions,
+        int curveNodes,
+        int couponNodes,
+        int maturityNodes)
+    {
+        int[] nNodes = Enumerable.Repeat(curveNodes, activeCurveDimensions + 2).ToArray();
+        nNodes[activeCurveDimensions] = couponNodes;
+        nNodes[activeCurveDimensions + 1] = maturityNodes;
+        return nNodes;
     }
 
     private static double[][] BuildActivePillarDomain(

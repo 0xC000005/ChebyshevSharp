@@ -71,6 +71,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   support for the current maturity neighbourhood.
 - [x] Implement a first 10Y active-pillar TT candidate that preserves the full
   public wrapper and measures local PV and Greek errors.
+- [x] Implement a narrowed/higher-resolution 10Y active-pillar TT candidate to
+  test whether rank/window/resolution are driving the Greek errors.
 - [ ] Implement an analytic-coupon active-pillar TT candidate only after the
   active-pillar full-PV candidate is measurable.
 - [ ] Add fixed-trade curve-only control results to distinguish a production
