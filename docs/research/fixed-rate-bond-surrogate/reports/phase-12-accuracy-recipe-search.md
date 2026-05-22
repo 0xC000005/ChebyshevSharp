@@ -105,13 +105,19 @@ Initial oracle results:
 | Schedule-resolved cashflow Chebyshev kernels internal dimensions | `2` |
 | Schedule-resolved cashflow Chebyshev kernels build evaluations | `39699` |
 | Schedule-resolved cashflow Chebyshev kernels validation points | `99` |
-| Schedule-resolved cashflow Chebyshev kernels measured eval speedup | `2.8x` |
+| Schedule-resolved cashflow Chebyshev kernels measured eval speedup | `2.2x` |
 | Schedule-resolved cashflow Chebyshev kernels max PV abs. error | `1.348184E-010` |
 | Schedule-resolved cashflow Chebyshev kernels max PV rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max all-pillar DV01 abs. error | `4.263256E-010` |
+| Schedule-resolved cashflow Chebyshev kernels max all-pillar DV01 rel. error | `0.00%` |
 | Schedule-resolved cashflow Chebyshev kernels max 10Y DV01 rel. error | `0.00%` |
 | Schedule-resolved cashflow Chebyshev kernels max coupon derivative rel. error | `0.00%` |
 | Schedule-resolved cashflow Chebyshev kernels max maturity sensitivity rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max 10Y rate-coupon mixed abs. error | `2.842171E-006` |
+| Schedule-resolved cashflow Chebyshev kernels max 10Y rate-coupon mixed rel. error | `0.01%` |
+| Schedule-resolved cashflow Chebyshev kernels max 10Y rate-maturity mixed abs. error | `1.112253E-008` |
 | Schedule-resolved cashflow Chebyshev kernels max coupon-maturity mixed rel. error | `0.00%` |
+| Schedule-resolved cashflow Chebyshev kernels max 10Y-10.5Y rate-rate mixed abs. error | `3.197442E-006` |
 | Non-100 notional dirty-price max abs. error | `4.243361E-011` |
 
 ## Interpretation
@@ -186,11 +192,17 @@ single cashflow discount factor depend on only one or two adjacent curve
 pillars, each local kernel is at most 2D. On a broadened 99-point full-wrapper
 validation bank spanning coupons, maturities, parallel shifts, slopes, sinusoidal
 shocks, and local 10Y bumps, this candidate reports `1.348184E-010` max PV
-absolute error, near-zero displayed PV/risk relative error, and `2.8x` measured
+absolute error, `4.263256E-010` max all-pillar DV01 absolute error, and `2.2x` measured
 evaluation speedup over the QLNet baseline path after schedules/kernels are
 cached. A separate non-100 notional check at `250` notional reports
 `4.243361E-011` max dirty-price absolute error, which confirms that notional is
 handled algebraically rather than becoming a hidden Chebyshev coordinate.
+Additional mixed-risk diagnostics remain small in absolute terms:
+`2.842171E-006` for the 10Y rate-coupon mixed term, `1.112253E-008` for the 10Y
+rate-maturity mixed term, and `3.197442E-006` for the 10Y-10.5Y rate-rate mixed
+term. The rate-rate relative error is intentionally not used as the acceptance
+criterion because the baseline mixed term is near zero on many validation
+points.
 
 This is the first candidate in Phase 12 that satisfies the intended replacement
 shape: it accepts the full wrapper, preserves schedule-sensitive maturity

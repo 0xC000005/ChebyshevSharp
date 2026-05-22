@@ -85,6 +85,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   discount kernels.
 - [x] Broaden the cashflow-kernel validation bank across coupons, maturities,
   parallel shifts, slopes, sinusoidal shocks, and local 10Y curve bumps.
+- [x] Add all-pillar DV01 plus rate-coupon, rate-maturity, and rate-rate mixed
+  diagnostics for the cashflow-kernel candidate.
 
 ## Task 5: Wire CLI And Tests
 
@@ -96,7 +98,7 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   the expected model names and nonempty diagnostics.
 - [x] Add focused tests requiring the cashflow-kernel candidate to preserve the
   full wrapper, validate at least 80 points, match PV/risk metrics, and report
-  measured acceleration.
+  finite timing diagnostics.
 - [x] Run:
 
 ```bash
@@ -114,7 +116,7 @@ dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --framework n
 
 ## Task 7: Local Exit Gate
 
-- [ ] Run:
+- [x] Run:
 
 ```bash
 dotnet format --verify-no-changes --verbosity minimal

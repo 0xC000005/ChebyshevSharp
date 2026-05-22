@@ -127,9 +127,13 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
 
         AssertMetricBelow(model, "PV", maxAbsoluteError: 1e-6, maxRelativeError: 1e-8);
         AssertMetricBelow(model, "10Y DV01", maxAbsoluteError: 1e-7, maxRelativeError: 1e-5);
+        AssertMetricBelow(model, "all-pillar DV01", maxAbsoluteError: 1e-7, maxRelativeError: 1e-5);
         AssertMetricBelow(model, "coupon derivative", maxAbsoluteError: 1e-5, maxRelativeError: 1e-7);
         AssertMetricBelow(model, "maturity sensitivity", maxAbsoluteError: 1e-4, maxRelativeError: 1e-4);
+        AssertMetricBelow(model, "10Y rate-coupon mixed", maxAbsoluteError: 1e-4, maxRelativeError: 1e-3);
+        AssertMetricAbsoluteBelow(model, "10Y rate-maturity mixed", maxAbsoluteError: 1e-6);
         AssertMetricBelow(model, "coupon-maturity mixed", maxAbsoluteError: 1e-4, maxRelativeError: 1e-4);
+        AssertMetricAbsoluteBelow(model, "10Y-10.5Y rate-rate mixed", maxAbsoluteError: 1e-5);
     }
 
     [Fact]
@@ -172,5 +176,17 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
         Assert.True(
             metric.MaxRelativeError <= maxRelativeError,
             $"{model.ModelName} {metricName} max rel {metric.MaxRelativeError:E6} > {maxRelativeError:E6}");
+    }
+
+    private static void AssertMetricAbsoluteBelow(
+        AccuracyRecipeModelSummary model,
+        string metricName,
+        double maxAbsoluteError)
+    {
+        AccuracyRecipeMetricSummary metric = model.Metrics.Single(metric => metric.Name == metricName);
+
+        Assert.True(
+            metric.MaxAbsoluteError <= maxAbsoluteError,
+            $"{model.ModelName} {metricName} max abs {metric.MaxAbsoluteError:E6} > {maxAbsoluteError:E6}");
     }
 }

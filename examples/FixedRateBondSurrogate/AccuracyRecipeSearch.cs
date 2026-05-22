@@ -604,6 +604,11 @@ public static class AccuracyRecipeSearch
                 point => FirstDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4),
                 point => FirstDerivative(model.Eval, point, CurveDimensionForMonths(120), 1e-4),
                 validationPoints),
+            SummarizeVectorMetric(
+                "all-pillar DV01",
+                point => CurveGradient(adapter.Price, point, 1e-4),
+                point => CurveGradient(model.Eval, point, 1e-4),
+                validationPoints),
             SummarizeMetric(
                 "coupon derivative",
                 point => FirstDerivative(adapter.Price, point, CouponDimension, 1e-4),
@@ -625,9 +630,24 @@ public static class AccuracyRecipeSearch
                 point => ForwardDerivative(model.Eval, point, MaturityDimension, 7.0 / 365.25),
                 validationPoints),
             SummarizeMetric(
+                "10Y rate-coupon mixed",
+                point => MixedDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4, CouponDimension, 1e-4),
+                point => MixedDerivative(model.Eval, point, CurveDimensionForMonths(120), 1e-4, CouponDimension, 1e-4),
+                validationPoints),
+            SummarizeMetric(
+                "10Y rate-maturity mixed",
+                point => MixedDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4, MaturityDimension, 7.0 / 365.25),
+                point => MixedDerivative(model.Eval, point, CurveDimensionForMonths(120), 1e-4, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
                 "coupon-maturity mixed",
                 point => MixedDerivative(adapter.Price, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
                 point => MixedDerivative(model.Eval, point, CouponDimension, 1e-4, MaturityDimension, 7.0 / 365.25),
+                validationPoints),
+            SummarizeMetric(
+                "10Y-10.5Y rate-rate mixed",
+                point => MixedDerivative(adapter.Price, point, CurveDimensionForMonths(120), 1e-4, CurveDimensionForMonths(126), 1e-4),
+                point => MixedDerivative(model.Eval, point, CurveDimensionForMonths(120), 1e-4, CurveDimensionForMonths(126), 1e-4),
                 validationPoints),
         ];
         AccuracyEvalSpeedSummary speed = MeasureEvaluationSpeed(adapter.Price, model.Eval, validationPoints);
@@ -807,6 +827,35 @@ public static class AccuracyRecipeSearch
             MaxRelativeError: relativeErrors.Max());
     }
 
+    private static AccuracyRecipeMetricSummary SummarizeVectorMetric(
+        string name,
+        Func<double[], double[]> baseline,
+        Func<double[], double[]> model,
+        IReadOnlyList<SurrogateValidationPoint> validationPoints)
+    {
+        var absoluteErrors = new List<double>(validationPoints.Count * CurveBumpDimensionCount);
+        var relativeErrors = new List<double>(validationPoints.Count * CurveBumpDimensionCount);
+
+        foreach (SurrogateValidationPoint point in validationPoints)
+        {
+            double[] expected = baseline(point.Coordinates);
+            double[] actual = model(point.Coordinates);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                double absolute = Math.Abs(actual[i] - expected[i]);
+                absoluteErrors.Add(absolute);
+                relativeErrors.Add(RelativeError(absolute, expected[i]));
+            }
+        }
+
+        return new AccuracyRecipeMetricSummary(
+            Name: name,
+            MeanAbsoluteError: absoluteErrors.Average(),
+            MaxAbsoluteError: absoluteErrors.Max(),
+            MeanRelativeError: relativeErrors.Average(),
+            MaxRelativeError: relativeErrors.Max());
+    }
+
     private static AccuracyEvalSpeedSummary MeasureEvaluationSpeed(
         Func<double[], double> baseline,
         Func<double[], double> model,
@@ -959,6 +1008,20 @@ public static class AccuracyRecipeSearch
         double[] down = Shift(point, dimension, -step);
         double[] up = Shift(point, dimension, step);
         return (function(up) - function(down)) / (2.0 * step);
+    }
+
+    private static double[] CurveGradient(
+        Func<double[], double> function,
+        double[] point,
+        double step)
+    {
+        var gradient = new double[CurveBumpDimensionCount];
+        for (int dim = 0; dim < CurveBumpDimensionCount; dim++)
+        {
+            gradient[dim] = FirstDerivative(function, point, dim, step);
+        }
+
+        return gradient;
     }
 
     private static double BackwardDerivative(
