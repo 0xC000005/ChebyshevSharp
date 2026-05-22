@@ -190,6 +190,7 @@ Start Phase 11 on `phase11-fixed-rate-bond-tutorial`: turn the fixed-rate bond r
 - Phase PR: [#202](https://github.com/0xC000005/ChebyshevSharp/pull/202).
 - Tracking issue update: [#191 comment](https://github.com/0xC000005/ChebyshevSharp/issues/191#issuecomment-4519611297).
 - CI outcome: `.NET 10 tests`, `.NET 8 library build`, `All Tests Passed`, and `Format, Pack, and Docs` passed; Dependabot skipped.
+- Public-surface audit: `docs/research/fixed-rate-bond-surrogate/plans/**`, `status.md`, `design.md`, and early setup/prototype reports from Phases 1-4 were being published by DocFX. `docs/docfx.json` now excludes them while leaving the public case-study page, linked Phase 5-10 evidence reports, figures, and data available.
 
 ## Phase 5 Notes
 

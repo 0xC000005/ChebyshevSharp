@@ -22,7 +22,14 @@
         "exclude": [
           "_site/**",
           "_obj/**",
-          "superpowers/**"
+          "superpowers/**",
+          "research/**/design.md",
+          "research/**/status.md",
+          "research/**/plans/**",
+          "research/**/reports/phase-1-*.md",
+          "research/**/reports/phase-2-*.md",
+          "research/**/reports/phase-3-*.md",
+          "research/**/reports/phase-4-*.md"
         ]
       }
     ],

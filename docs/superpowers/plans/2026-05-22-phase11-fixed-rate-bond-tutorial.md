@@ -61,7 +61,7 @@ identity, and schedule-aware routing limits.
 
 - [x] Comment on issue #191 with the Phase 11 branch and scope.
 - [x] Open one coherent Phase 11 PR after local verification passes.
-- [ ] Keep all review fixes in that PR.
+- [x] Keep all review fixes in that PR.
 - [ ] Do not start Phase 12 until the Phase 11 PR is merged or explicitly
       closed without merge.
 
@@ -72,3 +72,5 @@ identity, and schedule-aware routing limits.
 - [ ] Limitations are stated clearly.
 - [ ] DocFX and diff checks pass.
 - [ ] Tracking issue and PR are synchronized.
+- [x] Workflow-only research plans, status, and design files are excluded from
+      the public DocFX site.

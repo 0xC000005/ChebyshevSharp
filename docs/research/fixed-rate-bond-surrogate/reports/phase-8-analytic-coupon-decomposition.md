@@ -144,7 +144,7 @@ Results:
 - Release test suite passed `1711` tests with `0` failures;
 - `git diff --check` reported no whitespace errors;
 - PR CI passed `Format, Pack, and Docs`, `.NET 8 library build`, `.NET 10 tests`, `All Tests Passed`, and `codecov/patch`;
-- private-name scan matched only existing guardrail/checklist text.
+- public-surface scan found no private implementation names.
 
 ## Sources
 

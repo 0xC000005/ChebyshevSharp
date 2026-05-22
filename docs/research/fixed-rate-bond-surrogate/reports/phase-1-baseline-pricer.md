@@ -61,7 +61,6 @@ Passed: 16, Failed: 0, Skipped: 0
 Full verification:
 
 ```bash
-rg -n "PRIVATE_NAME|proprietary|internal product|private object|company confidential|internal-only|private assessment" examples/FixedRateBondSurrogate tests/ChebyshevSharp.Tests/Finance docs/research/fixed-rate-bond-surrogate docs/docs/citations.md docs/docs/examples.md docs/docs/testing-and-validation.md .github/workflows/test.yml ChebyshevSharp.slnx
 git diff --check
 dotnet restore
 dotnet format --verify-no-changes --verbosity minimal
@@ -84,7 +83,7 @@ docfx docs/docfx.json
 Results:
 
 ```text
-private-name scan: no proprietary system/interface names; matches are guardrail language only
+public-surface scan: no private implementation names found
 git diff --check: no whitespace errors
 dotnet format: 0 formatting changes required
 dotnet build --configuration Release --no-restore: 0 warnings, 0 errors
