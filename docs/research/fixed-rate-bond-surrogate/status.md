@@ -10,9 +10,9 @@ This is the primary scope for the next small version update.
 
 Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191)
 
-Working branch: `phase11-fixed-rate-bond-tutorial`
+Working branch: `phase12-accuracy-recipe-search`
 
-Last completed phase PR: [#201](https://github.com/0xC000005/ChebyshevSharp/pull/201), merged on 2026-05-22 as `1e9d66e`.
+Last completed phase PR: [#202](https://github.com/0xC000005/ChebyshevSharp/pull/202), merged on 2026-05-22 as `f4dafca`.
 
 ## Confidentiality Guardrail
 
@@ -42,8 +42,9 @@ Use generic public terms:
 | 8. Analytic coupon decomposition | Complete | Principal/annuity surrogate comparison completed |
 | 9. Maturity splitting and adaptive knots | Complete | Schedule-aware and detector special-point comparison completed |
 | 10. Schedule-aware high-dimensional router | Complete | PR #201 merged; router remains example-local and does not justify a generic kink-detection API yet |
-| 11. Tutorial and documentation | PR ready | Public tutorial and case-study documentation opened in PR #202 |
-| 12. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
+| 11. Tutorial and documentation | Complete | PR #202 merged; public tutorial and case-study documentation are on main |
+| 12. Accuracy recipe search | In progress | Dominant residual error source identified and next modelling recipe selected |
+| 13. Library improvement issues | Not started | Evidence-backed issues opened only where needed |
 
 ## Environment Readiness
 
@@ -64,7 +65,20 @@ Last checked: 2026-05-20.
 
 ## Next Task
 
-Start Phase 11 on `phase11-fixed-rate-bond-tutorial`: turn the fixed-rate bond research into a public tutorial and case study that explains the baseline pricer, data fixture, naive global TT/Slider failures, structured alternatives, analytic coupon identity, and schedule-aware routing limits without claiming a general fixed-income replacement.
+Start Phase 12 on `phase12-accuracy-recipe-search`: isolate why the fixed-rate bond surrogate remains inaccurate after schedule-aware routing, then compare stronger candidate recipes while preserving the full 62-coordinate wrapper.
+
+## Phase 12 Notes
+
+- Plan: [Phase 12 Accuracy Recipe Search Plan](plans/phase-12-accuracy-recipe-search.md).
+- Implementation plan path: `docs/superpowers/plans/2026-05-22-phase12-accuracy-recipe-search.md`.
+- Report draft: [Phase 12 Report: Accuracy Recipe Search](reports/phase-12-accuracy-recipe-search.md).
+- Working branch: `phase12-accuracy-recipe-search`.
+- Scope boundary: do not add reusable ChebyshevSharp APIs, bump versions, or release packages in this phase.
+- Required wrapper contract: every candidate remains callable as the full 62-coordinate interface, `curve bumps[60] + coupon + maturity`.
+- Research refresh: Chebfun supports splitting piecewise-smooth functions; OpenGamma Strata validates PV and bucketed PV01 as core outputs; Federal Reserve H.15 documents public constant-maturity curve construction; yield-curve PCA references support level/slope/curvature as a common compression idea; Tensor Train Cross references require held-out validation rather than rank assumptions.
+- Required first diagnostics: projection oracle, derivative-step oracle, schedule-dispatch oracle, richer factor candidate, schedule-aware active-pillar candidate, analytic-coupon active-pillar candidate, and fixed-trade curve-only control.
+- Housekeeping verification: `git diff --check` passed; `docfx docs/docfx.json` passed with 0 warnings and 0 errors.
+- Tracking issue: [#191](https://github.com/0xC000005/ChebyshevSharp/issues/191).
 
 ## Phase 6 Notes
 
