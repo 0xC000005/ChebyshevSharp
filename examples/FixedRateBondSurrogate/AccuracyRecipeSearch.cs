@@ -43,6 +43,22 @@ public sealed record AccuracyScheduleDispatchDiagnostic(
 public sealed record AccuracyScheduleDispatchSummary(
     IReadOnlyList<AccuracyScheduleDispatchDiagnostic> Diagnostics);
 
+public sealed record AccuracyActiveSupportPoint(
+    string Name,
+    double MaturityYears,
+    int ActiveCurveBumpDimensions,
+    double OriginalDirtyPrice,
+    double TruncatedDirtyPrice,
+    double AbsoluteError,
+    double RelativeError);
+
+public sealed record AccuracyActiveSupportSummary(
+    IReadOnlyList<AccuracyActiveSupportPoint> Points,
+    double MaxPvAbsoluteError,
+    double MaxPvRelativeError,
+    int MinActiveCurveBumpDimensions,
+    int MaxActiveCurveBumpDimensions);
+
 public sealed record AccuracyRecipeSearchReport(
     string FixtureId,
     DateTime CurveDate,
@@ -53,6 +69,7 @@ public sealed record AccuracyRecipeSearchReport(
     AccuracyProjectionOracleSummary ProjectionOracle,
     AccuracyDerivativeOracleSummary DerivativeOracle,
     AccuracyScheduleDispatchSummary ScheduleDispatch,
+    AccuracyActiveSupportSummary ActiveSupport,
     string Decision);
 
 public static class AccuracyRecipeSearch
@@ -84,6 +101,7 @@ public static class AccuracyRecipeSearch
         AccuracyProjectionOracleSummary projection = BuildProjectionOracle(adapter, factorBasis, clonePoints, factorPoints);
         AccuracyDerivativeOracleSummary derivative = BuildDerivativeOracle(adapter, request);
         AccuracyScheduleDispatchSummary schedule = BuildScheduleDispatchSummary();
+        AccuracyActiveSupportSummary activeSupport = BuildActiveSupportOracle(adapter, clonePoints);
 
         string decision = projection.MaxClonePvAbsoluteError > projection.MaxFactorAlignedPvAbsoluteError * 10.0
             ? "Projection oracle is already material: factor compression must be separated from arbitrary 60-pillar clone accuracy before adding more TT complexity."
@@ -99,6 +117,7 @@ public static class AccuracyRecipeSearch
             ProjectionOracle: projection,
             DerivativeOracle: derivative,
             ScheduleDispatch: schedule,
+            ActiveSupport: activeSupport,
             Decision: decision);
     }
 
@@ -235,6 +254,52 @@ public static class AccuracyRecipeSearch
                         PieceHi: breakpoints[pieceIndex + 1]);
                 })
                 .ToArray());
+    }
+
+    private static AccuracyActiveSupportSummary BuildActiveSupportOracle(
+        RequestAdapter adapter,
+        IReadOnlyList<SurrogateValidationPoint> clonePoints)
+    {
+        AccuracyActiveSupportPoint[] points = clonePoints
+            .Select(point =>
+            {
+                double maturityYears = point.Coordinates[MaturityDimension];
+                int activeDimensions = ActiveCurveBumpDimensions(maturityYears);
+                double[] truncated = TruncateInactiveCurveBumps(point.Coordinates, activeDimensions);
+                double truncatedPrice = adapter.Price(truncated);
+                double absolute = Math.Abs(truncatedPrice - point.BaselineDirtyPrice);
+
+                return new AccuracyActiveSupportPoint(
+                    Name: point.Name,
+                    MaturityYears: maturityYears,
+                    ActiveCurveBumpDimensions: activeDimensions,
+                    OriginalDirtyPrice: point.BaselineDirtyPrice,
+                    TruncatedDirtyPrice: truncatedPrice,
+                    AbsoluteError: absolute,
+                    RelativeError: RelativeError(absolute, point.BaselineDirtyPrice));
+            })
+            .ToArray();
+
+        return new AccuracyActiveSupportSummary(
+            Points: points,
+            MaxPvAbsoluteError: points.Max(point => point.AbsoluteError),
+            MaxPvRelativeError: points.Max(point => point.RelativeError),
+            MinActiveCurveBumpDimensions: points.Min(point => point.ActiveCurveBumpDimensions),
+            MaxActiveCurveBumpDimensions: points.Max(point => point.ActiveCurveBumpDimensions));
+    }
+
+    private static int ActiveCurveBumpDimensions(double maturityYears)
+        => Math.Min(CurveBumpDimensionCount, (int)Math.Floor(maturityYears * 2.0) + 1);
+
+    private static double[] TruncateInactiveCurveBumps(double[] point, int activeDimensions)
+    {
+        double[] truncated = (double[])point.Clone();
+        for (int i = activeDimensions; i < CurveBumpDimensionCount; i++)
+        {
+            truncated[i] = 0.0;
+        }
+
+        return truncated;
     }
 
     private static int RouteHalfOpen(double maturity, double[] breakpoints)

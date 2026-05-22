@@ -68,6 +68,17 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
     }
 
     [Fact]
+    public void Active_support_oracle_preserves_price_when_post_maturity_pillars_are_removed()
+    {
+        AccuracyRecipeSearchReport report = Report.Value;
+
+        Assert.NotEmpty(report.ActiveSupport.Points);
+        Assert.True(report.ActiveSupport.MaxPvAbsoluteError < 1e-8);
+        Assert.Contains(report.ActiveSupport.Points, point => point.ActiveCurveBumpDimensions < 60);
+        Assert.Contains(report.ActiveSupport.Points, point => point.ActiveCurveBumpDimensions == 60);
+    }
+
+    [Fact]
     public void Accuracy_recipe_search_mode_writes_phase12_summary()
     {
         using var writer = new StringWriter();

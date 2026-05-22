@@ -76,6 +76,10 @@ Initial oracle results:
 | 3-day maturity central slope | `-6.556768E-001` |
 | 7-day maturity central slope | `-6.005639E-001` |
 | Post-maturity unsupported 30Y pillar DV01 | `0.000000E+000` |
+| Active-support oracle max PV abs. error | `0.000000E+000` |
+| Active-support oracle max PV rel. error | `0.00%` |
+| Active-support min active curve-bump dimensions | `5` |
+| Active-support max active curve-bump dimensions | `60` |
 
 ## Interpretation
 
@@ -98,13 +102,22 @@ consistent with the schedule-boundary evidence from earlier phases. The
 post-maturity 30Y pillar DV01 remains numerically zero for a 10Y bond, so the
 current baseline and wrapper preserve the expected curve-support sanity check.
 
+The active-support oracle is exact on the current validation bank when curve
+bumps after the maturity neighbourhood are removed. Active curve dimensions
+range from `5` to `60`, depending on maturity. This supports a schedule-aware
+active-pillar recipe: it can preserve the full public wrapper while each local
+piece avoids modelling provably inactive post-maturity pillars. The long end
+still reaches all `60` curve-bump dimensions, so active support is necessary but
+not by itself a low-dimensional recipe for every maturity.
+
 ## Decision
 
 Current working decision: separate factor-scenario accuracy from arbitrary
 60-pillar clone accuracy before trying larger TT builds. The next candidate
-should either add richer curve factors and measure projection error again, or
-move to schedule-aware active-pillar models that keep the full public wrapper
-but do not compress every shock into three factors.
+should move to schedule-aware active-pillar models that keep the full public
+wrapper but do not compress every shock into three factors. Factor compression
+can remain a factor-scenario recipe, but it should not be presented as the
+faithful arbitrary-pillar clone.
 
 ## Sources
 

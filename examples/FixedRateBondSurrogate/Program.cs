@@ -518,6 +518,15 @@ public static class FixedRateBondExample
         }
 
         output.WriteLine();
+        output.WriteLine("Active support oracle");
+        output.WriteLine(
+            $"  max PV abs {report.ActiveSupport.MaxPvAbsoluteError:E6}, " +
+            $"max PV rel {report.ActiveSupport.MaxPvRelativeError:P2}");
+        output.WriteLine(
+            $"  active curve dims min {report.ActiveSupport.MinActiveCurveBumpDimensions}, " +
+            $"max {report.ActiveSupport.MaxActiveCurveBumpDimensions}");
+
+        output.WriteLine();
         output.WriteLine("Next decision");
         output.WriteLine($"  {report.Decision}");
     }
