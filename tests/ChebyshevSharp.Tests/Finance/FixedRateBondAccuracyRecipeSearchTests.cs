@@ -147,6 +147,100 @@ public sealed class FixedRateBondAccuracyRecipeSearchTests
     }
 
     [Fact]
+    public void Schedule_resolved_cashflow_pricer_prices_full_request_like_reference_pricer()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
+        FixedRateBondRequest baseRequest = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
+        var surrogate = new ScheduleResolvedCashflowChebyshevBondPricer(Pricer, baseRequest);
+
+        ZeroRatePillar[] curve = baseRequest.ZeroCurve.ToArray();
+        for (int i = 1; i < curve.Length; i++)
+        {
+            double bumpBp = -70.0 + 140.0 * (i - 1) / 59.0;
+            curve[i] = curve[i] with { ZeroRate = curve[i].ZeroRate + bumpBp * 1e-4 };
+        }
+
+        FixedRateBondRequest request = baseRequest with
+        {
+            Coupon = 0.0675,
+            MaturityDate = baseRequest.ValuationDate.Date.AddDays((int)Math.Round(365.25 * 18.75)),
+            Notional = 250.0,
+            ZeroCurve = curve,
+        };
+
+        double expected = Pricer.Price(request).DirtyPrice;
+        double actual = surrogate.PriceDirty(request);
+
+        Assert.Equal(expected, actual, precision: 8);
+    }
+
+    [Fact]
+    public void Schedule_resolved_cashflow_pricer_rejects_curve_bumps_outside_training_domain()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
+        FixedRateBondRequest baseRequest = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
+        var surrogate = new ScheduleResolvedCashflowChebyshevBondPricer(Pricer, baseRequest);
+
+        ZeroRatePillar[] curve = baseRequest.ZeroCurve.ToArray();
+        curve[20] = curve[20] with { ZeroRate = curve[20].ZeroRate + 0.0200 };
+
+        FixedRateBondRequest request = baseRequest with
+        {
+            MaturityDate = baseRequest.ValuationDate.Date.AddDays((int)Math.Round(365.25 * 10.0)),
+            ZeroCurve = curve,
+        };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => surrogate.PriceDirty(request));
+    }
+
+    [Fact]
+    public void Schedule_resolved_cashflow_pricer_rejects_incompatible_requests_and_coordinates()
+    {
+        YieldCurveFixture fixture = FixedRateBondMarketData.LoadDenseSemiannualCurveFixture();
+        FixedRateBondRequest baseRequest = FixedRateBondMarketData.RegularThirtyYearFromDenseFixture(fixture);
+        var surrogate = new ScheduleResolvedCashflowChebyshevBondPricer(Pricer, baseRequest);
+
+        Assert.Throws<ArgumentException>(() =>
+            new ScheduleResolvedCashflowChebyshevBondPricer(
+                Pricer,
+                baseRequest with { ZeroCurve = baseRequest.ZeroCurve.Take(2).ToArray() }));
+        Assert.Throws<ArgumentException>(() => surrogate.Eval(new double[61]));
+
+        double[] point = new double[ScheduleResolvedCashflowChebyshevBondPricer.PublicInputDimensionCount];
+        point[60] = 0.13;
+        point[61] = 10.0;
+        Assert.Throws<ArgumentOutOfRangeException>(() => surrogate.Eval(point));
+
+        point[60] = 0.045;
+        point[61] = 31.0;
+        Assert.Throws<ArgumentOutOfRangeException>(() => surrogate.Eval(point));
+
+        Assert.Throws<ArgumentException>(() => surrogate.PriceDirty(baseRequest with
+        {
+            ValuationDate = baseRequest.ValuationDate.AddDays(1),
+        }));
+        Assert.Throws<ArgumentException>(() => surrogate.PriceDirty(baseRequest with
+        {
+            EffectiveDate = baseRequest.EffectiveDate.AddDays(1),
+        }));
+        Assert.Throws<ArgumentException>(() => surrogate.PriceDirty(baseRequest with
+        {
+            SettlementDays = 1,
+        }));
+        Assert.Throws<ArgumentException>(() => surrogate.PriceDirty(baseRequest with
+        {
+            ZeroCurve = baseRequest.ZeroCurve.SkipLast(1).ToArray(),
+        }));
+
+        ZeroRatePillar[] shiftedDates = baseRequest.ZeroCurve.ToArray();
+        shiftedDates[10] = shiftedDates[10] with { Date = shiftedDates[10].Date.AddDays(1) };
+        Assert.Throws<ArgumentException>(() => surrogate.PriceDirty(baseRequest with
+        {
+            ZeroCurve = shiftedDates,
+        }));
+    }
+
+    [Fact]
     public void Accuracy_recipe_search_mode_writes_phase12_summary()
     {
         using var writer = new StringWriter();

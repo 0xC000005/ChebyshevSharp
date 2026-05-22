@@ -90,6 +90,9 @@ Measure candidates in this order:
 5. schedule-resolved cashflow Chebyshev kernels: resolve the maturity schedule,
    keep coupon/notional algebraic, and use local 1D/2D Chebyshev tensors for
    smooth discount-factor kernels.
+6. if the cashflow-kernel recipe succeeds, expose it as an example-local pricer
+   that accepts full bond requests and performs explicit eligibility/domain
+   checks.
 
 Stop adding candidates once the dominant error source is clear.
 

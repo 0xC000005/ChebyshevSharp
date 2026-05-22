@@ -21,6 +21,7 @@ TensorTrain/Slider objects where needed, DocFX documentation.
 ## File Map
 
 - Create `examples/FixedRateBondSurrogate/AccuracyRecipeSearch.cs`.
+- Create `examples/FixedRateBondSurrogate/ScheduleResolvedCashflowChebyshevBondPricer.cs`.
 - Modify `examples/FixedRateBondSurrogate/Program.cs`.
 - Create `tests/ChebyshevSharp.Tests/Finance/FixedRateBondAccuracyRecipeSearchTests.cs`.
 - Modify `docs/research/fixed-rate-bond-surrogate/reports/phase-12-accuracy-recipe-search.md`.
@@ -57,8 +58,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   step sizes: `1e-4`, `5e-5`, and `1e-5` for rate bumps, and one-day,
   three-day, and seven-day maturity steps.
 - [x] Report how much the baseline derivative changes as the step changes.
-- [ ] Add one-sided maturity slopes around schedule split candidates from Phase
-  9 so central differences do not silently cross pricing regimes.
+- [x] Add one-sided maturity slopes to candidate validation so central
+  differences do not silently cross pricing regimes.
 - [x] Add a test asserting post-maturity pillar DV01 stays within numerical
   tolerance for the baseline derivative oracle.
 
@@ -83,6 +84,9 @@ TensorTrain/Slider objects where needed, DocFX documentation.
   preserves the 62-coordinate wrapper, resolves cashflow schedules from
   maturity, keeps coupon/notional algebraic, and uses local 1D/2D Chebyshev
   discount kernels.
+- [x] Extract the schedule-resolved candidate into an example-local pricer class
+  that accepts full bond requests and rejects incompatible or out-of-domain
+  inputs instead of silently clamping.
 - [x] Broaden the cashflow-kernel validation bank across coupons, maturities,
   parallel shifts, slopes, sinusoidal shocks, and local 10Y curve bumps.
 - [x] Add all-pillar DV01 plus rate-coupon, rate-maturity, and rate-rate mixed
@@ -99,6 +103,8 @@ TensorTrain/Slider objects where needed, DocFX documentation.
 - [x] Add focused tests requiring the cashflow-kernel candidate to preserve the
   full wrapper, validate at least 80 points, match PV/risk metrics, and report
   finite timing diagnostics.
+- [x] Add request-level tests requiring the extracted cashflow-kernel pricer to
+  match the QLNet reference dirty price and reject out-of-domain curve bumps.
 - [x] Run:
 
 ```bash

@@ -105,7 +105,7 @@ Initial oracle results:
 | Schedule-resolved cashflow Chebyshev kernels internal dimensions | `2` |
 | Schedule-resolved cashflow Chebyshev kernels build evaluations | `39699` |
 | Schedule-resolved cashflow Chebyshev kernels validation points | `99` |
-| Schedule-resolved cashflow Chebyshev kernels measured eval speedup | `2.2x` |
+| Schedule-resolved cashflow Chebyshev kernels measured eval speedup | `2.5x` |
 | Schedule-resolved cashflow Chebyshev kernels max PV abs. error | `1.348184E-010` |
 | Schedule-resolved cashflow Chebyshev kernels max PV rel. error | `0.00%` |
 | Schedule-resolved cashflow Chebyshev kernels max all-pillar DV01 abs. error | `4.263256E-010` |
@@ -192,7 +192,7 @@ single cashflow discount factor depend on only one or two adjacent curve
 pillars, each local kernel is at most 2D. On a broadened 99-point full-wrapper
 validation bank spanning coupons, maturities, parallel shifts, slopes, sinusoidal
 shocks, and local 10Y bumps, this candidate reports `1.348184E-010` max PV
-absolute error, `4.263256E-010` max all-pillar DV01 absolute error, and `2.2x` measured
+absolute error, `4.263256E-010` max all-pillar DV01 absolute error, and `2.5x` measured
 evaluation speedup over the QLNet baseline path after schedules/kernels are
 cached. A separate non-100 notional check at `250` notional reports
 `4.243361E-011` max dirty-price absolute error, which confirms that notional is
@@ -215,6 +215,15 @@ is that it is formula-aware. It is a correct recipe for the supported
 fixed-coupon bond family, not a blind black-box surrogate for arbitrary
 products.
 
+The candidate is now exposed as
+`ScheduleResolvedCashflowChebyshevBondPricer` in the fixed-rate bond example.
+That class can price a full `FixedRateBondRequest` by mapping the request back
+to the public 62-coordinate wrapper, and the request-level test matches the
+QLNet reference dirty price to 8 decimal places under a non-flat 60-pillar bump
+shape, changed coupon, changed maturity, and non-100 notional. It also rejects
+incompatible dates, curve pillar layouts, and curve bumps outside the supported
+`[-150, 150]` bp domain, so the example does not rely on silent clamping.
+
 ## Decision
 
 Current working decision: factor compression can remain a factor-scenario
@@ -224,8 +233,9 @@ decomposition plus local Chebyshev discount kernels. This keeps maturity as a
 schedule-routing input instead of an ordinary smooth Chebyshev axis, keeps
 coupon/notional algebraic, and uses low-dimensional Chebyshev tensors only for
 the smooth discount-factor kernels. The next Phase 12 task is to broaden this
-candidate's validation bank and decide whether the example should present this
-as the recommended bond-pricer acceleration pattern.
+candidate's validation bank and decide whether any additional supported-family
+eligibility checks are needed before presenting this as the recommended
+bond-pricer acceleration pattern.
 
 ## Sources
 
