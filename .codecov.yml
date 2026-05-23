@@ -3,11 +3,15 @@ coverage:
     patch:
       default:
         target: 90%
+        paths:
+          - "src"
         if_not_found: success
     project:
       default:
         target: auto
         threshold: 1%
+        paths:
+          - "src"
         if_not_found: success
 
 comment:
