@@ -308,7 +308,8 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 Run the risk-acceptance mode to test the current candidate family against a
 broader risk-manager style validation bank. It reports PV, factor sensitivities,
 full 60-pillar DV01 vector error, product Greeks, selected mixed terms, and the
-new full-pillar-aware HDMR/residual probes:
+full-DV01 timing for the reference-semantics tree clone, smoothed lattice
+tangent, hybrid DV01 correction, HDMR, residual, and Tensor Train probes:
 
 ```bash
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance

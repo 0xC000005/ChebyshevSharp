@@ -29,6 +29,9 @@ public sealed record CallableRiskAcceptanceModelSummary(
     int InternalDimensionCount,
     int BuildEvaluations,
     double BuildSeconds,
+    double BaselineFullDv01Milliseconds,
+    double ModelFullDv01Milliseconds,
+    double FullDv01Speedup,
     CallableRiskAcceptanceMetrics Metrics);
 
 public sealed record CallableRiskAcceptanceReport(
@@ -75,6 +78,7 @@ public static class CallableStructuredAlternatives
 
         CallableBondFullDimensionalWrapper wrapper = CallableBondFullDimensionalWrapper.CreateDefault(pricer);
         CallableBondRequest baseRequest = wrapper.ToRequest(wrapper.CreateBasePoint());
+        var referenceTree = new ReferenceSemanticsCallableTreePricer(wrapper);
         CurveFactorSurrogate directSurrogate = BuildCurveFactorSurrogate(wrapper);
         CurveFactorSurrogate curveFactorTt = BuildCurveFactorTtSurrogate(wrapper);
         CurveFactorSurrogate embeddedOptionSurrogate = BuildEmbeddedOptionSurrogate(wrapper);
@@ -83,10 +87,24 @@ public static class CallableStructuredAlternatives
         IReadOnlyList<CallableValidationPoint> factorAligned = BuildFactorAlignedValidation(wrapper);
         IReadOnlyList<CallableValidationPoint> arbitrary = BuildArbitraryValidation(wrapper);
         double[] timingPoint = factorAligned[0].Coordinates;
+        SpeedSummary referenceTreeSpeed = MeasureSpeed(wrapper.Price, referenceTree.Price, timingPoint, buildSeconds: 0.0);
         SpeedSummary directSpeed = MeasureSpeed(wrapper.Price, directSurrogate.EvalFullPoint, timingPoint, directSurrogate.BuildSeconds);
         SpeedSummary curveFactorTtSpeed = MeasureSpeed(wrapper.Price, curveFactorTt.EvalFullPoint, timingPoint, curveFactorTt.BuildSeconds);
         SpeedSummary embeddedOptionSpeed = MeasureSpeed(wrapper.Price, embeddedOptionSurrogate.EvalFullPoint, timingPoint, embeddedOptionSurrogate.BuildSeconds);
         SpeedSummary fullPillarSpeed = MeasureSpeed(wrapper.Price, embeddedOptionFullPillar.EvalFullPoint, timingPoint, embeddedOptionFullPillar.BuildSeconds);
+
+        var referenceTreeModel = new CallableStructuredAlternativeModelSummary(
+            ModelName: "Reference-semantics tree clone",
+            ApproximationType: "faithful full-pillar tree clone",
+            PublicInputDimensionCount: CallableBondFullDimensionalWrapper.DimensionCount,
+            InternalDimensionCount: CallableBondFullDimensionalWrapper.DimensionCount,
+            BuildEvaluations: 0,
+            BuildSeconds: 0.0,
+            BaselineEvalMicroseconds: referenceTreeSpeed.BaselineEvalMicroseconds,
+            SurrogateEvalMicroseconds: referenceTreeSpeed.SurrogateEvalMicroseconds,
+            BreakEvenEvaluations: referenceTreeSpeed.BreakEvenEvaluations,
+            FactorAlignedMetrics: SummarizeMetrics(wrapper.Price, referenceTree.Price, factorAligned),
+            ArbitraryBumpMetrics: SummarizeMetrics(wrapper.Price, referenceTree.Price, arbitrary));
 
         var directModel = new CallableStructuredAlternativeModelSummary(
             ModelName: "Curve-factor tensor",
@@ -143,7 +161,7 @@ public static class CallableStructuredAlternatives
         return new CallableStructuredAlternativesReport(
             FixtureId: "fed-nominal-yield-curve-semiannual-2026-05-15",
             CurveDate: baseRequest.ValuationDate,
-            Models: [directModel, curveFactorTtModel, embeddedOptionModel, embeddedOptionFullPillarModel]);
+            Models: [referenceTreeModel, directModel, curveFactorTtModel, embeddedOptionModel, embeddedOptionFullPillarModel]);
     }
 
     public static CallableRiskAcceptanceReport RunRiskAcceptance(
@@ -156,9 +174,15 @@ public static class CallableStructuredAlternatives
         CallableBondRequest baseRequest = wrapper.ToRequest(wrapper.CreateBasePoint());
         IReadOnlyList<CallableRiskValidationPoint> validationBank = CallableRiskAcceptance.BuildDefaultValidationBank();
         Func<double[], double> baseline = wrapper.Price;
+        double[] timingPoint = validationBank[0].Coordinates;
+        double baselineFullDv01Milliseconds = TimeOneCallMilliseconds(() => FullDv01Vector(baseline, timingPoint));
 
         var candidates = new List<RiskCandidate>
         {
+            BuildReferenceSemanticsTreeCandidate(wrapper),
+            BuildReferenceSemanticsTreeTangentCandidate(wrapper),
+            BuildReferenceSemanticsTreeHybridRiskCandidate(wrapper),
+            BuildReducedTreeHybridRiskCandidate(wrapper),
             BuildAnchoredHdmrCandidate(wrapper),
             new(
                 "Curve-factor tensor",
@@ -204,18 +228,32 @@ public static class CallableStructuredAlternatives
             CurveDate: baseRequest.ValuationDate,
             ValidationPointCount: validationBank.Count,
             Models: candidates
-                .Select(candidate => new CallableRiskAcceptanceModelSummary(
-                    ModelName: candidate.ModelName,
-                    ApproximationType: candidate.ApproximationType,
-                    PublicInputDimensionCount: CallableBondFullDimensionalWrapper.DimensionCount,
-                    InternalDimensionCount: candidate.InternalDimensionCount,
-                    BuildEvaluations: candidate.Surrogate.BuildEvaluations,
-                    BuildSeconds: candidate.Surrogate.BuildSeconds,
-                    Metrics: CallableRiskAcceptance.Summarize(
-                        baseline,
-                        candidate.Surrogate.EvalFullPoint,
-                        validationBank,
-                        candidate.Surrogate.DirectFullDv01Vector)))
+                .Select(candidate =>
+                {
+                    double modelFullDv01Milliseconds = TimeOneCallMilliseconds(
+                        () =>
+                        {
+                            double[] vector = candidate.Surrogate.DirectFullDv01Vector is null
+                                ? FullDv01Vector(candidate.Surrogate.EvalFullPoint, timingPoint)
+                                : candidate.Surrogate.DirectFullDv01Vector(timingPoint);
+                            GC.KeepAlive(vector);
+                        });
+                    return new CallableRiskAcceptanceModelSummary(
+                        ModelName: candidate.ModelName,
+                        ApproximationType: candidate.ApproximationType,
+                        PublicInputDimensionCount: CallableBondFullDimensionalWrapper.DimensionCount,
+                        InternalDimensionCount: candidate.InternalDimensionCount,
+                        BuildEvaluations: candidate.Surrogate.BuildEvaluations,
+                        BuildSeconds: candidate.Surrogate.BuildSeconds,
+                        BaselineFullDv01Milliseconds: baselineFullDv01Milliseconds,
+                        ModelFullDv01Milliseconds: modelFullDv01Milliseconds,
+                        FullDv01Speedup: baselineFullDv01Milliseconds / modelFullDv01Milliseconds,
+                        Metrics: CallableRiskAcceptance.Summarize(
+                            baseline,
+                            candidate.Surrogate.EvalFullPoint,
+                            validationBank,
+                            candidate.Surrogate.DirectFullDv01Vector));
+                })
                 .ToArray());
     }
 
@@ -245,6 +283,65 @@ public static class CallableStructuredAlternatives
             EvalFullPoint,
             approximation.NEvaluations,
             sw.Elapsed.TotalSeconds);
+    }
+
+    private static RiskCandidate BuildReferenceSemanticsTreeCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        var pricer = new ReferenceSemanticsCallableTreePricer(wrapper);
+        return new RiskCandidate(
+            "Reference-semantics tree clone",
+            "faithful full-pillar tree clone",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                pricer.Price,
+                BuildEvaluations: 0,
+                BuildSeconds: 0.0));
+    }
+
+    private static RiskCandidate BuildReferenceSemanticsTreeTangentCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        var pricer = new ReferenceSemanticsCallableTreePricer(wrapper);
+        return new RiskCandidate(
+            "Reference-semantics tree tangent DV01",
+            "fast pathwise lattice-risk diagnostic",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                pricer.Price,
+                BuildEvaluations: 0,
+                BuildSeconds: 0.0,
+                DirectFullDv01Vector: pricer.FullDv01Vector));
+    }
+
+    private static RiskCandidate BuildReferenceSemanticsTreeHybridRiskCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        var pricer = new ReferenceSemanticsCallableTreePricer(wrapper);
+        return new RiskCandidate(
+            "Reference-semantics tree hybrid DV01",
+            "smoothed tangent plus material-pillar bump correction",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                pricer.Price,
+                BuildEvaluations: 0,
+                BuildSeconds: 0.0,
+                DirectFullDv01Vector: point => pricer.HybridFullDv01Vector(point, correctionCount: 48)));
+    }
+
+    private static RiskCandidate BuildReducedTreeHybridRiskCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        var pricer = new ReferenceSemanticsCallableTreePricer(wrapper, treeTimeStepsOverride: 40);
+        return new RiskCandidate(
+            "Reduced 40-step tree hybrid DV01",
+            "faster discretized tree diagnostic",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                pricer.Price,
+                BuildEvaluations: 0,
+                BuildSeconds: 0.0,
+                DirectFullDv01Vector: point => pricer.HybridFullDv01Vector(point, correctionCount: 48)));
     }
 
     private static RiskCandidate BuildAnchoredHdmrCandidate(
@@ -902,6 +999,26 @@ public static class CallableStructuredAlternatives
             : double.PositiveInfinity;
 
         return new SpeedSummary(baselineMicroseconds, surrogateMicroseconds, breakEven);
+    }
+
+    private static double TimeOneCallMilliseconds(Action action)
+    {
+        action();
+        Stopwatch sw = Stopwatch.StartNew();
+        action();
+        sw.Stop();
+        return sw.Elapsed.TotalMilliseconds;
+    }
+
+    private static double[] FullDv01Vector(Func<double[], double> function, double[] point)
+    {
+        var vector = new double[PublicCurveBumpCount];
+        for (int i = 0; i < vector.Length; i++)
+        {
+            vector[i] = FirstDerivative(function, point, i, RateBpStep);
+        }
+
+        return vector;
     }
 
     private static double TimePerCallMicroseconds(

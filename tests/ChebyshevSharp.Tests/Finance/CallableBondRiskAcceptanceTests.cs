@@ -75,4 +75,36 @@ public sealed class CallableBondRiskAcceptanceTests
         Assert.True(surrogate.BuildSeconds >= 0.0);
         Assert.True(double.IsFinite(surrogate.Eval(wrapper.CreateBasePoint())));
     }
+
+    [Fact]
+    public void Reference_semantics_tree_clone_matches_qlnet_prices()
+    {
+        var wrapper = CallableBondFullDimensionalWrapper.CreateDefault(new QlNetCallableBondReferencePricer());
+        var clone = new ReferenceSemanticsCallableTreePricer(wrapper);
+
+        foreach (CallableRiskValidationPoint point in CallableRiskAcceptance.BuildDefaultValidationBank())
+        {
+            double expected = wrapper.Price(point.Coordinates);
+            double actual = clone.Price(point.Coordinates);
+
+            Assert.InRange(Math.Abs(actual - expected), 0.0, 1e-10);
+        }
+    }
+
+    [Fact]
+    public void Hybrid_dv01_clone_passes_full_pillar_risk_gate()
+    {
+        var wrapper = CallableBondFullDimensionalWrapper.CreateDefault(new QlNetCallableBondReferencePricer());
+        var clone = new ReferenceSemanticsCallableTreePricer(wrapper);
+
+        CallableRiskAcceptanceMetrics metrics = CallableRiskAcceptance.Summarize(
+            wrapper.Price,
+            clone.Price,
+            CallableRiskAcceptance.BuildDefaultValidationBank(),
+            point => clone.HybridFullDv01Vector(point, correctionCount: 48));
+
+        CallableRiskVectorMetricSummary fullDv01 = Assert.Single(metrics.VectorMetrics);
+        Assert.InRange(fullDv01.MaxComponentAbsoluteError, 0.0, 2.5e-4);
+        Assert.InRange(fullDv01.MaxL1RelativeError, 0.0, 0.05);
+    }
 }

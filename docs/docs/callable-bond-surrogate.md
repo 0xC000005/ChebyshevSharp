@@ -13,6 +13,13 @@ reference implementation, a pinned Federal Reserve nominal-yield-curve fixture,
 a semiannual fixed-rate bullet bond, and a one-factor Hull-White tree callable
 bond engine. It is not a general fixed-income engine.
 
+The accepted clone is validated for the regular schedule family used in the
+harness: maturity and first-call dates are on the semiannual coupon grid, calls
+repeat semiannually, and the settlement date is the valuation date. Non-aligned
+call dates, stubs, accrued-settlement effects, amortization, and exotic
+callability rules are outside the promoted scope and should route to the
+reference pricer or a separate validation harness.
+
 ## Why Callable Bonds
 
 The earlier fixed-rate bond case study is a useful correctness exercise, but an
@@ -103,6 +110,7 @@ and mixed finite-difference quantities:
 | Call-price sensitivity | Slope with respect to clean call price. |
 | Rate-sigma mixed | Whether rate exposure changes correctly when volatility changes. |
 | Call-price-sigma mixed | Whether call-price exposure changes correctly when volatility changes. |
+| Full 60-pillar DV01 vector | The complete key-rate ladder from bumping each public curve coordinate. |
 
 Speed is reported with the break-even count:
 
@@ -115,6 +123,13 @@ $$
 
 A surrogate is useful only if its build cost can be amortized over a realistic
 number of repeated scenario or Greek evaluations.
+
+For callable bonds, the full DV01 ladder is especially important. A pathwise
+or adjoint derivative through a fixed exercise decision is not automatically
+the same object as the bump-and-reprice effective DV01 used in many risk
+systems. Near an exercise boundary, a tiny rate bump can move tree nodes across
+the call decision. The later trials therefore report both accuracy and full
+DV01 wall-clock speed.
 
 ## Trial 1: Naive Global Clone
 
@@ -526,28 +541,137 @@ production candidate would need to reproduce the reference engine's calibrated
 Hull-White tree semantics before using Chebyshev continuation functions as an
 accelerator.
 
+## Trial 10: Reproduce The Reference Tree
+
+The failed dynamic pilot points to a basic requirement: before accelerating the
+recursion, reproduce the recursion. QLNet's callable engine builds a
+recombining Hull-White trinomial tree, creates a time grid containing coupon
+and call dates, and fits a short-rate shift at every time step so the tree
+matches the input discount curve.
+
+For state \(x_{i,j}\), Arrow-Debreu state price \(\pi_{i,j}\), and step
+\(\Delta t_i\), the fitted shift is:
+
+$$
+\phi_i =
+\frac{1}{\Delta t_i}
+\log\left(
+  \frac{\sum_j \pi_{i,j}\exp(-x_{i,j}\Delta t_i)}
+       {P(0,t_{i+1})}
+\right).
+$$
+
+The rollback is then:
+
+$$
+V_{i,j} =
+\exp(-(x_{i,j}+\phi_i)\Delta t_i)
+\sum_b p_{i,j,b} V_{i+1,d(i,j,b)} .
+$$
+
+At event dates, the clone applies the same coupon and call ordering as QLNet.
+This is not a fitted Chebyshev model; it is a reference-semantics clone used to
+separate approximation failure from engine-semantics mismatch.
+
+| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
+| --- | ---: | ---: | ---: | ---: |
+| Reference-semantics tree clone | 2.84E-14 | 4.97E-14 | 0.00% | 3.2x |
+
+The clone proves that the 65D wrapper can be reproduced faithfully. The speedup
+is modest because this version still obtains the full DV01 ladder by exact
+bump-and-reprice.
+
+## Trial 11: One-Pass Lattice Tangent Risk
+
+The next trial differentiates the fitted lattice itself. For one curve pillar
+\(p\):
+
+$$
+\partial_p V_{i,j}
+=
+D_{i,j}\sum_b p_{i,j,b}\partial_p V_{i+1,d(i,j,b)}
+-
+\Delta t_i V_{i,j}\partial_p\phi_i,
+$$
+
+where \(D_{i,j}=\exp(-(x_{i,j}+\phi_i)\Delta t_i)\). The derivative of
+\(\phi_i\) comes from differentiating the calibration formula above. This gives
+all 60 curve sensitivities in one lattice pass.
+
+A hard call decision is not differentiable at \(V=K\), so the diagnostic uses a
+small exercise-boundary smoothing weight:
+
+$$
+w(V,K)=
+\frac12\left(
+1-\frac{V-K}{\sqrt{(V-K)^2+\varepsilon^2}}
+\right).
+$$
+
+The result is fast, but it is still not strict enough to replace
+bump-and-reprice effective DV01:
+
+| Model | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
+| --- | ---: | ---: | ---: |
+| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | 38.8x |
+
+This is a useful failure. It shows that pathwise lattice risk and finite-bump
+risk are close but not identical near exercise boundaries.
+
+## Trial 12: Hybrid Effective DV01
+
+The accepted risk candidate keeps the fast smoothed tangent for the full ladder,
+then corrects the most material pillars with exact bump-and-reprice through the
+cloned tree:
+
+$$
+\mathrm{DV01}^{\mathrm{hybrid}}_p =
+\begin{cases}
+\dfrac{Q(x+e_p)-Q(x-e_p)}{2}, & p \in I_{48}, \\
+\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_p, & p \notin I_{48}.
+\end{cases}
+$$
+
+Here \(I_{48}\) is the set of the 48 largest tangent-DV01 magnitudes. This is
+an engine-aware risk clone: preserve exact lattice semantics for PV, propagate
+a full-ladder tangent in one pass, and spend exact bump evaluations only where
+the ladder is most material.
+
+The exact correction reprices are independent across pillars, so the harness
+executes them in parallel. That keeps the mathematical definition identical to
+bump-and-reprice for the corrected pillars while making the full ladder fast
+enough for the local risk gate.
+
+| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
+| --- | ---: | ---: | ---: | ---: |
+| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | 44.2x |
+
+This is the first callable-bond candidate that is faithful to the 65D public
+wrapper and operationally useful for the full key-rate ladder. A reduced
+40-step tree was also tested, but it damaged Greeks and full DV01 enough to be
+rejected.
+
 ## Current Conclusion
 
-The callable-bond harness has a clear but limited current answer.
+The callable-bond harness has a sharper answer now.
 
-The naive global clone does not work. It fails both price and risk metrics, and
-the Slider misses important cross terms by construction. The factor TT is fast
-but not a faithful local-risk clone. The first HDMR and residual-correction
-attempts show that simply adding local pillar components is not enough either.
+The naive global Chebyshev clone does not work. Factor compression is fast but
+not a faithful arbitrary-pillar risk clone. Static HDMR and residual patches do
+not repair the exercise-boundary behavior. A simplified dynamic Chebyshev
+recursion is closer to the right idea, but still fails if it does not reproduce
+the calibrated tree semantics of the reference engine.
 
-The strongest lesson is negative but useful. For this supported callable family,
-we have not found a risk-acceptable replacement by fitting the final QLNet price
-surface, by adding static residual patches, or by using a simplified dynamic
-Chebyshev recursion.
+The first risk-acceptable clone is therefore not a blind tensor. It is a
+reference-semantics lattice clone with hybrid effective DV01. For the supported
+regular callable fixed-rate family, it preserves the 65D request wrapper,
+matches QLNet PV and scalar finite-difference Greeks to numerical noise, and
+computes the full 60-pillar DV01 ladder with sub-gate error and about 44x
+speedup in the local benchmark.
 
-The related option-pricing literature still points to the right structural
-direction for early-exercise products: approximate continuation values inside
-the dynamic programming problem rather than fitting one static black-box
-function after the fact. The pilot here confirms that structure matters, but
-also shows that matching the reference engine matters just as much. A production
-candidate would need to reproduce the calibrated Hull-White tree semantics of
-the reference engine, or expose continuation values from that engine, before
-Chebyshev continuation functions can be promoted as a risk-system replacement.
+The remaining Chebyshev research direction should start from this engine-aware
+decomposition. Chebyshev continuation functions can still be tested as
+accelerators inside the reproduced tree semantics, but fitting one static final
+price surface is not the right architecture for this product.
 
 ## Reproduce
 

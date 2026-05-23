@@ -139,6 +139,9 @@ public static class CallableBondExample
             output.WriteLine($"  Internal dims: {model.InternalDimensionCount}");
             output.WriteLine($"  Build evals  : {model.BuildEvaluations:N0}");
             output.WriteLine($"  Build seconds: {model.BuildSeconds:F3}");
+            output.WriteLine($"  Baseline full DV01: {model.BaselineFullDv01Milliseconds:F3} ms");
+            output.WriteLine($"  Model full DV01   : {model.ModelFullDv01Milliseconds:F3} ms");
+            output.WriteLine($"  Full DV01 speedup : {model.FullDv01Speedup:F1}x");
             output.WriteLine();
 
             output.WriteLine("  scalar risk metrics");

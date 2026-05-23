@@ -20,8 +20,10 @@ how-to guides, and API reference.
 - Expanded the callable-bond case study with a risk-acceptance validation
   section, full-pillar DV01/PV01 evidence, anchored HDMR and factor-residual
   trials, state-dependent local-risk, exercise-moneyness residual, and dynamic
-  short-rate-state evidence, plus references for HDMR and dynamic Chebyshev
-  methods for early-exercise products
+  short-rate-state evidence, then added the first risk-acceptable
+  reference-semantics tree clone with parallel hybrid effective DV01
+  acceleration, plus references for HDMR and dynamic Chebyshev methods for
+  early-exercise products
   ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209)).
 - Added a callable fixed-rate bond case study that keeps a 65-dimensional
   request-level wrapper, uses QLNet's Hull-White tree callable-bond pricer as
@@ -32,7 +34,8 @@ how-to guides, and API reference.
 ### Examples
 - Added a callable-bond risk-acceptance mode with full 60-pillar DV01 vector
   checks, product Greeks, mixed-term checks, and first full-pillar-aware HDMR
-  diagnostics
+  diagnostics; added reference-semantics tree, lattice-tangent DV01, parallel
+  hybrid DV01, and reduced-tree diagnostics
   ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209)).
 - Added `examples/CallableBondSurrogate`, including the QLNet-backed callable
   baseline, the full-dimensional public wrapper, naive surrogate discovery, and
