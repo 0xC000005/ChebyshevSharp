@@ -40,6 +40,14 @@ rate tree and the call schedule. That makes this example closer to the risk
 workloads where Chebyshev tensors are useful: the baseline call is expensive,
 but users need repeated PV and sensitivity evaluations across many scenarios.
 
+This is the same broad motivation as the Chebyshev-tensor finance literature:
+use structured approximation to amortize expensive repeated risk calculations.
+The case study also borrows the dynamic-programming lesson from American and
+Bermudan option work: early-exercise products should be treated through their
+recursion, not only as one final black-box payoff surface. The concrete
+baseline and event ordering come from the QLNet/QuantLib callable-bond engine;
+see [Citations](citations.md) for the source links and papers.
+
 ## Public Wrapper
 
 Every trial uses the same full-dimensional request-level wrapper:
@@ -130,6 +138,36 @@ the same object as the bump-and-reprice effective DV01 used in many risk
 systems. Near an exercise boundary, a tiny rate bump can move tree nodes across
 the call decision. The later trials therefore report both accuracy and full
 DV01 wall-clock speed.
+
+The final candidate is judged against the full ladder, not only against the
+selected pillars. For a model \(M\), the validation computes:
+
+$$
+\mathrm{DV01}^{\mathrm{ref}}_p
+  =
+  \frac{Q_{\mathrm{ref}}(x+e_p)-Q_{\mathrm{ref}}(x-e_p)}{2},
+\qquad
+p=1,\ldots,60,
+$$
+
+then checks both the worst component error and the ladder-level residual:
+
+$$
+\max_p
+\left|
+\mathrm{DV01}^{M}_p-\mathrm{DV01}^{\mathrm{ref}}_p
+\right|,
+\qquad
+\frac{\sum_p
+\left|
+\mathrm{DV01}^{M}_p-\mathrm{DV01}^{\mathrm{ref}}_p
+\right|}
+{\sum_p|\mathrm{DV01}^{\mathrm{ref}}_p|}.
+$$
+
+This distinction matters for governance. A fast risk path is acceptable only if
+the uncorrected residual remains small when compared with the exact full
+bump-and-reprice ladder.
 
 ## Trial 1: Naive Global Clone
 
@@ -347,6 +385,11 @@ factor-like moves. The decomposition preserves local coordinates, but it
 over-extrapolates when many coordinates move together, which is exactly what a
 level or slope scenario does.
 
+This is where the experiment departs from a simple tensor-compression story.
+HDMR is a standard high-dimensional decomposition idea, but a callable-bond
+lattice contains exercise decisions. A low-order static expansion around one
+anchor does not automatically preserve those decisions under broad curve moves.
+
 ## Trial 5: Factor Backbone Plus Local Residual
 
 The next attempt combines the two previous ideas. Let \(P(x)\) be the
@@ -541,6 +584,11 @@ production candidate would need to reproduce the reference engine's calibrated
 Hull-White tree semantics before using Chebyshev continuation functions as an
 accelerator.
 
+The lesson is not that dynamic Chebyshev is the wrong idea. The lesson is that
+the continuation-value approximation must sit on top of the same calibrated
+tree semantics as the reference engine. Otherwise, the surrogate is solving a
+nearby pricing problem instead of cloning the intended one.
+
 ## Trial 10: Reproduce The Reference Tree
 
 The failed dynamic pilot points to a basic requirement: before accelerating the
@@ -642,6 +690,40 @@ executes them in parallel. That keeps the mathematical definition identical to
 bump-and-reprice for the corrected pillars while making the full ladder fast
 enough for the local risk gate.
 
+This is not a claim that the other 12 pillars are ignored. The clone first
+computes a tangent estimate for every pillar:
+
+$$
+\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}
+  =
+  \left(
+    \widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_1,
+    \ldots,
+    \widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_{60}
+  \right).
+$$
+
+The exact corrections replace the largest components of that complete ladder;
+the remaining components stay on the fast tangent estimate. The validation then
+compares the whole 60-vector against exact bump-and-reprice. In production
+terms, the hard-coded \(48\) is a research-harness choice. A governed risk
+implementation should choose the correction set by materiality, for example:
+
+$$
+I_\alpha
+ =
+ \min\left\{
+ I:
+ \frac{\sum_{p\notin I}
+ |\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_p|}
+ {\sum_p |\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_p|}
+ \le \alpha
+ \right\},
+$$
+
+plus any mandatory reporting tenors. The system should fall back to exact
+full-ladder bump-and-reprice if the measured residual breaches tolerance.
+
 | Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
 | --- | ---: | ---: | ---: | ---: |
 | Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | 44.2x |
@@ -672,6 +754,22 @@ The remaining Chebyshev research direction should start from this engine-aware
 decomposition. Chebyshev continuation functions can still be tested as
 accelerators inside the reproduced tree semantics, but fitting one static final
 price surface is not the right architecture for this product.
+
+## Governance Notes
+
+For a production risk system, the safe operating modes are:
+
+| Mode | Use |
+| --- | --- |
+| Exact cloned-tree PV | Default price path for the supported regular callable family. |
+| Exact cloned-tree full DV01 | Audit path and fallback when residual checks fail. |
+| Hybrid full DV01 | Fast risk path after materiality thresholds and mandatory tenors are satisfied. |
+| Reference-pricer fallback | Any product outside the documented schedule and convention scope. |
+
+The board-level claim should therefore be narrow: the method is a fast,
+validated clone for a specific callable-bond family, with explicit residual
+checks and fallback. It is not a general replacement for arbitrary fixed-income
+products.
 
 ## Reproduce
 
