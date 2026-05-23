@@ -50,6 +50,9 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Ruiz, I. and Zeron, M. (2020). "Dynamic sensitivities and Initial Margin via Chebyshev Tensors." arXiv: [2011.04544](https://arxiv.org/abs/2011.04544).
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
+- Glau, K., Mahlstedt, M., and Pötz, C. (2019). "A New Approach for American Option Pricing: The Dynamic Chebyshev Method." *SIAM Journal on Scientific Computing*, 41(1), B153-B180. DOI: [10.1137/18M1193001](https://doi.org/10.1137/18M1193001); arXiv: [1806.05579](https://arxiv.org/abs/1806.05579).
+- Huang, J., Pang, T., and Zeng, Y. (2014). "Efficient pricing of Bermudan options using recombining quadratures." *Journal of Computational and Applied Mathematics*, 271, 195-205. DOI: [10.1016/j.cam.2014.04.007](https://doi.org/10.1016/j.cam.2014.04.007).
+- Rabitz, H., and Aliş, Ö. F. (1999). "General foundations of high-dimensional model representations." *Journal of Mathematical Chemistry*, 25, 197-233. DOI: [10.1023/A:1019188517934](https://doi.org/10.1023/A:1019188517934).
 
 ## Fixed-Income Baseline Libraries
 

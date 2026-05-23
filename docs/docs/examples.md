@@ -27,6 +27,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --naive-surrogate-discovery
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
 ```
 
 ## QuickStart
@@ -301,6 +302,15 @@ local key-rate DV01 checks, and volatility sensitivity checks:
 
 ```bash
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
+```
+
+Run the risk-acceptance mode to test the current candidate family against a
+broader risk-manager style validation bank. It reports PV, factor sensitivities,
+full 60-pillar DV01 vector error, product Greeks, selected mixed terms, and the
+new full-pillar-aware HDMR/residual probes:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
 ```
 
 For the full narrative, including the financial formula, trial rationale,

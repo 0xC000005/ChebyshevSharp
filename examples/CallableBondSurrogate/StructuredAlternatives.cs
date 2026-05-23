@@ -22,6 +22,21 @@ public sealed record CallableStructuredAlternativesReport(
     DateTime CurveDate,
     IReadOnlyList<CallableStructuredAlternativeModelSummary> Models);
 
+public sealed record CallableRiskAcceptanceModelSummary(
+    string ModelName,
+    string ApproximationType,
+    int PublicInputDimensionCount,
+    int InternalDimensionCount,
+    int BuildEvaluations,
+    double BuildSeconds,
+    CallableRiskAcceptanceMetrics Metrics);
+
+public sealed record CallableRiskAcceptanceReport(
+    string FixtureId,
+    DateTime CurveDate,
+    int ValidationPointCount,
+    IReadOnlyList<CallableRiskAcceptanceModelSummary> Models);
+
 public static class CallableStructuredAlternatives
 {
     private const int PublicCurveBumpCount = 60;
@@ -131,6 +146,60 @@ public static class CallableStructuredAlternatives
             Models: [directModel, curveFactorTtModel, embeddedOptionModel, embeddedOptionFullPillarModel]);
     }
 
+    public static CallableRiskAcceptanceReport RunRiskAcceptance(ICallableBondReferencePricer pricer)
+    {
+        ArgumentNullException.ThrowIfNull(pricer);
+
+        CallableBondFullDimensionalWrapper wrapper = CallableBondFullDimensionalWrapper.CreateDefault(pricer);
+        CallableBondRequest baseRequest = wrapper.ToRequest(wrapper.CreateBasePoint());
+        IReadOnlyList<CallableRiskValidationPoint> validationBank = CallableRiskAcceptance.BuildDefaultValidationBank();
+        Func<double[], double> baseline = wrapper.Price;
+
+        RiskCandidate[] candidates =
+        [
+            BuildAnchoredHdmrCandidate(wrapper),
+            new(
+                "Curve-factor tensor",
+                "factor-risk surrogate",
+                InternalDimensionCount,
+                BuildCurveFactorSurrogate(wrapper)),
+            new(
+                "Curve-factor TT",
+                "factor-risk surrogate",
+                InternalDimensionCount,
+                BuildCurveFactorTtSurrogate(wrapper)),
+            BuildCurveFactorTtWithAnchorDv01ResidualCandidate(wrapper),
+            new(
+                "Embedded-option curve-factor tensor",
+                "formula-aware factor-risk surrogate",
+                InternalDimensionCount,
+                BuildEmbeddedOptionSurrogate(wrapper)),
+            new(
+                "Embedded-option full-pillar TT",
+                "formula-aware faithful full-pillar candidate",
+                CallableBondFullDimensionalWrapper.DimensionCount,
+                BuildEmbeddedOptionFullPillarTt(wrapper)),
+        ];
+
+        return new CallableRiskAcceptanceReport(
+            FixtureId: "fed-nominal-yield-curve-semiannual-2026-05-15",
+            CurveDate: baseRequest.ValuationDate,
+            ValidationPointCount: validationBank.Count,
+            Models: candidates
+                .Select(candidate => new CallableRiskAcceptanceModelSummary(
+                    ModelName: candidate.ModelName,
+                    ApproximationType: candidate.ApproximationType,
+                    PublicInputDimensionCount: CallableBondFullDimensionalWrapper.DimensionCount,
+                    InternalDimensionCount: candidate.InternalDimensionCount,
+                    BuildEvaluations: candidate.Surrogate.BuildEvaluations,
+                    BuildSeconds: candidate.Surrogate.BuildSeconds,
+                    Metrics: CallableRiskAcceptance.Summarize(
+                        baseline,
+                        candidate.Surrogate.EvalFullPoint,
+                        validationBank)))
+                .ToArray());
+    }
+
     private static CurveFactorSurrogate BuildCurveFactorSurrogate(
         CallableBondFullDimensionalWrapper wrapper)
     {
@@ -157,6 +226,56 @@ public static class CallableStructuredAlternatives
             EvalFullPoint,
             approximation.NEvaluations,
             sw.Elapsed.TotalSeconds);
+    }
+
+    private static RiskCandidate BuildAnchoredHdmrCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        CallableAnchoredHdmrSurrogate surrogate = CallableAnchoredHdmrSurrogate.Build(wrapper);
+        return new RiskCandidate(
+            "Anchored HDMR full-pillar",
+            "faithful full-pillar low-order candidate",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                surrogate.Eval,
+                surrogate.BuildEvaluations,
+                surrogate.BuildSeconds));
+    }
+
+    private static RiskCandidate BuildCurveFactorTtWithAnchorDv01ResidualCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        CurveFactorSurrogate factorTt = BuildCurveFactorTtSurrogate(wrapper);
+        double[] anchor = wrapper.CreateBasePoint();
+        var anchorDv01 = new double[PublicCurveBumpCount];
+        Stopwatch sw = Stopwatch.StartNew();
+        for (int i = 0; i < anchorDv01.Length; i++)
+        {
+            anchorDv01[i] = FirstDerivative(wrapper.Price, anchor, i, RateBpStep);
+        }
+
+        sw.Stop();
+
+        double EvalFullPoint(double[] fullPoint)
+        {
+            double[] projected = ToFullPoint(ProjectFullPoint(fullPoint));
+            double correction = 0.0;
+            for (int i = 0; i < PublicCurveBumpCount; i++)
+            {
+                correction += (fullPoint[i] - projected[i]) * anchorDv01[i];
+            }
+
+            return factorTt.EvalFullPoint(fullPoint) + correction;
+        }
+
+        return new RiskCandidate(
+            "Curve-factor TT + anchor DV01 residual",
+            "factor backbone with full-pillar linear residual candidate",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                EvalFullPoint,
+                factorTt.BuildEvaluations + 2 * anchorDv01.Length,
+                factorTt.BuildSeconds + sw.Elapsed.TotalSeconds));
     }
 
     private static CurveFactorSurrogate BuildEmbeddedOptionSurrogate(
@@ -578,6 +697,12 @@ public static class CallableStructuredAlternatives
         double BaselineEvalMicroseconds,
         double SurrogateEvalMicroseconds,
         double BreakEvenEvaluations);
+
+    private sealed record RiskCandidate(
+        string ModelName,
+        string ApproximationType,
+        int InternalDimensionCount,
+        CurveFactorSurrogate Surrogate);
 
     private sealed record CallableValidationPoint(
         string Name,

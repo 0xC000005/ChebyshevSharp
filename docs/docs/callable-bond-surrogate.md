@@ -241,23 +241,133 @@ option value is smaller and more regime-sensitive than the full callable price,
 so a weak low-node approximation can produce worse relative PV error even when
 the formula is financially natural.
 
+## Risk Acceptance Check
+
+The first structured report was still too PV-heavy. A risk manager needs more
+than price: the object must also reproduce full-pillar DV01/PV01, product
+Greeks, and mixed terms. The broader check uses seven validation points:
+factor-like curve moves, arbitrary local pillar shocks, high-volatility cases,
+low-volatility cases, and near-par call cases.
+
+Run it:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
+```
+
+The result is decisive: the current factor models are fast, but they are not
+risk-acceptable.
+
+| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Max sigma-sensitivity rel. error | Max call-price-sigma mixed rel. error |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Curve-factor tensor | 2.08 | 3.74E-02 | 143.01% | 34.80% | 10,094.33% |
+| Curve-factor TT | 2.89 | 3.74E-02 | 143.72% | 23.39% | 6,482.03% |
+| Embedded-option curve-factor tensor | 9.60 | 8.29E-02 | 414.99% | 34.80% | 10,094.33% |
+| Embedded-option full-pillar TT | 7.16 | 8.55E-02 | 370.55% | 51.15% | 9,569.51% |
+
+This explains why PV speed is not enough. The curve-factor TT projects the
+60-pillar curve into three factors, so it can price factor-like scenarios but
+cannot reproduce arbitrary local key-rate risk. The embedded-option variants
+also fail because the option residual is more regime-sensitive than the full
+price in the low-node probes.
+
+## Trial 4: Anchored HDMR
+
+The next mathematical idea is to keep every public coordinate. High-dimensional
+model representation (HDMR), also called a hierarchical ANOVA-style expansion,
+approximates a high-dimensional function by low-order components:
+
+$$
+F(z)
+  \approx
+  F(a)
+  + \sum_i F_i(z_i)
+  + \sum_{(i,j)\in P} F_{ij}(z_i,z_j).
+$$
+
+With an anchor point \(a\), the implemented cut-HDMR terms are:
+
+$$
+F_i(z_i)
+  =
+  F(a_1,\ldots,z_i,\ldots,a_d) - F(a),
+$$
+
+and
+
+$$
+F_{ij}(z_i,z_j)
+  =
+  F(a_{ij})
+  - F_i(z_i)
+  - F_j(z_j)
+  - F(a).
+$$
+
+The rationale is clear: if factor compression fails because it discards local
+curve pillars, give every curve pillar a one-dimensional component and add the
+most obvious two-dimensional interactions. The first probe includes
+curve-coupon, curve-call-price, curve-sigma, adjacent-curve, and selected
+product-variable pairs.
+
+The evidence is also clear: this is not sufficient.
+
+| Model | Build evals | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| Anchored HDMR full-pillar | 6,735 | 25.25 | 3.50E-02 | 1,444.10% |
+
+The failure mode is instructive. A single anchor is too local for broad
+factor-like moves. The decomposition preserves local coordinates, but it
+over-extrapolates when many coordinates move together, which is exactly what a
+level or slope scenario does.
+
+## Trial 5: Factor Backbone Plus Local Residual
+
+The next attempt combines the two previous ideas. Let \(P(x)\) be the
+level/slope/curvature projection of the full curve and \(\tilde{x}\) the curve
+reconstructed from those factors. The model is:
+
+$$
+\widehat{F}(x,y)
+  =
+  \widehat{F}_{\mathrm{factor}}(P(x), y)
+  +
+  \sum_i (x_i - \tilde{x}_i)\,\Delta_i(a).
+$$
+
+Here \(y=(c,T,\tau,K,\sigma)\) and \(\Delta_i(a)\) is the baseline
+one-basis-point pillar sensitivity at the anchor. The intent is to let the
+factor TT handle global smooth moves and use the residual term to restore local
+pillar directions.
+
+This improves some factor-direction errors, but it still does not pass the
+risk gates:
+
+| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Max sigma-sensitivity rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| Curve-factor TT + anchor DV01 residual | 2.30 | 3.86E-02 | 133.40% | 23.39% |
+
+The local residual is only a first-order correction at one anchor. It does not
+adapt when coupon, call price, volatility, or the factor curve move.
+
 ## Current Conclusion
 
 The callable-bond harness has a clear but limited current answer.
 
 The naive global clone does not work. It fails both price and risk metrics, and
-the Slider misses important cross terms by construction. The curve-factor TT is
-the best current candidate when the workload is factor-like: it preserves the
-65D public wrapper, evaluates hundreds of times faster than the QLNet tree call,
-and reaches about 1% PV error in the small validation bank. It is not a faithful
-local key-rate risk clone, because the internal projection discards most
-arbitrary 60-pillar directions.
+the Slider misses important cross terms by construction. The factor TT is fast
+but not a faithful local-risk clone. The first HDMR and residual-correction
+attempts show that simply adding local pillar components is not enough either.
 
-The next research step is therefore not to claim a production replacement. It
-is to improve the method that sits behind the full wrapper: richer curve bases,
-PCA-style factors, active-pillar routing around cashflow and exercise dates,
-regime-aware routing, and stronger validation banks that include PV, all-pillar
-DV01, volatility Greeks, and mixed terms.
+The related option-pricing literature points to a different direction for early
+exercise products: approximate continuation values inside the dynamic
+programming problem rather than fitting one static black-box function after the
+fact. Dynamic Chebyshev methods for American/Bermudan options use Chebyshev
+approximations during backward induction and can deliver prices and Greeks from
+the same representation. For this callable-bond case study, the next serious
+candidate is therefore a schedule/exercise-aware engine or residual model that
+uses Chebyshev on the smooth continuation-value pieces, while keeping the 65D
+public wrapper and full-risk validation bank.
 
 ## Reproduce
 
@@ -273,6 +383,7 @@ Run the three public modes:
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --naive-surrogate-discovery
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
 ```
 
 ## Sources

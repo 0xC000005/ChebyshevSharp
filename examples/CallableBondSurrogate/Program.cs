@@ -21,6 +21,12 @@ public static class CallableBondExample
             return;
         }
 
+        if (args is ["--risk-acceptance"])
+        {
+            RunRiskAcceptance(output);
+            return;
+        }
+
         RunPricingExample(output);
     }
 
@@ -102,6 +108,48 @@ public static class CallableBondExample
             output.WriteLine();
             WriteMetrics(output, "factor-aligned scenarios", model.FactorAlignedMetrics);
             WriteMetrics(output, "arbitrary pillar shocks", model.ArbitraryBumpMetrics);
+        }
+    }
+
+    private static void RunRiskAcceptance(TextWriter output)
+    {
+        var pricer = new QlNetCallableBondReferencePricer();
+        CallableRiskAcceptanceReport report = CallableStructuredAlternatives.RunRiskAcceptance(pricer);
+
+        output.WriteLine("Callable bond risk acceptance");
+        output.WriteLine();
+        output.WriteLine($"Curve fixture    : {report.FixtureId}");
+        output.WriteLine($"Curve date       : {report.CurveDate:yyyy-MM-dd}");
+        output.WriteLine($"Validation points: {report.ValidationPointCount}");
+        output.WriteLine();
+
+        foreach (CallableRiskAcceptanceModelSummary model in report.Models)
+        {
+            output.WriteLine($"{model.ModelName} ({model.ApproximationType})");
+            output.WriteLine($"  Public dims  : {model.PublicInputDimensionCount}");
+            output.WriteLine($"  Internal dims: {model.InternalDimensionCount}");
+            output.WriteLine($"  Build evals  : {model.BuildEvaluations:N0}");
+            output.WriteLine($"  Build seconds: {model.BuildSeconds:F3}");
+            output.WriteLine();
+
+            output.WriteLine("  scalar risk metrics");
+            foreach (CallableRiskScalarMetricSummary metric in model.Metrics.ScalarMetrics)
+            {
+                output.WriteLine(
+                    $"    {metric.Name,-28} max abs {metric.MaxAbsoluteError:E6} " +
+                    $"max rel {metric.MaxRelativeError:P2} worst {metric.WorstPointName}");
+            }
+
+            output.WriteLine("  vector risk metrics");
+            foreach (CallableRiskVectorMetricSummary metric in model.Metrics.VectorMetrics)
+            {
+                output.WriteLine(
+                    $"    {metric.Name,-28} max component abs {metric.MaxComponentAbsoluteError:E6} " +
+                    $"max L1 rel {metric.MaxL1RelativeError:P2} " +
+                    $"worst {metric.WorstPointName}/{metric.WorstComponentLabel}");
+            }
+
+            output.WriteLine();
         }
     }
 
