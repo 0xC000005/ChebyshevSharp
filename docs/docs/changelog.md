@@ -19,8 +19,9 @@ how-to guides, and API reference.
 ### Documentation
 - Expanded the callable-bond case study with a risk-acceptance validation
   section, full-pillar DV01/PV01 evidence, anchored HDMR and factor-residual
-  trials, state-dependent local-risk residual evidence, and references for
-  HDMR plus dynamic Chebyshev methods for early-exercise products
+  trials, state-dependent local-risk and exercise-moneyness residual evidence,
+  and references for HDMR plus dynamic Chebyshev methods for early-exercise
+  products
   ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209)).
 - Added a callable fixed-rate bond case study that keeps a 65-dimensional
   request-level wrapper, uses QLNet's Hull-White tree callable-bond pricer as

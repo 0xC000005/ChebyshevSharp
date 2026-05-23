@@ -174,6 +174,7 @@ public static class CallableStructuredAlternatives
             BuildCurveFactorTtWithDirectDv01Candidate(wrapper),
             BuildCurveFactorTtWithAnchorDv01ResidualCandidate(wrapper),
             BuildCurveFactorTtWithLocalDv01ResidualCandidate(wrapper),
+            BuildExerciseMoneynessOptionCandidate(wrapper),
             new(
                 "Embedded-option curve-factor tensor",
                 "formula-aware factor-risk surrogate",
@@ -531,6 +532,51 @@ public static class CallableStructuredAlternatives
                 DirectDv01));
     }
 
+    private static RiskCandidate BuildExerciseMoneynessOptionCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        double[][] domain =
+        [
+            [-100.0, 100.0], // level
+            [-100.0, 100.0], // slope
+            [-100.0, 100.0], // curvature
+            [0.03, 0.09],
+            [12.0, 30.0],
+            [3.0, 8.0],
+            [-80.0, 80.0],   // discounted first-call moneyness proxy
+            [0.003, 0.025],
+        ];
+
+        int[] nNodes = [5, 5, 5, 3, 3, 3, 7, 5];
+        var optionTt = new ChebyshevTT(
+            point => EmbeddedOptionValue(wrapper, ToFullPointFromExerciseMoneyness(point, wrapper)),
+            numDimensions: 8,
+            domain: domain,
+            nNodes: nNodes,
+            maxRank: 7,
+            tolerance: 1e-5,
+            maxSweeps: 4);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        optionTt.Build(verbose: false, seed: 20260523, method: "cross");
+        sw.Stop();
+
+        double EvalFullPoint(double[] fullPoint)
+        {
+            double optionValue = optionTt.Eval(ProjectExerciseMoneynessFeatures(wrapper, fullPoint));
+            return StraightDirtyPrice(wrapper, fullPoint) - optionValue;
+        }
+
+        return new RiskCandidate(
+            "Exercise-moneyness option TT",
+            "exercise-aware option-residual candidate",
+            8,
+            new CurveFactorSurrogate(
+                EvalFullPoint,
+                2 * optionTt.TotalBuildEvals,
+                sw.Elapsed.TotalSeconds));
+    }
+
     private static CurveFactorSurrogate BuildEmbeddedOptionSurrogate(
         CallableBondFullDimensionalWrapper wrapper)
     {
@@ -648,10 +694,15 @@ public static class CallableStructuredAlternatives
     private static double StraightDirtyPrice(
         CallableBondFullDimensionalWrapper wrapper,
         double[] fullPoint)
+        => StraightBondResult(wrapper, fullPoint).DirtyPrice;
+
+    private static FixedRateBondResult StraightBondResult(
+        CallableBondFullDimensionalWrapper wrapper,
+        double[] fullPoint)
     {
         var straightPricer = new QlNetFixedRateBondReferencePricer();
         CallableBondRequest callable = wrapper.ToRequest(fullPoint);
-        FixedRateBondResult straight = straightPricer.Price(new FixedRateBondRequest(
+        return straightPricer.Price(new FixedRateBondRequest(
             callable.ValuationDate,
             callable.EffectiveDate,
             callable.MaturityDate,
@@ -659,8 +710,108 @@ public static class CallableStructuredAlternatives
             callable.Notional,
             callable.ZeroCurve,
             callable.SettlementDays));
-        return straight.DirtyPrice;
     }
+
+    private static double[] ProjectExerciseMoneynessFeatures(
+        CallableBondFullDimensionalWrapper wrapper,
+        double[] fullPoint)
+    {
+        double[] internalPoint = ProjectFullPoint(fullPoint);
+        CallableBondRequest request = wrapper.ToRequest(fullPoint);
+        double moneyness = FirstCallMoneynessProxy(request, StraightBondResult(wrapper, fullPoint));
+        return
+        [
+            internalPoint[0],
+            internalPoint[1],
+            internalPoint[2],
+            fullPoint[CouponDimension],
+            fullPoint[MaturityDimension],
+            fullPoint[FirstCallDimension],
+            moneyness,
+            fullPoint[SigmaDimension],
+        ];
+    }
+
+    private static double[] ToFullPointFromExerciseMoneyness(
+        double[] point,
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        double[] fullPoint = ToFullPoint([
+            point[0],
+            point[1],
+            point[2],
+            point[3],
+            point[4],
+            point[5],
+            100.0,
+            point[7],
+        ]);
+
+        CallableBondRequest request = wrapper.ToRequest(fullPoint);
+        FixedRateBondResult straight = StraightBondResult(wrapper, fullPoint);
+        double postCallPv = PostFirstCallCashflowPv(request, straight);
+        double callDiscount = DiscountFactor(request, request.FirstCallDate);
+        double impliedCallPrice = (postCallPv - point[6]) / Math.Max(callDiscount, 1e-12);
+        fullPoint[CallPriceDimension] = Math.Clamp(
+            impliedCallPrice,
+            PublicDomain[CallPriceDimension][0],
+            PublicDomain[CallPriceDimension][1]);
+        return fullPoint;
+    }
+
+    private static double FirstCallMoneynessProxy(
+        CallableBondRequest request,
+        FixedRateBondResult straight)
+        => PostFirstCallCashflowPv(request, straight)
+            - request.CallPrice * DiscountFactor(request, request.FirstCallDate);
+
+    private static double PostFirstCallCashflowPv(
+        CallableBondRequest request,
+        FixedRateBondResult straight)
+        => straight.Cashflows
+            .Where(cashflow => !cashflow.HasOccurred && cashflow.PaymentDate.Date > request.FirstCallDate.Date)
+            .Sum(cashflow => cashflow.Amount * DiscountFactor(request, cashflow.PaymentDate));
+
+    private static double DiscountFactor(CallableBondRequest request, DateTime date)
+    {
+        double time = YearFraction(request.ValuationDate, date);
+        if (time <= 0.0)
+        {
+            return 1.0;
+        }
+
+        double zeroRate = ZeroRate(request.ZeroCurve, request.ValuationDate, date);
+        return Math.Exp(-zeroRate * time);
+    }
+
+    private static double ZeroRate(
+        IReadOnlyList<ZeroRatePillar> curve,
+        DateTime valuationDate,
+        DateTime date)
+    {
+        double targetTime = YearFraction(valuationDate, date);
+        if (targetTime <= 0.0)
+        {
+            return curve[0].ZeroRate;
+        }
+
+        for (int i = 1; i < curve.Count; i++)
+        {
+            double rightTime = YearFraction(valuationDate, curve[i].Date);
+            if (targetTime <= rightTime)
+            {
+                double leftTime = YearFraction(valuationDate, curve[i - 1].Date);
+                double width = Math.Max(rightTime - leftTime, 1e-12);
+                double weight = (targetTime - leftTime) / width;
+                return ((1.0 - weight) * curve[i - 1].ZeroRate) + (weight * curve[i].ZeroRate);
+            }
+        }
+
+        return curve[^1].ZeroRate;
+    }
+
+    private static double YearFraction(DateTime valuationDate, DateTime date)
+        => (date.Date - valuationDate.Date).TotalDays / 365.0;
 
     private static IReadOnlyList<CallableValidationPoint> BuildFactorAlignedValidation(
         CallableBondFullDimensionalWrapper wrapper)

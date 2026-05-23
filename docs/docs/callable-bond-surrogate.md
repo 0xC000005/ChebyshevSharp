@@ -270,6 +270,7 @@ risk-acceptable.
 | Curve-factor tensor | 2.08 | 3.74E-02 | 143.01% | 34.80% | 10,094.33% |
 | Curve-factor TT | 2.89 | 3.74E-02 | 143.72% | 23.39% | 6,482.03% |
 | Curve-factor TT + local DV01 residual | 1.93 | 4.25E-02 | 387.30% | 24.17% | 7,604.07% |
+| Exercise-moneyness option TT | 11.85 | 7.52E-02 | 468.73% | 68.32% | 1,188.19% |
 | Embedded-option curve-factor tensor | 9.60 | 8.29E-02 | 414.99% | 34.80% | 10,094.33% |
 | Embedded-option full-pillar TT | 7.16 | 8.55E-02 | 370.55% | 51.15% | 9,569.51% |
 | Stronger full-pillar TT | 13.18 | 3.99E-02 | 169.49% | 54.37% | 4,436.56% |
@@ -407,7 +408,50 @@ the strongest local-static failure so far: the callable risk vector is not just
 a smooth factor price plus a reusable local patch. Exercise behavior changes
 the relationship between local curve shocks and continuation value.
 
-## Trial 7: More Factors And A Stronger Full TT
+## Trial 7: Exercise-Moneyness Option Residual
+
+The next attempt asks whether the option residual should be parameterized by an
+exercise coordinate rather than by raw call price. Define a discounted first-call
+moneyness proxy
+
+$$
+M_1(x,c,T,\tau,K)
+  =
+  \sum_{t_k>\tau} C_k(c,T)D(t_k;x)
+  -
+  K D(\tau;x).
+$$
+
+The intuition is simple: if the discounted continuation cashflows after the
+first call date exceed the discounted call price, the issuer's option is near
+the exercise region. The option residual is then fitted as
+
+$$
+\widehat{V}_{\mathrm{call}}
+  =
+  G(\ell,s,\kappa,c,T,\tau,M_1,\sigma),
+\qquad
+\widehat{Q}
+  =
+  Q_{\mathrm{straight, exact}}
+  -
+  \widehat{V}_{\mathrm{call}}.
+$$
+
+This is more financially motivated than a raw factor residual, but it is still
+not enough:
+
+| Model | Build evals | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| Exercise-moneyness option TT | 1,936 | 11.85 | 7.52E-02 | 468.73% |
+
+The first-call proxy compresses a multi-call Bermudan-style decision into one
+exercise score. That loses too much information about later call dates and the
+state-dependent continuation value. The failure is useful because it rejects a
+tempting shortcut: adding a moneyness coordinate is not the same as modelling
+the callable recursion.
+
+## Trial 8: More Factors And A Stronger Full TT
 
 Two final static checks test whether the prior failures were just underpowered
 models.
