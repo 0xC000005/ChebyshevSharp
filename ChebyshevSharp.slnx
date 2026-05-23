@@ -13,5 +13,6 @@
     <Project Path="examples/SliderPartitionValidation/SliderPartitionValidation.csproj" />
     <Project Path="examples/TensorTrainHighDim/TensorTrainHighDim.csproj" />
     <Project Path="examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj" />
+    <Project Path="examples/CallableBondSurrogate/CallableBondSurrogate.csproj" />
   </Folder>
 </Solution>

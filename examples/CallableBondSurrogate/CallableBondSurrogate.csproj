@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ChebyshevSharp\ChebyshevSharp.csproj" />
+    <ProjectReference Include="..\FixedRateBondSurrogate\FixedRateBondSurrogate.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QLNet" Version="1.13.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\FixedRateBondSurrogate\Data\*.json" Link="Data\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
