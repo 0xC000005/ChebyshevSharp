@@ -146,7 +146,9 @@ public static class CallableStructuredAlternatives
             Models: [directModel, curveFactorTtModel, embeddedOptionModel, embeddedOptionFullPillarModel]);
     }
 
-    public static CallableRiskAcceptanceReport RunRiskAcceptance(ICallableBondReferencePricer pricer)
+    public static CallableRiskAcceptanceReport RunRiskAcceptance(
+        ICallableBondReferencePricer pricer,
+        bool includeHeavyFullPillarTt = false)
     {
         ArgumentNullException.ThrowIfNull(pricer);
 
@@ -155,8 +157,8 @@ public static class CallableStructuredAlternatives
         IReadOnlyList<CallableRiskValidationPoint> validationBank = CallableRiskAcceptance.BuildDefaultValidationBank();
         Func<double[], double> baseline = wrapper.Price;
 
-        RiskCandidate[] candidates =
-        [
+        var candidates = new List<RiskCandidate>
+        {
             BuildAnchoredHdmrCandidate(wrapper),
             new(
                 "Curve-factor tensor",
@@ -168,6 +170,8 @@ public static class CallableStructuredAlternatives
                 "factor-risk surrogate",
                 InternalDimensionCount,
                 BuildCurveFactorTtSurrogate(wrapper)),
+            BuildDctFactorTtCandidate(wrapper, factorCount: 12),
+            BuildCurveFactorTtWithDirectDv01Candidate(wrapper),
             BuildCurveFactorTtWithAnchorDv01ResidualCandidate(wrapper),
             new(
                 "Embedded-option curve-factor tensor",
@@ -179,7 +183,18 @@ public static class CallableStructuredAlternatives
                 "formula-aware faithful full-pillar candidate",
                 CallableBondFullDimensionalWrapper.DimensionCount,
                 BuildEmbeddedOptionFullPillarTt(wrapper)),
-        ];
+        };
+
+        if (includeHeavyFullPillarTt)
+        {
+            candidates.Insert(
+                candidates.Count - 2,
+                new RiskCandidate(
+                    "Stronger full-pillar TT",
+                    "faithful full-pillar TT candidate",
+                    CallableBondFullDimensionalWrapper.DimensionCount,
+                    BuildStrongerFullPillarTtSurrogate(wrapper)));
+        }
 
         return new CallableRiskAcceptanceReport(
             FixtureId: "fed-nominal-yield-curve-semiannual-2026-05-15",
@@ -196,7 +211,8 @@ public static class CallableStructuredAlternatives
                     Metrics: CallableRiskAcceptance.Summarize(
                         baseline,
                         candidate.Surrogate.EvalFullPoint,
-                        validationBank)))
+                        validationBank,
+                        candidate.Surrogate.DirectFullDv01Vector)))
                 .ToArray());
     }
 
@@ -276,6 +292,125 @@ public static class CallableStructuredAlternatives
                 EvalFullPoint,
                 factorTt.BuildEvaluations + 2 * anchorDv01.Length,
                 factorTt.BuildSeconds + sw.Elapsed.TotalSeconds));
+    }
+
+    private static RiskCandidate BuildCurveFactorTtWithDirectDv01Candidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        CurveFactorSurrogate factorTt = BuildCurveFactorTtSurrogate(wrapper);
+        double[][] riskDomain =
+        [
+            [0.5, 30.0],
+            [-100.0, 100.0],
+            [-100.0, 100.0],
+            [-100.0, 100.0],
+            [0.03, 0.09],
+            [12.0, 30.0],
+            [3.0, 8.0],
+            [98.0, 104.0],
+            [0.003, 0.025],
+        ];
+
+        int[] nNodes = [13, 3, 3, 3, 3, 3, 3, 3, 3];
+        var dv01Tt = new ChebyshevTT(
+            point =>
+            {
+                double[] fullPoint = ToFullPoint([
+                    point[1],
+                    point[2],
+                    point[3],
+                    point[4],
+                    point[5],
+                    point[6],
+                    point[7],
+                    point[8],
+                ]);
+                double[] direction = LocalTenorDirection(point[0]);
+                return DirectionalCurveDerivative(wrapper.Price, fullPoint, direction, RateBpStep);
+            },
+            numDimensions: 9,
+            domain: riskDomain,
+            nNodes: nNodes,
+            maxRank: 6,
+            tolerance: 1e-5,
+            maxSweeps: 4);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        dv01Tt.Build(verbose: false, seed: 20260523, method: "cross");
+        sw.Stop();
+
+        double[] DirectDv01(double[] fullPoint)
+        {
+            double[] internalPoint = ProjectFullPoint(fullPoint);
+            var vector = new double[PublicCurveBumpCount];
+            for (int i = 0; i < vector.Length; i++)
+            {
+                double tenorYears = 0.5 * (i + 1);
+                vector[i] = dv01Tt.Eval([
+                    tenorYears,
+                    internalPoint[0],
+                    internalPoint[1],
+                    internalPoint[2],
+                    internalPoint[3],
+                    internalPoint[4],
+                    internalPoint[5],
+                    internalPoint[6],
+                    internalPoint[7],
+                ]);
+            }
+
+            return vector;
+        }
+
+        return new RiskCandidate(
+            "Curve-factor TT + direct DV01 output",
+            "factor backbone with direct full-DV01 risk-output candidate",
+            InternalDimensionCount,
+            new CurveFactorSurrogate(
+                factorTt.EvalFullPoint,
+                factorTt.BuildEvaluations + 2 * dv01Tt.TotalBuildEvals,
+                factorTt.BuildSeconds + sw.Elapsed.TotalSeconds,
+                DirectDv01));
+    }
+
+    private static RiskCandidate BuildDctFactorTtCandidate(
+        CallableBondFullDimensionalWrapper wrapper,
+        int factorCount)
+    {
+        double[][] basis = BuildDctBasis(factorCount);
+        int internalDimensionCount = factorCount + 5;
+        double[][] domain = Enumerable
+            .Range(0, internalDimensionCount)
+            .Select(index => index < factorCount
+                ? new[] { -150.0, 150.0 }
+                : InternalDomain[3 + index - factorCount])
+            .ToArray();
+        int[] nNodes = Enumerable.Repeat(3, internalDimensionCount).ToArray();
+
+        var tt = new ChebyshevTT(
+            point => wrapper.Price(ToFullPointFromBasis(point, basis)),
+            numDimensions: internalDimensionCount,
+            domain: domain,
+            nNodes: nNodes,
+            maxRank: 8,
+            tolerance: 1e-5,
+            maxSweeps: 5);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        tt.Build(verbose: false, seed: 20260523, method: "cross");
+        sw.Stop();
+
+        double EvalFullPoint(double[] fullPoint)
+            => tt.Eval(ProjectFullPointToBasis(fullPoint, basis));
+
+        return new RiskCandidate(
+            $"DCT-{factorCount} curve-factor TT",
+            "richer factor-risk surrogate",
+            internalDimensionCount,
+            new CurveFactorSurrogate(
+                EvalFullPoint,
+                tt.TotalBuildEvals,
+                sw.Elapsed.TotalSeconds));
     }
 
     private static CurveFactorSurrogate BuildEmbeddedOptionSurrogate(
@@ -360,6 +495,29 @@ public static class CallableStructuredAlternatives
 
         return new CurveFactorSurrogate(
             EvalFullPoint,
+            tt.TotalBuildEvals,
+            sw.Elapsed.TotalSeconds);
+    }
+
+    private static CurveFactorSurrogate BuildStrongerFullPillarTtSurrogate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        int[] nNodes = Enumerable.Repeat(5, CallableBondFullDimensionalWrapper.DimensionCount).ToArray();
+        var tt = new ChebyshevTT(
+            wrapper.Price,
+            numDimensions: CallableBondFullDimensionalWrapper.DimensionCount,
+            domain: PublicDomain,
+            nNodes: nNodes,
+            maxRank: 8,
+            tolerance: 1e-5,
+            maxSweeps: 5);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        tt.Build(verbose: false, seed: 20260523, method: "cross");
+        sw.Stop();
+
+        return new CurveFactorSurrogate(
+            tt.Eval,
             tt.TotalBuildEvals,
             sw.Elapsed.TotalSeconds);
     }
@@ -609,6 +767,53 @@ public static class CallableStructuredAlternatives
         return internalPoint;
     }
 
+    private static double[] ProjectFullPointToBasis(double[] fullPoint, double[][] basis)
+    {
+        var internalPoint = new double[basis.Length + 5];
+        for (int basisIndex = 0; basisIndex < basis.Length; basisIndex++)
+        {
+            double numerator = 0.0;
+            double denominator = 0.0;
+            for (int i = 0; i < PublicCurveBumpCount; i++)
+            {
+                double value = basis[basisIndex][i];
+                numerator += fullPoint[i] * value;
+                denominator += value * value;
+            }
+
+            internalPoint[basisIndex] = numerator / denominator;
+        }
+
+        internalPoint[basis.Length] = fullPoint[CouponDimension];
+        internalPoint[basis.Length + 1] = fullPoint[MaturityDimension];
+        internalPoint[basis.Length + 2] = fullPoint[FirstCallDimension];
+        internalPoint[basis.Length + 3] = fullPoint[CallPriceDimension];
+        internalPoint[basis.Length + 4] = fullPoint[SigmaDimension];
+        return internalPoint;
+    }
+
+    private static double[] ToFullPointFromBasis(double[] internalPoint, double[][] basis)
+    {
+        var full = new double[CallableBondFullDimensionalWrapper.DimensionCount];
+        for (int i = 0; i < PublicCurveBumpCount; i++)
+        {
+            double bump = 0.0;
+            for (int basisIndex = 0; basisIndex < basis.Length; basisIndex++)
+            {
+                bump += internalPoint[basisIndex] * basis[basisIndex][i];
+            }
+
+            full[i] = bump;
+        }
+
+        full[CouponDimension] = internalPoint[basis.Length];
+        full[MaturityDimension] = internalPoint[basis.Length + 1];
+        full[FirstCallDimension] = internalPoint[basis.Length + 2];
+        full[CallPriceDimension] = internalPoint[basis.Length + 3];
+        full[SigmaDimension] = internalPoint[basis.Length + 4];
+        return full;
+    }
+
     private static double[] BuildTenorCoordinates()
         => Enumerable.Range(0, PublicCurveBumpCount)
             .Select(i => -1.0 + 2.0 * i / (PublicCurveBumpCount - 1))
@@ -637,6 +842,28 @@ public static class CallableStructuredAlternatives
             TenorCoordinates.ToArray(),
             TenorCoordinates.Select(x => 2.0 * x * x - 1.0).ToArray(),
         ];
+
+    private static double[][] BuildDctBasis(int factorCount)
+    {
+        if (factorCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(factorCount), "Factor count must be positive.");
+        }
+
+        var basis = new double[factorCount][];
+        for (int k = 0; k < factorCount; k++)
+        {
+            basis[k] = new double[PublicCurveBumpCount];
+            for (int i = 0; i < PublicCurveBumpCount; i++)
+            {
+                basis[k][i] = k == 0
+                    ? 1.0
+                    : Math.Cos(k * Math.PI * i / (PublicCurveBumpCount - 1));
+            }
+        }
+
+        return basis;
+    }
 
     private static int CurveDimensionForMonths(int months)
     {
@@ -670,6 +897,18 @@ public static class CallableStructuredAlternatives
         return (function(up) - function(down)) / (2.0 * step);
     }
 
+    private static double[] LocalTenorDirection(double tenorYears)
+    {
+        var direction = new double[PublicCurveBumpCount];
+        for (int i = 0; i < direction.Length; i++)
+        {
+            double pillarYears = 0.5 * (i + 1);
+            direction[i] = Math.Max(0.0, 1.0 - Math.Abs(tenorYears - pillarYears) / 0.5);
+        }
+
+        return direction;
+    }
+
     private static double[] ShiftCurve(double[] point, double[] direction, double scale)
     {
         double[] shifted = (double[])point.Clone();
@@ -691,7 +930,8 @@ public static class CallableStructuredAlternatives
     private sealed record CurveFactorSurrogate(
         Func<double[], double> EvalFullPoint,
         int BuildEvaluations,
-        double BuildSeconds);
+        double BuildSeconds,
+        Func<double[], double[]>? DirectFullDv01Vector = null);
 
     private sealed record SpeedSummary(
         double BaselineEvalMicroseconds,

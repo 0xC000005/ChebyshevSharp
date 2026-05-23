@@ -23,7 +23,13 @@ public static class CallableBondExample
 
         if (args is ["--risk-acceptance"])
         {
-            RunRiskAcceptance(output);
+            RunRiskAcceptance(output, includeHeavyFullPillarTt: false);
+            return;
+        }
+
+        if (args is ["--risk-acceptance-heavy"])
+        {
+            RunRiskAcceptance(output, includeHeavyFullPillarTt: true);
             return;
         }
 
@@ -111,16 +117,19 @@ public static class CallableBondExample
         }
     }
 
-    private static void RunRiskAcceptance(TextWriter output)
+    private static void RunRiskAcceptance(TextWriter output, bool includeHeavyFullPillarTt)
     {
         var pricer = new QlNetCallableBondReferencePricer();
-        CallableRiskAcceptanceReport report = CallableStructuredAlternatives.RunRiskAcceptance(pricer);
+        CallableRiskAcceptanceReport report = CallableStructuredAlternatives.RunRiskAcceptance(
+            pricer,
+            includeHeavyFullPillarTt);
 
         output.WriteLine("Callable bond risk acceptance");
         output.WriteLine();
         output.WriteLine($"Curve fixture    : {report.FixtureId}");
         output.WriteLine($"Curve date       : {report.CurveDate:yyyy-MM-dd}");
         output.WriteLine($"Validation points: {report.ValidationPointCount}");
+        output.WriteLine($"Heavy probes     : {(includeHeavyFullPillarTt ? "included" : "excluded")}");
         output.WriteLine();
 
         foreach (CallableRiskAcceptanceModelSummary model in report.Models)

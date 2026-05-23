@@ -255,6 +255,13 @@ Run it:
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
 ```
 
+The stronger full-pillar TT probe is intentionally behind a separate heavy
+mode:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance-heavy
+```
+
 The result is decisive: the current factor models are fast, but they are not
 risk-acceptable.
 
@@ -264,6 +271,7 @@ risk-acceptable.
 | Curve-factor TT | 2.89 | 3.74E-02 | 143.72% | 23.39% | 6,482.03% |
 | Embedded-option curve-factor tensor | 9.60 | 8.29E-02 | 414.99% | 34.80% | 10,094.33% |
 | Embedded-option full-pillar TT | 7.16 | 8.55E-02 | 370.55% | 51.15% | 9,569.51% |
+| Stronger full-pillar TT | 13.18 | 3.99E-02 | 169.49% | 54.37% | 4,436.56% |
 
 This explains why PV speed is not enough. The curve-factor TT projects the
 60-pillar curve into three factors, so it can price factor-like scenarios but
@@ -350,6 +358,34 @@ risk gates:
 The local residual is only a first-order correction at one anchor. It does not
 adapt when coupon, call price, volatility, or the factor curve move.
 
+## Trial 6: More Factors And A Stronger Full TT
+
+Two final static checks test whether the prior failures were just underpowered
+models.
+
+The first replaces the 3-factor level/slope/curvature basis with 12 DCT-style
+curve factors:
+
+$$
+x(t)
+  \approx
+  \sum_{k=0}^{11} f_k \cos\left(\frac{k\pi t}{T}\right).
+$$
+
+The second raises the full-pillar TT to five nodes per coordinate and rank cap
+8. Both preserve the 65D public wrapper, but neither solves the risk problem.
+
+| Model | Build evals | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| DCT-12 curve-factor TT | 2,230 | 15.96 | 4.10E-02 | 116.08% |
+| Stronger full-pillar TT | 53,349 | 13.18 | 3.99E-02 | 169.49% |
+
+The DCT basis keeps more curve information than level/slope/curvature, but it
+still projects away enough local shape to fail risk. The stronger full-pillar
+TT is worse than the cheap factor TT while costing much more. This is the
+strongest current evidence that the next candidate should change the modelling
+form, not merely increase tensor size.
+
 ## Current Conclusion
 
 The callable-bond harness has a clear but limited current answer.
@@ -384,6 +420,7 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --naive-surrogate-discovery
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance-heavy
 ```
 
 ## Sources

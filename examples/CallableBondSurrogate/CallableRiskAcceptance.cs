@@ -70,7 +70,8 @@ public static class CallableRiskAcceptance
     public static CallableRiskAcceptanceMetrics Summarize(
         Func<double[], double> baseline,
         Func<double[], double> model,
-        IReadOnlyList<CallableRiskValidationPoint> validationPoints)
+        IReadOnlyList<CallableRiskValidationPoint> validationPoints,
+        Func<double[], double[]>? modelFullDv01Vector = null)
     {
         ArgumentNullException.ThrowIfNull(baseline);
         ArgumentNullException.ThrowIfNull(model);
@@ -104,7 +105,7 @@ public static class CallableRiskAcceptance
                 .Select(metric => SummarizeScalar(metric.Name, metric.Compute, baseline, model, validationPoints))
                 .ToArray(),
             VectorMetrics: vectorComputations
-                .Select(metric => SummarizeVector(metric.Name, metric.Compute, baseline, model, validationPoints))
+                .Select(metric => SummarizeVector(metric.Name, metric.Compute, baseline, model, validationPoints, modelFullDv01Vector))
                 .ToArray());
     }
 
@@ -209,7 +210,8 @@ public static class CallableRiskAcceptance
         Func<Func<double[], double>, double[], double[]> compute,
         Func<double[], double> baseline,
         Func<double[], double> model,
-        IReadOnlyList<CallableRiskValidationPoint> validationPoints)
+        IReadOnlyList<CallableRiskValidationPoint> validationPoints,
+        Func<double[], double[]>? modelVectorOverride)
     {
         double sumMaxAbs = 0.0;
         double maxComponentAbs = 0.0;
@@ -223,7 +225,9 @@ public static class CallableRiskAcceptance
         foreach (CallableRiskValidationPoint point in validationPoints)
         {
             double[] expected = compute(baseline, point.Coordinates);
-            double[] actual = compute(model, point.Coordinates);
+            double[] actual = modelVectorOverride is null
+                ? compute(model, point.Coordinates)
+                : modelVectorOverride(point.Coordinates);
             if (expected.Length != actual.Length)
             {
                 throw new InvalidOperationException("Baseline and model vector metric lengths differ.");

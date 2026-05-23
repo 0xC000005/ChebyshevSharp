@@ -28,6 +28,7 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --naive-surrogate-discovery
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance-heavy
 ```
 
 ## QuickStart
@@ -311,6 +312,14 @@ new full-pillar-aware HDMR/residual probes:
 
 ```bash
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
+```
+
+Use the heavy mode only when you need to reproduce the stronger full-pillar TT
+probe. It is intentionally slower because that candidate uses a larger 65D
+TT-Cross build:
+
+```bash
+dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance-heavy
 ```
 
 For the full narrative, including the financial formula, trial rationale,
