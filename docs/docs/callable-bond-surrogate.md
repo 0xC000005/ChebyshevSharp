@@ -271,6 +271,7 @@ risk-acceptable.
 | Curve-factor TT | 2.89 | 3.74E-02 | 143.72% | 23.39% | 6,482.03% |
 | Curve-factor TT + local DV01 residual | 1.93 | 4.25E-02 | 387.30% | 24.17% | 7,604.07% |
 | Exercise-moneyness option TT | 11.85 | 7.52E-02 | 468.73% | 68.32% | 1,188.19% |
+| Dynamic Chebyshev short-rate state | 1.14 | 5.78E-02 | 850.64% | 30.30% | 9,396.95% |
 | Embedded-option curve-factor tensor | 9.60 | 8.29E-02 | 414.99% | 34.80% | 10,094.33% |
 | Embedded-option full-pillar TT | 7.16 | 8.55E-02 | 370.55% | 51.15% | 9,569.51% |
 | Stronger full-pillar TT | 13.18 | 3.99E-02 | 169.49% | 54.37% | 4,436.56% |
@@ -479,6 +480,52 @@ TT is worse than the cheap factor TT while costing much more. This is the
 strongest current evidence that the next candidate should change the modelling
 form, not merely increase tensor size.
 
+## Trial 9: Dynamic Chebyshev Short-Rate State
+
+The related Bermudan-option literature does not fit one final price surface.
+It approximates the continuation value inside the backward recursion. The pilot
+implementation follows that idea with a one-factor Hull-White-style state
+\(x_t\):
+
+$$
+r_t = x_t + \phi(t), \qquad
+dx_t = -a x_t\,dt + \sigma\,dW_t.
+$$
+
+At an exercise date \(t_i\), the callable-bond value is approximated by
+
+$$
+V_i(x)
+  =
+  C_i
+  +
+  \min\left(K,\;
+    \mathbb{E}\left[
+      e^{-\int_{t_i}^{t_{i+1}} r_s ds}
+      V_{i+1}(x_{t_{i+1}})
+      \mid x_{t_i}=x
+    \right]\right),
+$$
+
+with the `min` omitted on non-call dates. Chebyshev interpolation is used for
+the one-dimensional state function \(V_i(x)\), and Gauss-Hermite quadrature
+approximates the conditional expectation.
+
+This is the first trial that uses Chebyshev in the right structural location:
+inside the exercise recursion. It improves PV versus most static trials, but it
+still does not match the QLNet reference risk profile:
+
+| Model | Build evals | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| Dynamic Chebyshev short-rate state | 0 | 1.14 | 5.78E-02 | 850.64% |
+
+Adding intermediate time-grid points to mimic the QLNet tree did not fix the
+problem; it worsened the PV fit in this pilot. The likely issue is model
+calibration and event ordering, not Chebyshev interpolation itself. A serious
+production candidate would need to reproduce the reference engine's calibrated
+Hull-White tree semantics before using Chebyshev continuation functions as an
+accelerator.
+
 ## Current Conclusion
 
 The callable-bond harness has a clear but limited current answer.
@@ -488,15 +535,19 @@ the Slider misses important cross terms by construction. The factor TT is fast
 but not a faithful local-risk clone. The first HDMR and residual-correction
 attempts show that simply adding local pillar components is not enough either.
 
-The related option-pricing literature points to a different direction for early
-exercise products: approximate continuation values inside the dynamic
-programming problem rather than fitting one static black-box function after the
-fact. Dynamic Chebyshev methods for American/Bermudan options use Chebyshev
-approximations during backward induction and can deliver prices and Greeks from
-the same representation. For this callable-bond case study, the next serious
-candidate is therefore a schedule/exercise-aware engine or residual model that
-uses Chebyshev on the smooth continuation-value pieces, while keeping the 65D
-public wrapper and full-risk validation bank.
+The strongest lesson is negative but useful. For this supported callable family,
+we have not found a risk-acceptable replacement by fitting the final QLNet price
+surface, by adding static residual patches, or by using a simplified dynamic
+Chebyshev recursion.
+
+The related option-pricing literature still points to the right structural
+direction for early-exercise products: approximate continuation values inside
+the dynamic programming problem rather than fitting one static black-box
+function after the fact. The pilot here confirms that structure matters, but
+also shows that matching the reference engine matters just as much. A production
+candidate would need to reproduce the calibrated Hull-White tree semantics of
+the reference engine, or expose continuation values from that engine, before
+Chebyshev continuation functions can be promoted as a risk-system replacement.
 
 ## Reproduce
 

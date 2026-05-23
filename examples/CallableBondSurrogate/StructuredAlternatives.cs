@@ -175,6 +175,7 @@ public static class CallableStructuredAlternatives
             BuildCurveFactorTtWithAnchorDv01ResidualCandidate(wrapper),
             BuildCurveFactorTtWithLocalDv01ResidualCandidate(wrapper),
             BuildExerciseMoneynessOptionCandidate(wrapper),
+            BuildDynamicChebyshevCandidate(wrapper),
             new(
                 "Embedded-option curve-factor tensor",
                 "formula-aware factor-risk surrogate",
@@ -575,6 +576,20 @@ public static class CallableStructuredAlternatives
                 EvalFullPoint,
                 2 * optionTt.TotalBuildEvals,
                 sw.Elapsed.TotalSeconds));
+    }
+
+    private static RiskCandidate BuildDynamicChebyshevCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        var pricer = new DynamicChebyshevCallablePricer(wrapper);
+        return new RiskCandidate(
+            "Dynamic Chebyshev short-rate state",
+            "exercise-aware dynamic Chebyshev candidate",
+            CallableBondFullDimensionalWrapper.DimensionCount,
+            new CurveFactorSurrogate(
+                pricer.Price,
+                BuildEvaluations: 0,
+                BuildSeconds: 0.0));
     }
 
     private static CurveFactorSurrogate BuildEmbeddedOptionSurrogate(
