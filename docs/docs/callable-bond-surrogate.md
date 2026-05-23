@@ -269,6 +269,7 @@ risk-acceptable.
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Curve-factor tensor | 2.08 | 3.74E-02 | 143.01% | 34.80% | 10,094.33% |
 | Curve-factor TT | 2.89 | 3.74E-02 | 143.72% | 23.39% | 6,482.03% |
+| Curve-factor TT + local DV01 residual | 1.93 | 4.25E-02 | 387.30% | 24.17% | 7,604.07% |
 | Embedded-option curve-factor tensor | 9.60 | 8.29E-02 | 414.99% | 34.80% | 10,094.33% |
 | Embedded-option full-pillar TT | 7.16 | 8.55E-02 | 370.55% | 51.15% | 9,569.51% |
 | Stronger full-pillar TT | 13.18 | 3.99E-02 | 169.49% | 54.37% | 4,436.56% |
@@ -358,7 +359,55 @@ risk gates:
 The local residual is only a first-order correction at one anchor. It does not
 adapt when coupon, call price, volatility, or the factor curve move.
 
-## Trial 6: More Factors And A Stronger Full TT
+## Trial 6: State-Dependent Local Risk Residual
+
+The anchor residual failed because it used one fixed DV01 vector. The next
+question is whether the local key-rate sensitivity itself can be learned as a
+small reusable function.
+
+The public input is still the full 65D request. Internally, each pillar risk is
+approximated from a small state:
+
+$$
+g_i
+\left(
+  t_i,\ell,s,\kappa,
+  r_{i-1},r_i,r_{i+1},
+  c,T,\tau,K,\sigma
+\right)
+\approx
+\frac{\partial Q}{\partial x_i}.
+$$
+
+Here \((\ell,s,\kappa)\) are the global level/slope/curvature factors and
+\(r_{i-1},r_i,r_{i+1}\) are local residual curve bumps after subtracting the
+factor reconstruction. The price correction integrates the learned local risk
+halfway along the residual path:
+
+$$
+\widehat{Q}(x,y)
+  =
+  \widehat{Q}_{\mathrm{factor}}(P(x),y)
+  +
+  \sum_i
+  \left(x_i-\widetilde{x}_i\right)
+  g_i\left(\tfrac{1}{2}(x-\widetilde{x}), y\right).
+$$
+
+This is a reasonable risk-engine idea: preserve the full request vector, let
+the global factor TT handle broad motion, and add state-dependent local key-rate
+corrections. The result is still not acceptable:
+
+| Model | Build evals | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| Curve-factor TT + local DV01 residual | 4,684 | 1.93 | 4.25E-02 | 387.30% |
+
+The PV error improves slightly, but the full DV01 vector gets worse. This is
+the strongest local-static failure so far: the callable risk vector is not just
+a smooth factor price plus a reusable local patch. Exercise behavior changes
+the relationship between local curve shocks and continuation value.
+
+## Trial 7: More Factors And A Stronger Full TT
 
 Two final static checks test whether the prior failures were just underpowered
 models.

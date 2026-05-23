@@ -173,6 +173,7 @@ public static class CallableStructuredAlternatives
             BuildDctFactorTtCandidate(wrapper, factorCount: 12),
             BuildCurveFactorTtWithDirectDv01Candidate(wrapper),
             BuildCurveFactorTtWithAnchorDv01ResidualCandidate(wrapper),
+            BuildCurveFactorTtWithLocalDv01ResidualCandidate(wrapper),
             new(
                 "Embedded-option curve-factor tensor",
                 "formula-aware factor-risk surrogate",
@@ -411,6 +412,123 @@ public static class CallableStructuredAlternatives
                 EvalFullPoint,
                 tt.TotalBuildEvals,
                 sw.Elapsed.TotalSeconds));
+    }
+
+    private static RiskCandidate BuildCurveFactorTtWithLocalDv01ResidualCandidate(
+        CallableBondFullDimensionalWrapper wrapper)
+    {
+        CurveFactorSurrogate factorTt = BuildCurveFactorTtSurrogate(wrapper);
+        double[][] riskDomain =
+        [
+            [0.5, 30.0],       // tenor coordinate for the requested pillar risk
+            [-100.0, 100.0],   // level
+            [-100.0, 100.0],   // slope
+            [-100.0, 100.0],   // curvature
+            [-200.0, 200.0],   // left local residual
+            [-200.0, 200.0],   // center local residual
+            [-200.0, 200.0],   // right local residual
+            [0.03, 0.09],
+            [12.0, 30.0],
+            [3.0, 8.0],
+            [98.0, 104.0],
+            [0.003, 0.025],
+        ];
+
+        int[] nNodes = [13, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
+        var localDv01Tt = new ChebyshevTT(
+            point =>
+            {
+                double tenorYears = point[0];
+                int center = NearestPillarIndex(tenorYears);
+                double[] fullPoint = ToFullPoint([
+                    point[1],
+                    point[2],
+                    point[3],
+                    point[7],
+                    point[8],
+                    point[9],
+                    point[10],
+                    point[11],
+                ]);
+                ApplyLocalResidual(fullPoint, center - 1, point[4]);
+                ApplyLocalResidual(fullPoint, center, point[5]);
+                ApplyLocalResidual(fullPoint, center + 1, point[6]);
+
+                double[] direction = LocalTenorDirection(tenorYears);
+                return DirectionalCurveDerivative(wrapper.Price, fullPoint, direction, RateBpStep);
+            },
+            numDimensions: 12,
+            domain: riskDomain,
+            nNodes: nNodes,
+            maxRank: 7,
+            tolerance: 1e-5,
+            maxSweeps: 4);
+
+        Stopwatch sw = Stopwatch.StartNew();
+        localDv01Tt.Build(verbose: false, seed: 20260523, method: "cross");
+        sw.Stop();
+
+        double EvalLocalDv01(
+            double[] internalPoint,
+            double[] residual,
+            int index,
+            double residualScale)
+            => localDv01Tt.Eval([
+                0.5 * (index + 1),
+                internalPoint[0],
+                internalPoint[1],
+                internalPoint[2],
+                residualScale * ResidualAt(residual, index - 1),
+                residualScale * ResidualAt(residual, index),
+                residualScale * ResidualAt(residual, index + 1),
+                internalPoint[3],
+                internalPoint[4],
+                internalPoint[5],
+                internalPoint[6],
+                internalPoint[7],
+            ]);
+
+        double[] DirectDv01(double[] fullPoint)
+        {
+            double[] internalPoint = ProjectFullPoint(fullPoint);
+            double[] projected = ToFullPoint(internalPoint);
+            double[] residual = CurveResidual(fullPoint, projected);
+            var vector = new double[PublicCurveBumpCount];
+            for (int i = 0; i < vector.Length; i++)
+            {
+                vector[i] = EvalLocalDv01(internalPoint, residual, i, residualScale: 1.0);
+            }
+
+            return vector;
+        }
+
+        double EvalFullPoint(double[] fullPoint)
+        {
+            double[] internalPoint = ProjectFullPoint(fullPoint);
+            double[] projected = ToFullPoint(internalPoint);
+            double[] residual = CurveResidual(fullPoint, projected);
+            double correction = 0.0;
+
+            // Midpoint integration along the local residual path. The model
+            // learns state-dependent local pillar sensitivities, so this is a
+            // stronger correction than using one anchor DV01 vector.
+            for (int i = 0; i < PublicCurveBumpCount; i++)
+            {
+                correction += residual[i] * EvalLocalDv01(internalPoint, residual, i, residualScale: 0.5);
+            }
+
+            return factorTt.EvalFullPoint(fullPoint) + correction;
+        }
+
+        return new RiskCandidate(
+            "Curve-factor TT + local DV01 residual",
+            "factor backbone with state-dependent local-risk residual",
+            12,
+            new CurveFactorSurrogate(
+                EvalFullPoint,
+                factorTt.BuildEvaluations + 2 * localDv01Tt.TotalBuildEvals,
+                factorTt.BuildSeconds + sw.Elapsed.TotalSeconds,
+                DirectDv01));
     }
 
     private static CurveFactorSurrogate BuildEmbeddedOptionSurrogate(
@@ -908,6 +1026,34 @@ public static class CallableStructuredAlternatives
 
         return direction;
     }
+
+    private static int NearestPillarIndex(double tenorYears)
+    {
+        int index = (int)Math.Round(tenorYears / 0.5) - 1;
+        return Math.Clamp(index, 0, PublicCurveBumpCount - 1);
+    }
+
+    private static void ApplyLocalResidual(double[] fullPoint, int index, double residual)
+    {
+        if ((uint)index < PublicCurveBumpCount)
+        {
+            fullPoint[index] += residual;
+        }
+    }
+
+    private static double[] CurveResidual(double[] fullPoint, double[] projected)
+    {
+        var residual = new double[PublicCurveBumpCount];
+        for (int i = 0; i < residual.Length; i++)
+        {
+            residual[i] = fullPoint[i] - projected[i];
+        }
+
+        return residual;
+    }
+
+    private static double ResidualAt(double[] residual, int index)
+        => (uint)index < residual.Length ? residual[index] : 0.0;
 
     private static double[] ShiftCurve(double[] point, double[] direction, double scale)
     {
