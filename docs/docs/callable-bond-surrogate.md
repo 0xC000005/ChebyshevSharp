@@ -21,8 +21,9 @@ a one-pass tangent DV01 ladder with exact bump-and-reprice corrections for the
 material pillars. This materiality gate is a speed optimization, not the source
 of correctness: the exact all-pillar cloned-tree DV01 is the faithful baseline.
 The investigation has one thread: try the obvious Chebyshev models, show why
-they fail, then move the approximation closer to the actual financial
-structure.
+they fail, then stop treating the pricer as a black box. The final direction is
+structure-aware acceleration: preserve the non-smooth call-decision engine and
+speed up the smooth or repetitive risk work around it.
 
 The example is public and reproducible. It uses QLNet as the reference
 implementation, a pinned Federal Reserve nominal-yield-curve fixture, a
@@ -711,6 +712,13 @@ recombining Hull-White trinomial tree, creates a time grid containing coupon
 and call dates, and fits a short-rate shift at every time step so the tree
 matches the input discount curve.
 
+This trial is the turning point. It is not a Chebyshev approximation. It is the
+step where the harness stops treating the callable pricer as an unknown
+function and copies the pricing logic directly: the same calibrated tree, the
+same date grid, the same coupon events, the same call events, and the same
+rollback rule. That is why Trial 10 can be a correctness baseline. If this
+clone does not match QLNet, later speedups are optimizing the wrong object.
+
 For state \(x_{i,j}\), Arrow-Debreu state price \(\pi_{i,j}\), and step
 \(\Delta t_i\), the fitted shift is:
 
@@ -743,6 +751,11 @@ The clone proves that the 65D wrapper can be reproduced faithfully. This is the
 clean correctness baseline: exact cloned-tree PV plus exact cloned-tree
 all-pillar DV01. The speedup is modest because full central-difference DV01
 still means 120 exact reprices for 60 pillars.
+
+The lesson is deliberately conservative: preserve the call-decision engine
+exactly. The call/no-call boundary is the non-smooth part of the product. Trial
+11 and Trial 12 only try to speed up the repeated risk work built around that
+engine.
 
 ## Trial 11: One-Pass Lattice Tangent Risk
 
@@ -905,6 +918,12 @@ decomposition. Chebyshev continuation functions can still be tested as
 accelerators inside the reproduced tree semantics, but fitting one static final
 price surface is not the right architecture for this product.
 
+The practical lesson is broader than this one harness: for a product with
+exercise decisions, the safe acceleration target is not the whole pricing
+function as an opaque object. Preserve the discrete exercise engine, then
+accelerate the smooth or repetitive pieces that surround it, such as full-ladder
+risk propagation and materiality-gated exact corrections.
+
 ## What should you use?
 
 For a production risk system, the safe operating modes are:
@@ -933,10 +952,10 @@ The case study leaves five practical lessons:
    decisions can change under a bump.
 4. Dynamic Chebyshev ideas belong inside the continuation recursion, but a
    clone must first reproduce the reference engine's calibrated tree semantics.
-5. A practical risk clone can mix exact structure and approximation: exact tree
-   semantics for PV, exact all-pillar DV01 as the correctness baseline, tangent
-   risk for speed, exact corrections selected by a materiality rule, and
-   fallback outside the supported scope.
+5. A practical risk clone can mix exact structure and approximation: preserve
+   the non-smooth exercise engine, use exact all-pillar DV01 as the correctness
+   baseline, use tangent risk for speed, select exact corrections by a
+   materiality rule, and fall back outside the supported scope.
 
 ## Reproduce
 
