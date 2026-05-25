@@ -1,10 +1,10 @@
 ---
-title: Callable Bond Case Study
+title: Callable Bond Surrogate Case Study
 ---
 
-# Can Chebyshev Models Clone a Callable Bond Pricer?
+# Callable Bond Surrogate Case Study
 
-This case study asks a practical question: can a Chebyshev-style surrogate
+This technical blog asks a practical question: can a Chebyshev-style surrogate
 replace a callable fixed-rate bond pricer while preserving both price and
 risk-manager sensitivities?
 
