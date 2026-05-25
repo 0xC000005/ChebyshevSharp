@@ -16,6 +16,8 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-05-25 — Callable bond risk clone case study
+
 ### Documentation
 - Expanded the callable-bond case study with a risk-acceptance validation
   section, full-pillar DV01/PV01 evidence, anchored HDMR and factor-residual
@@ -24,23 +26,31 @@ how-to guides, and API reference.
   reference-semantics tree clone with parallel hybrid effective DV01
   acceleration, plus references for HDMR and dynamic Chebyshev methods for
   early-exercise products
-  ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209)).
+  ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209),
+  [#210](https://github.com/0xC000005/ChebyshevSharp/pull/210)).
 - Added a callable fixed-rate bond case study that keeps a 65-dimensional
   request-level wrapper, uses QLNet's Hull-White tree callable-bond pricer as
   the reference, records naive TT/Slider failure evidence, and compares
   structured factor and embedded-option surrogate trials
-  ([#207](https://github.com/0xC000005/ChebyshevSharp/issues/207)).
+  ([#207](https://github.com/0xC000005/ChebyshevSharp/issues/207),
+  [#210](https://github.com/0xC000005/ChebyshevSharp/pull/210)).
 
 ### Examples
 - Added a callable-bond risk-acceptance mode with full 60-pillar DV01 vector
   checks, product Greeks, mixed-term checks, and first full-pillar-aware HDMR
   diagnostics; added reference-semantics tree, lattice-tangent DV01, parallel
   hybrid DV01, and reduced-tree diagnostics
-  ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209)).
+  ([#209](https://github.com/0xC000005/ChebyshevSharp/issues/209),
+  [#210](https://github.com/0xC000005/ChebyshevSharp/pull/210)).
 - Added `examples/CallableBondSurrogate`, including the QLNet-backed callable
   baseline, the full-dimensional public wrapper, naive surrogate discovery, and
   structured-alternatives evidence modes
-  ([#207](https://github.com/0xC000005/ChebyshevSharp/issues/207)).
+  ([#207](https://github.com/0xC000005/ChebyshevSharp/issues/207),
+  [#210](https://github.com/0xC000005/ChebyshevSharp/pull/210)).
+
+### Release
+- Advanced package metadata to `0.13.4` and updated package validation to
+  compare this release against `0.13.3`.
 
 ## [0.13.3] - 2026-05-13 — High-dimensional documentation examples
 
