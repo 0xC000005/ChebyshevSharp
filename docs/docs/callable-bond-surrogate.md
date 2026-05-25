@@ -168,19 +168,24 @@ $$
 Here \(i\) is the time step, \(j\) is the short-rate tree node,
 \(p_{i,j,b}\) are transition probabilities, \(d(i,j,b)\) maps each branch to a
 node at the next time step, and \(D_{i,j}\) is the one-step discount factor.
-Schematically, at a call date the issuer can redeem at call price \(K\), so the
-value applies an exercise rule of the form:
+Schematically, at a call date the issuer can redeem at call price \(K\). If
+\(\mathcal{C}_{i,j}\) is the rolled-back continuation value,
 
 $$
-V_{i,j}
+\mathcal{C}_{i,j}
  =
- \min\left(
-   K,\;
-   D_{i,j}
-   \sum_b p_{i,j,b} V_{i+1,d(i,j,b)}
- \right)
- + \mathrm{coupon}_i .
+D_{i,j}
+\sum_b p_{i,j,b}V_{i+1,d(i,j,b)},
+\qquad
+V_{i,j}=\min(K,\mathcal{C}_{i,j})
+\quad \text{before coupon-date adjustments.}
 $$
+
+The actual engine also applies coupon adjustments at event dates; in the simple
+post-coupon case this becomes
+\(V_{i,j}=\min(K,\mathcal{C}_{i,j})+\mathrm{coupon}_i\). QLNet has additional
+ordering rules when a call date is snapped to a nearby coupon date, which is
+why later trials reproduce the reference event ordering explicitly.
 
 This `min` is the central difficulty. A small curve bump can change which side
 of the exercise boundary a node belongs to. A price surface can look accurate
@@ -350,14 +355,14 @@ Run it:
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 ```
 
-| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Surrogate eval | Break-even |
+| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Representative surrogate eval | Break-even |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Curve-factor tensor | factor-risk surrogate | 8 | 1.56% | 1.89% | 3.26 us | 6.3k |
-| Curve-factor TT | factor-risk surrogate | 8 | 2.20% | 0.90% | 3.23 us | 2.5k |
+| Curve-factor tensor | factor-risk surrogate | 8 | 1.56% | 1.89% | about 3-4 us | 6.3k |
+| Curve-factor TT | factor-risk surrogate | 8 | 2.20% | 0.90% | about 3-4 us | 2.5k |
 
 This trial is the first plausible acceleration story: the QLNet baseline takes
-roughly 1.6 ms per evaluation in the harness, while the factor TT evaluates in
-about 3 us after construction. The limitation is equally important: local
+roughly 1.6-1.9 ms per evaluation in the harness, while the factor TT evaluates
+in a few microseconds after construction. The limitation is equally important: local
 key-rate sensitivities remain weak because the projection intentionally discards
 most single-pillar directions.
 
@@ -391,10 +396,10 @@ The rationale is sound: exact cashflow discounting should handle the easy
 component, while Chebyshev focuses on the tree-driven option component. In the
 current low-node probe, however, this does not yet improve the clone.
 
-| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Surrogate eval | Break-even |
+| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Representative surrogate eval | Break-even |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Embedded-option curve-factor tensor | formula-aware factor-risk surrogate | 8 | 3.03% | 8.73% | 23.90 us | 6.5k |
-| Embedded-option full-pillar TT | formula-aware faithful full-pillar candidate | 65 | 7.99% | 5.12% | 29.89 us | 6.1k |
+| Embedded-option curve-factor tensor | formula-aware factor-risk surrogate | 8 | 3.03% | 8.73% | about 24-27 us | 6.5k |
+| Embedded-option full-pillar TT | formula-aware faithful full-pillar candidate | 65 | 7.99% | 5.12% | about 30-33 us | 6.1k |
 
 The result is a useful failure: decomposition alone is not enough. The embedded
 option value is smaller and more regime-sensitive than the full callable price,
@@ -792,7 +797,7 @@ bump-and-reprice effective DV01:
 
 | Model | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: |
-| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | about 22-31x |
+| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | about 20-33x |
 
 This is a useful failure. It shows that pathwise lattice risk and finite-bump
 risk are close but not identical near exercise boundaries.
@@ -884,14 +889,14 @@ experiment."
 
 | Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: | ---: |
-| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | about 24-33x |
+| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | about 9-14x |
 
 This is the first callable-bond candidate that keeps the faithful 65D public
 wrapper and demonstrates a materially faster full-ladder risk path. The
 correctness claim still rests on Trial 10's exact cloned-tree all-pillar
 baseline. Trial 12 adds a materiality-gated speed optimization: in the local
 verifier, it reduces the full-DV01 L1 error to 0.31% while moving from about
-2-3x speedup for exact all-pillar cloned-tree DV01 to about 24-33x for the
+2-3x speedup for exact all-pillar cloned-tree DV01 to about 9-14x for the
 hybrid path. A reduced 40-step tree was also tested, but it damaged Greeks and
 full DV01 enough to be rejected.
 
@@ -910,7 +915,7 @@ reference-semantics lattice clone. For the supported regular callable
 fixed-rate family, the exact cloned-tree path preserves the 65D request wrapper
 and matches QLNet PV and all-pillar DV01 to numerical noise. The
 materiality-gated hybrid path is the speed layer on top: it computes the full
-60-pillar DV01 ladder with sub-gate error and about 24-33x speedup in current
+60-pillar DV01 ladder with sub-gate error and about 9-14x speedup in current
 local verifier runs.
 
 The remaining Chebyshev research direction should start from this engine-aware
