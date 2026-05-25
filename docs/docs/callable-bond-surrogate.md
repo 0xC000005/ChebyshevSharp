@@ -1,30 +1,41 @@
 ---
-title: Callable Bond Case Study
+title: Callable Bond Surrogate Case Study
 ---
 
-# Callable Bond Surrogates: A Full-Dimensional Chebyshev Case Study
+# Callable Bond Surrogate Case Study
 
-This tutorial is a worked research case study. It asks whether a Chebyshev
-surrogate can clone a callable fixed-rate bond pricer that is expensive enough
-to make acceleration meaningful.
+This technical blog asks a practical question: can a Chebyshev-style surrogate
+replace a callable fixed-rate bond pricer while preserving both price and
+risk-manager sensitivities?
 
-The case study is deliberately restricted and public. It uses QLNet as the
-reference implementation, a pinned Federal Reserve nominal-yield-curve fixture,
-a semiannual fixed-rate bullet bond, and a one-factor Hull-White tree callable
-bond engine. It is not a general fixed-income engine.
+The short answer is: not by blindly fitting one global high-dimensional tensor.
+For fast present-value approximation alone, callable bonds are already a
+documented Chebyshev use case. The harder target in this article is a
+request-level clone: keep the full 65-dimensional input, reproduce the
+reference engine's exercise behavior, and compute the full 60-pillar DV01
+ladder with useful speedup.
 
-The accepted clone is validated for the regular schedule family used in the
-harness: maturity and first-call dates are on the semiannual coupon grid, calls
-repeat semiannually, and the settlement date is the valuation date. Non-aligned
-call dates, stubs, accrued-settlement effects, amortization, and exotic
-callability rules are outside the promoted scope and should route to the
-reference pricer or a separate validation harness.
+The first practical candidate is not a black-box tensor. It reproduces the
+reference callable-bond tree semantics first, then accelerates risk by combining
+a one-pass tangent DV01 ladder with exact bump-and-reprice corrections for the
+material pillars. This materiality gate is a speed optimization, not the source
+of correctness: the exact all-pillar cloned-tree DV01 is the faithful baseline.
+The investigation has one thread: try the obvious Chebyshev models, show why
+they fail, then stop treating the pricer as a black box. The final direction is
+structure-aware acceleration: preserve the non-smooth call-decision engine and
+speed up the smooth or repetitive risk work around it.
 
-## Why Callable Bonds
+The example is public and reproducible. It uses QLNet as the reference
+implementation, a pinned Federal Reserve nominal-yield-curve fixture, a
+semiannual fixed-rate bullet bond, and a one-factor Hull-White tree callable
+bond engine. It is a ChebyshevSharp demonstration, not a general fixed-income
+engine.
 
-The earlier fixed-rate bond case study is a useful correctness exercise, but an
-option-free bond is already cheap once the cashflow schedule is cached. A
-callable bond adds an embedded issuer option. The standard pricing picture is:
+## What the example prices
+
+A plain cashflow-discounting product is often cheap once its schedule is
+cached. A callable bond adds an embedded issuer option. The standard pricing
+picture is:
 
 $$
 Q_{\mathrm{callable}}
@@ -38,17 +49,54 @@ The straight-bond leg is mostly deterministic cashflow discounting. The issuer
 call option is harder because the optimal call decision depends on the future
 rate tree and the call schedule. That makes this example closer to the risk
 workloads where Chebyshev tensors are useful: the baseline call is expensive,
-but users need repeated PV and sensitivity evaluations across many scenarios.
+and users need repeated PV and sensitivity evaluations across many scenarios.
+
+The harness prices a deliberately restricted regular callable fixed-rate bond
+family:
+
+| Item | Choice |
+| --- | --- |
+| Reference pricer | QLNet `CallableFixedRateBond` with `TreeCallableFixedRateBondEngine` |
+| Short-rate model | One-factor Hull-White, mean reversion fixed at 3% |
+| Curve fixture | Federal Reserve fitted nominal yield curve, 2026-05-15 |
+| Curve grid | valuation-date anchor plus 60 semiannual zero-rate pillars |
+| Curve convention | Actual/365 Fixed timing, continuous compounding, linear zero-rate interpolation |
+| Bond family | regular callable fixed-rate bullet bond |
+| Coupon schedule | semiannual |
+| Coupon day count | 30/360 USA |
+| Calendar | U.S. Government Bond |
+| Business-day rule | Modified Following |
+| Settlement assumption | valuation date equals settlement/effective date |
+| Supported calls | first-call and maturity dates aligned to the semiannual coupon grid, then semiannual calls |
+| Excluded features | stubs, arbitrary settlement dates, non-aligned calls, accrued-settlement effects, amortization, exotic callability rules |
 
 This is the same broad motivation as the Chebyshev-tensor finance literature:
-use structured approximation to amortize expensive repeated risk calculations.
-The case study also borrows the dynamic-programming lesson from American and
-Bermudan option work: early-exercise products should be treated through their
-recursion, not only as one final black-box payoff surface. The concrete
-baseline and event ordering come from the QLNet/QuantLib callable-bond engine;
-see [Citations](citations.md) for the source links and papers.
+use structured approximation to amortize expensive repeated pricing and
+sensitivity calculations. It also connects to the dynamic Chebyshev literature
+for American and Bermudan options: early-exercise products should be treated
+through their continuation-value recursion, not only as one final black-box
+payoff surface.
 
-## Public Wrapper
+The extra work in this page comes from putting that literature into a
+request-level fixed-income clone. Many examples of approximation in finance can
+be useful after validating price accuracy, low-dimensional factors, or model
+Greeks. This study uses a more demanding acceptance rule: the clone must also
+preserve arbitrary local key-rate bumps, full-ladder DV01, mixed sensitivities,
+engine event ordering, and fallback boundaries.
+
+The concrete baseline and event ordering come from the QLNet/QuantLib
+callable-bond engine; see [Citations](citations.md) for the source links and
+papers.
+
+For fast PV approximation, the callable-bond-specific precedent is Glau, Pötz,
+Soloveitchik, and Wunderlich's *Efficient Valuation of Callable Bonds: The
+Dynamic Chebyshev Method*, which applies dynamic Chebyshev interpolation to
+callable-bond pricing. The surrounding literature also covers Chebyshev
+interpolation for parametric option pricing, low-rank tensor formats, American
+and Bermudan dynamic Chebyshev methods, and MoCaX-style risk acceleration.
+This page asks for a stricter risk clone on top of that price-surface story.
+
+## The clone target
 
 Every trial uses the same full-dimensional request-level wrapper:
 
@@ -73,7 +121,7 @@ request-level clone. The documentation labels each internal model honestly:
 | Factor-risk surrogate | Projects the 60-pillar curve into a smaller factor basis, so it is only faithful for factor-like scenarios. |
 | Formula-aware surrogate | Uses bond structure outside Chebyshev, then approximates only the remaining expensive component. |
 
-## Baseline
+## The reference engine
 
 The reference pricer is QLNet:
 
@@ -95,8 +143,8 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 
 The default scenario is a 30Y, 6% coupon callable bond with first call at 5Y,
 call price 100, Hull-White mean reversion 3%, volatility 1%, and 80 tree steps.
-The zero curve is the same pinned semiannual Federal Reserve fixture used by the
-fixed-rate bond case study.
+The zero curve is the pinned semiannual Federal Reserve fixture documented for
+this repository's public finance examples.
 
 The harness checks economic sanity before fitting surrogates: the callable
 dirty price should not exceed the comparable straight-bond dirty price, upward
@@ -104,7 +152,47 @@ curve bumps should reduce price, post-maturity direct curve exposure should be
 negligible, tree-step convergence should be stable, and call price / volatility
 effects should have the expected sign.
 
-## Metrics
+## The baseline recursion
+
+The reason this product is harder than a straight bond is not the coupon
+schedule by itself. The hard part is the issuer's exercise choice. At a coupon
+date with no call, the lattice rolls the next value backward:
+
+$$
+V_{i,j}
+ =
+ D_{i,j}
+ \sum_b p_{i,j,b} V_{i+1,d(i,j,b)} .
+$$
+
+Here \(i\) is the time step, \(j\) is the short-rate tree node,
+\(p_{i,j,b}\) are transition probabilities, \(d(i,j,b)\) maps each branch to a
+node at the next time step, and \(D_{i,j}\) is the one-step discount factor.
+Schematically, at a call date the issuer can redeem at call price \(K\). If
+\(\mathcal{C}_{i,j}\) is the rolled-back continuation value,
+
+$$
+\mathcal{C}_{i,j}
+ =
+D_{i,j}
+\sum_b p_{i,j,b}V_{i+1,d(i,j,b)},
+\qquad
+V_{i,j}=\min(K,\mathcal{C}_{i,j})
+\quad \text{before coupon-date adjustments.}
+$$
+
+The actual engine also applies coupon adjustments at event dates; in the simple
+post-coupon case this becomes
+\(V_{i,j}=\min(K,\mathcal{C}_{i,j})+\mathrm{coupon}_i\). QLNet has additional
+ordering rules when a call date is snapped to a nearby coupon date, which is
+why later trials reproduce the reference event ordering explicitly.
+
+This `min` is the central difficulty. A small curve bump can change which side
+of the exercise boundary a node belongs to. A price surface can look accurate
+while the finite bump-and-reprice DV01 ladder is wrong, because the bumped
+reference engine may make a different call decision.
+
+## How price and risk are checked
 
 PV alone is not enough for a risk surrogate. The case study also checks first
 and mixed finite-difference quantities:
@@ -169,10 +257,29 @@ This distinction matters for governance. A fast risk path is acceptable only if
 the uncorrected residual remains small when compared with the exact full
 bump-and-reprice ladder.
 
-## Trial 1: Naive Global Clone
+## Trial map
 
-The first trial asks the most direct question: what happens if a user points a
-global high-dimensional model at the callable pricer?
+The blog is organized as a sequence of modelling hypotheses. Each failure
+removes one tempting shortcut and motivates the next trial.
+
+| Trial | Model idea | Why try it? | Result |
+| --- | --- | --- | --- |
+| Trial 1: Blind global clone | Fit the full 65D function directly with TT or Slider. | This is the obvious black-box surrogate attempt. | PV and risk sensitivities fail. |
+| Trial 2: Curve compression | Project 60 curve pillars to level, slope, and curvature. | Many market scenarios are broad curve moves. | Fast PV, but not a faithful arbitrary-pillar risk clone. |
+| Trial 3: Embedded-option decomposition | Price the straight bond exactly and approximate only the call option. | Chebyshev should focus on the expensive option value. | The option residual is too regime-sensitive for the low-node probe. |
+| Risk gate | Check full DV01, mixed terms, and product Greeks. | A price-only pass can hide risk failure. | The early fast models are not risk-acceptable. |
+| Trials 4-8: Static corrections | Try HDMR, local DV01 residuals, exercise moneyness, more factors, and a stronger TT. | Maybe the missing risk can be patched without reproducing the lattice. | Static corrections still miss exercise-boundary behavior. |
+| Trial 9: Dynamic Chebyshev state | Approximate continuation value inside a short-rate recursion. | This matches the early-exercise literature more closely. | Structurally right, but not yet the same calibrated engine semantics. |
+| Trial 10: Reference tree clone | Reproduce the QLNet tree and event ordering. | Before accelerating, clone the engine being replaced. | PV and exact all-pillar DV01 become faithful, but full DV01 speedup is modest. |
+| Trial 11: One-pass tangent risk | Differentiate the lattice once to get all pillar risks. | Avoid 120 exact reprices for a 60-pillar DV01 ladder. | Fast, but pathwise tangent risk differs near exercise switches. |
+| Trial 12: Materiality-gated hybrid DV01 | Use tangent risk for all pillars and exact correction for material pillars. | Keep the exact full-ladder baseline, then buy more speed by correcting only the material subset under a tolerance rule. | Practical speed optimization for the supported family. |
+
+## Trial 1: Blind global clone
+
+The first trial intentionally uses the simplest mental model: "take the
+existing callable pricer as a black box and fit one high-dimensional
+surrogate." This is the easiest idea to explain, and it preserves the public
+input contract without any financial modelling inside the surrogate.
 
 $$
 \widehat{Q}_{\mathrm{TT}}(x, c, T, \tau, K, \sigma)
@@ -209,11 +316,14 @@ This is useful negative evidence. The global TT is too coarse to reproduce
 risk quantities. The singleton Slider is worse because it is an anchored
 additive model; cross-group mixed terms are zero by construction, so it cannot
 learn interactions such as rate-volatility or call-price-volatility coupling.
+The next question is whether the full curve is the real obstacle.
 
 ## Trial 2: Internal Curve Compression
 
 The next trial keeps the same 65D public wrapper but compresses the 60-pillar
-curve internally into level, slope, and curvature factors:
+curve internally into level, slope, and curvature factors. The intuition is
+reasonable: many real curve scenarios are not arbitrary 60-dimensional shapes;
+they are broad level, steepening, and curvature moves.
 
 $$
 x
@@ -245,21 +355,23 @@ Run it:
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 ```
 
-| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Surrogate eval | Break-even |
+| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Representative surrogate eval | Break-even |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Curve-factor tensor | factor-risk surrogate | 8 | 1.56% | 1.89% | 3.26 us | 6.3k |
-| Curve-factor TT | factor-risk surrogate | 8 | 2.20% | 0.90% | 3.23 us | 2.5k |
+| Curve-factor tensor | factor-risk surrogate | 8 | 1.56% | 1.89% | about 3-4 us | 6.3k |
+| Curve-factor TT | factor-risk surrogate | 8 | 2.20% | 0.90% | about 3-4 us | 2.5k |
 
 This trial is the first plausible acceleration story: the QLNet baseline takes
-roughly 1.6 ms per evaluation in the harness, while the factor TT evaluates in
-about 3 us after construction. The limitation is equally important: local
+roughly 1.6-1.9 ms per evaluation in the harness, while the factor TT evaluates
+in a few microseconds after construction. The limitation is equally important: local
 key-rate sensitivities remain weak because the projection intentionally discards
 most single-pillar directions.
 
 ## Trial 3: Embedded-Option Decomposition
 
-The formula-aware trial tries to avoid spending Chebyshev capacity on the cheap
-straight-bond component:
+The next temptation is to decompose the price before fitting. The straight bond
+is cheap and mostly deterministic, while the issuer call option is the expensive
+early-exercise component. The formula-aware trial therefore avoids spending
+Chebyshev capacity on the cheap straight-bond component:
 
 $$
 V_{\mathrm{issuer\ call}}
@@ -284,17 +396,18 @@ The rationale is sound: exact cashflow discounting should handle the easy
 component, while Chebyshev focuses on the tree-driven option component. In the
 current low-node probe, however, this does not yet improve the clone.
 
-| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Surrogate eval | Break-even |
+| Model | Type | Internal dims | Max PV rel. error on factor scenarios | Max PV rel. error on arbitrary bumps | Representative surrogate eval | Break-even |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Embedded-option curve-factor tensor | formula-aware factor-risk surrogate | 8 | 3.03% | 8.73% | 23.90 us | 6.5k |
-| Embedded-option full-pillar TT | formula-aware faithful full-pillar candidate | 65 | 7.99% | 5.12% | 29.89 us | 6.1k |
+| Embedded-option curve-factor tensor | formula-aware factor-risk surrogate | 8 | 3.03% | 8.73% | about 24-27 us | 6.5k |
+| Embedded-option full-pillar TT | formula-aware faithful full-pillar candidate | 65 | 7.99% | 5.12% | about 30-33 us | 6.1k |
 
 The result is a useful failure: decomposition alone is not enough. The embedded
 option value is smaller and more regime-sensitive than the full callable price,
 so a weak low-node approximation can produce worse relative PV error even when
-the formula is financially natural.
+the formula is financially natural. This motivates a stricter risk gate before
+trying more clever models.
 
-## Risk Acceptance Check
+## Why PV accuracy is not enough
 
 The first structured report was still too PV-heavy. A risk manager needs more
 than price: the object must also reproduce full-pillar DV01/PV01, product
@@ -334,6 +447,12 @@ This explains why PV speed is not enough. The curve-factor TT projects the
 cannot reproduce arbitrary local key-rate risk. The embedded-option variants
 also fail because the option residual is more regime-sensitive than the full
 price in the low-node probes.
+
+The next four trials ask whether this can be repaired without changing the
+basic architecture. They keep the final-output surrogate idea, but add more
+local structure: HDMR terms, local residuals, exercise moneyness, and stronger
+curve bases. These are reasonable ideas to test before giving up on static
+surfaces.
 
 ## Trial 4: Anchored HDMR
 
@@ -540,10 +659,11 @@ form, not merely increase tensor size.
 
 ## Trial 9: Dynamic Chebyshev Short-Rate State
 
-The related Bermudan-option literature does not fit one final price surface.
-It approximates the continuation value inside the backward recursion. The pilot
-implementation follows that idea with a one-factor Hull-White-style state
-\(x_t\):
+At this point the natural question is whether the Chebyshev approximation is in
+the wrong place. Instead of fitting one final callable-bond price surface, the
+related dynamic Chebyshev literature approximates continuation values inside
+the backward recursion. The pilot implementation follows that idea with a
+one-factor Hull-White-style state \(x_t\):
 
 $$
 r_t = x_t + \phi(t), \qquad
@@ -591,11 +711,18 @@ nearby pricing problem instead of cloning the intended one.
 
 ## Trial 10: Reproduce The Reference Tree
 
-The failed dynamic pilot points to a basic requirement: before accelerating the
+The failed dynamic pilot changes the priority. Before accelerating the
 recursion, reproduce the recursion. QLNet's callable engine builds a
 recombining Hull-White trinomial tree, creates a time grid containing coupon
 and call dates, and fits a short-rate shift at every time step so the tree
 matches the input discount curve.
+
+This trial is the turning point. It is not a Chebyshev approximation. It is the
+step where the harness stops treating the callable pricer as an unknown
+function and copies the pricing logic directly: the same calibrated tree, the
+same date grid, the same coupon events, the same call events, and the same
+rollback rule. That is why Trial 10 can be a correctness baseline. If this
+clone does not match QLNet, later speedups are optimizing the wrong object.
 
 For state \(x_{i,j}\), Arrow-Debreu state price \(\pi_{i,j}\), and step
 \(\Delta t_i\), the fitted shift is:
@@ -625,14 +752,23 @@ separate approximation failure from engine-semantics mismatch.
 | --- | ---: | ---: | ---: | ---: |
 | Reference-semantics tree clone | 2.84E-14 | 4.97E-14 | 0.00% | about 2-3x |
 
-The clone proves that the 65D wrapper can be reproduced faithfully. The speedup
-is modest because this version still obtains the full DV01 ladder by exact
-bump-and-reprice.
+The clone proves that the 65D wrapper can be reproduced faithfully. This is the
+clean correctness baseline: exact cloned-tree PV plus exact cloned-tree
+all-pillar DV01. The speedup is modest because full central-difference DV01
+still means 120 exact reprices for 60 pillars.
+
+The lesson is deliberately conservative: preserve the call-decision engine
+exactly. The call/no-call boundary is the non-smooth part of the product. Trial
+11 and Trial 12 only try to speed up the repeated risk work built around that
+engine.
 
 ## Trial 11: One-Pass Lattice Tangent Risk
 
-The next trial differentiates the fitted lattice itself. For one curve pillar
-\(p\):
+Now that the engine semantics are matched, the remaining bottleneck is risk
+speed. Exact full DV01 for 60 pillars means 120 price evaluations if each
+central bump is repriced separately. The next trial differentiates the fitted
+lattice itself so all pillar risks can be propagated in one pass. For one curve
+pillar \(p\):
 
 $$
 \partial_p V_{i,j}
@@ -661,16 +797,25 @@ bump-and-reprice effective DV01:
 
 | Model | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: |
-| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | about 22-31x |
+| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | about 20-33x |
 
 This is a useful failure. It shows that pathwise lattice risk and finite-bump
 risk are close but not identical near exercise boundaries.
 
-## Trial 12: Hybrid Effective DV01
+## Trial 12: Materiality-Gated Hybrid Effective DV01
 
-The accepted risk candidate keeps the fast smoothed tangent for the full ladder,
-then corrects the most material pillars with exact bump-and-reprice through the
-cloned tree:
+Trial 12 does not select pillars because selected pillars are needed for
+correctness. They are not. Trial 10 already gives the fully faithful answer by
+correcting every pillar exactly. Trial 12 asks a speed question:
+
+> Can we stay within a stated full-ladder error tolerance while avoiding exact
+> repricing for all 60 pillars?
+
+The speed-optimized risk candidate combines the two previous lessons. The
+cloned tree gives exact reference semantics. The tangent pass gives a fast
+estimate for every pillar. The hybrid method keeps that tangent estimate for
+the whole ladder, then corrects the material pillars with exact
+bump-and-reprice through the cloned tree:
 
 $$
 \mathrm{DV01}^{\mathrm{hybrid}}_p =
@@ -680,10 +825,19 @@ $$
 \end{cases}
 $$
 
-Here \(I_{48}\) is the set of the 48 largest tangent-DV01 magnitudes. This is
-an engine-aware risk clone: preserve exact lattice semantics for PV, propagate
-a full-ladder tangent in one pass, and spend exact bump evaluations only where
-the ladder is most material.
+Here \(I_{48}\) is the pilot correction set: the 48 largest tangent-DV01
+magnitudes in the local harness. This is not a manual production rule. It is a
+research setting used to show the speed-accuracy tradeoff. The production rule
+must be chosen before seeing exact bump-and-reprice answers.
+
+The engine-aware risk path is:
+
+1. preserve exact lattice semantics for PV;
+2. compute a tangent DV01 estimate for all 60 pillars;
+3. choose an exact correction set using a predeclared materiality rule;
+4. replace those material entries with exact bump-and-reprice values;
+5. validate the complete 60-pillar ladder against the exact all-pillar path on
+   audit samples.
 
 The exact correction reprices are independent across pillars, so the harness
 executes them in parallel. That keeps the mathematical definition identical to
@@ -705,8 +859,7 @@ $$
 
 The exact corrections replace the largest components of that complete ladder;
 the remaining components stay on the fast tangent estimate. The validation then
-compares the whole 60-vector against exact bump-and-reprice. In production
-terms, the hard-coded \(48\) is a research-harness choice. A governed risk
+compares the whole 60-vector against exact bump-and-reprice. A governed risk
 implementation should choose the correction set by materiality. One concrete
 rule is to sort pillars by descending tangent magnitude,
 \(|t_{p_1}| \ge \cdots \ge |t_{p_{60}}|\), where
@@ -730,19 +883,26 @@ $$
 
 Then include any mandatory reporting tenors. The system should fall back to
 exact full-ladder bump-and-reprice if the measured residual breaches tolerance.
+With this policy, "selected pillars" means "pillars selected by a documented
+error-control rule," not "pillars selected because they happened to work in one
+experiment."
 
 | Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: | ---: |
-| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | about 24-33x |
+| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | about 9-14x |
 
-This is the first callable-bond candidate that is faithful to the 65D public
-wrapper and operationally useful for the full key-rate ladder. A reduced
-40-step tree was also tested, but it damaged Greeks and full DV01 enough to be
-rejected.
+This is the first callable-bond candidate that keeps the faithful 65D public
+wrapper and demonstrates a materially faster full-ladder risk path. The
+correctness claim still rests on Trial 10's exact cloned-tree all-pillar
+baseline. Trial 12 adds a materiality-gated speed optimization: in the local
+verifier, it reduces the full-DV01 L1 error to 0.31% while moving from about
+2-3x speedup for exact all-pillar cloned-tree DV01 to about 9-14x for the
+hybrid path. A reduced 40-step tree was also tested, but it damaged Greeks and
+full DV01 enough to be rejected.
 
-## Current Conclusion
+## What worked
 
-The callable-bond harness has a sharper answer now.
+The callable-bond harness has a sharper answer now:
 
 The naive global Chebyshev clone does not work. Factor compression is fast but
 not a faithful arbitrary-pillar risk clone. Static HDMR and residual patches do
@@ -751,32 +911,56 @@ recursion is closer to the right idea, but still fails if it does not reproduce
 the calibrated tree semantics of the reference engine.
 
 The first risk-acceptable clone is therefore not a blind tensor. It is a
-reference-semantics lattice clone with hybrid effective DV01. For the supported
-regular callable fixed-rate family, it preserves the 65D request wrapper,
-matches QLNet PV and scalar finite-difference Greeks to numerical noise, and
-computes the full 60-pillar DV01 ladder with sub-gate error and about 24-33x
-speedup in current local verifier runs.
+reference-semantics lattice clone. For the supported regular callable
+fixed-rate family, the exact cloned-tree path preserves the 65D request wrapper
+and matches QLNet PV and all-pillar DV01 to numerical noise. The
+materiality-gated hybrid path is the speed layer on top: it computes the full
+60-pillar DV01 ladder with sub-gate error and about 9-14x speedup in current
+local verifier runs.
 
 The remaining Chebyshev research direction should start from this engine-aware
 decomposition. Chebyshev continuation functions can still be tested as
 accelerators inside the reproduced tree semantics, but fitting one static final
 price surface is not the right architecture for this product.
 
-## Governance Notes
+The practical lesson is broader than this one harness: for a product with
+exercise decisions, the safe acceleration target is not the whole pricing
+function as an opaque object. Preserve the discrete exercise engine, then
+accelerate the smooth or repetitive pieces that surround it, such as full-ladder
+risk propagation and materiality-gated exact corrections.
+
+## What should you use?
 
 For a production risk system, the safe operating modes are:
 
 | Mode | Use |
 | --- | --- |
 | Exact cloned-tree PV | Default price path for the supported regular callable family. |
-| Exact cloned-tree full DV01 | Audit path and fallback when residual checks fail. |
-| Hybrid full DV01 | Fast risk path after materiality thresholds and mandatory tenors are satisfied. |
+| Exact cloned-tree full DV01 | Faithful all-pillar baseline; audit path and fallback when residual checks fail. |
+| Materiality-gated hybrid full DV01 | Fast risk path after materiality thresholds, mandatory tenors, and residual audits are satisfied. |
 | Reference-pricer fallback | Any product outside the documented schedule and convention scope. |
 
 The board-level claim should therefore be narrow: the method is a fast,
 validated clone for a specific callable-bond family, with explicit residual
 checks and fallback. It is not a general replacement for arbitrary fixed-income
 products.
+
+## Practical lessons
+
+The case study leaves five practical lessons:
+
+1. Price accuracy is not enough. A callable-bond surrogate can pass a PV check
+   and still fail the DV01 ladder.
+2. Factor compression is useful when the business input is factor scenarios,
+   but it changes the contract if the caller expects arbitrary key-rate bumps.
+3. Static residual patches are weak near exercise boundaries because exercise
+   decisions can change under a bump.
+4. Dynamic Chebyshev ideas belong inside the continuation recursion, but a
+   clone must first reproduce the reference engine's calibrated tree semantics.
+5. A practical risk clone can mix exact structure and approximation: preserve
+   the non-smooth exercise engine, use exact all-pillar DV01 as the correctness
+   baseline, use tangent risk for speed, select exact corrections by a
+   materiality rule, and fall back outside the supported scope.
 
 ## Reproduce
 
@@ -786,7 +970,7 @@ Run the focused callable test suite:
 dotnet test tests/ChebyshevSharp.Tests/ChebyshevSharp.Tests.csproj --filter "FullyQualifiedName~CallableBond"
 ```
 
-Run the three public modes:
+Run the public modes:
 
 ```bash
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj

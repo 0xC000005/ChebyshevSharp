@@ -2,10 +2,10 @@
 title: Fixed-Rate Bond Surrogate Case Study
 ---
 
-# Can Chebyshev Models Clone a Fixed-Rate Bond Pricer?
+# Fixed-Rate Bond Surrogate Case Study
 
-This case study asks a practical question: can Chebyshev interpolation replace
-a fixed-rate bond pricing function while preserving price and risk
+This technical blog asks a practical question: can Chebyshev interpolation
+replace a fixed-rate bond pricing function while preserving price and risk
 sensitivities?
 
 The short answer is: not by blindly fitting one global high-dimensional tensor.
@@ -19,6 +19,11 @@ The example is public and reproducible. It uses QLNet as the reference pricer,
 a pinned Federal Reserve nominal-yield-curve fixture, and a regular fixed-rate
 bullet bond. It is a ChebyshevSharp demonstration, not a general fixed-income
 library.
+
+The investigation has one thread: start with the obvious global clone, observe
+where it fails, test standard compression ideas, then use the bond formula to
+separate schedule routing from smooth discounting. Each failed trial motivates
+the next modelling step.
 
 ## What the example prices
 
@@ -135,6 +140,12 @@ base notional, and $D_x(t_k)$ is the bumped discount factor. The difficult
 part is not the cashflow sum itself. The difficult part is that changing
 $T$ can change $\mathcal{C}(T)$.
 
+The three public coordinates have different mathematical roles:
+
+- curve bumps change discount factors smoothly;
+- coupon changes the size of scheduled coupon payments algebraically;
+- maturity can change the generated coupon schedule.
+
 The direct zero curve uses continuous compounding and linear zero-rate
 interpolation. If a payment time $t_k$ lies between adjacent curve pillars
 $t_j$ and $t_{j+1}$, then
@@ -152,15 +163,42 @@ $$
 This local interpolation fact is the key to the final method: each individual
 discount factor depends on at most two curve-bump coordinates.
 
-### What dirty price does not smooth
+## Why maturity is the hard coordinate
 
-It is natural to ask whether dirty price removes the maturity problem. Dirty
-price helps with a different problem: for a fixed bond observed between coupon
-dates, it includes accrued interest at the settlement date. In this case study
-the valuation date, settlement date, and effective date are the same, so accrued
-interest is zero in the baseline request. More importantly, the maturity
-coordinate is not moving the valuation date through time. It is changing the
-bond being built.
+Coupon is smooth for this supported product. Maturity is different because it
+can regenerate the schedule. A one-day change can alter the number of future
+cashflows, the final accrual period, or the business-day-adjusted payment date.
+This is not a clean-price versus dirty-price artifact. It is a product
+construction artifact: changing maturity changes the schedule that defines the
+future cashflows.
+
+### Coupons are discrete, not continuous
+
+Fixed-rate coupon bonds do not pay coupon continuously. They pay contractual
+coupon cashflows on scheduled coupon dates. Accrued interest is a settlement
+allocation between buyer and seller when the same bond trades between coupon
+dates; it does not turn future coupon payments into a continuous stream.
+
+For a fixed schedule, coupon mainly changes payment size:
+
+$$
+\mathrm{CF}_k(c) = R_k + cM_k.
+$$
+
+Here $R_k$ is principal or redemption and $M_k$ is the coupon multiplier for
+that payment date. Doubling the coupon doubles the coupon part of each scheduled
+cashflow; it does not create new payment dates.
+
+### Dirty price does not smooth schedule generation
+
+That distinction matters because this case study is not repricing one existing
+bond as the settlement date moves through time. The valuation date, settlement
+date, and effective date are fixed. The maturity coordinate instead changes the
+bond being constructed, then the reference pricer generates a schedule for that
+new maturity date. Dirty price is therefore the right price measure, but it
+does not remove the schedule-generation problem.
+
+### Schedule changes change the formula
 
 The implementation maps the real maturity coordinate to a maturity date:
 
@@ -205,6 +243,85 @@ price happens to be nearly continuous, the slope can still jump because the
 left and right formulas are different. That is the discontinuity or kink that a
 global smooth Chebyshev polynomial is trying to approximate.
 
+The simplest mental model is:
+
+$$
+Q_-(x,c,T)
+  =
+  100D_x(T)
+  +
+  c\sum_{i=1}^{m}\alpha_iD_x(t_i),
+$$
+
+on one side of a schedule boundary, but
+
+$$
+Q_+(x,c,T)
+  =
+  100D_x(T)
+  +
+  c\sum_{i=1}^{m+1}\alpha_iD_x(t_i),
+$$
+
+on the other side. The exact QLNet schedules are more detailed than this toy
+formula because they include calendar adjustment and day-count conventions, but
+the lesson is the same: changing maturity can change which coupon cashflows
+exist. A global surrogate then has to approximate several local formulas with
+one smooth object.
+
+### Derivatives fail before price looks bad
+
+The harness scans one-day windows around semiannual maturity regions. A price
+plot alone is not very instructive because dirty price can look visually mild.
+The stronger evidence is the one-day left and right slope diagnostic. For a
+one-day maturity step $\Delta$ and $\Delta_y \approx 1/365$, the reported
+slopes are
+
+$$
+\mathrm{leftSlope}(T)
+  =
+  \frac{Q(T)-Q(T-\Delta)}{\Delta_y},
+\qquad
+\mathrm{rightSlope}(T)
+  =
+  \frac{Q(T+\Delta)-Q(T)}{\Delta_y}.
+$$
+
+When these two slopes disagree sharply, the local derivative seen from the left
+does not match the local derivative seen from the right. That is exactly the
+kind of behavior a single global polynomial tends to smear.
+
+Representative spike evidence from the dirty-price scan:
+
+| Maturity date | Scheduled future cashflow count | Second difference | Left slope/year | Right slope/year |
+| --- | ---: | ---: | ---: | ---: |
+| 2039-11-11 | 28 | `7.339039E-003` | `-2.650493E+000` | `2.825619E-002` |
+| 2040-11-10 | 30 | `7.191154E-003` | `-2.605554E+000` | `1.921722E-002` |
+| 2038-05-15 | 25 | `6.116018E-003` | `-1.953303E+000` | `2.790432E-001` |
+
+This is the practical meaning of piecewise smoothness here. The price level may
+remain close enough to look benign, but maturity sensitivity and
+coupon-maturity cross sensitivity expose the schedule transition. For a fixed
+schedule,
+
+$$
+Q(x,c,T)=P(x,T)+cA(x,T),
+$$
+
+so
+
+$$
+\frac{\partial^2 Q}{\partial c\,\partial T}
+  =
+  \frac{\partial A}{\partial T}.
+$$
+
+The annuity $A(x,T)$ is a sum over the generated coupon schedule. When that
+schedule changes, the coupon-maturity cross term is exactly where the
+discrete-coupon convention shows up. This is why the naive global models can
+miss maturity sensitivity and mixed risk even when a price-only chart looks
+less alarming.
+
 ## Why a dense tensor is impossible
 
 A full Chebyshev tensor over 62 scalar coordinates is not a realistic starting
@@ -223,14 +340,14 @@ dense grid.
 
 | Trial | Model idea | Why try it? | Result |
 | --- | --- | --- | --- |
-| Global Tensor Train and Slider | Fit $Q(x,c,T)$ directly. | This is the most natural first attempt for a high-dimensional function. | Fails on PV and risk sensitivities. |
-| Stronger global models, grouped Slider, curve factors, buckets | Add common dimensional compression and maturity routing. | Maybe the first model was too weak or used the wrong coordinates. | Improves some PV metrics but still fails as a full 60-pillar clone. |
-| Analytic coupon decomposition | Use fixed-rate bond linearity in $c$. | Coupon should not be a nonlinear tensor axis if cashflows are fixed. | Identity is exact, but maturity remains hard. |
-| Schedule and automatic split points | Split maturity into smoother pieces. | Chebyshev methods work best on smooth pieces. | Schedule-aware splits help; automatic split detection alone is not enough. |
-| Active-pillar and fixed-trade controls | Remove inactive post-maturity pillars or fix the trade. | Risk systems often price known trades under curve scenarios. | Fixed-trade curve-only TT works well; parametric new-bond clone still needs more structure. |
-| Schedule-resolved cashflow kernels | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; scalar speedup is useful, and all-pillar risk speedup is large. |
+| Trial 1: Blind global clone | Fit $Q(x,c,T)$ directly. | This is the obvious black-box surrogate attempt. | Fails on PV and risk sensitivities. |
+| Trial 2: Standard compression | Add stronger TT settings, grouped Slider partitions, curve factors, and maturity buckets. | Maybe the first model was too weak or used the wrong coordinates. | Improves some PV metrics but still fails as a faithful 60-pillar clone. |
+| Trial 3: Remove fake nonlinearity | Use fixed-rate bond linearity in $c$. | Coupon should not be a nonlinear tensor axis if cashflows are fixed. | Identity is exact, but maturity remains hard. |
+| Trial 4: Piecewise maturity routing | Split maturity into smoother pieces. | Chebyshev methods work best on smooth pieces. | Schedule-aware splits help; automatic split detection alone is not enough. |
+| Trial 5: Active support and fixed trades | Remove inactive post-maturity pillars or fix the trade. | Risk systems often price known trades under curve scenarios. | Fixed-trade curve-only TT works well; parametric new-bond clone still needs more structure. |
+| Trial 6: Resolve cashflows first | Resolve cashflows first and approximate only local discount factors. | The bond formula already decomposes into low-dimensional smooth kernels. | Accurate for the supported family; scalar speedup is useful, and all-pillar risk speedup is large. |
 
-## Trial 1: one global model
+## Trial 1: Blind global clone
 
 The first trial intentionally uses the most naive mental model: "take the
 existing pricer as a black box and fit one high-dimensional surrogate to it."
@@ -288,43 +405,17 @@ surrogate probes. The failure is therefore not a simple post-maturity exposure
 bug. One global smooth object is trying to learn schedule-sensitive behavior
 and cross sensitivities that it does not resolve.
 
-## Why maturity is the hard coordinate
+**Lesson:** the global model is not merely under-tuned. It is trying to learn
+schedule generation, active curve support, coupon linearity, and mixed risk
+from samples at the same time.
 
-Coupon is smooth for this supported product. Maturity is different because it
-can regenerate the schedule. A one-day change can alter the number of future
-cashflows, the final accrual period, or the business-day-adjusted payment date.
-This is not a clean-price versus dirty-price artifact. It is a product
-construction artifact: changing maturity changes the schedule that defines the
-future cashflows.
-
-The harness scans one-day windows around semiannual maturity regions. Dirty PV
-can look visually mild while the finite-difference slope jumps:
-
-![Maturity sensitivity near a semiannual schedule boundary](../images/fixed-rate-bond-maturity-sensitivity.svg)
-
-Representative spike evidence:
-
-| Maturity date | Future cashflows | Second difference | Left slope/year | Right slope/year |
-| --- | ---: | ---: | ---: | ---: |
-| 2039-11-11 | 28 | `7.339039E-003` | `-2.650493E+000` | `2.825619E-002` |
-| 2040-11-10 | 30 | `7.191154E-003` | `-2.605554E+000` | `1.921722E-002` |
-| 2038-05-15 | 25 | `6.116018E-003` | `-1.953303E+000` | `2.790432E-001` |
-
-This is the practical meaning of piecewise smoothness here. Price may remain
-continuous enough to look benign, but slope and cross sensitivities are poor
-targets for one global polynomial surrogate.
-
-## Trial 2: common compression and buckets
+## Trial 2: Standard compression
 
 The second trial asks a practical question: maybe the global fit failed because
 we gave it too many coordinates in the wrong form. In finance, curve moves are
 often summarized by level, slope, and curvature factors, and nonsmooth maturity
 behavior is often handled by splitting the domain into pieces. This trial tries
 those common ideas while keeping the public input contract unchanged.
-
-The next trial keeps the same public wrapper but tries common modelling fixes:
-a stronger global TT, grouped Slider partitions, low-dimensional curve factors,
-and maturity buckets.
 
 ```bash
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --structured-alternatives
@@ -366,7 +457,11 @@ an important distinction: factor compression can be a good workflow when the
 input contract is factor scenarios, but it is not a drop-in replacement for a
 function whose public input is every curve pillar.
 
-## Trial 3: coupon is algebraic
+**Lesson:** standard compression is useful when it matches the risk contract,
+but factor or bucket compression alone does not make a full 60-pillar
+parametric clone.
+
+## Trial 3: Remove fake nonlinearity
 
 The third trial separates a real difficulty from a fake one. Coupon looks like
 another input coordinate, but for this supported fixed-rate bullet bond it only
@@ -422,16 +517,17 @@ as a hard nonlinear Chebyshev axis. But it does not solve maturity. A global
 decomposed TT still reports `456.94%` max maturity-sensitivity relative error
 in the benchmark.
 
-## Trial 4: schedule splits and automatic split detection
+**Lesson:** coupon was never the hard nonlinear coordinate. Removing it from
+the learned nonlinear surface clarifies the problem, but schedule-sensitive
+maturity remains.
+
+## Trial 4: Piecewise maturity routing
 
 The fourth trial follows the Chebyshev intuition directly. A Chebyshev
 polynomial is excellent on a smooth interval, but it struggles when one
 polynomial has to cover multiple regimes. Since maturity changes the schedule,
 we try routing maturity into smaller pieces so each local model sees a simpler
 function.
-
-Since Chebyshev interpolation performs best on smooth intervals, the next trial
-tests whether maturity should be routed into smoother pieces:
 
 $$
 \widehat{Q}(x,c,T)
@@ -466,7 +562,11 @@ is especially important: adding more split points is not automatically better.
 For this bond problem, split detection needs schedule context and held-out risk
 validation.
 
-## Trial 5: active pillars and fixed trades
+**Lesson:** piecewise modelling is the right instinct, but generic knot
+detection is not enough. Financial schedule context and held-out risk checks
+are part of the model.
+
+## Trial 5: Active support and fixed trades
 
 The fifth trial asks whether we are wasting approximation budget on curve
 coordinates that cannot affect the bond. A 10-year bond should not have direct
@@ -498,13 +598,21 @@ relative error. That is a good recipe for a known trade under repeated curve
 scenarios. It is not the same problem as a parametric new-bond surface over
 coupon and maturity.
 
-## Trial 6: resolve cashflows first
+**Lesson:** a fixed-trade curve-only surrogate can work well, but that solves a
+narrower risk-scenario problem. The parametric wrapper still needs a way to
+handle maturity as a schedule-routing input.
+
+## Trial 6: Resolve cashflows first
 
 The sixth trial changes the modelling premise. Instead of asking a global TT to
 rediscover the bond formula, it uses the formula as the outer structure and
 uses Chebyshev only where interpolation is actually needed. This is still a
 surrogate behind the same 62-coordinate wrapper, but it is no longer a blind
 black-box clone.
+
+At this point, the failed trials point to the same conclusion: the mistake is
+treating the whole pricer as one black box. The bond formula already tells us
+where the smooth pieces are.
 
 The implementation is
 `examples/FixedRateBondSurrogate/ScheduleResolvedCashflowChebyshevBondPricer.cs`.
@@ -553,6 +661,27 @@ is a schedule-routing input that chooses the cashflow template. Chebyshev
 interpolation is used only after the smooth local discount-kernel problem has
 been isolated.
 
+### Why this isolates the smooth part
+
+The nonsmooth part of the request is the schedule-generation map
+$T \mapsto \mathcal{C}(T)$. Trial 6 handles that map exactly before using
+Chebyshev. Once maturity has selected the supported schedule, the remaining
+cashflow list is fixed for that evaluation.
+
+Coupon and notional are also handled outside Chebyshev. Coupon only multiplies
+known cashflow multipliers $M_k(T)$, and dirty price per 100 scales linearly in
+notional. The only learned object is the discount kernel
+
+$$
+D_x(t_k)=\exp\left(-t_k z_x(t_k)\right).
+$$
+
+Under linear zero-rate interpolation, $z_x(t_k)$ is affine in at most two curve
+bumps. Therefore $D_x(t_k)$ is an analytic one- or two-dimensional function of
+the relevant bump coordinates. Trial 6 preserves the 62-coordinate public
+wrapper while ensuring every Chebyshev kernel sees only this smooth,
+low-dimensional problem.
+
 Run the final evidence mode:
 
 ```bash
@@ -591,6 +720,10 @@ cashflow control prices a fixed resolved schedule faster than the Chebyshev
 kernel. That means this case study supports a formula-aware Chebyshev clone for
 public demonstration and fast risk snapshots, while a production scalar
 fixed-bond pricer should still compare against an exact cached cashflow engine.
+
+**Lesson:** the successful clone is formula-aware. It does not ask Chebyshev to
+learn the schedule; it uses Chebyshev only for smooth discount kernels after
+the schedule has been resolved.
 
 ## Why this method is accurate
 
@@ -641,12 +774,6 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj -- --accuracy-recipe-search
 ```
 
-Regenerate the maturity-sensitivity figure:
-
-```bash
-python tools/PlotFixedRateBondEvidence/plot_maturity_sensitivity.py
-```
-
 Run the fixed-rate bond test slice:
 
 ```bash
@@ -663,6 +790,15 @@ Build the documentation:
 docfx docs/docfx.json
 ```
 
+## What should you use?
+
+| Situation | Recommendation |
+| --- | --- |
+| One fixed bond, scalar price only | Use an exact cached cashflow pricer. |
+| Full 60-pillar risk ladder for the supported family | Use the schedule-resolved Chebyshev clone. |
+| Factor-only scenario workflow | Use a factor-risk surrogate and state the reduced input contract. |
+| Unsupported product features | Route to the reference pricer or a separately validated model. |
+
 ## Practical lessons
 
 Use the case study as a modelling workflow:
@@ -677,6 +813,10 @@ Use the case study as a modelling workflow:
 6. Use factor compression only when the input contract is factor scenarios.
 7. Treat maturity as schedule-sensitive for parametric bond surfaces.
 8. Use formula-aware decomposition when the product payoff structure gives one.
+
+The final takeaway is simple: the successful method is not blind Chebyshev
+compression. It is formula-aware decomposition: schedule first, coupon
+algebraic, discount kernels smooth.
 
 ## Limitations of this write-up
 
