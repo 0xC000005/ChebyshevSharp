@@ -18,9 +18,11 @@ ladder with useful speedup.
 The first practical candidate is not a black-box tensor. It reproduces the
 reference callable-bond tree semantics first, then accelerates risk by combining
 a one-pass tangent DV01 ladder with exact bump-and-reprice corrections for the
-material pillars. The investigation has one thread: try the obvious Chebyshev
-models, show why they fail, then move the approximation closer to the actual
-financial structure.
+material pillars. This materiality gate is a speed optimization, not the source
+of correctness: the exact all-pillar cloned-tree DV01 is the faithful baseline.
+The investigation has one thread: try the obvious Chebyshev models, show why
+they fail, then move the approximation closer to the actual financial
+structure.
 
 The example is public and reproducible. It uses QLNet as the reference
 implementation, a pinned Federal Reserve nominal-yield-curve fixture, a
@@ -262,9 +264,9 @@ removes one tempting shortcut and motivates the next trial.
 | Risk gate | Check full DV01, mixed terms, and product Greeks. | A price-only pass can hide risk failure. | The early fast models are not risk-acceptable. |
 | Trials 4-8: Static corrections | Try HDMR, local DV01 residuals, exercise moneyness, more factors, and a stronger TT. | Maybe the missing risk can be patched without reproducing the lattice. | Static corrections still miss exercise-boundary behavior. |
 | Trial 9: Dynamic Chebyshev state | Approximate continuation value inside a short-rate recursion. | This matches the early-exercise literature more closely. | Structurally right, but not yet the same calibrated engine semantics. |
-| Trial 10: Reference tree clone | Reproduce the QLNet tree and event ordering. | Before accelerating, clone the engine being replaced. | PV and exact DV01 become faithful, but full DV01 speedup is modest. |
+| Trial 10: Reference tree clone | Reproduce the QLNet tree and event ordering. | Before accelerating, clone the engine being replaced. | PV and exact all-pillar DV01 become faithful, but full DV01 speedup is modest. |
 | Trial 11: One-pass tangent risk | Differentiate the lattice once to get all pillar risks. | Avoid 120 exact reprices for a 60-pillar DV01 ladder. | Fast, but pathwise tangent risk differs near exercise switches. |
-| Trial 12: Hybrid effective DV01 | Use tangent risk for all pillars and exact correction for material pillars. | Preserve full-ladder risk while spending exact reprices where they matter. | First practical clone for the supported family. |
+| Trial 12: Materiality-gated hybrid DV01 | Use tangent risk for all pillars and exact correction for material pillars. | Keep the exact full-ladder baseline, then buy more speed by correcting only the material subset under a tolerance rule. | Practical speed optimization for the supported family. |
 
 ## Trial 1: Blind global clone
 
@@ -737,9 +739,10 @@ separate approximation failure from engine-semantics mismatch.
 | --- | ---: | ---: | ---: | ---: |
 | Reference-semantics tree clone | 2.84E-14 | 4.97E-14 | 0.00% | about 2-3x |
 
-The clone proves that the 65D wrapper can be reproduced faithfully. The speedup
-is modest because this version still obtains the full DV01 ladder by exact
-bump-and-reprice.
+The clone proves that the 65D wrapper can be reproduced faithfully. This is the
+clean correctness baseline: exact cloned-tree PV plus exact cloned-tree
+all-pillar DV01. The speedup is modest because full central-difference DV01
+still means 120 exact reprices for 60 pillars.
 
 ## Trial 11: One-Pass Lattice Tangent Risk
 
@@ -781,13 +784,20 @@ bump-and-reprice effective DV01:
 This is a useful failure. It shows that pathwise lattice risk and finite-bump
 risk are close but not identical near exercise boundaries.
 
-## Trial 12: Hybrid Effective DV01
+## Trial 12: Materiality-Gated Hybrid Effective DV01
 
-The accepted risk candidate combines the two previous lessons. The cloned tree
-gives exact reference semantics. The tangent pass gives a fast full risk ladder.
-The hybrid method keeps the fast smoothed tangent for every pillar, then
-corrects the most material pillars with exact bump-and-reprice through the
-cloned tree:
+Trial 12 does not select pillars because selected pillars are needed for
+correctness. They are not. Trial 10 already gives the fully faithful answer by
+correcting every pillar exactly. Trial 12 asks a speed question:
+
+> Can we stay within a stated full-ladder error tolerance while avoiding exact
+> repricing for all 60 pillars?
+
+The speed-optimized risk candidate combines the two previous lessons. The
+cloned tree gives exact reference semantics. The tangent pass gives a fast
+estimate for every pillar. The hybrid method keeps that tangent estimate for
+the whole ladder, then corrects the material pillars with exact
+bump-and-reprice through the cloned tree:
 
 $$
 \mathrm{DV01}^{\mathrm{hybrid}}_p =
@@ -797,10 +807,19 @@ $$
 \end{cases}
 $$
 
-Here \(I_{48}\) is the set of the 48 largest tangent-DV01 magnitudes. This is
-an engine-aware risk clone: preserve exact lattice semantics for PV, propagate
-a full-ladder tangent in one pass, and spend exact bump evaluations only where
-the ladder is most material.
+Here \(I_{48}\) is the pilot correction set: the 48 largest tangent-DV01
+magnitudes in the local harness. This is not a manual production rule. It is a
+research setting used to show the speed-accuracy tradeoff. The production rule
+must be chosen before seeing exact bump-and-reprice answers.
+
+The engine-aware risk path is:
+
+1. preserve exact lattice semantics for PV;
+2. compute a tangent DV01 estimate for all 60 pillars;
+3. choose an exact correction set using a predeclared materiality rule;
+4. replace those material entries with exact bump-and-reprice values;
+5. validate the complete 60-pillar ladder against the exact all-pillar path on
+   audit samples.
 
 The exact correction reprices are independent across pillars, so the harness
 executes them in parallel. That keeps the mathematical definition identical to
@@ -822,8 +841,7 @@ $$
 
 The exact corrections replace the largest components of that complete ladder;
 the remaining components stay on the fast tangent estimate. The validation then
-compares the whole 60-vector against exact bump-and-reprice. In production
-terms, the hard-coded \(48\) is a research-harness choice. A governed risk
+compares the whole 60-vector against exact bump-and-reprice. A governed risk
 implementation should choose the correction set by materiality. One concrete
 rule is to sort pillars by descending tangent magnitude,
 \(|t_{p_1}| \ge \cdots \ge |t_{p_{60}}|\), where
@@ -847,15 +865,22 @@ $$
 
 Then include any mandatory reporting tenors. The system should fall back to
 exact full-ladder bump-and-reprice if the measured residual breaches tolerance.
+With this policy, "selected pillars" means "pillars selected by a documented
+error-control rule," not "pillars selected because they happened to work in one
+experiment."
 
 | Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: | ---: |
 | Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | about 24-33x |
 
-This is the first callable-bond candidate that is faithful to the 65D public
-wrapper and operationally useful for the full key-rate ladder. A reduced
-40-step tree was also tested, but it damaged Greeks and full DV01 enough to be
-rejected.
+This is the first callable-bond candidate that keeps the faithful 65D public
+wrapper and demonstrates a materially faster full-ladder risk path. The
+correctness claim still rests on Trial 10's exact cloned-tree all-pillar
+baseline. Trial 12 adds a materiality-gated speed optimization: in the local
+verifier, it reduces the full-DV01 L1 error to 0.31% while moving from about
+2-3x speedup for exact all-pillar cloned-tree DV01 to about 24-33x for the
+hybrid path. A reduced 40-step tree was also tested, but it damaged Greeks and
+full DV01 enough to be rejected.
 
 ## What worked
 
@@ -868,11 +893,12 @@ recursion is closer to the right idea, but still fails if it does not reproduce
 the calibrated tree semantics of the reference engine.
 
 The first risk-acceptable clone is therefore not a blind tensor. It is a
-reference-semantics lattice clone with hybrid effective DV01. For the supported
-regular callable fixed-rate family, it preserves the 65D request wrapper,
-matches QLNet PV and scalar finite-difference Greeks to numerical noise, and
-computes the full 60-pillar DV01 ladder with sub-gate error and about 24-33x
-speedup in current local verifier runs.
+reference-semantics lattice clone. For the supported regular callable
+fixed-rate family, the exact cloned-tree path preserves the 65D request wrapper
+and matches QLNet PV and all-pillar DV01 to numerical noise. The
+materiality-gated hybrid path is the speed layer on top: it computes the full
+60-pillar DV01 ladder with sub-gate error and about 24-33x speedup in current
+local verifier runs.
 
 The remaining Chebyshev research direction should start from this engine-aware
 decomposition. Chebyshev continuation functions can still be tested as
@@ -886,8 +912,8 @@ For a production risk system, the safe operating modes are:
 | Mode | Use |
 | --- | --- |
 | Exact cloned-tree PV | Default price path for the supported regular callable family. |
-| Exact cloned-tree full DV01 | Audit path and fallback when residual checks fail. |
-| Hybrid full DV01 | Fast risk path after materiality thresholds and mandatory tenors are satisfied. |
+| Exact cloned-tree full DV01 | Faithful all-pillar baseline; audit path and fallback when residual checks fail. |
+| Materiality-gated hybrid full DV01 | Fast risk path after materiality thresholds, mandatory tenors, and residual audits are satisfied. |
 | Reference-pricer fallback | Any product outside the documented schedule and convention scope. |
 
 The board-level claim should therefore be narrow: the method is a fast,
@@ -908,8 +934,9 @@ The case study leaves five practical lessons:
 4. Dynamic Chebyshev ideas belong inside the continuation recursion, but a
    clone must first reproduce the reference engine's calibrated tree semantics.
 5. A practical risk clone can mix exact structure and approximation: exact tree
-   semantics for PV, tangent risk for the full ladder, exact corrections where
-   the residual is material, and fallback outside the supported scope.
+   semantics for PV, exact all-pillar DV01 as the correctness baseline, tangent
+   risk for speed, exact corrections selected by a materiality rule, and
+   fallback outside the supported scope.
 
 ## Reproduce
 
