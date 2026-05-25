@@ -152,15 +152,19 @@ $$
 This local interpolation fact is the key to the final method: each individual
 discount factor depends on at most two curve-bump coordinates.
 
-### What dirty price does not smooth
+### Discrete coupons, dirty price, and maturity
 
-It is natural to ask whether dirty price removes the maturity problem. Dirty
-price helps with a different problem: for a fixed bond observed between coupon
-dates, it includes accrued interest at the settlement date. In this case study
-the valuation date, settlement date, and effective date are the same, so accrued
-interest is zero in the baseline request. More importantly, the maturity
-coordinate is not moving the valuation date through time. It is changing the
-bond being built.
+Fixed-rate coupon bonds do not pay coupon continuously. They pay contractual
+coupon cashflows on scheduled coupon dates. Accrued interest is a settlement
+allocation between buyer and seller when the same bond trades between coupon
+dates; it does not turn future coupon payments into a continuous stream.
+
+That distinction matters because this case study is not repricing one existing
+bond as the settlement date moves through time. The valuation date, settlement
+date, and effective date are fixed. The maturity coordinate instead changes the
+bond being constructed, then the reference pricer generates a schedule for that
+new maturity date. Dirty price is therefore the right price measure, but it
+does not remove the schedule-generation problem.
 
 The implementation maps the real maturity coordinate to a maturity date:
 
@@ -204,6 +208,32 @@ stub period, this difference is generally not forced to be zero. Even when the
 price happens to be nearly continuous, the slope can still jump because the
 left and right formulas are different. That is the discontinuity or kink that a
 global smooth Chebyshev polynomial is trying to approximate.
+
+The simplest mental model is:
+
+$$
+Q_-(x,c,T)
+  =
+  100D_x(T)
+  +
+  c\sum_{i=1}^{m}\alpha_iD_x(t_i),
+$$
+
+on one side of a schedule boundary, but
+
+$$
+Q_+(x,c,T)
+  =
+  100D_x(T)
+  +
+  c\sum_{i=1}^{m+1}\alpha_iD_x(t_i),
+$$
+
+on the other side. The exact QLNet schedules are more detailed than this toy
+formula because they include calendar adjustment and day-count conventions, but
+the lesson is the same: changing maturity can change which coupon cashflows
+exist. A global surrogate then has to approximate several local formulas with
+one smooth object.
 
 ## Why a dense tensor is impossible
 
@@ -297,22 +327,56 @@ This is not a clean-price versus dirty-price artifact. It is a product
 construction artifact: changing maturity changes the schedule that defines the
 future cashflows.
 
-The harness scans one-day windows around semiannual maturity regions. Dirty PV
-can look visually mild while the finite-difference slope jumps:
+The harness scans one-day windows around semiannual maturity regions. A price
+plot alone is not very instructive because dirty price can look visually mild.
+The stronger evidence is the one-day left and right slope diagnostic. For a
+one-day maturity step $\Delta$ and $\Delta_y \approx 1/365$, the reported
+slopes are
 
-![Maturity sensitivity near a semiannual schedule boundary](../images/fixed-rate-bond-maturity-sensitivity.svg)
+$$
+\mathrm{leftSlope}(T)
+  =
+  \frac{Q(T)-Q(T-\Delta)}{\Delta_y},
+\qquad
+\mathrm{rightSlope}(T)
+  =
+  \frac{Q(T+\Delta)-Q(T)}{\Delta_y}.
+$$
 
-Representative spike evidence:
+When these two slopes disagree sharply, the local derivative seen from the left
+does not match the local derivative seen from the right. That is exactly the
+kind of behavior a single global polynomial tends to smear.
 
-| Maturity date | Future cashflows | Second difference | Left slope/year | Right slope/year |
+Representative spike evidence from the dirty-price scan:
+
+| Maturity date | Scheduled future cashflow count | Second difference | Left slope/year | Right slope/year |
 | --- | ---: | ---: | ---: | ---: |
 | 2039-11-11 | 28 | `7.339039E-003` | `-2.650493E+000` | `2.825619E-002` |
 | 2040-11-10 | 30 | `7.191154E-003` | `-2.605554E+000` | `1.921722E-002` |
 | 2038-05-15 | 25 | `6.116018E-003` | `-1.953303E+000` | `2.790432E-001` |
 
-This is the practical meaning of piecewise smoothness here. Price may remain
-continuous enough to look benign, but slope and cross sensitivities are poor
-targets for one global polynomial surrogate.
+This is the practical meaning of piecewise smoothness here. The price level may
+remain close enough to look benign, but maturity sensitivity and
+coupon-maturity cross sensitivity expose the schedule transition. For a fixed
+schedule,
+
+$$
+Q(x,c,T)=P(x,T)+cA(x,T),
+$$
+
+so
+
+$$
+\frac{\partial^2 Q}{\partial c\,\partial T}
+  =
+  \frac{\partial A}{\partial T}.
+$$
+
+The annuity $A(x,T)$ is a sum over the generated coupon schedule. When that
+schedule changes, the coupon-maturity cross term is exactly where the
+discrete-coupon convention shows up. This is why the naive global models can
+miss maturity sensitivity and mixed risk even when a price-only chart looks
+less alarming.
 
 ## Trial 2: common compression and buckets
 
