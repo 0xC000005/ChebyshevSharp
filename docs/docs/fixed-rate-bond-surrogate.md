@@ -565,7 +565,7 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 | Max internal kernel dimension | 2 |
 | Validation points | 99 |
 | Build evaluations | 39,699 |
-| Measured scalar evaluation speedup, current harness | 9.1x |
+| Measured scalar evaluation speedup, current harness | about 9x |
 | BenchmarkDotNet scalar speedup vs QLNet | 7.6x |
 | BenchmarkDotNet all-pillar risk speedup vs finite-difference QLNet | 850.4x |
 | BenchmarkDotNet batch-32 scalar speedup vs QLNet | 7.1x |

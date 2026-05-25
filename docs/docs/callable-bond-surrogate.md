@@ -621,9 +621,9 @@ At event dates, the clone applies the same coupon and call ordering as QLNet.
 This is not a fitted Chebyshev model; it is a reference-semantics clone used to
 separate approximation failure from engine-semantics mismatch.
 
-| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
+| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: | ---: |
-| Reference-semantics tree clone | 2.84E-14 | 4.97E-14 | 0.00% | 3.2x |
+| Reference-semantics tree clone | 2.84E-14 | 4.97E-14 | 0.00% | about 2-3x |
 
 The clone proves that the 65D wrapper can be reproduced faithfully. The speedup
 is modest because this version still obtains the full DV01 ladder by exact
@@ -659,9 +659,9 @@ $$
 The result is fast, but it is still not strict enough to replace
 bump-and-reprice effective DV01:
 
-| Model | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
+| Model | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: |
-| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | 38.8x |
+| Smoothed lattice tangent DV01 | 9.51E-04 | 3.64% | about 22-31x |
 
 This is a useful failure. It shows that pathwise lattice risk and finite-bump
 risk are close but not identical near exercise boundaries.
@@ -707,26 +707,33 @@ The exact corrections replace the largest components of that complete ladder;
 the remaining components stay on the fast tangent estimate. The validation then
 compares the whole 60-vector against exact bump-and-reprice. In production
 terms, the hard-coded \(48\) is a research-harness choice. A governed risk
-implementation should choose the correction set by materiality, for example:
+implementation should choose the correction set by materiality. One concrete
+rule is to sort pillars by descending tangent magnitude,
+\(|t_{p_1}| \ge \cdots \ge |t_{p_{60}}|\), where
+\(t_p=\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_p\), then choose the
+smallest prefix whose uncorrected tangent mass is below a tolerance:
 
 $$
 I_\alpha
  =
+ \{p_1,\ldots,p_m\},
+\qquad
+m=
  \min\left\{
- I:
- \frac{\sum_{p\notin I}
- |\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_p|}
- {\sum_p |\widetilde{\mathrm{DV01}}^{\mathrm{tangent}}_p|}
+ q:
+ \frac{\sum_{p\notin \{p_1,\ldots,p_q\}}
+ |t_p|}
+ {\sum_p |t_p|}
  \le \alpha
- \right\},
+ \right\}.
 $$
 
-plus any mandatory reporting tenors. The system should fall back to exact
-full-ladder bump-and-reprice if the measured residual breaches tolerance.
+Then include any mandatory reporting tenors. The system should fall back to
+exact full-ladder bump-and-reprice if the measured residual breaches tolerance.
 
-| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Full-DV01 speedup |
+| Model | Max PV abs. error | Max full-DV01 component abs. error | Max full-DV01 L1 rel. error | Representative full-DV01 speedup |
 | --- | ---: | ---: | ---: | ---: |
-| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | 44.2x |
+| Reference-semantics tree hybrid DV01 | 2.84E-14 | 2.05E-04 | 0.31% | about 24-33x |
 
 This is the first callable-bond candidate that is faithful to the 65D public
 wrapper and operationally useful for the full key-rate ladder. A reduced
@@ -747,8 +754,8 @@ The first risk-acceptable clone is therefore not a blind tensor. It is a
 reference-semantics lattice clone with hybrid effective DV01. For the supported
 regular callable fixed-rate family, it preserves the 65D request wrapper,
 matches QLNet PV and scalar finite-difference Greeks to numerical noise, and
-computes the full 60-pillar DV01 ladder with sub-gate error and about 44x
-speedup in the local benchmark.
+computes the full 60-pillar DV01 ladder with sub-gate error and about 24-33x
+speedup in current local verifier runs.
 
 The remaining Chebyshev research direction should start from this engine-aware
 decomposition. Chebyshev continuation functions can still be tested as
