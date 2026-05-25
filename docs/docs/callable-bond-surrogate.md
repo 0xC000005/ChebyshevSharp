@@ -24,24 +24,32 @@ Callable bonds are a natural candidate for Chebyshev-style risk acceleration
 because the expensive part is repeated valuation of an early-exercise product.
 The issuer can call on scheduled dates, so the price is defined by backward
 induction through a rate lattice rather than by one deterministic cashflow sum.
-For fast present-value approximation alone, this is already a well-motivated
-research direction: Chebyshev interpolation has been developed for parametric
-option pricing, low-rank tensor formats have been used to extend it to
-high-dimensional parameter spaces, and dynamic Chebyshev methods have been
-studied for American and Bermudan-style exercise problems. MoCaX-style
-Chebyshev tensor work also targets repeated risk calculations and dynamic
-sensitivities. See [Citations](citations.md#finance-context) for the cited
-finance literature.
+For fast present-value approximation alone, this is already a documented
+research direction. The callable-bond-specific precedent is Glau, Pötz,
+Soloveitchik, and Wunderlich's *Efficient Valuation of Callable Bonds: The
+Dynamic Chebyshev Method*, which applies dynamic Chebyshev interpolation to
+callable-bond pricing. The surrounding finance literature develops Chebyshev
+interpolation for parametric option pricing, low-rank tensor formats for
+high-dimensional parameter spaces, and dynamic Chebyshev methods for American
+and Bermudan-style exercise problems. MoCaX-style Chebyshev tensor work also
+targets repeated risk calculations and dynamic sensitivities. See
+[Citations](citations.md#finance-context) for the cited finance literature.
 
-The acceptance target in this page is stricter than a fast PV demonstration.
-The goal is a request-level clone that preserves the full 65-dimensional input,
-including arbitrary 60-pillar curve bumps, and reproduces risk-manager
-quantities such as effective bump-and-reprice DV01. Near an exercise boundary,
-a small rate bump can change whether calling is optimal, so a smooth pathwise
-derivative and a finite bump-and-reprice sensitivity are not automatically the
-same object. That is why the study does extra work: it must reproduce the
-reference engine's exercise recursion and accelerate the full risk ladder, not
-only fit final prices.
+The acceptance target in this page asks for more than that known fast-PV use
+case. The goal is a request-level clone that preserves the full
+65-dimensional input, including arbitrary 60-pillar curve bumps, and
+reproduces risk-manager quantities such as effective bump-and-reprice DV01.
+Near an exercise boundary, a small rate bump can change whether calling is
+optimal, so a smooth pathwise derivative and a finite bump-and-reprice
+sensitivity are not automatically the same object. That is why the study does
+extra work: it must reproduce the reference engine's exercise recursion and
+accelerate the full risk ladder, not only fit final prices.
+
+In other words, this page is an extension beyond the common "fast price
+surface" exercise. The naive and factor trials show that fast PV can be
+achievable in restricted settings, but that is not enough for a risk system.
+The accepted candidate keeps the price clone accurate, then adds the machinery
+needed for full-ladder risk accuracy with measured speedup.
 
 ## Why Callable Bonds
 
