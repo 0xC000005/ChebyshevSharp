@@ -24,9 +24,14 @@ Callable bonds are a natural candidate for Chebyshev-style risk acceleration
 because the expensive part is repeated valuation of an early-exercise product.
 The issuer can call on scheduled dates, so the price is defined by backward
 induction through a rate lattice rather than by one deterministic cashflow sum.
-That structure matches the broad motivation in MoCaX-style Chebyshev tensor
-work and the dynamic Chebyshev literature for American and Bermudan options:
-amortize expensive repeated pricing by exploiting structure.
+For fast present-value approximation alone, this is already a well-motivated
+research direction: Chebyshev interpolation has been developed for parametric
+option pricing, low-rank tensor formats have been used to extend it to
+high-dimensional parameter spaces, and dynamic Chebyshev methods have been
+studied for American and Bermudan-style exercise problems. MoCaX-style
+Chebyshev tensor work also targets repeated risk calculations and dynamic
+sensitivities. See [Citations](citations.md#finance-context) for the cited
+finance literature.
 
 The acceptance target in this page is stricter than a fast PV demonstration.
 The goal is a request-level clone that preserves the full 65-dimensional input,
@@ -58,12 +63,12 @@ rate tree and the call schedule. That makes this example closer to the risk
 workloads where Chebyshev tensors are useful: the baseline call is expensive,
 and users need repeated PV and sensitivity evaluations across many scenarios.
 
-This is the same broad motivation as the Chebyshev-tensor finance literature
-and MoCaX-style risk-acceleration work: use structured approximation to
-amortize expensive repeated pricing and sensitivity calculations. It also
-connects to the dynamic Chebyshev literature for American and Bermudan options:
-early-exercise products should be treated through their continuation-value
-recursion, not only as one final black-box payoff surface.
+This is the same broad motivation as the Chebyshev-tensor finance literature:
+use structured approximation to amortize expensive repeated pricing and
+sensitivity calculations. It also connects to the dynamic Chebyshev literature
+for American and Bermudan options: early-exercise products should be treated
+through their continuation-value recursion, not only as one final black-box
+payoff surface.
 
 The extra work in this page comes from putting that literature into a
 request-level fixed-income clone. Many examples of approximation in finance can
