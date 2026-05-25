@@ -20,6 +20,20 @@ call dates, stubs, accrued-settlement effects, amortization, and exotic
 callability rules are outside the promoted scope and should route to the
 reference pricer or a separate validation harness.
 
+This case study should be read as a contrast with the fixed-rate bond case
+study. For the option-free bond, the successful method resolves the cashflow
+schedule first and uses Chebyshev only on smooth discount kernels. A callable
+bond has that cashflow layer too, but the hard part is different: the issuer
+has an early-exercise decision at call dates. The value is defined by backward
+induction through a rate lattice, and the risk manager's DV01 is usually an
+effective bump-and-reprice sensitivity through that exercise decision.
+
+That is why the final callable-bond answer is not simply "isolate the smooth
+discount factor and fit it." The study first tests that idea and other common
+compression methods, then shifts to the more important requirement: reproduce
+the reference engine's exercise recursion and accelerate the full risk ladder
+without changing the public 65-dimensional request.
+
 ## Why Callable Bonds
 
 The earlier fixed-rate bond case study is a useful correctness exercise, but an
@@ -40,13 +54,25 @@ rate tree and the call schedule. That makes this example closer to the risk
 workloads where Chebyshev tensors are useful: the baseline call is expensive,
 but users need repeated PV and sensitivity evaluations across many scenarios.
 
-This is the same broad motivation as the Chebyshev-tensor finance literature:
-use structured approximation to amortize expensive repeated risk calculations.
-The case study also borrows the dynamic-programming lesson from American and
-Bermudan option work: early-exercise products should be treated through their
-recursion, not only as one final black-box payoff surface. The concrete
-baseline and event ordering come from the QLNet/QuantLib callable-bond engine;
-see [Citations](citations.md) for the source links and papers.
+This is the same broad motivation as the Chebyshev-tensor finance literature
+and MoCaX-style risk-acceleration work: use structured approximation to
+amortize expensive repeated pricing and sensitivity calculations. It also
+connects to the dynamic Chebyshev literature for American and Bermudan options:
+early-exercise products should be treated through their continuation-value
+recursion, not only as one final black-box payoff surface.
+
+The extra work in this page comes from putting that literature into a
+request-level fixed-income clone. A factor or tensor surrogate can be fast on
+PV, but risk management asks for the full 60-pillar key-rate ladder and mixed
+sensitivities. Near an exercise boundary, a small rate bump can change whether
+calling is optimal, so a smooth pathwise derivative and a finite
+bump-and-reprice effective DV01 are not automatically the same object. The
+case study therefore has to validate engine semantics, exercise event ordering,
+and full-ladder residuals, not just final price error.
+
+The concrete baseline and event ordering come from the QLNet/QuantLib
+callable-bond engine; see [Citations](citations.md) for the source links and
+papers.
 
 ## Public Wrapper
 
