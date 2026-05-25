@@ -2,10 +2,10 @@
 title: Fixed-Rate Bond Surrogate Case Study
 ---
 
-# Can Chebyshev Models Clone a Fixed-Rate Bond Pricer?
+# Fixed-Rate Bond Surrogate Case Study
 
-This case study asks a practical question: can Chebyshev interpolation replace
-a fixed-rate bond pricing function while preserving price and risk
+This technical blog asks a practical question: can Chebyshev interpolation
+replace a fixed-rate bond pricing function while preserving price and risk
 sensitivities?
 
 The short answer is: not by blindly fitting one global high-dimensional tensor.
