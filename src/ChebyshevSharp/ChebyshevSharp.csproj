@@ -7,7 +7,7 @@
 
     <!-- NuGet package metadata -->
     <PackageId>ChebyshevSharp</PackageId>
-    <Version>0.13.3</Version>
+    <Version>0.13.4</Version>
     <PyChebyshevParity>0.21.1</PyChebyshevParity>
     <InformationalVersion>$(Version)+pychebyshev.$(PyChebyshevParity)</InformationalVersion>
     <Authors>Max</Authors>
@@ -20,7 +20,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>0.13.2</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>0.13.3</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

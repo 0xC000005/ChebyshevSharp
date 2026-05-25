@@ -101,7 +101,7 @@ public static class CallableNaiveSurrogateDiscovery
             ThreeNodeDenseGridCount: BigInteger.Pow(new BigInteger(3), CallableBondFullDimensionalWrapper.DimensionCount)
                 .ToString("N0"),
             DenseTensorConclusion:
-                "The dense tensor is too large to build; this phase uses full-input TT/Slider only as naive probes.");
+                "The dense tensor is too large to build; this example uses full-input TT/Slider only as naive probes.");
 
     private static IReadOnlyList<CallableValidationPoint> BuildValidationPoints(
         CallableBondFullDimensionalWrapper wrapper)

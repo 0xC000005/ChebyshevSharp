@@ -50,6 +50,9 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Ruiz, I. and Zeron, M. (2020). "Dynamic sensitivities and Initial Margin via Chebyshev Tensors." arXiv: [2011.04544](https://arxiv.org/abs/2011.04544).
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
+- Glau, K., Mahlstedt, M., and Pötz, C. (2019). "A New Approach for American Option Pricing: The Dynamic Chebyshev Method." *SIAM Journal on Scientific Computing*, 41(1), B153-B180. DOI: [10.1137/18M1193001](https://doi.org/10.1137/18M1193001); arXiv: [1806.05579](https://arxiv.org/abs/1806.05579).
+- Huang, J., Pang, T., and Zeng, Y. (2014). "Efficient pricing of Bermudan options using recombining quadratures." *Journal of Computational and Applied Mathematics*, 271, 195-205. DOI: [10.1016/j.cam.2014.04.007](https://doi.org/10.1016/j.cam.2014.04.007).
+- Rabitz, H., and Aliş, Ö. F. (1999). "General foundations of high-dimensional model representations." *Journal of Mathematical Chemistry*, 25, 197-233. DOI: [10.1023/A:1019188517934](https://doi.org/10.1023/A:1019188517934).
 
 ## Fixed-Income Baseline Libraries
 
@@ -57,7 +60,11 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - QLNet quick-start guide. Installation instructions for NuGet and source builds. [Quick-start](https://amaggiulli.github.io/QLNet/docs/quick-start-guide/).
 - QLNet `FixedRateBond` source. Public constructors for fixed-rate bonds with schedules, coupon rates, day counters, payment conventions, redemption, and issue dates. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/Bonds/FixedRateBond.cs).
 - QLNet `DiscountingBondEngine` source. Bond engine that discounts future bond cashflows with a `YieldTermStructure`. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Pricingengines/Bond/Discountingbondengine.cs).
-- QLNet callable-bond source. QLNet's C# implementation of `CallableFixedRateBond`, `Callability`, and `TreeCallableFixedRateBondEngine`. [Callable bonds source](https://github.com/amaggiulli/QLNet/tree/develop/src/QLNet/Experimental/CallableBonds).
+- QLNet callable-bond source. QLNet's C# implementation of `CallableFixedRateBond` and callable-bond arguments. [CallableBond.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/Bonds/CallableBond.cs).
+- QLNet callable tree engine source. Numerical lattice engine wiring for callable fixed-rate bonds. [TreeCallableBondEngine.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Pricingengines/Bond/TreeCallableBondEngine.cs).
+- QLNet discretized callable-bond source. Coupon/call event ordering and call-date snapping used by the tree engine. [DiscretizedCallableFixedRateBond.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/Bonds/DiscretizedCallableFixedRateBond.cs).
+- QLNet Hull-White source. One-factor Hull-White model and trinomial-tree fitting parameter implementation. [HullWhite.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Models/Shortrate/Onefactormodels/HullWhite.cs).
+- QLNet trinomial lattice source. Recombining tree and lattice rollback mechanics used by short-rate engines. [TrinomialTree.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Methods/lattices/TrinomialTree.cs).
 - QuantLib example. "CallableBonds.cpp." Reference example using `CallableFixedRateBond`, Hull-White, and a tree callable-bond engine. [Example source](https://codebrowser.dev/quantlib/quantlib/Examples/CallableBonds/CallableBonds.cpp.html).
 - RQuantLib documentation. `CallableBond` description using a Hull-White model and `TreeCallableFixedBondEngine`. [Documentation](https://www.rdocumentation.org/packages/RQuantLib/versions/0.4.26/topics/CallableBond).
 - QuantLib.js API. `TreeCallableFixedRateBondEngine` class documentation describing the numerical lattice engine for callable fixed-rate bonds. [API docs](https://quantlib.js.org/docs/classes/_ql_experimental_callablebonds_treecallablebondengine_.treecallablefixedratebondengine.html).
