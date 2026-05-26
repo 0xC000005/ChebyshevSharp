@@ -291,6 +291,15 @@ When these two slopes disagree sharply, the local derivative seen from the left
 does not match the local derivative seen from the right. That is exactly the
 kind of behavior a single global polynomial tends to smear.
 
+The economic intuition is that the cashflow moving with maturity changes at the
+boundary. Just before a semiannual coupon date, the final maturity cashflow
+contains principal plus an almost-full stub coupon. Extending maturity moves
+that almost-full coupon with the final payment date. Just after the boundary,
+that coupon has become a fixed scheduled payment at the coupon date. Extending
+maturity now moves only principal plus the new tiny stub coupon. The price
+level can connect smoothly, but the maturity slope can change because a full
+coupon stopped moving with the maturity coordinate.
+
 Representative spike evidence from the dirty-price scan:
 
 | Maturity date | Scheduled future cashflow count | Second difference | Left slope/year | Right slope/year |

@@ -187,6 +187,19 @@ post-coupon case this becomes
 ordering rules when a call date is snapped to a nearby coupon date, which is
 why later trials reproduce the reference event ordering explicitly.
 
+The node-level decision flow is:
+
+```mermaid
+flowchart TD
+    A["Next-step node values"] --> B["Discounted expected continuation value"]
+    B --> C{"Is this a call date?"}
+    C -- "No" --> D["Keep continuation value"]
+    C -- "Yes" --> E["Issuer applies min(call price, continuation)"]
+    D --> F["Apply coupon and event adjustments"]
+    E --> F
+    F --> G["Current node value"]
+```
+
 This `min` is the central difficulty. A small curve bump can change which side
 of the exercise boundary a node belongs to. A price surface can look accurate
 while the finite bump-and-reprice DV01 ladder is wrong, because the bumped
@@ -761,6 +774,16 @@ The lesson is deliberately conservative: preserve the call-decision engine
 exactly. The call/no-call boundary is the non-smooth part of the product. Trial
 11 and Trial 12 only try to speed up the repeated risk work built around that
 engine.
+
+The modelling path after Trial 10 is:
+
+```mermaid
+flowchart LR
+    A["Trial 10: exact reference-tree clone"] --> B["Lock down calibrated tree, event ordering, and call decisions"]
+    B --> C["Trial 11: propagate all-pillar tangent risk in one pass"]
+    C --> D["Trial 12: replace material tangent entries with exact bump-and-reprice corrections"]
+    D --> E["Fast full-ladder risk path with exact fallback"]
+```
 
 ## Trial 11: One-Pass Lattice Tangent Risk
 
