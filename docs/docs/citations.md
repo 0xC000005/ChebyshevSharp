@@ -50,15 +50,27 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Ruiz, I. and Zeron, M. (2020). "Dynamic sensitivities and Initial Margin via Chebyshev Tensors." arXiv: [2011.04544](https://arxiv.org/abs/2011.04544).
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
+- Longstaff, F. A. and Schwartz, E. S. (2001). "Valuing American Options by Simulation: A Simple Least-Squares Approach." *The Review of Financial Studies*, 14(1), 113-147. DOI: [10.1093/rfs/14.1.113](https://doi.org/10.1093/rfs/14.1.113); [UCLA PDF](https://www.anderson.ucla.edu/documents/areas/fac/finance/least_squares.pdf).
 - Glau, K., Mahlstedt, M., and Pötz, C. (2019). "A New Approach for American Option Pricing: The Dynamic Chebyshev Method." *SIAM Journal on Scientific Computing*, 41(1), B153-B180. DOI: [10.1137/18M1193001](https://doi.org/10.1137/18M1193001); arXiv: [1806.05579](https://arxiv.org/abs/1806.05579).
 - Glau, K., Pötz, C., Soloveitchik, M., and Wunderlich, L. (2021). "Efficient Valuation of Callable Bonds: The Dynamic Chebyshev Method." QuantMinds International presentation/article. [PDF](https://assets.informa.com/connectls/GLOBAL%20FINANCE/2021/QuantMinds%20Int%202021/CallableBondsQuantMinds2021_v1.pdf); [summary](https://informaconnect.com/efficient-valuation-of-callable-bonds-the-dynamic-chebyshev-method/).
 - Huang, J., Pang, T., and Zeng, Y. (2014). "Efficient pricing of Bermudan options using recombining quadratures." *Journal of Computational and Applied Mathematics*, 271, 195-205. DOI: [10.1016/j.cam.2014.04.007](https://doi.org/10.1016/j.cam.2014.04.007).
 - Rabitz, H., and Aliş, Ö. F. (1999). "General foundations of high-dimensional model representations." *Journal of Mathematical Chemistry*, 25, 197-233. DOI: [10.1023/A:1019188517934](https://doi.org/10.1023/A:1019188517934).
 
+## Reinforcement Learning and Dynamic Programming
+
+- Rao, A. (2020). "RL for Optimal Exercise of American Options." Stanford CME 241 lecture note. [PDF](https://web.stanford.edu/class/cme241/lecture_slides/LSPIAmericanOptions.pdf).
+- Rao, A. (2020). "Pricing American Options with Reinforcement Learning." Stanford RL for Finance notes. [PDF](https://web.stanford.edu/~ashlearn/RLForFinanceBook/AmericanOptionsRL.pdf).
+- Halperin, I. (2018). "QLBS: Q-Learner in the Black-Scholes(-Merton) Worlds." arXiv: [1712.04609](https://arxiv.org/abs/1712.04609).
+- QuantEcon. `ContinuousDPs.jl`, a Julia package for continuous-state dynamic programming examples and Bellman-collocation workflows. [Repository](https://github.com/QuantEcon/ContinuousDPs.jl).
+
 ## Fixed-Income Baseline Libraries
 
 - QLNet project. "QLNet C# Library." GitHub repository and documentation site. [Repository](https://github.com/amaggiulli/QLNet); [project site](https://amaggiulli.github.io/QLNet/).
 - QLNet quick-start guide. Installation instructions for NuGet and source builds. [Quick-start](https://amaggiulli.github.io/QLNet/docs/quick-start-guide/).
+- QLNet `VanillaOption` source. Vanilla option instrument used by the American-option case study. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/VanillaOption.cs).
+- QLNet finite-difference Black-Scholes vanilla engine source. Numerical engine used as the American-option reference pricer. [FdBlackScholesVanillaEngine.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Pricingengines/vanilla/FdBlackScholesVanillaEngine.cs).
+- QLNet binomial vanilla engine source. Cox-Ross-Rubinstein cross-check engine for American-option references. [BinomialEngine.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Pricingengines/vanilla/BinomialEngine.cs).
+- QuantLib documentation examples. American vanilla options with `AmericanExercise`, `FdBlackScholesVanillaEngine`, and binomial engines. [QuantLib repository](https://github.com/lballabio/QuantLib).
 - QLNet `FixedRateBond` source. Public constructors for fixed-rate bonds with schedules, coupon rates, day counters, payment conventions, redemption, and issue dates. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/Bonds/FixedRateBond.cs).
 - QLNet `DiscountingBondEngine` source. Bond engine that discounts future bond cashflows with a `YieldTermStructure`. [Source](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Pricingengines/Bond/Discountingbondengine.cs).
 - QLNet callable-bond source. QLNet's C# implementation of `CallableFixedRateBond` and callable-bond arguments. [CallableBond.cs](https://github.com/amaggiulli/QLNet/blob/develop/src/QLNet/Instruments/Bonds/CallableBond.cs).

@@ -10,6 +10,8 @@
       href: fixed-rate-bond-surrogate.md
     - name: Callable Bond Case Study
       href: callable-bond-surrogate.md
+    - name: American Option Case Study
+      href: american-option-dynamic-chebyshev.md
     - name: Which Class Should I Use?
       href: which-class.md
 

@@ -29,6 +29,7 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance-heavy
+dotnet run --project examples/AmericanOptionDynamicChebyshev/AmericanOptionDynamicChebyshev.csproj
 ```
 
 ## QuickStart
@@ -326,6 +327,26 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 For the full narrative, including the financial formula, trial rationale,
 failure evidence, acceleration economics, and current limitations, see the
 [Callable Bond Case Study](callable-bond-surrogate.md).
+
+## AmericanOptionDynamicChebyshev
+
+`examples/AmericanOptionDynamicChebyshev` demonstrates an optimal-stopping
+workflow for a one-factor American put. It uses QLNet as the finite-difference
+reference, then compares Longstaff-Schwartz regression, a Stanford-style LSPI
+reinforcement-learning baseline, and a Dynamic Chebyshev continuation-value
+solver:
+
+```bash
+dotnet run --project examples/AmericanOptionDynamicChebyshev/AmericanOptionDynamicChebyshev.csproj
+```
+
+The example is intentionally small and auditable. Its main lesson is to keep
+the exercise decision exact and approximate the smoother continuation value
+with Chebyshev interpolation. The output reports price, Delta, Gamma, build
+cost, online evaluation speed, and spot-grid errors against the QLNet reference.
+
+For the full narrative, see the
+[American Option Dynamic Chebyshev Case Study](american-option-dynamic-chebyshev.md).
 
 ## When to run them
 
