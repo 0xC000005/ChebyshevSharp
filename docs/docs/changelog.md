@@ -16,21 +16,30 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-06-02 — American option Dynamic Chebyshev case study
+
 ### Examples
 - Added `examples/AmericanOptionDynamicChebyshev`, a QLNet-backed American
   option case-study harness comparing finite-difference and binomial references,
   Longstaff-Schwartz regression simulation, Stanford-style LSPI, and a reusable
-  Dynamic Chebyshev continuation-value model.
+  Dynamic Chebyshev continuation-value model
+  ([#216](https://github.com/0xC000005/ChebyshevSharp/issues/216),
+  [#217](https://github.com/0xC000005/ChebyshevSharp/pull/217)).
 
 ### Tests
 - Added finance regression tests for the American-option QLNet reference
   pricer, Longstaff-Schwartz baseline, LSPI baseline, and Dynamic Chebyshev
-  solver.
+  solver
+  ([#217](https://github.com/0xC000005/ChebyshevSharp/pull/217)).
 
 ### Documentation
 - Added the American Option Dynamic Chebyshev case study with optimal-stopping
   formulas, continuation-value intuition, source-backed baseline discussion,
   reproducible commands, accuracy results, online speed evidence, and citations.
+
+### Release
+- Advanced package metadata to `0.14.0` and updated package validation to
+  compare this release against `0.13.4`.
 
 ## [0.13.4] - 2026-05-25 — Callable bond risk clone case study
 
