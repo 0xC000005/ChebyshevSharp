@@ -11,7 +11,7 @@ body:
     id: version
     attributes:
       label: ChebyshevSharp version
-      placeholder: "0.13.4"
+      placeholder: "0.14.0"
     validations:
       required: true
   - type: dropdown
