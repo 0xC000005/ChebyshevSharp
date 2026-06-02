@@ -38,8 +38,47 @@ public sealed class AmericanOptionRegressionMonteCarloTests
 
         Assert.True(double.IsFinite(result.Price));
         Assert.True(double.IsFinite(result.StandardError));
+        Assert.Equal(settings.PathCount, result.PathCount);
+        Assert.Equal(settings.ExerciseSteps, result.ExerciseSteps);
         Assert.InRange(Math.Abs(result.Price - reference.Price), 0.0, 0.75);
         Assert.True(result.ExercisedPathFraction > 0.0);
         Assert.True(result.ExercisedPathFraction < 1.0);
+    }
+
+    [Fact]
+    public void Longstaff_schwartz_handles_call_payoff_and_degenerate_regression()
+    {
+        var pricer = new LongstaffSchwartzAmericanOptionPricer();
+        var settings = new RegressionMonteCarloSettings(
+            PathCount: 3,
+            ExerciseSteps: 3,
+            Seed: 31415);
+        AmericanOptionRequest call = AmericanOptionScenarios.StandardCall(
+            spot: 110.0,
+            strike: 100.0,
+            volatility: 0.0);
+
+        RegressionMonteCarloResult result = pricer.Price(call, settings);
+
+        Assert.True(double.IsFinite(result.Price));
+        Assert.True(double.IsFinite(result.StandardError));
+        Assert.Equal(settings.PathCount, result.PathCount);
+        Assert.Equal(settings.ExerciseSteps, result.ExerciseSteps);
+    }
+
+    [Fact]
+    public void Longstaff_schwartz_rejects_invalid_inputs()
+    {
+        AmericanOptionRequest request = AmericanOptionScenarios.StandardPut();
+        var pricer = new LongstaffSchwartzAmericanOptionPricer();
+
+        Assert.Throws<ArgumentException>(() =>
+            pricer.Price(request with { MaturityDate = request.ValuationDate }, new RegressionMonteCarloSettings()));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            pricer.Price(request, new RegressionMonteCarloSettings(PathCount: 0)));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            pricer.Price(request, new RegressionMonteCarloSettings(ExerciseSteps: 0)));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            pricer.Price(request with { Right = (VanillaOptionRight)999 }, new RegressionMonteCarloSettings()));
     }
 }

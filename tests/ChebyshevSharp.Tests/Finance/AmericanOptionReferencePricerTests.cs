@@ -72,4 +72,33 @@ public sealed class AmericanOptionReferencePricerTests
         Assert.True(highSpot.Price < lowSpot.Price);
         Assert.True(highVolatility.Price > lowVolatility.Price);
     }
+
+    [Fact]
+    public void Reference_pricer_rejects_invalid_inputs()
+    {
+        AmericanOptionRequest request = AmericanOptionScenarios.StandardPut();
+
+        Assert.Throws<ArgumentException>(() =>
+            Pricer.Price(request with { MaturityDate = request.ValuationDate }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { Spot = 0.0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { Strike = 0.0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { RiskFreeRate = double.NaN }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { DividendYield = double.PositiveInfinity }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { Volatility = 0.0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { TimeSteps = 0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { GridPoints = 0 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { SpotBump = request.Spot }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { Right = (VanillaOptionRight)999 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Pricer.Price(request with { Engine = (AmericanOptionReferenceEngine)999 }));
+    }
 }
