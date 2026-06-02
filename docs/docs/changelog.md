@@ -16,6 +16,22 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Examples
+- Added `examples/AmericanOptionDynamicChebyshev`, a QLNet-backed American
+  option case-study harness comparing finite-difference and binomial references,
+  Longstaff-Schwartz regression simulation, Stanford-style LSPI, and a reusable
+  Dynamic Chebyshev continuation-value model.
+
+### Tests
+- Added finance regression tests for the American-option QLNet reference
+  pricer, Longstaff-Schwartz baseline, LSPI baseline, and Dynamic Chebyshev
+  solver.
+
+### Documentation
+- Added the American Option Dynamic Chebyshev case study with optimal-stopping
+  formulas, continuation-value intuition, source-backed baseline discussion,
+  reproducible commands, accuracy results, online speed evidence, and citations.
+
 ## [0.13.4] - 2026-05-25 — Callable bond risk clone case study
 
 ### Documentation

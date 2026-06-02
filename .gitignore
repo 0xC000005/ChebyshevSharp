@@ -498,6 +498,9 @@ main.py
 # git worktrees
 .worktrees/
 
+# Internal research artifacts and uploaded source material
+.research/
+
 # Local agent notes and scratch instructions
 AGENTS.md
 agents.md

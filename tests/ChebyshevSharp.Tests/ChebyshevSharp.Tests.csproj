@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\src\ChebyshevSharp\ChebyshevSharp.csproj" />
     <ProjectReference Include="..\..\examples\FixedRateBondSurrogate\FixedRateBondSurrogate.csproj" />
     <ProjectReference Include="..\..\examples\CallableBondSurrogate\CallableBondSurrogate.csproj" />
+    <ProjectReference Include="..\..\examples\AmericanOptionDynamicChebyshev\AmericanOptionDynamicChebyshev.csproj" />
   </ItemGroup>
 
   <ItemGroup>
