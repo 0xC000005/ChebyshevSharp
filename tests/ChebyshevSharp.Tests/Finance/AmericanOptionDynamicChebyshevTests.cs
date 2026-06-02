@@ -102,6 +102,30 @@ public sealed class AmericanOptionDynamicChebyshevTests
     }
 
     [Fact]
+    public void Dynamic_chebyshev_bellman_expectation_matches_black_scholes_first_moment()
+    {
+        MethodInfo method = typeof(DynamicChebyshevAmericanOptionPricer)
+            .GetMethod("ContinuationValue", BindingFlags.Static | BindingFlags.NonPublic)!;
+        double spot = 100.0;
+        double riskFreeRate = 0.05;
+        double dividendYield = 0.02;
+        double volatility = 0.20;
+        double dt = 1.0 / 80.0;
+        double discount = Math.Exp(-riskFreeRate * dt);
+        double drift = (riskFreeRate - dividendYield - 0.5 * volatility * volatility) * dt;
+        double diffusion = volatility * Math.Sqrt(dt);
+
+        double continuation = (double)method.Invoke(
+            null,
+            [spot, drift, diffusion, discount, (Func<double, double>)(nextSpot => nextSpot)])!;
+
+        // For nextValue(S') = S', the Bellman expectation is
+        // e^{-r dt} E[S'] = S e^{-q dt} under risk-neutral GBM.
+        double expected = spot * Math.Exp(-dividendYield * dt);
+        Assert.InRange(Math.Abs(continuation - expected), 0.0, 1e-12);
+    }
+
+    [Fact]
     public void Dynamic_chebyshev_rejects_invalid_inputs()
     {
         AmericanOptionRequest request = AmericanOptionScenarios.StandardPut();
