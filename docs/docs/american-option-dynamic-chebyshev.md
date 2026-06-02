@@ -126,6 +126,32 @@ The baseline is checked before any surrogate is trusted:
 Those tests keep this tutorial from quietly benchmarking against a broken
 home-grown pricer.
 
+## What was parity checked
+
+The American-option numerical oracle is QLNet, not the Chebyshev model itself.
+The finite-difference engine supplies the reference price and bumped Greeks,
+while the high-step binomial engine is an independent cross-check for the same
+Black-Scholes product.
+
+QuantEcon's `ContinuousDPs.jl` was used differently. It is a useful public
+reference for continuous-state Bellman-equation collocation workflows, but it
+solves infinite-horizon continuous-state/control examples rather than this
+finite-horizon stopping problem. For that reason, this case study does not claim
+direct American-option price parity against `ContinuousDPs.jl`.
+
+Instead, the comparable layer is the Bellman expectation operator. The test
+suite checks the risk-neutral first-moment identity used inside the Dynamic
+Chebyshev continuation builder:
+
+$$
+e^{-r\Delta t}\mathbb{E}[S_{i+1}\mid S_i=S]
+  =
+S e^{-q\Delta t}.
+$$
+
+That verifies the transition-and-discount step shared by Bellman-collocation
+methods before the American-option-specific stopping rule is applied.
+
 ## Baseline 1: Longstaff-Schwartz regression
 
 Longstaff and Schwartz estimate continuation by simulation and regression. The

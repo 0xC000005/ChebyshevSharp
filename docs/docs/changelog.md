@@ -16,6 +16,16 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Documentation
+- Clarified that the American-option case study uses QLNet finite difference
+  and binomial engines as the numerical oracle, while QuantEcon
+  `ContinuousDPs.jl` is a Bellman-collocation workflow reference rather than a
+  direct American-option parity oracle.
+
+### Tests
+- Added a Dynamic Chebyshev Bellman expectation regression test for the
+  Black-Scholes risk-neutral first-moment identity.
+
 ## [0.14.0] - 2026-06-02 — American option Dynamic Chebyshev case study
 
 ### Examples
