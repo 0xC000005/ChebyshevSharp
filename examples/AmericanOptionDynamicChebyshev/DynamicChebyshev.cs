@@ -49,19 +49,28 @@ public sealed class DynamicChebyshevAmericanOptionModel
 
     public double BuildTimeSeconds { get; }
 
-    public DynamicChebyshevEvaluation Evaluate(double spot)
+    public double Payoff(double spot)
     {
-        if (spot < _settings.SpotLower || spot > _settings.SpotUpper)
-        {
-            throw new ArgumentOutOfRangeException(nameof(spot), "Spot must be inside the Dynamic Chebyshev spot domain.");
-        }
+        ValidateSpot(spot);
+        return DynamicChebyshevAmericanOptionPricer.Payoff(_request, spot);
+    }
 
-        double payoff = DynamicChebyshevAmericanOptionPricer.Payoff(_request, spot);
-        double continuationAtSpot = DynamicChebyshevAmericanOptionPricer.EvaluateApproximation(
+    public double Continuation(double spot)
+    {
+        ValidateSpot(spot);
+        return DynamicChebyshevAmericanOptionPricer.EvaluateApproximation(
             _firstContinuation,
             spot,
             _settings,
             derivativeOrder: 0);
+    }
+
+    public DynamicChebyshevEvaluation Evaluate(double spot)
+    {
+        ValidateSpot(spot);
+
+        double payoff = Payoff(spot);
+        double continuationAtSpot = Continuation(spot);
         bool continueAtSpot = continuationAtSpot >= payoff;
 
         double price = Math.Max(payoff, continuationAtSpot);
@@ -81,6 +90,14 @@ public sealed class DynamicChebyshevAmericanOptionModel
             : 0.0;
 
         return new DynamicChebyshevEvaluation(price, delta, gamma);
+    }
+
+    private void ValidateSpot(double spot)
+    {
+        if (spot < _settings.SpotLower || spot > _settings.SpotUpper)
+        {
+            throw new ArgumentOutOfRangeException(nameof(spot), "Spot must be inside the Dynamic Chebyshev spot domain.");
+        }
     }
 }
 

@@ -32,6 +32,7 @@ ChebyshevSharp builds reusable polynomial surrogates for smooth multi-dimensiona
 | **Piecewise splines** | `ChebyshevSpline` — place knots at singularities for spectral convergence on each piece |
 | **Sliding technique** | `ChebyshevSlider` — partition dimensions into groups for high-dimensional approximation |
 | **Tensor Train interpolation** | `ChebyshevTT` — approximate high-dimensional coupled functions without materializing the dense grid |
+| **Dynamic programming** | `ChebyshevSharp.DynamicProgramming` — finite-horizon continuous-state Bellman collocation with discrete action grids |
 | **Algebra** | Combine interpolants via `+`, `-`, `*`, `/` |
 | **Extrusion & slicing** | Add or fix dimensions for portfolio aggregation |
 | **Spectral calculus** | Integration (Fejer-1), root-finding (colleague matrix), minimization, maximization |
@@ -82,6 +83,7 @@ Runnable example projects are available in `examples/`:
 ```bash
 dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
+dotnet run --project examples/ContinuousStateDynamicProgramming/ContinuousStateDynamicProgramming.csproj
 ```
 
 The examples print accuracy checks against the original function so you can
@@ -95,6 +97,7 @@ verify the local build and see how dense and TT-Cross workflows differ.
 | `ChebyshevSpline` | Functions with discontinuities or singularities | pieces $\times \prod_i n_i$ |
 | `ChebyshevSlider` | High-dimensional, additively separable functions | $\sum_g \prod_{i \in g} n_i$ |
 | `ChebyshevTT` | High-dimensional functions with general coupling | $O(d \cdot n \cdot r^2)$ for TT-Cross |
+| `FiniteHorizonBellmanSolver` | One-dimensional continuous-state Bellman problems with a discrete action grid | steps $\times$ actions $\times$ nodes |
 
 ## Example: Option Pricing
 
@@ -132,6 +135,7 @@ double[] results = cheb.VectorizedEvalMulti(
 | `ChebyshevSpline` | Piecewise interpolation with knots, algebra, calculus, serialization, and automatic knot helpers |
 | `ChebyshevSlider` | Partitioned high-dimensional approximation with parallel build, progress reporting, and sensitivity diagnostics |
 | `ChebyshevTT` | Tensor Train build/eval, finite-difference derivatives, integration, roots, optimization, algebra, slicing/extrusion, reordering, and guarded dense materialization |
+| `ChebyshevSharp.DynamicProgramming` | Finite-horizon Bellman collocation for continuous-state, discrete-action problems |
 | Validation | xUnit regression suite, deterministic FsCheck properties, Codecov patch gate, package validation, DocFX build, and scheduled/manual mutation testing |
 
 See the [changelog](https://0xc000005.github.io/ChebyshevSharp/docs/changelog.html) for release-by-release changes, fixes, and validation notes.
@@ -146,6 +150,7 @@ Full documentation is available at **[0xc000005.github.io/ChebyshevSharp](https:
 - [Piecewise Chebyshev (Splines)](https://0xc000005.github.io/ChebyshevSharp/docs/spline.html)
 - [Sliding Technique](https://0xc000005.github.io/ChebyshevSharp/docs/slider.html)
 - [Tensor Train](https://0xc000005.github.io/ChebyshevSharp/docs/tensor-train.html)
+- [Continuous-State Dynamic Programming](https://0xc000005.github.io/ChebyshevSharp/docs/continuous-state-dynamic-programming.html)
 - [Computing Greeks](https://0xc000005.github.io/ChebyshevSharp/docs/greeks.html)
 - [Chebyshev Algebra](https://0xc000005.github.io/ChebyshevSharp/docs/algebra.html)
 - [Advanced Usage](https://0xc000005.github.io/ChebyshevSharp/docs/advanced-usage.html)

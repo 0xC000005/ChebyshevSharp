@@ -29,6 +29,7 @@ dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --structured-alternatives
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance
 dotnet run --project examples/CallableBondSurrogate/CallableBondSurrogate.csproj -- --risk-acceptance-heavy
+dotnet run --project examples/ContinuousStateDynamicProgramming/ContinuousStateDynamicProgramming.csproj
 dotnet run --project examples/AmericanOptionDynamicChebyshev/AmericanOptionDynamicChebyshev.csproj
 ```
 
@@ -347,6 +348,26 @@ cost, online evaluation speed, and spot-grid errors against the QLNet reference.
 
 For the full narrative, see the
 [American Option Dynamic Chebyshev Case Study](american-option-dynamic-chebyshev.md).
+For the reusable implementation pattern, see
+[Continuous-State Dynamic Programming](continuous-state-dynamic-programming.md).
+
+## ContinuousStateDynamicProgramming
+
+`examples/ContinuousStateDynamicProgramming` demonstrates the generic
+finite-horizon Bellman-collocation API in `ChebyshevSharp.DynamicProgramming`.
+It runs two non-option examples:
+
+1. dynamic asset allocation, with wealth as the continuous state and risky
+   weight as a discrete action grid;
+2. stochastic growth, with capital as the continuous state and savings rate as
+   a discrete action grid.
+
+```bash
+dotnet run --project examples/ContinuousStateDynamicProgramming/ContinuousStateDynamicProgramming.csproj
+```
+
+Use this example when learning the generic dynamic-programming layer before
+adapting the finance-specific American option case study.
 
 ## When to run them
 

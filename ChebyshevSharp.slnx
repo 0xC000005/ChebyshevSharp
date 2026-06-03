@@ -14,6 +14,7 @@
     <Project Path="examples/TensorTrainHighDim/TensorTrainHighDim.csproj" />
     <Project Path="examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj" />
     <Project Path="examples/CallableBondSurrogate/CallableBondSurrogate.csproj" />
+    <Project Path="examples/ContinuousStateDynamicProgramming/ContinuousStateDynamicProgramming.csproj" />
     <Project Path="examples/AmericanOptionDynamicChebyshev/AmericanOptionDynamicChebyshev.csproj" />
   </Folder>
 </Solution>

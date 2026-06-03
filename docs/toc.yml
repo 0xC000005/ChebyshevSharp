@@ -1,13 +1,9 @@
-- name: Home
-  href: index.md
-- name: User Guide
+- name: Docs
   href: docs/
-- name: API Reference
+- name: API
   href: api/
   homepage: api/ChebyshevSharp.yml
 - name: Release Notes
   href: docs/changelog.md
-- name: Project
-  href: docs/project.md
-- name: GitHub Repo
+- name: GitHub
   href: https://github.com/0xC000005/ChebyshevSharp
