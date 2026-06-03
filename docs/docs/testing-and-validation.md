@@ -24,6 +24,7 @@ dotnet run --project examples/QuickStart/QuickStart.csproj
 dotnet run --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
 dotnet run --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
 dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
+dotnet run --project examples/ContinuousStateDynamicProgramming/ContinuousStateDynamicProgramming.csproj
 ```
 
 The [Examples](examples.md) page explains what each project is meant to validate

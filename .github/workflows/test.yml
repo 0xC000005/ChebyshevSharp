@@ -38,6 +38,7 @@ jobs:
           dotnet run --configuration Release --no-build --project examples/SliderPartitionValidation/SliderPartitionValidation.csproj
           dotnet run --configuration Release --no-build --project examples/TensorTrainHighDim/TensorTrainHighDim.csproj
           dotnet run --configuration Release --no-build --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.csproj
+          dotnet run --configuration Release --no-build --project examples/ContinuousStateDynamicProgramming/ContinuousStateDynamicProgramming.csproj
 
       - name: Pack with package validation
         run: dotnet pack src/ChebyshevSharp --configuration Release --no-build --output artifacts/packages

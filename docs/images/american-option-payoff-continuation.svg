@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="430" viewBox="0 0 760 430" role="img" aria-labelledby="title desc">
+  <title id="title">American put payoff and continuation boundary</title>
+  <desc id="desc">A plot of payoff h(S) and continuation C(S) for spot values from 70 to 110. The curves cross near spot 81.86.</desc>
+  <rect width="760" height="430" fill="#ffffff"/>
+  <line x1="70" y1="350" x2="650" y2="350" stroke="#1f2937" stroke-width="1.5"/>
+  <line x1="70" y1="50" x2="70" y2="350" stroke="#1f2937" stroke-width="1.5"/>
+  <g fill="#374151" font-family="Arial, sans-serif" font-size="12">
+    <text x="345" y="400">Spot S</text>
+    <text x="14" y="43">Value</text>
+    <text x="58" y="354" text-anchor="end">0</text>
+    <text x="58" y="260" text-anchor="end">10</text>
+    <text x="58" y="166" text-anchor="end">20</text>
+    <text x="58" y="72" text-anchor="end">30</text>
+    <text x="70" y="374" text-anchor="middle">70</text>
+    <text x="208" y="374" text-anchor="middle">80</text>
+    <text x="345" y="374" text-anchor="middle">90</text>
+    <text x="483" y="374" text-anchor="middle">100</text>
+    <text x="620" y="374" text-anchor="middle">110</text>
+  </g>
+  <g stroke="#e5e7eb" stroke-width="1">
+    <line x1="70" y1="256" x2="650" y2="256"/>
+    <line x1="70" y1="162" x2="650" y2="162"/>
+    <line x1="70" y1="69" x2="650" y2="69"/>
+    <line x1="208" y1="50" x2="208" y2="350"/>
+    <line x1="345" y1="50" x2="345" y2="350"/>
+    <line x1="483" y1="50" x2="483" y2="350"/>
+    <line x1="620" y1="50" x2="620" y2="350"/>
+  </g>
+  <polyline fill="none" stroke="#2563eb" stroke-width="3" points="
+    70,69
+    139,116
+    208,163
+    235,181
+    290,219
+    345,256
+    400,294
+    455,331
+    510,350
+    565,350
+    620,350"/>
+  <polyline fill="none" stroke="#dc2626" stroke-width="3" points="
+    70,70
+    139,116
+    208,164
+    235,181
+    290,214
+    345,242
+    400,266
+    455,285
+    510,300
+    565,312
+    620,322"/>
+  <line x1="233" y1="50" x2="233" y2="350" stroke="#111827" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <circle cx="233" cy="180" r="4" fill="#111827"/>
+  <g font-family="Arial, sans-serif" font-size="13">
+    <rect x="472" y="74" width="202" height="82" rx="6" fill="#ffffff" stroke="#d1d5db"/>
+    <line x1="488" y1="96" x2="530" y2="96" stroke="#2563eb" stroke-width="3"/>
+    <text x="540" y="101" fill="#111827">payoff h(S)</text>
+    <line x1="488" y1="124" x2="530" y2="124" stroke="#dc2626" stroke-width="3"/>
+    <text x="540" y="129" fill="#111827">continuation C(S)</text>
+    <line x1="488" y1="145" x2="530" y2="145" stroke="#111827" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="540" y="150" fill="#111827">boundary ~81.86</text>
+  </g>
+  <g fill="#111827" font-family="Arial, sans-serif" font-size="12">
+    <text x="86" y="91">exercise</text>
+    <text x="256" y="91">continue</text>
+  </g>
+</svg>

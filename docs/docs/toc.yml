@@ -1,5 +1,7 @@
 - name: Tutorials
   items:
+    - name: Tutorial Overview
+      href: tutorials.md
     - name: Introduction
       href: introduction.md
     - name: Getting Started
@@ -28,6 +30,8 @@
 
 - name: How-To Guides
   items:
+    - name: How-To Overview
+      href: how-to.md
     - name: Pre-computed Values
       href: from-values.md
     - name: Error-Driven Construction
@@ -42,6 +46,8 @@
       href: slider.md
     - name: Tensor Train
       href: tensor-train.md
+    - name: Continuous-State DP
+      href: continuous-state-dynamic-programming.md
     - name: Computing Greeks
       href: greeks.md
     - name: Calculus
@@ -59,6 +65,8 @@
 
 - name: Reference
   items:
+    - name: Reference Overview
+      href: reference.md
     - name: Ergonomics
       href: ergonomics.md
     - name: Portable Binary Format (.pcb)

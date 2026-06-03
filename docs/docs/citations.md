@@ -48,6 +48,7 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Ruiz, I. and Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View*. Wiley Finance. ISBN: [978-1-119-79138-6](https://www.wiley-vch.de/en/areas-interest/finance-economics-law/machine-learning-for-risk-calculations-978-1-119-79138-6).
 - MoCaX Intelligence. "Research & Resources." Public resources on Chebyshev tensors, tensor extension algorithms, and risk-calculation acceleration. [Research resources](https://mocaxintelligence.com/research-resources/).
 - Ruiz, I. and Zeron, M. (2020). "Dynamic sensitivities and Initial Margin via Chebyshev Tensors." arXiv: [2011.04544](https://arxiv.org/abs/2011.04544).
+- Zeron, M. and Ruiz, I. (2021). "Tensoring Dynamic Sensitivities and Dynamic Initial Margin." *Risk Magazine*, Cutting Edge. [PDF](https://mocaxintelligence.com/wp-content/uploads/2025/03/DIM_Chebyhsev_Risk_reviewed_short_final.pdf).
 - Gaß, M., Glau, K., Mahlstedt, M., and Mair, M. (2018). "Chebyshev Interpolation for Parametric Option Pricing." *Finance and Stochastics*, 22, 701-731. DOI: [10.1007/s00780-018-0361-y](https://doi.org/10.1007/s00780-018-0361-y).
 - Glau, K., Kressner, D., and Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv: [1902.04367](https://arxiv.org/abs/1902.04367).
 - Longstaff, F. A. and Schwartz, E. S. (2001). "Valuing American Options by Simulation: A Simple Least-Squares Approach." *The Review of Financial Studies*, 14(1), 113-147. DOI: [10.1093/rfs/14.1.113](https://doi.org/10.1093/rfs/14.1.113); [UCLA PDF](https://www.anderson.ucla.edu/documents/areas/fac/finance/least_squares.pdf).
@@ -55,13 +56,21 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 - Glau, K., Pötz, C., Soloveitchik, M., and Wunderlich, L. (2021). "Efficient Valuation of Callable Bonds: The Dynamic Chebyshev Method." QuantMinds International presentation/article. [PDF](https://assets.informa.com/connectls/GLOBAL%20FINANCE/2021/QuantMinds%20Int%202021/CallableBondsQuantMinds2021_v1.pdf); [summary](https://informaconnect.com/efficient-valuation-of-callable-bonds-the-dynamic-chebyshev-method/).
 - Huang, J., Pang, T., and Zeng, Y. (2014). "Efficient pricing of Bermudan options using recombining quadratures." *Journal of Computational and Applied Mathematics*, 271, 195-205. DOI: [10.1016/j.cam.2014.04.007](https://doi.org/10.1016/j.cam.2014.04.007).
 - Rabitz, H., and Aliş, Ö. F. (1999). "General foundations of high-dimensional model representations." *Journal of Mathematical Chemistry*, 25, 197-233. DOI: [10.1023/A:1019188517934](https://doi.org/10.1023/A:1019188517934).
+- Kan, K. H. (2010). *Simulation-based Valuation and Counterparty Exposure Estimation of American Options*. PhD thesis, The University of Western Ontario. [Repository record](https://ir.lib.uwo.ca/etd/52/).
 
 ## Reinforcement Learning and Dynamic Programming
 
+- Miranda, M. J. and Fackler, P. L. (2002). *Applied Computational Economics and Finance*. MIT Press. [Publisher page](https://mitpress.mit.edu/9780262633093/applied-computational-economics-and-finance/).
+- Lagoudakis, M. G. and Parr, R. (2003). "Least-Squares Policy Iteration." *Journal of Machine Learning Research*, 4, 1107-1149. [JMLR page](https://jmlr.org/papers/v4/lagoudakis03a.html).
 - Rao, A. (2020). "RL for Optimal Exercise of American Options." Stanford CME 241 lecture note. [PDF](https://web.stanford.edu/class/cme241/lecture_slides/LSPIAmericanOptions.pdf).
 - Rao, A. (2020). "Pricing American Options with Reinforcement Learning." Stanford RL for Finance notes. [PDF](https://web.stanford.edu/~ashlearn/RLForFinanceBook/AmericanOptionsRL.pdf).
 - Halperin, I. (2018). "QLBS: Q-Learner in the Black-Scholes(-Merton) Worlds." arXiv: [1712.04609](https://arxiv.org/abs/1712.04609).
 - QuantEcon. `ContinuousDPs.jl`, a Julia package for continuous-state dynamic programming examples and Bellman-collocation workflows. [Repository](https://github.com/QuantEcon/ContinuousDPs.jl).
+- Perla, J., Sargent, T. J., and Stachurski, J. "Optimal Growth I: The Stochastic Optimal Growth Model." *Quantitative Economics with Julia*. [Lecture](https://julia.quantecon.org/dynamic_programming/optgrowth.html).
+- Perla, J., Sargent, T. J., and Stachurski, J. "Optimal Growth II: Time Iteration." *Quantitative Economics with Julia*. [Lecture](https://julia.quantecon.org/dynamic_programming/coleman_policy_iter.html).
+- Pascal, J. (2017). "Solving Bellman Equations by the Collocation Method." [Blog post](https://julienpascal.github.io/post/collocation/).
+- CVXPortfolio project. Portfolio optimization documentation organized around policies, objective terms, constraints, and simulators. [Documentation](https://www.cvxportfolio.com/en/stable/).
+- PyPortfolioOpt project. Portfolio optimization documentation organized around expected returns, risk models, objective functions, and optimizers. [Documentation](https://pyportfolioopt.readthedocs.io/en/latest/).
 
 ## Fixed-Income Baseline Libraries
 

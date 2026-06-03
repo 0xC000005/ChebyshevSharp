@@ -16,15 +16,46 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-06-03 — Continuous-state dynamic programming
+
+### Added
+- Added `ChebyshevSharp.DynamicProgramming`, a finite-horizon continuous-state
+  Bellman-collocation API for one-dimensional state problems with discrete
+  action grids.
+
+### Examples
+- Added `examples/ContinuousStateDynamicProgramming`, covering dynamic asset
+  allocation and stochastic growth as non-option examples of the generic
+  Bellman-collocation API.
+
 ### Documentation
 - Clarified that the American-option case study uses QLNet finite difference
   and binomial engines as the numerical oracle, while QuantEcon
   `ContinuousDPs.jl` is a Bellman-collocation workflow reference rather than a
   direct American-option parity oracle.
+- Added a Continuous-State Dynamic Programming how-to guide that presents the
+  generic API before the finance-specific American-option case study and cites
+  QuantEcon, `ContinuousDPs.jl`, CVXPortfolio, and PyPortfolioOpt as related
+  documentation patterns.
+- Reworked the documentation landing page as a reader-oriented hub with direct
+  paths for tutorials, how-to guides, concepts, reference, common workflows, and
+  case studies.
+- Simplified the top navigation to `Docs`, `API`, `Release Notes`, and `GitHub`
+  while keeping tutorial, how-to, concept, and reference landing pages available
+  inside the documentation tree.
+- Added the documentation math template used by the American-option tutorial so
+  LaTeX formulas render consistently in the DocFX site.
 
 ### Tests
 - Added a Dynamic Chebyshev Bellman expectation regression test for the
   Black-Scholes risk-neutral first-moment identity.
+- Added regression tests for the generic finite-horizon Bellman solver, dynamic
+  asset-allocation example pattern, stochastic-growth example pattern, input
+  validation, and out-of-domain model evaluation.
+
+### CI
+- Added the continuous-state dynamic-programming console example to the
+  validation workflow's runnable example gate.
 
 ## [0.14.0] - 2026-06-02 — American option Dynamic Chebyshev case study
 
