@@ -501,6 +501,9 @@ main.py
 # Internal research artifacts and uploaded source material
 .research/
 
+# Imported Claude.ai conversation transcripts (research source material)
+longstaff-schwartz-american-options-conversation.md
+
 # Local agent notes and scratch instructions
 AGENTS.md
 agents.md

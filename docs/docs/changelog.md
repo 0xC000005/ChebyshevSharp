@@ -17,6 +17,13 @@ how-to guides, and API reference.
 ## [Unreleased]
 
 ### Documentation
+- Added a conceptual primer, "From MDPs to Chebyshev Collocation," that builds the
+  general-to-specific path — infinite-horizon MDPs and value/policy iteration, the move to
+  finite-horizon continuous-state problems, the four ways to represent a value function (basis
+  functions, regression, neural networks, discretisation), and a finite-difference vs
+  Chebyshev-collocation comparison including the compute-once transition-kernel derivation — and
+  cross-links it from the American-option case study. Adds foundational MDP / dynamic-programming /
+  optimal-stopping references (Bellman, Bertsekas, Puterman, Sutton & Barto, Judd, Becker-Cheridito-Jentzen).
 - Corrected documentation citations: fixed the author list of the Bermudan
   recombining-quadratures reference (Lim, Lee & Kim 2014), the Goreinov–Tyrtyshnikov
   2001 page range (47–51), and the Halperin QLBS year (2017); and added
