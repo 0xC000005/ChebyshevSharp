@@ -16,6 +16,8 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-06-05 — Documentation: case-study DP-lecture trim
+
 ### Documentation
 - Trimmed the American-option case study's embedded continuous-state dynamic-programming
   lecture (~400 lines of general MDP / Bellman / value-and-policy-iteration / collocation
