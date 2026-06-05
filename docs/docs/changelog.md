@@ -16,6 +16,8 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-06-05 — Documentation: MDPs-to-collocation primer and citation fixes
+
 ### Documentation
 - Added a conceptual primer, "From MDPs to Chebyshev Collocation," that builds the
   general-to-specific path — infinite-horizon MDPs and value/policy iteration, the move to
