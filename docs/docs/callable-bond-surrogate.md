@@ -770,6 +770,13 @@ clean correctness baseline: exact cloned-tree PV plus exact cloned-tree
 all-pillar DV01. The speedup is modest because full central-difference DV01
 still means 120 exact reprices for 60 pillars.
 
+> **Benchmark scope.** The "representative full-DV01 speedup" figures in this and
+> the following trials are single wall-clock runs (one warm-up, one timed call)
+> on a development machine, not averaged benchmarks — treat the magnitudes as
+> indicative and machine-dependent. The PV and DV01 *error* figures are
+> deterministic. See [Performance](performance.md) for the reference rig and
+> methodology.
+
 The lesson is deliberately conservative: preserve the call-decision engine
 exactly. The call/no-call boundary is the non-smooth part of the product. Trial
 11 and Trial 12 only try to speed up the repeated risk work built around that

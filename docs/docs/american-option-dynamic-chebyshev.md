@@ -24,6 +24,17 @@ in Dynamic Chebyshev methods for American-style products: isolate the
 conditional expectation, approximate it accurately, then apply the exercise
 rule outside the interpolant.
 
+> **Scope of the "Dynamic Chebyshev" name.** The term follows Glau, Mahlstedt &
+> Pötz (2019). This case study implements that *idea* — Chebyshev interpolation
+> of the continuation value inside a backward Bellman recursion, with the `max`
+> stopping rule applied exactly — but **not** their specific offline/online
+> algorithm, in which a family of generalized moments
+> $\mathbb{E}[T_k(S_{i+1}) \mid S_i = x_j]$ is precomputed once so the online
+> recursion needs no fresh expectations. Here the conditional expectation is
+> recomputed by Gauss-Hermite quadrature at every step (see the **Proposed
+> Method** section below). It is "inspired by," not a reimplementation of, that
+> paper.
+
 The runnable harness lives in `examples/AmericanOptionDynamicChebyshev`.
 
 ```bash
@@ -63,6 +74,15 @@ Chebyshev model evaluates price, Delta, and Gamma in `7.339 us` in the local
 benchmark, versus `33.780 ms` for the tutorial's QLNet reference path. That is
 an online speedup of `4602.8x`. The QLNet timing includes the adapter's
 bump-and-reprice Delta and Gamma path, not only a raw NPV call.
+
+> **Benchmark scope.** These are single, representative local runs on the
+> reference rig (12th Gen Intel Core i7-12700K, .NET 10 Release), not averaged
+> benchmarks; absolute timings and the speedup are machine- and run-dependent.
+> Prices and grid errors are deterministic and reproduce exactly. The QLNet
+> reference path additionally prices a European option analytically on every
+> call, which the Chebyshev online path does not, so the headline ratio
+> overstates the like-for-like pricing gap somewhat. See
+> [Performance](performance.md) for methodology.
 
 ## Numerical Oracle
 

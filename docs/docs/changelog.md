@@ -16,6 +16,30 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Documentation
+- Corrected documentation citations: fixed the author list of the Bermudan
+  recombining-quadratures reference (Lim, Lee & Kim 2014), the Goreinov–Tyrtyshnikov
+  2001 page range (47–51), and the Halperin QLBS year (2017); and added
+  Homma & Saltelli (1996) for the total-order Sobol index, Goreinov et al. (2010)
+  "How to Find a Good Submatrix" for the maxvol algorithm, and Zeron-Medina Laris &
+  Ruiz (2021, arXiv:1911.10948) for the Orthogonal Chebyshev Sliding Technique
+  ([#221](https://github.com/0xC000005/ChebyshevSharp/pull/221)).
+- Corrected in-text method attributions: the total-order sensitivity index is now
+  credited to Homma & Saltelli (1996) rather than Sobol alone, and the maxvol
+  algorithm to Goreinov et al. (2010) rather than the 1997 concept paper.
+- Added a scope note to the American-option case study clarifying that it implements
+  the Dynamic Chebyshev *idea* (Chebyshev interpolation of the continuation value in
+  a backward Bellman recursion) rather than the Glau–Mahlstedt–Pötz (2019)
+  offline-moment algorithm.
+- Clarified that `ChebyshevSlider` is related to, but not identical with, the
+  PCA-coupled Orthogonal Chebyshev Sliding Technique.
+- Fixed the `ChebyshevTT` error-estimation snippet so it compiles (single-argument
+  delegate, self-contained domain and node arrays).
+- Added benchmark-scope notes to the introduction and the American-option,
+  callable-bond, and fixed-rate-bond case studies (reference machine and .NET
+  version, single-run caveat, deterministic-vs-timing distinction, and what the
+  timed path includes).
+
 ## [0.15.0] - 2026-06-03 — Continuous-state dynamic programming
 
 ### Added

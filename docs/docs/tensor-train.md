@@ -551,7 +551,7 @@ The TT ranks $r_k$ measure the coupling between the first $k$ and the remaining 
 
 ### Maxvol algorithm
 
-The maxvol algorithm (Goreinov, Tyrtyshnikov & Zamarashkin 1997) finds $r$ rows of an $m \times r$ tall matrix $A$ such that the $r \times r$ submatrix has approximately maximal determinant. This is used within TT-Cross to select the most informative grid index combinations for function evaluation.
+The maxvol algorithm (Goreinov, Oseledets, Savostyanov, Tyrtyshnikov & Zamarashkin 2010) finds $r$ rows of an $m \times r$ tall matrix $A$ such that the $r \times r$ submatrix has approximately maximal determinant (the maximal-volume *concept* is due to Goreinov, Tyrtyshnikov & Zamarashkin 1997). Finding the exact maximum-volume submatrix is NP-hard, so maxvol is a greedy iterative swap that converges to a quasi-maximal-volume submatrix. This is used within TT-Cross to select the most informative grid index combinations for function evaluation.
 
 The implementation uses:
 1. **Column-pivoted QR** on $A^T$ for initialization (selects the $r$ most linearly independent rows)
@@ -569,9 +569,10 @@ See [Citations](citations.md) for the references used by this page.
 
 1. Oseledets, I. V. (2011). "Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 33(5):2295--2317.
 2. Oseledets, I. V. & Tyrtyshnikov, E. E. (2010). "TT-cross approximation for multidimensional arrays." *Linear Algebra and its Applications* 432(1):70--88.
-3. Goreinov, S. A., Tyrtyshnikov, E. E. & Zamarashkin, N. L. (1997). "A theory of pseudoskeleton approximations." *Linear Algebra and its Applications* 261:1--21.
-4. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Chapter 6.
-5. Savostyanov, D. V. & Oseledets, I. V. (2011). "Fast adaptive interpolation of multi-dimensional arrays in tensor train format." *7th International Workshop on Multidimensional Systems*, pp. 1--8.
-6. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
-7. Bigoni, D., Engsig-Karup, A. P. & Marzouk, Y. M. (2016). "Spectral Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 38(4):A2405--A2439.
-8. Glau, K., Kressner, D. & Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv:1902.04367.
+3. Goreinov, S. A., Tyrtyshnikov, E. E. & Zamarashkin, N. L. (1997). "A theory of pseudoskeleton approximations." *Linear Algebra and its Applications* 261:1--21. (maximal-volume concept)
+4. Goreinov, S. A., Oseledets, I. V., Savostyanov, D. V., Tyrtyshnikov, E. E. & Zamarashkin, N. L. (2010). "How to Find a Good Submatrix." In *Matrix Methods: Theory, Algorithms and Applications*, World Scientific, pp. 247--256. (the maxvol algorithm)
+5. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance. Chapter 6.
+6. Savostyanov, D. V. & Oseledets, I. V. (2011). "Fast adaptive interpolation of multi-dimensional arrays in tensor train format." *7th International Workshop on Multidimensional Systems*, pp. 1--8.
+7. Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.
+8. Bigoni, D., Engsig-Karup, A. P. & Marzouk, Y. M. (2016). "Spectral Tensor-Train Decomposition." *SIAM Journal on Scientific Computing* 38(4):A2405--A2439.
+9. Glau, K., Kressner, D. & Statti, F. (2019). "Low-Rank Tensor Approximation for Chebyshev Interpolation in Parametric Option Pricing." arXiv:1902.04367.

@@ -27,10 +27,13 @@ $$
 where $\mathbf{x}_{G_i}$ denotes the components of $\mathbf{x}$ belonging to group $i$.
 Equivalently, this is $\sum_i s_i(\mathbf{x}_{G_i}) - (k-1)v$.
 
-This is a first-order anchored decomposition over the chosen groups. Related
-anchored-ANOVA work shows that the anchor point can strongly affect accuracy
-[4], so treat `pivotPoint` as a modelling choice and validate points away from
-that pivot.
+This is a first-order anchored decomposition over the chosen groups. It is
+related to, but not the same as, the Orthogonal Chebyshev Sliding Technique of
+Zeron-Medina Laris & Ruiz [5], which couples Chebyshev sliders with a PCA
+pre-rotation of the risk factors; `ChebyshevSlider` performs the anchored
+additive decomposition without that orthogonalization. Related anchored-ANOVA
+work shows that the anchor point can strongly affect accuracy [4], so treat
+`pivotPoint` as a modelling choice and validate points away from that pivot.
 
 ### Mental model
 
@@ -350,3 +353,4 @@ Both operands must have the same dimensions, domain, node counts, **partition**,
 2. Berrut, J.-P. & Trefethen, L. N. (2004). "Barycentric Lagrange Interpolation." *SIAM Review* 46(3):501-517.
 3. Ruiz, I. & Zeron, M. (2022). *Machine Learning for Risk Calculations: A Practitioner's View.* Wiley Finance.
 4. Zhang, Z., Choi, M. & Karniadakis, G. E. (2011). "Anchor Points Matter in ANOVA Decomposition." In *Spectral and High Order Methods for Partial Differential Equations*, Lecture Notes in Computational Science and Engineering 76, 347-355.
+5. Zeron-Medina Laris, M. & Ruiz, I. (2021). "Denting the FRTB-IMA Computational Challenge via Orthogonal Chebyshev Sliding Technique." *Wilmott Magazine* (January 2021); arXiv:1911.10948.
