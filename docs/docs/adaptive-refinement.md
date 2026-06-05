@@ -73,7 +73,7 @@ V = \sum_{\alpha \ne 0} c_\alpha^2 \prod_{j=1}^{d} \langle T_{\alpha_j}, T_{\alp
 \langle T_k,T_k\rangle=\pi/2\ (k>0).
 $$
 
-First-order energy for dimension $j$ sums coefficients with $\alpha_j>0$ and all other degrees zero. Total-order energy for dimension $j$ sums every coefficient with $\alpha_j>0$. `ChebyshevTT.SobolIndices()` computes the same quantities by contracting TT coefficient cores, avoiding dense coefficient materialization.
+First-order energy for dimension $j$ sums coefficients with $\alpha_j>0$ and all other degrees zero — the main-effect (first-order) index of Sobol (2001). Total-order energy for dimension $j$ sums every coefficient with $\alpha_j>0$ — the total-effect (total-order) index introduced by Homma & Saltelli (1996), with the efficient estimator of Saltelli et al. (2010). The two are distinct: $S_j \le S_{T_j}$, with equality only when dimension $j$ has no interactions. `ChebyshevTT.SobolIndices()` computes the same quantities by contracting TT coefficient cores, avoiding dense coefficient materialization.
 
 ## ChebyshevTT.WithAutoOrder + Reorder
 
@@ -97,6 +97,7 @@ Binary algebra (`+`, `-`) between TTs requires matching `DimOrder`; call `Reorde
 
 ## References
 
-- Sobol, I. M. (2001). "Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates."
-- Saltelli, A. et al. (2010). "Variance Based Sensitivity Analysis of Model Output."
+- Sobol, I. M. (2001). "Global Sensitivity Indices for Nonlinear Mathematical Models and Their Monte Carlo Estimates." (first-order/main-effect index)
+- Homma, T. & Saltelli, A. (1996). "Importance Measures in Global Sensitivity Analysis of Nonlinear Models." *Reliability Engineering & System Safety* 52(1):1--17. (total-order/total-effect index)
+- Saltelli, A. et al. (2010). "Variance Based Sensitivity Analysis of Model Output." (efficient total-index estimator)
 - Trefethen, L. N. (2013). *Approximation Theory and Approximation Practice.* SIAM.

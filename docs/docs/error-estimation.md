@@ -180,7 +180,19 @@ For $\sin(x)$, which is entire (analytic everywhere in the complex plane), the c
 `ChebyshevTT` also supports `ErrorEstimate()`. The estimate is computed as the sum of $\max |G_k[:, n_k{-}1, :]|$ across all dimensions $k$, where $G_k[:, n_k{-}1, :]$ is the slice of the coefficient core corresponding to the highest-order Chebyshev polynomial. This parallels the DCT-II coefficient decay used by `ChebyshevApproximation`, adapted to the TT core structure.
 
 ```csharp
-var tt = new ChebyshevTT(f, 5, domain, nNodes, maxRank: 15);
+// ChebyshevTT takes a single-argument delegate (Func<double[], double>),
+// unlike the (double[], object?) signature used by the other classes.
+double g(double[] x) =>
+    Math.Sin(x[0]) + Math.Sin(x[1]) + Math.Sin(x[2]) + Math.Sin(x[3]) + Math.Sin(x[4]);
+
+double[][] domain =
+{
+    new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 },
+    new[] { -1.0, 1.0 }, new[] { -1.0, 1.0 }
+};
+int[] nNodes = { 11, 11, 11, 11, 11 };
+
+var tt = new ChebyshevTT(g, 5, domain, nNodes, maxRank: 15);
 tt.Build(verbose: false, seed: 42);
 Console.WriteLine($"TT error estimate: {tt.ErrorEstimate():E2}");
 ```

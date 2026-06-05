@@ -714,6 +714,14 @@ dotnet run --project examples/FixedRateBondSurrogate/FixedRateBondSurrogate.cspr
 | Max 10Y-10.5Y rate-rate cross-sensitivity absolute error | `3.197442E-006` |
 | Non-100 notional dirty-price max absolute error | `4.243361E-011` |
 
+> **Benchmark scope.** The scalar / all-pillar / batch speedups above are from a
+> short BenchmarkDotNet run on the reference rig (12th Gen Intel Core i7-12700K,
+> .NET 10 Release), not a long statistical sweep, and are machine-dependent. The
+> 850.4x all-pillar figure is largely a finite-difference-avoidance effect — one
+> analytic gradient pass versus 120 reference repricings — distinct from the
+> ~7.6x scalar interpolation speedup. The PV/DV01 *error* figures are
+> deterministic. See [Performance](performance.md) for methodology.
+
 This is the first method in the case study that behaves like a practical clone
 for the supported family. It accepts the full request-level wrapper, preserves
 schedule-sensitive maturity behavior by resolving cashflows, captures
