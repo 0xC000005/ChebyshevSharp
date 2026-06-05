@@ -16,6 +16,13 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Documentation
+- Trimmed the American-option case study's embedded continuous-state dynamic-programming
+  lecture (~400 lines of general MDP / Bellman / value-and-policy-iteration / collocation
+  theory) down to a short, problem-specific summary that cross-links the new "From MDPs to
+  Chebyshev Collocation" primer. The empirical results, glossary, boundary picture, and
+  Bellman diagnostics are unchanged.
+
 ## [0.15.1] - 2026-06-05 — Documentation: MDPs-to-collocation primer and citation fixes
 
 ### Documentation

@@ -493,448 +493,53 @@ variance and feature risk without solving a harder information problem.
 
 ## Continuous-State Dynamic Programming Context
 
-The Dynamic Chebyshev method is easier to understand if we first step back from
-options and look at the same problem in dynamic-programming language.
+This case study is a continuous-state, finite-horizon dynamic program. The general theory —
+Markov decision processes, the Bellman equation, contraction and value/policy iteration, why a
+continuous state cannot be tabulated, and how Chebyshev collocation compares to regression, neural
+networks, and finite differences — is developed in
+[From MDPs to Chebyshev Collocation](from-mdps-to-chebyshev-collocation.md). This section states only
+what is specific to the American-option problem solved here.
 
-Most finance readers first meet American-option valuation through
-Longstaff-Schwartz or another simulation method. That is natural: the hard
-quantity is the continuation value,
-
-$$
-\text{value of waiting}
-  =
-\mathbb{E}[\text{future optimized value}\mid\text{state today}],
-$$
-
-and simulation gives an intuitive way to estimate that future value. Reinforcement
-learning uses similar language. It treats `exercise` and `continue` as actions
-and tries to learn which action is better from sampled transitions.
-
-That viewpoint is useful, but it can hide a simpler fact in this one-factor
-Black-Scholes benchmark: the transition law is already known. For any spot
-$S_i=S$, Black-Scholes gives the conditional distribution of $S_{i+1}$. That
-means the conditional expectation in the continuation value is a computable
-operator, not an unknown object that must be inferred only from realized
-cashflows:
+The reframing that makes the method work is that **the transition law is known**. Under one-factor
+Black-Scholes the conditional distribution of $S_{i+1}$ given $S_i=S$ is available in closed form, so
+the continuation value
 
 $$
-C_i(S)
-=
-e^{-r\Delta t}
-\mathbb{E}\!\left[V_{i+1}(S_{i+1})\mid S_i=S\right].
+C_i(S)=e^{-r\Delta t}\,\mathbb{E}\!\left[V_{i+1}(S_{i+1})\mid S_i=S\right]
 $$
 
-Once $V_{i+1}$ is represented as a function, the right-hand side can be
-evaluated by quadrature at any chosen $S$. The reason is mechanical. Under the
-known transition model, each quadrature node gives one possible next spot:
+is a *computable* operator, not an object that must be inferred from realised cashflows.
+Longstaff-Schwartz and LSPI estimate it from sampled paths because they treat the model as unknown;
+here it is evaluated directly by quadrature. The data are not the teacher — the Bellman equation is.
+
+This is the smooth/non-smooth split the whole design rests on. The continuation value $C_i$ is smooth
+and is the single object approximated by a Chebyshev interpolant; the exercise decision is the exact,
+non-smooth comparison
 
 $$
-S_{i+1}^{(m)}
-=
-S\exp\left(
-  (r-q-\tfrac12\sigma^2)\Delta t
-  + \sqrt{2}\sigma\sqrt{\Delta t}\,x_m
-\right),
-$$
-
-where $x_m$ is a Gauss-Hermite node. If we can evaluate the function
-$V_{i+1}(\cdot)$ at those next spots, the conditional expectation becomes a
-weighted sum:
-
-$$
-C_i(S)
-\approx
-e^{-r\Delta t}
-\frac{1}{\sqrt{\pi}}
-\sum_m w_m V_{i+1}\!\left(S_{i+1}^{(m)}\right).
-$$
-
-This is why the problem changes shape. We still approximate a function, but we
-no longer need pathwise regression to create the target values. The model itself
-creates the targets through the Bellman expectation operator.
-
-The useful mental shift is:
-
-```text
-state -> Bellman functional equation -> value function
-```
-
-not:
-
-```text
-state -> simulated training data -> neural-network value estimate
-```
-
-The two workflows look like this:
-
-```text
-LS/RL sampling workflow
-  simulate paths
-      -> observe realized future cashflows or transitions
-      -> fit continuation/policy from sampled data
-      -> apply exercise rule
-
-Bellman collocation workflow
-  choose spot nodes
-      -> use the known transition law to compute continuation at each node
-      -> build a function approximation through those node values
-      -> apply exercise rule
-```
-
-That distinction is the reason this page discusses `ContinuousDPs.jl`. The
-library is not an American-option pricing engine; it is a public example of the
-same numerical-analysis viewpoint: when the transition model is known, solve the
-Bellman equation as a function approximation problem rather than as a pure
-statistical learning problem.
-
-This is the main mental difference from LS regression or RL. In the statistical
-view, we generate sample paths, observe noisy realized outcomes, and fit a
-continuation rule from data. In the QuantEcon/computational-economics view, the
-economic model is already the object being solved. The user supplies the reward
-function, transition equation, discount factor, shocks, and constraints; the
-solver then looks for a value function and policy that satisfy the Bellman
-equation. The data are not the teacher. The Bellman equation is the teacher.
-
-For an American option, this means:
-
-```text
-LSM/RL question:
-  Given simulated paths, what continuation rule best explains the sampled
-  future payoffs or learned action values?
-
-Dynamic-programming/collocation question:
-  Given the model transition law and the next-step value function, what
-  continuation function does the finite-horizon Bellman recursion produce
-  at representative states?
-```
-
-In a continuous-state dynamic program, the state is a number or vector such as
-wealth, inventory, interest rate, or spot price. The value function is not just a
-table; it is a function over a continuous state space:
-
-$$
-V_i(x)=\max_a\left\{r_i(x,a)+\beta\mathbb{E}[V_{i+1}(X_{i+1})\mid x,a]\right\}.
-$$
-
-The policy is the action that attains this maximum. In other words, once we have
-a candidate value function, the policy at a state is found by solving the
-one-state optimization problem inside the Bellman equation:
-
-$$
-\pi_i(x)
-=
-\arg\max_a
-\left\{
-r_i(x,a)+\beta\mathbb{E}[V_{i+1}(X_{i+1})\mid x,a]
-\right\}.
-$$
-
-For a continuous-control economics model, that maximization is a real numerical
-subproblem. A solver such as `ContinuousDPs.jl` embeds this step: at each
-collocation node, it maximizes the Bellman objective over the admissible action
-interval, stores the greedy action, evaluates that policy using the model,
-updates the value-function coefficients, and repeats until the value/policy pair
-is self-consistent.
-
-That is background, not the algorithm used by this American-option example.
-This case study is different. It is a finite-horizon stopping problem with a
-discrete action space, not a generic continuous-action control problem. Maturity
-gives a terminal condition $V_N(S)=h(S)$, so the solver walks backward through
-exercise dates. There is no infinite-horizon fixed-point loop and no repeated
-policy-iteration convergence step. At each date, the Bellman action set is only
-`{exercise, continue}`. Because the action set is discrete and has only two
-choices, the `argmax` can be done exactly by enumeration: compare payoff with
-continuation and choose the larger value.
-
-This distinction matters because the words "policy iteration" appear in both
-computational economics and reinforcement learning. The outer idea can sound
-similar: evaluate a policy, improve the policy, repeat. The information source
-is different.
-
-In model-based Bellman collocation, policy evaluation uses the supplied reward
-function, transition equation, discount factor, shock nodes, and shock weights.
-Policy improvement solves the one-state maximization implied by the Bellman
-equation. So the iteration, when used, is a deterministic numerical solve of the
-model equations.
-
-In LSPI-style reinforcement learning, the transition model is not used directly.
-The algorithm learns a state-action value approximation from sampled
-transitions, then improves the policy greedily with respect to that learned
-state-action value. The Bellman expectation is estimated from data rather than
-computed from the model.
-
-```text
-Generic model-based collocation policy iteration:
-  known f, g, shocks, weights
-      -> at each collocation node, compute Bellman expectations from the model
-      -> at each collocation node, improve policy by numerical maximization
-
-This case study's finite-horizon backward induction:
-  terminal payoff V_N(S) is known
-      -> move one exercise date backward
-      -> at each Chebyshev spot node, compute continuation from V_{i+1}
-      -> set V_i(S) = max(payoff, continuation)
-      -> repeat until today
-
-LSPI/RL policy iteration:
-  sampled transitions
-      -> estimate Q(s, a) from data
-      -> improve policy greedily from learned Q
-```
-
-Here "node" means a collocation state point used during the solve. After the
-value and policy functions are fitted, they can be evaluated at other spot or
-state values too; those are validation or evaluation points, not the points that
-defined the coefficient solve.
-
-For this finite-horizon American option, the policy search is simpler because
-the action space is discrete. There are only two actions:
-
-```text
-exercise -> receive payoff h(S)
-continue -> receive continuation value C_i(S)
-```
-
-So the policy is just the larger branch:
-
-$$
-\pi_i(S)
-=
+V_i(S)=\max\bigl(h(S),C_i(S)\bigr),\qquad
+\pi_i(S)=
 \begin{cases}
-\mathrm{exercise}, & h(S)\ge C_i(S),\\
-\mathrm{continue}, & C_i(S)>h(S).
+\text{exercise}, & h(S)\ge C_i(S),\\
+\text{continue}, & C_i(S)>h(S).
 \end{cases}
 $$
 
-No reinforcement-learning exploration and no continuous numerical optimizer are
-needed for this `argmax`. The model computes $C_i(S)$, exercise gives the known
-payoff $h(S)$, and the policy follows from comparing those two numbers.
+Because the action set is the two-element $\{\text{exercise},\text{continue}\}$, the policy is a direct
+comparison of two known numbers — no continuous-action optimiser and no reinforcement-learning
+exploration are required. Maturity supplies the terminal condition $V_N(S)=h(S)$, so the solver walks
+backward through the exercise dates; it does **not** use the infinite-horizon fixed point $V=T[V]$ or
+any policy-iteration convergence loop. (The primer explains why finite-horizon backward induction is
+value iteration that simply terminates after $N$ sweeps.)
 
-The general Bellman workflow and the American-option workflow differ only in how
-hard the `argmax` step is:
+`ContinuousDPs.jl` is cited as a conceptual reference for this model-based, collocation view of dynamic
+programming, not as an American-option pricing engine; its generic solver performs a per-node
+continuous-action maximisation that this two-action stopping problem does not need. The
+**What Was Parity Checked** section below states exactly what is and is not validated against it.
 
-```text
-General continuous-action Bellman step at node x_k:
-  1. Try candidate actions a.
-  2. For each action, compute reward + discounted expected next value.
-  3. Choose the action with the largest value.
-  4. Store both the optimal value and the maximizing action.
-
-American option Bellman step at node S_k:
-  1. Compute exercise value h(S_k).
-  2. Compute continuation value C_i(S_k).
-  3. Choose the larger branch.
-  4. Store V_i(S_k) = max(h(S_k), C_i(S_k)).
-```
-
-So an American option is a simplified optimal-control problem. The action set is
-not a continuum such as "consume any amount between 0 and wealth" or "choose any
-portfolio weight." It is the two-action set `{exercise, continue}`. That is why
-the policy is easy once continuation has been computed: the generic continuous
-`argmax` becomes a discrete `argmax` over two known candidates.
-
-The continuation value is the future part of that expression:
-
-$$
-C_i(x,a)=\beta\mathbb{E}[V_{i+1}(X_{i+1})\mid x,a].
-$$
-
-In reinforcement-learning language, this is the future part of a Q-value. In
-economics language, it is the value of not terminating the problem today. The
-same structure appears in consumption-saving models, retirement decisions,
-investment timing, American options, and callable bonds.
-
-QuantEcon's `ContinuousDPs.jl` is useful background because it comes from this
-economics/numerical-analysis tradition. It should not be read as saying that
-`ContinuousDPs.jl` has no optimizer. Generic `ContinuousDPs.jl` problems do use
-per-node Bellman maximization and policy iteration when the action is
-continuous. The algorithm in this page is narrower: it is not the
-`ContinuousDPs.jl` infinite-horizon fixed-point solver. The shared concept is
-collocation: represent a function by forcing it to match model-computed targets
-at selected state nodes.
-
-The package-level mental model is:
-
-| ContinuousDPs-style input | Meaning |
-| --- | --- |
-| `f(s, x)` | current reward from state `s` and action `x` |
-| `g(s, x, e)` | next-state transition after shock `e` |
-| `discount` | discount factor in the Bellman equation |
-| `shocks`, `weights` | quadrature or discrete shock representation |
-| `x_lb(s)`, `x_ub(s)` | state-dependent bounds for the continuous action |
-| `basis` | interpolation basis and collocation nodes |
-
-Solving that problem returns a value function, a policy function, and residual
-diagnostics. The residual is important because collocation forces the Bellman
-equation at selected nodes; responsible users still check how well the equation
-holds on evaluation points away from those nodes. That is the same validation
-habit used in this page: build on Chebyshev nodes, then test price, Greeks,
-boundary behavior, and Bellman-style diagnostics away from the construction
-points.
-
-In this case study, collocation is used inside a finite-horizon backward
-induction step. Suppose the unknown continuation function at one exercise date
-is smooth enough to write as a short Chebyshev expansion:
-
-$$
-C_i(S)\approx a_0T_0(S)+a_1T_1(S)+\cdots+a_{n-1}T_{n-1}(S).
-$$
-
-The unknowns are the coefficients $a_0,\ldots,a_{n-1}$. To determine them,
-choose $n$ representative spot points $S_0,\ldots,S_{n-1}$. These are the
-collocation nodes. At each node, compute what the finite-horizon Bellman
-recursion says continuation should be, using the already-built next-step value
-function $V_{i+1}$. Call that model-computed target $b_k$:
-
-$$
-b_k = T[V_{i+1}](S_k).
-$$
-
-Then require the approximation to hit those Bellman targets at the nodes:
-
-$$
-\sum_{j=0}^{n-1} a_jT_j(S_k)=b_k,
-\qquad k=0,\ldots,n-1.
-$$
-
-This is just a linear interpolation system once the backward-induction targets
-are computed.
-In matrix form:
-
-$$
-\Phi a=b,
-\qquad
-\Phi_{k,j}=T_j(S_k).
-$$
-
-Solving this system gives the continuation-function coefficients. In plain
-language: build a Chebyshev object through the continuation values computed at
-selected nodes, then use that object to interpolate continuation between the
-nodes.
-
-The targets are not magic observed labels. They come from backward induction. At
-maturity, the value function is exactly the payoff, $V_N(S)=h(S)$. One step
-earlier, the continuation target at node $S_k$ is computed by applying the known
-transition law and quadrature to that payoff. Two steps earlier, the target is
-computed by applying the same Bellman expectation to the next-step Chebyshev
-value function. This repeats backward to today:
-
-```text
-terminal payoff V_N(S) is known
-  -> compute continuation targets at nodes for time N-1
-  -> build Chebyshev continuation C_{N-1}(S)
-  -> form value V_{N-1}(S) = max(h(S), C_{N-1}(S))
-  -> repeat backward
-```
-
-So the node targets are deterministic model calculations, not noisy regression
-labels. They are "exact" only up to the numerical choices already made:
-next-step approximation, quadrature rule, node count, and domain. The important
-validation step is therefore to check errors or Bellman residuals away from the
-nodes, because collocation only forces agreement at the selected nodes.
-
-The finite-horizon collocation step used here is backward induction, not policy
-iteration:
-
-1. Pick a function family for continuation, here Chebyshev polynomials.
-2. Pick spot collocation nodes $S_k$.
-3. At exercise date $i$, compute each continuation target
-   $C_i(S_k)$ from the known transition law, discounting, quadrature, and
-   already-built next-step value function $V_{i+1}$.
-4. Build a Chebyshev continuation approximation through those node targets.
-5. Define the value function for that date as
-   $V_i(S)=\max(h(S),C_i(S))$.
-6. Move to the previous exercise date and repeat until today.
-7. Validate between the nodes.
-
-So this case study does not use the infinite-horizon fixed-point property
-$V=T[V]$. It uses the finite-horizon terminal condition $V_N=h$ and the
-time-indexed recursion $V_i=\max(h,C_i)$, with Chebyshev collocation used only
-to represent each smooth continuation function $C_i$.
-
-In this case study, the state is spot $S$. The Dynamic Chebyshev settings use
-the spot domain $[5,250]$ and `SpotNodeCount = 81`, so the collocation nodes are
-81 Chebyshev Type I spot nodes mapped into that interval:
-
-$$
-S_k
-=
-\frac{S_{\min}+S_{\max}}{2}
-+
-\frac{S_{\max}-S_{\min}}{2}
-\cos\left(\frac{(2k+1)\pi}{2n}\right),
-\qquad k=0,\ldots,n-1.
-$$
-
-The implementation sorts these nodes from low spot to high spot. Chebyshev nodes
-are chosen instead of evenly spaced nodes because they cluster near the ends of
-the domain and give a stable high-order polynomial interpolant for smooth
-functions. The node count is a numerical resolution choice: more nodes increase
-build cost but usually reduce interpolation and derivative error until other
-errors, such as exercise-boundary resolution or quadrature error, dominate.
-
-With a Chebyshev basis, the American-option mental model is:
-
-$$
-C_i(S)\approx \sum_{j=0}^{n-1} a_{i,j}T_j(S),
-\qquad
-C_i(S_k)=T[V_{i+1}](S_k)
-\quad\text{at collocation nodes }S_k.
-$$
-
-This is called collocation because the continuation approximation is forced to
-match the Bellman-recursion targets at selected nodes. The unknowns are the
-function values or coefficients. In generic `ContinuousDPs.jl` problems, the
-same collocation idea is embedded inside an infinite-horizon fixed-point or
-policy-iteration solve with a per-node action maximization. In this
-American-option example, the action maximization is only the binary stopping
-comparison, and the collocation step is embedded inside finite-horizon backward
-induction.
-
-Compared with LS regression or RL, the practical difference is:
-
-| Viewpoint | What is fitted | Source of error |
-| --- | --- | --- |
-| Longstaff-Schwartz | Continuation from realized cashflows on simulated paths | Sampling noise, regression basis, boundary mistakes |
-| LSPI/RL | Action value or policy from simulated transitions | Sampling noise, feature choice, policy iteration error |
-| Bellman collocation | Value or continuation function satisfying the model equation at nodes | Interpolation error, quadrature error, boundary resolution |
-
-There is no replay buffer, no stochastic gradient step, and no regression target
-generated from noisy realized cashflows. The numerical questions become:
-
-1. Is the value or continuation function smooth enough on the chosen domain?
-2. Are the collocation nodes and basis rich enough?
-3. Is the Bellman residual small at the points we care about?
-
-For an American option, the two actions are simply `exercise` and `continue`.
-Exercise has exact payoff $h(S)$. Continue has continuation value:
-
-$$
-C_i(S)=e^{-r\Delta t}\mathbb{E}[V_{i+1}(S_{i+1})\mid S_i=S].
-$$
-
-The stopping rule is
-
-$$
-V_i(S)=\max(h(S),C_i(S)).
-$$
-
-This also explains the design choice in the case study. The exercise payoff is
-known exactly. The `max` operation is the non-smooth stopping decision. The
-continuation function is the smoother future-value object. So the Dynamic
-Chebyshev solver does not ask interpolation to learn the whole policy as a black
-box. It approximates the continuation function and keeps the stopping comparison
-explicit:
-
-```text
-learn with Chebyshev:   continuation value C_i(S)
-keep exact:             payoff h(S) and max(h(S), C_i(S))
-```
-
-Errors can still occur near the exercise boundary where $h(S)\approx C_i(S)$.
-The difference is that the error source is now localized and deterministic:
-interpolation, quadrature, and boundary resolution. It is no longer a new
-statistical regression problem injected at every backward step.
+The concrete collocation step — building the continuation interpolant through model-computed targets at
+the Chebyshev spot nodes, and the Gauss-Hermite quadrature that produces those targets — is given in the
+**Proposed Method: Dynamic Chebyshev** section below.
 
 ### Glossary
 
