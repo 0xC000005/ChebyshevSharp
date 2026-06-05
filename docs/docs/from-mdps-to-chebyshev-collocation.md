@@ -15,6 +15,15 @@ The worked numbers and the runnable harness live in the
 [American Option Dynamic Chebyshev Case Study](american-option-dynamic-chebyshev.md); read this
 page first for the *why*, then that page for the empirical study.
 
+The five parts move from the general problem to the specific method:
+
+1. Infinite-horizon MDPs on discrete states — the vocabulary and the Bellman equation.
+2. How that equation is solved — the Bellman operator, contraction, value iteration, policy iteration.
+3. The finite-horizon, continuous-state case the option lives in, and why it cannot be tabulated.
+4. Four ways to represent the value function — basis functions, regression, neural networks,
+   discretisation — and a finite-difference-versus-collocation comparison.
+5. Which method to reach for, on three axes: dimension, known model, and smoothness.
+
 ## Notation and conventions
 
 A **Markov decision process** (MDP) is a tuple $(\mathcal S, \mathcal A, P, r, \gamma)$: a state
@@ -28,10 +37,11 @@ Two value functions recur throughout, and the rest of the page assumes the disti
 - The **state-value** $V^\pi(s)$ is the expected discounted reward of *following policy $\pi$
   from state $s$ onward*.
 - The **action-value** $Q^\pi(s,a)$ is the expected discounted reward of *taking action $a$ for
-  one step and then following $\pi$*. It scores actions directly, so the greedy policy is simply
-  $\pi(s)=\arg\max_a Q(s,a)$, and $V(s)=\max_a Q(s,a)$ under an optimal policy.
+  one step and then following $\pi$*. It scores actions directly: the greedy policy chooses the
+  action with the larger $Q$. Writing $V^\star$ and $Q^\star$ for the *optimal* value functions, the
+  optimality relations are $V^\star(s)=\max_a Q^\star(s,a)$ and $\pi^\star(s)=\arg\max_a Q^\star(s,a)$.
 
-We write $V^\star$ and $Q^\star$ for the optimal value functions. "Prediction" means evaluating a
+"Prediction" means evaluating a
 *fixed* policy ($V^\pi$); "control" means finding the best policy ($V^\star$). These are different
 problems with different machinery, and conflating them is the first source of confusion this page
 removes.
@@ -97,7 +107,10 @@ Two algorithms find the fixed point:
 The two convergence guarantees are different in kind: value iteration converges by *contraction*
 (Banach, asymptotic); policy iteration converges by *finite termination* (a finite policy set climbed
 monotonically). Value iteration is the special case of policy iteration whose evaluation step is
-truncated to a single sweep (generalised policy iteration).
+truncated to a single sweep (generalised policy iteration). On the machine-maintenance example,
+value iteration re-sweeps all three states toward $V^\star$ and is never exactly done, whereas policy
+iteration alternates a $3\times3$ linear solve with a greedy switch and halts the moment no state's
+best action changes.
 
 Both algorithms exist because the infinite horizon makes the problem **cyclic**: a state can recur
 ($s_1\to s_2\to s_1$), so $V$ references itself and a fixed point is unavoidable. The next part removes
@@ -131,11 +144,13 @@ ignorance of the law, and not the absence of a fixed point — is what forces an
 known model the density is available in closed form; what has no closed form is the *recursive* value,
 because the $\max$ introduces an endogenous switching boundary located only by a transcendental crossing.
 
-**Optimal stopping is the minimal instance.** An American option is the smallest non-trivial MDP:
-two actions, *exercise* (absorbing) and *continue*. One action-value is free,
+**Optimal stopping is the minimal instance.** An optimal-stopping problem is the minimal non-trivial
+MDP with a terminal action: two actions, *exercise* (absorbing) and *continue*. From here the abstract
+discount specialises to the financial factor $\gamma = e^{-r\Delta t}$, with $r$ the risk-free rate and
+$\Delta t$ the step length (so $r$ no longer denotes a reward). One action-value is free,
 
 $$
-Q_i(S,\text{exercise}) = h(S)\quad\text{(the payoff, known exactly)},
+Q_i(S,\text{exercise}) = h(S)\quad\text{(the payoff, e.g. $\max(K-S,0)$ for a put, known exactly)},
 $$
 
 and the other is the only unknown,
@@ -145,8 +160,9 @@ Q_i(S,\text{continue}) = e^{-r\Delta t}\,\mathbb{E}\!\left[V_{i+1}(S')\mid S\rig
 $$
 
 with $V_i(S)=\max\bigl(h(S),C_i(S)\bigr)$. The continuation value $C_i$ is smooth; the exercise
-boundary $B_i$ is the spot where the $\arg\max$ flips. Pricing the option is therefore exactly the
-problem of *representing the smooth $C_i$* inside backward induction.
+boundary $B_i$ — the spot where the $\arg\max$ flips — is the moving kink that later limits spectral
+accuracy. Pricing the option is therefore exactly the problem of *representing the smooth $C_i$*
+inside backward induction.
 
 ## Part 4 — Representing the value function: four families
 
@@ -157,22 +173,22 @@ every method is a way to carry its solution across a continuum.
 
 ### (a) Basis functions: Chebyshev collocation
 
-Write the continuation value as a finite Chebyshev expansion on $N$ fixed nodes,
+Write the continuation value as a finite Chebyshev expansion on $n$ fixed nodes,
 
 $$
-C_i(S) \approx \sum_{k=0}^{N-1} a_k\,T_k(S),
+C_i(S) \approx \sum_{k=0}^{n-1} a_k\,T_k(S),
 $$
 
 and fix the coefficients by forcing the polynomial through the model-computed values at the nodes —
-a **square** linear solve $\Phi a = b$, *interpolation* rather than regression. ChebyshevSharp uses
-Type-I Chebyshev nodes (the roots of $T_N$, no endpoints; see
-[Mathematical Concepts](concepts.md)). The node locations never move across steps; only the values on
-them change as time-to-maturity changes.
+a **square** linear solve $\Phi a = b$ with the collocation matrix $\Phi_{jk}=T_k(S_j)$,
+*interpolation* rather than regression. ChebyshevSharp uses Type-I Chebyshev nodes (the roots of
+$T_n$, no endpoints; see [Mathematical Concepts](concepts.md)). The node locations never move across
+steps; only the values on them change as time-to-maturity changes.
 
 *Why it helps.* Forcing a high-degree polynomial through equispaced points oscillates wildly near the
 ends (Runge's phenomenon); Chebyshev nodes cluster toward the endpoints and tame this (their Lebesgue
 constant grows only logarithmically). For a function analytic in a Bernstein ellipse, the interpolation
-error then decays *geometrically*, $O(\rho^{-N})$, where $\rho$ measures the distance to the nearest
+error then decays *geometrically*, $O(\rho^{-n})$, where $\rho$ measures the distance to the nearest
 singularity — spectral accuracy. A handful of well-placed nodes can match a fine grid, which is why the
 case study resolves the continuation value with $81$ nodes. Because the representation is a polynomial,
 $\Delta$ and $\Gamma$ are available analytically at any spot, with no re-differencing.
@@ -208,34 +224,38 @@ The entire expectation step collapses to one matrix–vector product, $Q_{\text{
 
 *Why $\Gamma$ is computed once and reused.* $\Gamma_{jk}$ depends only on the fixed node $S_j$, the
 fixed basis polynomial $T_k$, and the one-step law $S_j\to S'$. Under constant $\Delta t$ and
-time-homogeneous dynamics (geometric Brownian motion, local volatility $\sigma(S)$, constant-parameter
-Heston, Lévy models), that law is the *same* distribution at every step — it carries no calendar-time
+time-homogeneous dynamics (geometric Brownian motion, local volatility $\sigma(S)$, one-dimensional
+Lévy models), that law is the *same* distribution at every step — it carries no calendar-time
 index and no payoff. Hence $\mathbb{E}[T_k(S')\mid S_j]$ is literally the same number at step $70\to71$
 as at step $1\to2$. $\Gamma$ encodes only dynamics and grid, so one matrix serves every backward step
 *and* every contract (any strike, maturity, or revaluation), amortising across the whole risk loop.
+Multi-factor models such as Heston use the same construction on a tensor Chebyshev grid, with the
+scalar node $S_j$ replaced by a multi-index node; the reuse argument is unchanged.
 
-*Why it is cheap.* The expensive work — filling the $N\times N$ matrix, roughly $N^2$ Gauss–Hermite
+*Why it is cheap.* The expensive work — filling the $n\times n$ matrix, roughly $n^2$ Gauss–Hermite
 quadratures against the known density — happens once; it is the only place the model is touched. Each
-online step is then $Q_{\text{hold}}=\Gamma c$ (a dense $O(N^2)$ matrix–vector product), the exercise
-decision $V=\max(h,Q_{\text{hold}})$ ($O(N)$, pointwise), and a transform back to coefficients for the
-next step ($O(N\log N)$, a DCT). There is no linear solve, no PDE projection, and no re-integration.
+online step is then $Q_{\text{hold}}=\Gamma c$ (a dense $O(n^2)$ matrix–vector product), the exercise
+decision $V=\max(h,Q_{\text{hold}})$ ($O(n)$, pointwise), and a transform back to coefficients for the
+next step ($O(n\log n)$, a DCT). There is no linear solve, no PDE projection, and no re-integration.
 Finite differences, by contrast, pay a (tridiagonal) solve plus an early-exercise projection at every
 step and cannot reuse work across contracts.
 
 *Coordinate systems.* Node values $v_j$ (heights at the nodes) and coefficients $c_k$ (amounts of each
 basis polynomial) describe the same curve in two bases. $\Gamma$ must act on *coefficients*, because
 $\mathbb{E}[T_k\mid S_j]$ multiplies "how much $T_k$ is present," which is $c_k$, not the height $v_j$.
-One may keep $\Gamma$ as a moment matrix on $c$ and convert with a DCT each step, or fold the conversion
-in: the fused operator $\Gamma_{\text{node}} = e^{-r\Delta t}\,\Gamma_{\text{mom}}\,\Phi^{-1}$ acts
-directly on node values, with the values-to-coefficients transform $\Phi^{-1}$ baked in. These are two
-factorisations of one operator.
+One may keep the moment matrix $\Gamma_{\text{mom}}:=\Gamma$ (which already carries the discount
+$e^{-r\Delta t}$, by its definition above) acting on $c$ and convert with a DCT each step, or fold the
+conversion in: the fused operator $\Gamma_{\text{node}} = \Gamma_{\text{mom}}\,\Phi^{-1}$ acts directly
+on node values $v=\Phi c$, with the values-to-coefficients transform $\Phi^{-1}$ baked in. These are two
+factorisations of one operator, and the discount $e^{-r\Delta t}$ appears exactly once, inside
+$\Gamma_{\text{mom}}$.
 
 *Why re-interpolation is unavoidable.* The kernel machinery lives in coefficient space, but the
 exercise decision is a pointwise $\max$ that kinks $V$ and destroys the polynomial structure $\Gamma$
 needs as input. Each step therefore applies the $\max$ in node space, then transforms back to fresh
 coefficients. The linear dynamics live in coefficient space, the non-linear $\max$ in node space, and
 the DCT carries between them. Non-smoothness here is a bounded cost (a reduced convergence rate and more
-sensitive Greeks near the boundary), not a validity failure — interpolation through $N$ finite values
+sensitive Greeks near the boundary), not a validity failure — interpolation through $n$ finite values
 always exists.
 
 > **Scope.** The precomputed-$\Gamma$ offline/online split above is the algorithm of Glau, Mahlstedt &
@@ -284,7 +304,7 @@ at opposite extremes of that single idea, and both require a known transition la
 | --- | --- | --- |
 | Polynomial | many local, low-order stencils | one global, high-order interpolant |
 | Coupling | local (a point hears its neighbours); sparse, banded | global (every node couples); dense |
-| Convergence | algebraic, $O(h^p)$ — halve the spacing for a digit | spectral, $O(\rho^{-N})$ for smooth functions |
+| Convergence | algebraic, $O(h^p)$ — each halving of the spacing buys a fixed factor $2^{-p}$ | spectral, $O(\rho^{-n})$ for smooth functions |
 | Form discretised | differential (PDE), needs a per-step solve | integral (expectation), a per-step matrix–vector product |
 | Greeks | re-difference the grid | analytic from the polynomial |
 | Node count (this problem) | hundreds ($300$) | tens ($81$) |
@@ -334,7 +354,7 @@ collocation are addressed by the [Tensor Train](tensor-train.md) compression rat
 ## References
 
 Foundational and method references are collected on the [Citations](citations.md) page; the entries most
-relevant here are Bellman (1957), Bertsekas (*Dynamic Programming and Optimal Control*), Puterman (1994),
+relevant here are Bellman (1957), Bertsekas (2017), Puterman (1994),
 Sutton & Barto (2018) and Lagoudakis & Parr (2003) for MDPs and reinforcement learning; Judd (1998) and
 Miranda & Fackler (2002) for numerical dynamic programming and collocation in economics;
 Longstaff & Schwartz (2001) for LSM; Becker, Cheridito & Jentzen (2019) for deep optimal stopping;
