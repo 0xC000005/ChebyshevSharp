@@ -41,6 +41,9 @@ The runnable harness lives in `examples/AmericanOptionDynamicChebyshev`.
 dotnet run --project examples/AmericanOptionDynamicChebyshev/AmericanOptionDynamicChebyshev.csproj
 ```
 
+For the general theory behind this study — Markov decision processes, value and policy
+iteration, and how Chebyshev collocation compares to finite differences, regression, and
+neural networks — see [From MDPs to Chebyshev Collocation](from-mdps-to-chebyshev-collocation.md).
 For a shorter reusable recipe focused on the implementation pattern, see
 [Continuous-State Dynamic Programming](continuous-state-dynamic-programming.md).
 

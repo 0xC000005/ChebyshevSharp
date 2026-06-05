@@ -21,6 +21,8 @@
   items:
     - name: Mathematical Concepts
       href: concepts.md
+    - name: From MDPs to Chebyshev Collocation
+      href: from-mdps-to-chebyshev-collocation.md
     - name: Error Estimation
       href: error-estimation.md
     - name: Performance

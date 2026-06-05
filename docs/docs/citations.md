@@ -63,6 +63,12 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 
 ## Reinforcement Learning and Dynamic Programming
 
+- Bellman, R. (1957). *Dynamic Programming*. Princeton University Press.
+- Bertsekas, D. P. (2017). *Dynamic Programming and Optimal Control*, Vol. I, 4th ed. Athena Scientific.
+- Puterman, M. L. (1994). *Markov Decision Processes: Discrete Stochastic Dynamic Programming*. Wiley. ISBN: 978-0-471-61977-2.
+- Sutton, R. S. and Barto, A. G. (2018). *Reinforcement Learning: An Introduction*, 2nd ed. MIT Press.
+- Judd, K. L. (1998). *Numerical Methods in Economics*. MIT Press. ISBN: 978-0-262-10071-7.
+- Becker, S., Cheridito, P., and Jentzen, A. (2019). "Deep Optimal Stopping." *Journal of Machine Learning Research*, 20(74), 1-25. arXiv: [1804.05394](https://arxiv.org/abs/1804.05394).
 - Miranda, M. J. and Fackler, P. L. (2002). *Applied Computational Economics and Finance*. MIT Press. [Publisher page](https://mitpress.mit.edu/9780262633093/applied-computational-economics-and-finance/).
 - Lagoudakis, M. G. and Parr, R. (2003). "Least-Squares Policy Iteration." *Journal of Machine Learning Research*, 4, 1107-1149. [JMLR page](https://jmlr.org/papers/v4/lagoudakis03a.html).
 - Rao, A. (2020). "RL for Optimal Exercise of American Options." Stanford CME 241 lecture note. [PDF](https://web.stanford.edu/class/cme241/lecture_slides/LSPIAmericanOptions.pdf).
