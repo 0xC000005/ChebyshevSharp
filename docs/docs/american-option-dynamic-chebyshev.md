@@ -821,6 +821,25 @@ endpoint sitting on the query (Company, Egorova & Jodar 2014). That is a solver
 re-architecture rather than a knot tweak, and is the direction for a future
 boundary-aware variant.
 
+### A log-spot variant recovers the boundary Gamma
+
+The first step of that front-fixing direction is already informative. Interpolating the continuation in
+`x = log(S)` (a `LogSpot` build option) makes the Gauss–Hermite transition additive, so the images stay
+bounded, and the grid narrow and uniform in `x`, hence far better conditioned than the wide linear
+`[5, 250]` grid. Measured spot-82 Gamma error against the oracle (`0.033689`):
+
+| nodes `n` | linear Γ(82) error | log-spot Γ(82) error |
+| ---: | ---: | ---: |
+| 81 | 0.007993 | 0.009807 |
+| 161 | 0.033689 (linear: spot 82 collapses into the exercise region) | 0.005922 |
+| 321 | non-finite (linear build throws) | 0.002755 |
+
+The log-spot error **falls monotonically with `n`** — the boundary Gamma was resolution-limited, not
+intrinsic — and the log-spot build stays finite at node counts where the linear grid throws. At low `n`
+the log-spot nodes cluster at the domain ends rather than at the boundary, so it trails the linear grid
+there; the gain appears once the grid is refined, and where the linear grid can no longer run. This
+recovers most of the boundary Gamma without the full boundary-tracking (Landau) re-architecture.
+
 ## Accuracy and Speed
 
 The aggregate comparison is useful only after reading the per-candidate
