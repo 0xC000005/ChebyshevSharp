@@ -581,6 +581,33 @@ also why small continuation errors near the boundary matter: the value itself
 may be close, but the exercise/continue decision can flip when $h(S)$ and
 $C(S)$ are nearly equal.
 
+### Why the boundary kink costs accuracy
+
+The boundary is a *kink*, and that is what bounds the method's accuracy. Smooth
+pasting makes the value $C^1$ across $B_i$ (the slopes match), but the second
+derivative $V_{SS}$ jumps there -- zero in the exercise region, positive in the
+continuation region. A jump in the second derivative is a $\nu = 2$ singularity,
+so a global Chebyshev interpolant over the whole spot domain converges only
+**algebraically, $O(n^{-2})$**, near the boundary instead of geometrically (see
+[Kinks vs jumps](concepts.md#kinks-vs-jumps-how-fast-the-rate-degrades)).
+
+The current solver interpolates the continuation with a *single* 81-node
+`ChebyshevApproximation` over `[5, 250]` and places **no knot at the boundary**,
+so each step's continuation carries this mild non-smoothness across $B_i$. The
+value error stays small -- payoff and continuation nearly coincide *at* the
+boundary, so a misplaced corner barely moves the price -- but the damage
+concentrates in the **second derivative**. That is exactly why the worst metric
+in the study is Gamma at spot `82.0` (the row next to the $\approx 81.86$
+boundary): `23.7%` relative, while price and Delta stay accurate.
+
+The principled remedy is to **split at the boundary**: locate $B_i$ each step by
+root-finding the payoff $=$ continuation crossing and represent the continuation
+as a two-piece [`ChebyshevSpline`](spline.md) with the knot at $B_i$, so each
+piece is smooth and spectral accuracy (and clean Greeks) return. The trade-off
+is that $B_i$ moves every step, so the two boundary-straddling pieces relocate --
+the method tolerates the kink today precisely to keep the per-step work cheap and
+reusable.
+
 ### Bellman Diagnostics
 
 The current example does not expose a full residual curve for every backward

@@ -124,6 +124,13 @@ Place knots at the locations where the function is **non-smooth**:
   constructor does not search for singularities. If you do not know the knot
   locations, use [Adaptive Refinement](adaptive-refinement.md) for the
   heuristic `AutoKnots` scan, then validate the resulting knots.
+- **Moving knots.** When the kink itself *moves* -- e.g. an American option's
+  early-exercise boundary $S^*(T)$ relocates at each time step -- a single fixed
+  knot cannot track it. The
+  [American-option case study](american-option-dynamic-chebyshev.md) navigates
+  exactly this: it keeps the exercise `max` exact rather than splitting at the
+  moving boundary, and a boundary-aware variant would place the knot at the
+  per-step boundary located by root-finding.
 
 ### Multiple knots in one dimension
 
