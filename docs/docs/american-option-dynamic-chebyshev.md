@@ -831,8 +831,22 @@ Gamma query onto the **clustered edge of the upper piece**, where a Chebyshev
 second-derivative differentiation matrix is most ill-conditioned (a measured
 ~4000x edge amplification versus the interior). The split even produced a
 non-physical *negative* Gamma one tick above the knot. Raising the node count
-makes both variants worse, because the wide-spot Gauss-Hermite quadrature loses
-finite values at high `n`.
+does not rescue it — the wide `[5, 250]` grid becomes ill-conditioned at high
+`n` and the build returns non-finite values (`n = 321` throws).
+
+The wiggle is concrete (`B0 = 81.868`): the split-piece Gamma rings across the
+knot edge while the global interpolant climbs smoothly.
+
+| spot | global Γ | split Γ |
+| ---: | ---: | ---: |
+| 81.85 | 0.000000 | 0.000000 |
+| 81.90 | 0.025163 | **-0.000404** |
+| 82.00 | 0.025696 | 0.019329 |
+| 82.25 | 0.026978 | 0.011920 |
+| 82.60 | 0.028640 | 0.036449 |
+
+Negative one tick above the knot, a trough at `82.25`, then an overshoot past the
+global by `82.60` — endpoint ringing, not signal.
 
 What *does* help, cheaply, is seeding the terminal backward step with the exact
 one-period European Black-Scholes value (the `ClosedFormTerminalStep` option)
@@ -847,6 +861,25 @@ fixed grid line, so the smooth region is resolved without an interpolation
 endpoint sitting on the query (Company, Egorova & Jodar 2014). That is a solver
 re-architecture rather than a knot tweak, and is the direction for a future
 boundary-aware variant.
+
+### A log-spot variant recovers the boundary Gamma
+
+The first step of that front-fixing direction is already informative. Interpolating the continuation in
+`x = log(S)` (a `LogSpot` build option) makes the Gauss–Hermite transition additive, so the images stay
+bounded, and the grid narrow and uniform in `x`, hence far better conditioned than the wide linear
+`[5, 250]` grid. Measured spot-82 Gamma error against the oracle (`0.033689`):
+
+| nodes `n` | linear Γ(82) error | log-spot Γ(82) error |
+| ---: | ---: | ---: |
+| 81 | 0.007993 | 0.009807 |
+| 161 | 0.033689 (linear: spot 82 collapses into the exercise region) | 0.005922 |
+| 321 | non-finite (linear build throws) | 0.002755 |
+
+The log-spot error **falls monotonically with `n`** — the boundary Gamma was resolution-limited, not
+intrinsic — and the log-spot build stays finite at node counts where the linear grid throws. At low `n`
+the log-spot nodes cluster at the domain ends rather than at the boundary, so it trails the linear grid
+there; the gain appears once the grid is refined, and where the linear grid can no longer run. This
+recovers most of the boundary Gamma without the full boundary-tracking (Landau) re-architecture.
 
 ## Accuracy and Speed
 
