@@ -804,8 +804,22 @@ Gamma query onto the **clustered edge of the upper piece**, where a Chebyshev
 second-derivative differentiation matrix is most ill-conditioned (a measured
 ~4000x edge amplification versus the interior). The split even produced a
 non-physical *negative* Gamma one tick above the knot. Raising the node count
-makes both variants worse, because the wide-spot Gauss-Hermite quadrature loses
-finite values at high `n`.
+does not rescue it — the wide `[5, 250]` grid becomes ill-conditioned at high
+`n` and the build returns non-finite values (`n = 321` throws).
+
+The wiggle is concrete (`B0 = 81.868`): the split-piece Gamma rings across the
+knot edge while the global interpolant climbs smoothly.
+
+| spot | global Γ | split Γ |
+| ---: | ---: | ---: |
+| 81.85 | 0.000000 | 0.000000 |
+| 81.90 | 0.025163 | **-0.000404** |
+| 82.00 | 0.025696 | 0.019329 |
+| 82.25 | 0.026978 | 0.011920 |
+| 82.60 | 0.028640 | 0.036449 |
+
+Negative one tick above the knot, a trough at `82.25`, then an overshoot past the
+global by `82.60` — endpoint ringing, not signal.
 
 What *does* help, cheaply, is seeding the terminal backward step with the exact
 one-period European Black-Scholes value (the `ClosedFormTerminalStep` option)

@@ -10,14 +10,6 @@ public sealed record DynamicChebyshevSettings(
     double SpotUpper = 250.0,
     int QuadratureOrder = 8,
     bool ClosedFormTerminalStep = false,
-    // Experimental, and a DOCUMENTED NEGATIVE RESULT: splitting the smooth continuation at the
-    // exercise boundary does not improve Greeks. The kink lives in the price max(payoff, C), which
-    // is applied exactly outside the interpolant; the continuation C is smooth at the boundary, so a
-    // knot there resolves no singularity and only relocates the Gamma query onto the ill-conditioned
-    // Chebyshev piece edge (it yields a non-physical negative Gamma one tick above the knot). Kept,
-    // default-off, for reproducibility; superseded by the planned front-fixing variant. See the
-    // "Why the boundary Gamma is weak" section of the American-option case study.
-    bool BoundarySplit = false,
     // Stage F1 front-fixing: interpolate the continuation in x = log(S) instead of linear S. The GBM
     // transition is additive in x, so the Gauss-Hermite images stay bounded; the narrow uniform-in-x
     // grid is also far better conditioned at high node counts, curing the high-n non-finite build
@@ -167,7 +159,6 @@ public sealed class DynamicChebyshevAmericanOptionPricer
             ? x => Payoff(request, Math.Exp(x))
             : spot => Payoff(request, spot);
         ChebyshevApproximation? firstContinuation = null;
-        Func<double, double>? firstContinuationFunction = null;
 
         for (int step = settings.ExerciseSteps - 1; step >= 0; step--)
         {
@@ -214,16 +205,13 @@ public sealed class DynamicChebyshevAmericanOptionPricer
             if (step == 0)
             {
                 firstContinuation = continuation;
-                firstContinuationFunction = continuationFunction;
             }
         }
 
         stopwatch.Stop();
 
         Debug.Assert(firstContinuation is not null);
-        Debug.Assert(firstContinuationFunction is not null);
         ChebyshevApproximation firstApprox = firstContinuation!;
-        Func<double, double> firstFunc = firstContinuationFunction!;
 
         Func<double, int, double> continuationCurve;
         if (settings.LogSpot)
@@ -249,17 +237,6 @@ public sealed class DynamicChebyshevAmericanOptionPricer
                 double u2 = EvaluateLogSpotApproximation(firstLog, x, settings, derivativeOrder: 2);
                 return (u2 - u1) / (spot * spot);
             };
-        }
-        else if (settings.BoundarySplit && request.Right == VanillaOptionRight.Put)
-        {
-            double GlobalContinuation(double spot) =>
-                EvaluateApproximation(firstApprox, spot, settings, derivativeOrder: 0);
-            double PayoffAt(double spot) => Payoff(request, spot);
-            double boundary = FindExerciseBoundary(GlobalContinuation, PayoffAt, settings.SpotLower, request.Strike);
-
-            ChebyshevSpline spline = BuildContinuationSpline(settings, firstFunc, boundary);
-            buildEvaluations += spline.NumPieces * settings.SpotNodeCount;
-            continuationCurve = (spot, order) => EvaluateSpline(spline, spot, settings, order, boundary);
         }
         else
         {
@@ -437,41 +414,6 @@ public sealed class DynamicChebyshevAmericanOptionPricer
     {
         double Gap(double spot) => continuation(spot) - payoff(spot);
         return MathNet.Numerics.RootFinding.Brent.FindRoot(Gap, lo, hi, accuracy: 1e-8, maxIterations: 100);
-    }
-
-    private static ChebyshevSpline BuildContinuationSpline(
-        DynamicChebyshevSettings settings, Func<double, double> continuation, double knot)
-    {
-        double Function(double[] point, object? _) => continuation(point[0]);
-
-        var spline = new ChebyshevSpline(
-            Function,
-            numDimensions: 1,
-            domain: [[settings.SpotLower, settings.SpotUpper]],
-            nNodes: [settings.SpotNodeCount],
-            knots: [[knot]],
-            maxDerivativeOrder: 2);
-        spline.Build(verbose: false);
-        return spline;
-    }
-
-    private static double EvaluateSpline(
-        ChebyshevSpline spline,
-        double spot,
-        DynamicChebyshevSettings settings,
-        int derivativeOrder,
-        double knot)
-    {
-        double clamped = Math.Clamp(spot, settings.SpotLower, settings.SpotUpper);
-
-        // Derivatives are undefined exactly at the knot (adjacent pieces disagree there); nudge onto
-        // the continuation side so Greeks remain queryable right at the boundary.
-        if (derivativeOrder > 0 && Math.Abs(clamped - knot) < 1e-9)
-        {
-            clamped = knot + 1e-7;
-        }
-
-        return spline.Eval([clamped], [derivativeOrder]);
     }
 
     private static void Validate(
