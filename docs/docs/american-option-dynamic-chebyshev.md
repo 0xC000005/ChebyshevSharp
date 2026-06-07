@@ -808,6 +808,46 @@ var valueAndGreeks = model.Evaluate(100.0);
 `Build` performs the backward induction. `Evaluate` reuses the first-step
 continuation interpolant to return price, Delta, and Gamma at new spot values.
 
+### Why the boundary Gamma is weak, and why splitting there does not help
+
+The one weak row above is spot `82.0`, just inside the continuation region
+(`B0` is about `81.86`). Its Gamma is off by `23.7%` while every other Greek on
+the grid is within a fraction of a percent. This is structural, not a bug. By
+the *smooth-pasting* condition the American value `V` is `C^1` across the
+exercise boundary (value and Delta continuous) but its **second** derivative
+jumps, so Gamma is the fragile quantity exactly there. The model reads Gamma
+from the stored continuation `C`, whose curvature just above the boundary does
+not fully match the true `V_SS` on this grid.
+
+The natural idea, placing a `ChebyshevSpline` knot at `B0` so each piece is
+smooth, was implemented and **measured, and it does not help**: near the
+boundary it makes Gamma *worse*. The reason is precise. The solver interpolates
+the **continuation** `C`, applying `max(payoff, C)` exactly *outside* the
+interpolant. `C` is a Gaussian (Gauss-Hermite) expectation of the next step, so
+it is smooth: `C''` is monotone right through `B0`, and the kink lives only in
+the *price* `max(payoff, C)`, which is already handled exactly. Splitting a
+smooth `C` at `B0` resolves no singularity; it only relocates the spot-`82`
+Gamma query onto the **clustered edge of the upper piece**, where a Chebyshev
+second-derivative differentiation matrix is most ill-conditioned (a measured
+~4000x edge amplification versus the interior). The split even produced a
+non-physical *negative* Gamma one tick above the knot. Raising the node count
+makes both variants worse, because the wide-spot Gauss-Hermite quadrature loses
+finite values at high `n`.
+
+What *does* help, cheaply, is seeding the terminal backward step with the exact
+one-period European Black-Scholes value (the `ClosedFormTerminalStep` option)
+instead of quadrature against the kinked payoff. It lowers the near-money price
+error (at-the-money `0.004631` to `0.003490`) by removing the strike-corner
+quadrature distortion at the worst-fitted step. It does not change the boundary
+Gamma, which is a different effect.
+
+The correct structural cure for boundary-aware spectral Greeks is a
+**front-fixing (Landau) transform** that maps the moving boundary `B(t)` to a
+fixed grid line, so the smooth region is resolved without an interpolation
+endpoint sitting on the query (Company, Egorova & Jodar 2014). That is a solver
+re-architecture rather than a knot tweak, and is the direction for a future
+boundary-aware variant.
+
 ## Accuracy and Speed
 
 The aggregate comparison is useful only after reading the per-candidate
