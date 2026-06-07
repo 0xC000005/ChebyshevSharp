@@ -43,6 +43,8 @@ This page lists the references used by ChebyshevSharp documentation and algorith
 
 - Chebfun project. "First steps in Chebfun." *Chebfun Guide*. [Guide page](https://www.chebfun.org/docs/guide/guide01.html).
 - Chebfun project. "Edge detection in Chebfun." *Chebfun Examples*. [Example](https://www.chebfun.org/examples/approx/EdgeDetection.html).
+- Pachón, R., Platte, R. B., and Trefethen, L. N. (2010). "Piecewise-Smooth Chebfuns." *IMA Journal of Numerical Analysis*, 30(4), 898-916. DOI: [10.1093/imanum/drp008](https://doi.org/10.1093/imanum/drp008).
+- Gottlieb, D. and Shu, C.-W. (1997). "On the Gibbs Phenomenon and Its Resolution." *SIAM Review*, 39(4), 644-668. DOI: [10.1137/S0036144596301390](https://doi.org/10.1137/S0036144596301390).
 - SciPy project. "Finite Difference Differentiation." *SciPy API Reference*. [Documentation](https://docs.scipy.org/doc/scipy/reference/differentiate.html).
 
 ## Finance Context

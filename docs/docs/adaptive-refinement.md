@@ -32,6 +32,24 @@ Tuning parameters: `thresholdFactor` (default 5.0), `maxKnotsPerDim` (default
 auto-knot insertion and build a single-piece spline. Always inspect
 `sp.Knots` and validate held-out points after using the scan.
 
+### Chebfun edge detection vs `AutoKnots`
+
+`AutoKnots` is ChebyshevSharp's automatic kink detector -- the analogue of Chebfun's *splitting* mode. The tools map onto each other:
+
+| Chebfun | ChebyshevSharp |
+| --- | --- |
+| exact rootfinding for `abs`/`min`/`max`/`sign` (a corner placed at a root of $f$) | declare the location with [`WithSpecialPoints`](special-points.md) |
+| automatic edge detection (`splitting on`) | `AutoKnots` |
+| piecewise representation (smooth pieces joined at breakpoints) | `ChebyshevSpline` |
+
+The detection *philosophy* differs, and `AutoKnots` is deliberately the simpler tool. Chebfun's `detectedge` recursively bisects and judges each candidate by *convergence* -- refining a singularity's location toward machine precision and classifying jump-vs-kink by which finite-difference derivative blows up. `AutoKnots` instead does a single fixed-grid second-difference scan, which has three consequences worth knowing:
+
+- **Resolution is bounded by the scan grid:** a knot is placed no more accurately than `(hi - lo) / (nScanPoints - 1)`, and the scan does not iteratively refine.
+- **It scans one mid-point line per dimension** (other dimensions fixed at their midpoint), so a kink whose location depends on another coordinate -- a sloped boundary, a barrier varying with another input -- can be missed or mis-placed.
+- **It thresholds raw $|d^2 f|$,** so it does not distinguish a true kink from steep-but-smooth curvature by convergence behaviour.
+
+For a *known* kink (a strike, a barrier, an exercise boundary already located by root-finding), prefer declaring it with `WithSpecialPoints` -- exact and cheap -- over relying on the scan. Reference: Pachón, R., Platte, R. B. & Trefethen, L. N. (2010), "Piecewise smooth chebfuns," *IMA J. Numer. Anal.* 30, 898--916, and the Chebfun guide on `splitting on`.
+
 ## SobolIndices
 
 Variance decomposition from spectral Chebyshev coefficients. No Monte Carlo, no extra evaluations beyond what's already in `TensorValues`.

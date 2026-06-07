@@ -61,6 +61,16 @@ A Bernstein ellipse is an ellipse in the complex plane with foci at $x = -1$ and
 
 For functions with singularities or discontinuities on the real interval itself (e.g., $|x|$ at $x = 0$), the Bernstein ellipse collapses ($\rho \to 1$) and convergence becomes algebraic rather than exponential. In such cases, use `ChebyshevSpline` to place knots at the trouble points and recover spectral convergence on each smooth piece -- see [Piecewise Chebyshev Interpolation](spline.md).
 
+### Kinks vs jumps: how fast the rate degrades
+
+How much accuracy you lose depends on *which* derivative first fails to exist. By Trefethen's smoothness theorem (ATAP Thm 7.2), if $f$ has $\nu$ derivatives with $f^{(\nu)}$ of bounded variation $V$, then $\|f - p_n\|_\infty \le 4V / (\pi \nu (n-\nu)^\nu) = O(n^{-\nu})$.
+
+- A **kink** (a slope corner: $C^0$ but not $C^1$, like $|x|$ or the payoff $\max(K-S,0)$ at the strike) has $\nu = 1$, so convergence is only $O(n^{-1})$ -- roughly ten times the nodes per extra digit. It still converges *uniformly*; the polynomial merely wiggles to fit the corner, with no overshoot.
+- A **second-derivative kink** (the value is $C^1$ but $V_{SS}$ jumps -- the situation at an option's early-exercise boundary, where smooth pasting forces the slopes to match) has $\nu = 2$, so $O(n^{-2})$. The value error stays small, but the **second derivative (Gamma) is where the damage shows**.
+- A **jump** (not even $C^0$, e.g. a step) is worse: no uniform convergence, plus the **Gibbs phenomenon** -- a persistent $\sim 9\%$ overshoot and ringing near the jump that does not decay as $n$ grows.
+
+All three are cured the same structural way: **do not let the singularity sit inside one smooth approximant -- place a breakpoint (knot) exactly at it**, so each piece's local Bernstein ellipse re-opens and spectral convergence returns per piece. This is what `ChebyshevSpline` does with explicit knots, what [`AutoKnots`](adaptive-refinement.md) attempts automatically, and what Chebfun calls *splitting* (Pachón, Platte & Trefethen, 2010). The same idea applied *in time* -- interpolate only the smooth continuation value and keep the non-smooth `max` exact -- is the design of the [American-option case study](american-option-dynamic-chebyshev.md).
+
 For the full theory, see Trefethen (2013), *Approximation Theory and Approximation Practice*, SIAM, Chapter 8.
 
 ## Barycentric Interpolation Formula
