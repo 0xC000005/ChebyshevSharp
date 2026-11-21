@@ -216,6 +216,8 @@ internal static class Sensitivity
 
         double weightedMeanSum = 0.0;
         double totalWeightedSquared = 0.0;
+        double withinPieceEnergy = 0.0;
+        var pieceVolumes = new double[totalPieces];
         for (int flatPiece = 0; flatPiece < totalPieces; flatPiece++)
         {
             int[] pieceIndex = UnravelIndex(flatPiece, pieceShape);
@@ -235,6 +237,7 @@ internal static class Sensitivity
                 throw new ArgumentException(
                     $"pieceCoeffs[{flatPiece}].Length={coeffs.Length} does not match prod(pieceCoeffShapes[{flatPiece}])={expectedCoeffLength}.");
 
+            pieceVolumes[flatPiece] = volume;
             weightedMeanSum += volume * coeffs[0];
             for (long flatCoeff = 0; flatCoeff < coeffs.Length; flatCoeff++)
             {
@@ -245,14 +248,27 @@ internal static class Sensitivity
 
                 if (coeff == 0.0) continue;
                 int[] alpha = UnravelIndex(flatCoeff, coeffShape);
-                totalWeightedSquared += volume * coeff * coeff * MultiIndexNormSquared(alpha);
+                double energy = volume * coeff * coeff * MultiIndexNormSquared(alpha);
+                totalWeightedSquared += energy;
+                if (flatCoeff != 0) withinPieceEnergy += energy;
             }
         }
 
+        // Variance = energy within each piece (non-constant coefficients) plus the spread
+        // of the piece means around the global mean. Both terms are sums of non-negative
+        // numbers; the algebraically equal form totalWeightedSquared - measure * mean^2
+        // cancels catastrophically for functions with a large constant offset.
         double globalMean = weightedMeanSum / totalVolume;
-        double variance = totalWeightedSquared - totalMeasure * globalMean * globalMean;
+        double meanNormSquared = totalMeasure / totalVolume;
+        double betweenPieceEnergy = 0.0;
+        for (int flatPiece = 0; flatPiece < totalPieces; flatPiece++)
+        {
+            double deviation = pieceCoeffs[flatPiece][0] - globalMean;
+            betweenPieceEnergy += pieceVolumes[flatPiece] * meanNormSquared * deviation * deviation;
+        }
+        double variance = withinPieceEnergy + betweenPieceEnergy;
         if (IsNumericalZeroVariance(variance, totalWeightedSquared))
-            return new SobolResult(new double[nDim], new double[nDim], variance);
+            return new SobolResult(new double[nDim], new double[nDim], 0.0);
 
         var firstOrder = new double[nDim];
         var totalOrder = new double[nDim];
@@ -426,7 +442,9 @@ internal static class Sensitivity
             }
         }
 
-        double complementTotalWeightedSquared = 0.0;
+        // Same non-cancelling form as the total variance: energy of the non-constant
+        // projected coefficients plus the spread of the projected piece means.
+        double complementVariance = 0.0;
         for (int compFlat = 0; compFlat < complementPieceCount; compFlat++)
         {
             int[] compPieceIndex = UnravelIndex(compFlat, complementPieceShape);
@@ -439,20 +457,16 @@ internal static class Sensitivity
             }
 
             int[] compCoeffShape = complementCoeffShapes[compFlat];
+            projected[compFlat].TryGetValue(0L, out double pieceMean);
+            double meanDelta = pieceMean - globalMean;
+            complementVariance += compVolume * meanDelta * meanDelta * MultiIndexNormSquared(new int[nDim - 1]);
             foreach (var kvp in projected[compFlat])
             {
+                if (kvp.Key == 0L) continue;
                 int[] alpha = UnravelIndex(kvp.Key, compCoeffShape);
-                complementTotalWeightedSquared += compVolume * kvp.Value * kvp.Value * MultiIndexNormSquared(alpha);
+                complementVariance += compVolume * kvp.Value * kvp.Value * MultiIndexNormSquared(alpha);
             }
         }
-
-        double complementMeasure = 1.0;
-        for (int d = 0; d < nDim; d++)
-            if (d != dim) complementMeasure *= totalLengths[d] * Math.PI;
-
-        double complementVariance = complementTotalWeightedSquared - complementMeasure * globalMean * globalMean;
-        if (complementVariance < 0.0 && complementVariance > -Math.Abs(complementTotalWeightedSquared) * 1e-12)
-            complementVariance = 0.0;
 
         return totalLengths[dim] * Math.PI * complementVariance;
     }
@@ -701,7 +715,7 @@ internal static class Sensitivity
         }
 
         if (IsNumericalZeroVariance(variance, totalWeightedSquared))
-            return new SobolResult(new double[nDim], new double[nDim], variance);
+            return new SobolResult(new double[nDim], new double[nDim], 0.0);
         for (int d = 0; d < nDim; d++)
         {
             firstOrder[d] /= variance;

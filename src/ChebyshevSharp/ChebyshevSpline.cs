@@ -1883,10 +1883,10 @@ public class ChebyshevSpline
                 }
                 else
                 {
-                    // Bounds are non-null here because all-null bounds take the fast path above.
+                    // A null entry means this piece is fully covered in that dim: use its own interval.
                     var pieceIntBounds = new (double lo, double hi)[NumDimensions];
                     for (int d = 0; d < NumDimensions; d++)
-                        pieceIntBounds[d] = pieceBounds[d]!.Value;
+                        pieceIntBounds[d] = pieceBounds[d] ?? Intervals[d][multiIdx[d]];
                     total += (double)piece.Integrate(bounds: pieceIntBounds);
                 }
             }
