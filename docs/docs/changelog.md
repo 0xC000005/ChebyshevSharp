@@ -16,6 +16,15 @@ how-to guides, and API reference.
 
 ## [Unreleased]
 
+### Fixed
+- `ChebyshevSpline.SobolIndices()` no longer throws `ArgumentOutOfRangeException` on constant
+  splines, and no longer reports rounding noise as variance for functions with a large constant
+  offset. The piecewise variance is now a sum of non-negative within-piece and between-piece
+  terms instead of a cancelling subtraction.
+- `ChebyshevSpline.Integrate(bounds: ...)` over all dimensions no longer throws
+  `InvalidOperationException` when the bounds cover a piece fully in one dimension and
+  partially in another.
+
 ## [0.15.2] - 2026-06-05 — Documentation: case-study DP-lecture trim
 
 ### Documentation
